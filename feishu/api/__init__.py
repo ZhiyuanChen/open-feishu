@@ -25,8 +25,14 @@ from .auth import (
 )
 from .encrypt import AESCipher
 from .exceptions import FeishuException
+from .request import delete, get, patch, post, put
 
 __all__ = [
+    "post",
+    "get",
+    "put",
+    "patch",
+    "delete",
     "AESCipher",
     "FeishuException",
     "get_tenant_access_token",

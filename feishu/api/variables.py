@@ -17,3 +17,6 @@
 from __future__ import annotations
 
 BASE_URL = "https://open.feishu.cn/open-apis/"
+ACCESS_TOKEN_REFRESH_OFFSET = 5400
+MAX_RETRIES = 3
+BACKOFF_FACTOR = 4
