@@ -14,10 +14,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from email.utils import parseaddr
-from json import dumps
+from __future__ import annotations
 
-from feishu.api import variables
+from contextlib import suppress
+from email.utils import parseaddr
+from json import JSONDecodeError, dumps
+
+from chanfig import NestedDict
+
+from feishu import variables
 
 
 def infer_receive_id_type(receive_id: str) -> str:
@@ -37,7 +42,18 @@ def infer_receive_id_type(receive_id: str) -> str:
     raise ValueError("unable to infer receive_id_type")
 
 
-def get_stream_message(content: str, streaming: bool = False, uuid: str = ""):
+def get_stream_message(content: str, streaming: bool = False, streaming_status_text: str | None = None) -> dict:
+    r"""
+    构建流消息的消息卡片
+
+    Args:
+        content (str): 消息内容
+        streaming (bool): 是否正在流式传输
+        streaming_status_text (str): 用于显示流式传输状态的文本，默认为 `variables.STREAMING_STATUS_TEXT`。
+
+    阅读更多:
+        [消息卡片](https://open.feishu.cn/document/server-docs/im-v1/message-card/overview)
+    """
     elements = [{"tag": "div", "text": {"content": content, "tag": "lark_md"}}]
 
     if streaming:
@@ -45,7 +61,7 @@ def get_stream_message(content: str, streaming: bool = False, uuid: str = ""):
             {
                 "tag": "div",
                 "text": {
-                    "content": variables.STREAMING_STATUS_TEXT,
+                    "content": streaming_status_text or variables.STREAMING_STATUS_TEXT,
                     "tag": "plain_text",
                     "text_size": "notation",
                     "text_color": "gray",
@@ -57,5 +73,12 @@ def get_stream_message(content: str, streaming: bool = False, uuid: str = ""):
     return {
         "content": dumps({"config": {"wide_screen_mode": True}, "elements": elements}),
         "msg_type": "interactive",
-        "uuid": uuid,
     }
+
+
+def convert_json_to_dict(content: str) -> NestedDict:
+    r"""
+    将 json 字符串转换为字典
+    """
+    with suppress(JSONDecodeError):
+        return NestedDict.from_jsons(content)

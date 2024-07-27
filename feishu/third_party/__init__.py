@@ -15,18 +15,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from .app_access_token import get_app_access_token, get_app_access_token_internal, get_app_access_token_store
-from .tenant_access_token import (
-    get_tenant_access_token,
-    get_tenant_access_token_internal,
-    get_tenant_access_token_store,
-)
+from lazy_imports import try_import
 
-__all__ = [
-    "get_tenant_access_token",
-    "get_tenant_access_token_internal",
-    "get_tenant_access_token_store",
-    "get_app_access_token",
-    "get_app_access_token_internal",
-    "get_app_access_token_store",
-]
+with try_import() as _:
+    from .openai import get_openai_completions, get_system_prompt
+
+__all__ = ["get_openai_completions", "get_system_prompt"]

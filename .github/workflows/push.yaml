@@ -23,7 +23,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
       - name: Install dependencies for testing
-        run: pip install pytest pytest-cov
+        run: pip install pytest pytest-cov openai
       - name: Install module
         run: pip install -e .
       - name: pytest
@@ -95,9 +95,9 @@ jobs:
           python-version: 3.x
           cache: "pip"
       - name: Install dependencies for building
-        run: pip install wheel setuptools_scm
+        run: pip install build wheel setuptools_scm
       - name: build package
-        run: python setup.py sdist bdist_wheel
+        run: python -m build --sdist --wheel
       - name: create release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
@@ -122,9 +122,9 @@ jobs:
           python-version: 3.x
           cache: "pip"
       - name: Install dependencies for building
-        run: pip install wheel setuptools_scm
+        run: pip install build wheel setuptools_scm
       - name: build package
-        run: python setup.py sdist bdist_wheel
+        run: python -m build --sdist --wheel
       - name: create release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:

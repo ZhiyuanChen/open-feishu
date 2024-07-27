@@ -14,12 +14,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import annotations
 
-APP_ID: str
-APP_SECRET: str
-BASE_URL = "https://open.feishu.cn/open-apis/"
-ACCESS_TOKEN_REFRESH_OFFSET = 5400
-MAX_RETRIES = 3
-BACKOFF_FACTOR = 4
-STREAMING_STATUS_TEXT = "生成中..."
+from .app_access_token import get_app_access_token
+from .tenant_access_token import get_tenant_access_token
+
+__all__ = [
+    "get_tenant_access_token",
+    "get_app_access_token",
+]

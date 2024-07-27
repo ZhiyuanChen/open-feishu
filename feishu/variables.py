@@ -1,0 +1,63 @@
+# open-feishu
+# Copyright (C) 2024-Present  Zhiyuan Chen
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+r"""
+系统变量
+
+Attributes: 飞书:
+    APP_ID: 飞书应用 ID。默认读取环境变量的 `APP_ID`。
+        如果在调用函数时未提供 `app_id` 参数，则使用此值。
+    APP_SECRET: 飞书应用密钥。默认读取环境变量的 `APP_SECRET`。
+        如果在调用函数时未提供 `app_secret` 参数，则使用此值。
+    BASE_URL: 飞书 API 基础 URL。默认为 `"https://open.feishu.cn/open-apis/"`。
+    ACCESS_TOKEN_REFRESH_OFFSET: 飞书 access token 刷新偏移量。默认为 5400 秒。
+    MAX_RETRIES: 飞书请求最大重试次数。默认为 3 次。
+    BACKOFF_FACTOR: 飞书请求指数退避因子。默认为 4。
+    STREAMING_STATUS_TEXT: 飞书流状态文本。默认为 `"生成中..."`。
+
+Attributes: OpenAI:
+    OPENAI_KEY: OpenAI API 密钥。默认读取环境变量的 `OPENAI_KEY`。
+    OPENAI_URL: OpenAI API URL。默认为 `"https://api.openai.com"`。
+    OPENAI_MODEL: OpenAI API 模型。默认为 `"gpt-4o-mini"`。
+    SYSTEM_PROMPT: OpenAI API 系统提示。
+    SYSTEM_PROMPT_FILE: OpenAI API 系统提示文件，应当是 TEXT 格式。
+        只在 `SYSTEM_PROMPT` 为空时使用。
+    SYSTEM_INFO: OpenAI API 系统信息，用于存储系统变量。
+        值将在构建 System Prompt 时被注入其中。
+    SYSTEM_INFO_FILE: OpenAI API 系统信息文件，应当是 YAML 格式。
+        只在 `SYSTEM_INFO` 为空时使用。
+"""
+
+from __future__ import annotations
+
+from os import getenv
+from typing import Any, Dict
+
+APP_ID: str | None = getenv("APP_ID")
+APP_SECRET: str | None = getenv("APP_SECRET")
+BASE_URL = "https://open.feishu.cn/open-apis/"
+ACCESS_TOKEN_REFRESH_OFFSET = 5400
+MAX_RETRIES = 3
+BACKOFF_FACTOR = 4
+STREAMING_STATUS_TEXT = "生成中..."
+
+OPENAI_KEY: str | None = getenv("OPENAI_KEY")
+OPENAI_URL: str = getenv("OPENAI_URL", "https://api.openai.com")
+OPENAI_MODEL: str = getenv("OPENAI_MODEL", "gpt-4o-mini")
+SYSTEM_PROMPT: str
+SYSTEM_PROMPT_FILE: str
+SYSTEM_INFO: Dict[str, Any]
+SYSTEM_INFO_FILE: str

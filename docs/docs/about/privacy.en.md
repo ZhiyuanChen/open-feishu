@@ -1,12 +1,12 @@
-# Privacy Policy
-
 !!! info "Last Revised Date"
 
-    This policy was last updated on May 04, 2024.
+    This notice was last updated on May 04, 2024.
+
+# Privacy Notice
 
 This privacy notice for DanLing Team (also known as DanLing) ('we', 'us', or 'our'), describes how and why we might collect, store, use, and/or share ('process') your information when you use our services ('Services'), such as when you:
 
-- Visit our website at [danling.org](https://feishu.danling.org), or any website of ours that links to this privacy notice
+- Visit our website at [multimolecule.danling.org](https://multimolecule.danling.org), or any website of ours that links to this privacy notice
 
 You can change your privacy settings at any time by clicking the button below:
 
@@ -21,11 +21,21 @@ If you still have any questions or concerns, please contact us at [privacy@danli
 
 This summary provides key points from our privacy notice, but you can find out more details about any of these topics by clicking the link following each key point or by using our table of contents below to find the section you are looking for.
 
+<div class="grid cards" markdown>
+
 !!! question "What personal information do we process?"
 
-    We do not collect any personal information.
+    When you visit, use, or navigate our Services, we may process personal information depending on how you interact with us and the Services, the choices you make, and the products and features you use.
 
-    Learn more about [what information do we collect](#1-what-information-do-we-collect).
+    [:octicons-arrow-right-24: What information do we collect?](#1-what-information-do-we-collect)
+
+!!! question "How do we process your information?"
+
+    We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law.
+    We may also process your information for other purposes with your consent.
+    We process your information only when we have a valid legal reason to do so.
+
+    [:octicons-arrow-right-24: How do we process your information?](#2-how-do-we-process-your-information)
 
 !!! question "Do we process any sensitive personal information?"
 
@@ -35,43 +45,41 @@ This summary provides key points from our privacy notice, but you can find out m
 
     We do not collect any information from third parties.
 
-!!! question "How do we process your information?"
-
-    We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law.
-    We may also process your information for other purposes with your consent.
-    We process your information only when we have a valid legal reason to do so.
-
-    Learn more about [how we process your information](#2-how-do-we-process-your-information).
-
 !!! question "In what situations and with which parties do we share personal information?"
 
     We may share information in specific situations and with specific third parties.
 
-    Learn more about [when and with whom we share your personal information](#4-when-and-with-whom-do-we-share-your-personal-information).
+    [:octicons-arrow-right-24: When and with whom we share your personal information?](#4-when-and-with-whom-do-we-share-your-personal-information)
 
 !!! question "How do we keep your information safe?"
 
     We have organisational and technical processes and procedures in place to protect your personal information.
-    However, no electronic transmission over the internet or information storage technology can be guaranteed to be 100% secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorised third parties will not be able to defeat our security and improperly collect, access, steal, or modify your information.
 
-    Learn more about [how we keep your information safe](#7-how-do-we-keep-your-information-safe).
+    [:octicons-arrow-right-24: How do we keep your information safe?](#7-how-do-we-keep-your-information-safe)
 
 !!! question "What are your rights?"
 
     Depending on where you are located geographically, the applicable privacy law may mean you have certain rights regarding your personal information.
 
-    Learn more about [your privacy rights](#8-what-are-your-privacy-rights).
+    [:octicons-arrow-right-24: What are your privacy rights?](#8-what-are-your-privacy-rights)
 
 !!! question "How do you exercise your rights?"
 
-    The easiest way to exercise your rights is by contacting us via [privacy@danling.org](mailto:privacy@danling.org).
-    We will consider and act upon any request in accordance with applicable data protection laws.
+    The easiest way to exercise your rights is by contacting the relevant data protection authority in your jurisdiction.
+
+    [:octicons-arrow-right-24: How to exercise your rights](#how-to-exercise-your-rights)
+
+</div>
 
 ## 1. What information do we collect?
 
 ### Personal information you disclose to us
 
-We do not collect any personal information from you.
+!!! tip "In Short"
+
+    We collect personal information that you provide to us.
+
+We collect personal information that you voluntarily provide to us when you express an interest in obtaining information about us or our products and Services, when you participate in activities on the Services, or otherwise when you contact us.
 
 !!! danger "Sensitive Personal Information"
 
@@ -92,20 +100,20 @@ Like many businesses, we also collect information through cookies and similar te
 The information we collect includes:
 
 - **Identifiers.**
-  Identifier is a device and browser-specific unique random string that we generate when you use our Service.
-  This identifier is stored in a cookie on your device, allowing us to identify you across multiple sessions and when you return to our Service.
+    Identifier is a device and browser-specific unique random string that we generate when you use our Service.
+    This identifier is stored in a cookie on your device, allowing us to identify you across multiple sessions and when you return to our Service.
   You can delete this cookie at any time by clearing your browser's cache.
 - **Log and Usage Data.**
-  Log and usage data is service-related, diagnostic, usage, and performance information our servers automatically collect when you access or use our Services and which we record in log files.
-  Depending on how you interact with us, this log data may include your IP address, device information, browser type, and settings, and information about your activity in the Services (such as the date/time stamps associated with your usage, pages and files viewed, searches and other actions you take such as which features you use), device event information (such as system activity, error reports (sometimes called 'crash dumps') and hardware settings).
+    Log and usage data is service-related, diagnostic, usage, and performance information our servers automatically collect when you access or use our Services and which we record in log files.
+    Depending on how you interact with us, this log data may include your IP address, device information, browser type, and settings, and information about your activity in the Services (such as the date/time stamps associated with your usage, pages and files viewed, searches and other actions you take such as which features you use), device event information (such as system activity, error reports (sometimes called 'crash dumps') and hardware settings).
 - **Device Data.**
-  We collect device data such as information about your computer, phone, tablet, or other devices you use to access the Services.
-  Depending on the device used, this device data may include information such as your IP address (or proxy server), device and application identification numbers, location, browser type, hardware model, Internet Service Provider and/or mobile carrier, operating system, and system configuration information.
+    We collect device data such as information about your computer, phone, tablet, or other devices you use to access the Services.
+    Depending on the device used, this device data may include information such as your IP address (or proxy server), device and application identification numbers, location, browser type, hardware model, Internet Service Provider and/or mobile carrier, operating system, and system configuration information.
 - **Location Data.**
-  We collect location data such as information about your device's location, which can be either precise or imprecise.
-  How much information we collect depends on the type and settings of the device you use to access the Services.
-  For example, we may use GPS and other technologies to collect geolocation data that tells us your current location (based on your IP address).
-  You can opt out of allowing us to collect this information either by refusing access to the information or by disabling your location settings on your device.
+    We collect location data such as information about your device's location, which can be either precise or imprecise.
+    How much information we collect depends on the type and settings of the device you use to access the Services.
+    For example, we may use GPS and other technologies to collect geolocation data that tells us your current location (based on your IP address).
+    You can opt out of allowing us to collect this information either by refusing access to the information or by disabling your location settings on your device.
 
 ### Categories of Personal Information We Collect
 
@@ -149,11 +157,11 @@ We will use and retain the collected personal information as needed to provide y
 We process your personal information for a variety of reasons, depending on how you interact with our Services, including:
 
 - **To protect our Services.**
-  We may process your information as part of our efforts to keep our Services safe and secure, including fraud monitoring and prevention.
+    We may process your information as part of our efforts to keep our Services safe and secure, including fraud monitoring and prevention.
 - **To identify user trends.**
-  We may process information about how you use our Services to better understand how they are being used so we can improve them.
+    We may process information about how you use our Services to better understand how they are being used so we can improve them.
 - **To save or protect an individual's vital interest.**
-  We may process your information when necessary to save or protect an individual’s vital interest, such as to prevent harm.
+    We may process your information when necessary to save or protect an individual’s vital interest, such as to prevent harm.
 
 ## 3. What legal basis do we have for processing your information?
 
@@ -165,18 +173,18 @@ The General Data Protection Regulation (GDPR) and UK GDPR require us to explain 
 As such, we may rely on the following legal bases to process your personal information:
 
 - **Consent.**
-  We may process your personal information if you have given us specific consent to use your personal information for a specific purpose.
-  You have the right to withdraw your consent at any time.
-  Learn more about [withdrawing your consents]().
+    We may process your personal information if you have given us specific consent to use your personal information for a specific purpose.
+    You have the right to withdraw your consent at any time.
+    Learn more about [withdrawing your consents]().
 - **Legitimate Interests.**
-  We may process your information when we believe it is reasonably necessary to achieve our legitimate business interests and those interests do not outweigh your interests and fundamental rights and freedoms.
-  For example, we may process your personal information for some of the purposes described in order to:
-  - Analyse how our Services are used so we can improve them to engage and retain users
-  - Diagnose problems and/or prevent fraudulent activities
+    We may process your information when we believe it is reasonably necessary to achieve our legitimate business interests and those interests do not outweigh your interests and fundamental rights and freedoms.
+    For example, we may process your personal information for some of the purposes described in order to:
+    - Analyse how our Services are used so we can improve them to engage and retain users
+    - Diagnose problems and/or prevent fraudulent activities
 - **Legal Obligations.**
-  We may process your information where we believe it is necessary for compliance with our legal obligations, such as to cooperate with a law enforcement body or regulatory agency, exercise or defend our legal rights, or disclose your information as evidence in litigation in which we are involved.
+    We may process your information where we believe it is necessary for compliance with our legal obligations, such as to cooperate with a law enforcement body or regulatory agency, exercise or defend our legal rights, or disclose your information as evidence in litigation in which we are involved.
 - **Vital Interests.**
-  We may process your information where we believe it is necessary to protect your vital interests or the vital interests of a third party, such as situations involving potential threats to the safety of any person.
+    We may process your information where we believe it is necessary to protect your vital interests or the vital interests of a third party, such as situations involving potential threats to the safety of any person.
 
 !!! info "Consent to Processing in Canada"
 
@@ -213,24 +221,29 @@ They also commit to protect the data they hold on our behalf and to retain it fo
 The third parties we may share personal information with are as follows:
 
 - **Advertising, Direct Marketing, and Lead Generation**
-  Google AdSense
+    - Google AdSense
 - **Cloud Computing Services**
-  Microsoft Azure, Amazon Web Services (AWS) and Google Cloud Platform
+    - Microsoft Azure
+    - Amazon Web Services (AWS)
+    - Google Cloud Platform (GCP)
 - **Communications and Content Delivery Network (CDN) Services**
-  Cloudflare
+    - Cloudflare
 - **Content Optimisation**
-  Google Site Search and Google Fonts
+    - Google Site Search
+    - Google Fonts
 - **Functionality and Infrastructure Optimisation**
-  GitHub Pages
+    - GitHub Pages
 - **User Commenting and Forums**
-  Disqus, GitHub Issues and GitHub Discussions
+    - Disqus
+    - GitHub Issues
+    - GitHub Discussions
 - **Web and Mobile Analytics**
-  Google Analytics
+    - Google Analytics
 
 We also may need to share your personal information in the following situations:
 
 - **Business Transfers.**
-  We may share or transfer your information in connection with, or during negotiations of, any merger, sale of company assets, financing, or acquisition of all or a portion of our business to another company.
+    We may share or transfer your information in connection with, or during negotiations of, any merger, sale of company assets, financing, or acquisition of all or a portion of our business to another company.
 
 !!! info "We have disclosed the following categories of personal information for a business purpose in the past twelve (12) months:"
 
@@ -242,8 +255,6 @@ We also may need to share your personal information in the following situations:
 
 !!! info "The categories of third parties to whom we shared personal information with in the past twelve (12) months:"
 
-    - **Advertising, Direct Marketing, and Lead Generation**
-        - Google AdSense
     - **Web and Mobile Analytics**
         - Google Analytics
 
@@ -260,16 +271,22 @@ To the extent these online tracking technologies are deemed to be a 'sale'/'shar
 
 [Privacy Control](#__consent){ .md-button }
 
-<!-- Specific information about how we use such technologies and how you can refuse certain cookies is set out in our Cookie Notice: danling.org/about/cookie. -->
+<!-- Specific information about how we use such technologies and how you can refuse certain cookies is set out in our Cookie Notice: multimolecule.danling.org/about/cookie. -->
 
 ### Google Analytics
 
 We may share your information with Google Analytics to track and analyse the use of the Services.
 The Google Analytics Advertising Features that we may use include:
-Remarketing with Google Analytics, Google Display Network Impressions Reporting and Google Analytics Demographics and Interests Reporting.
-To opt out of being tracked by Google Analytics across the Services, visit https://tools.google.com/dlpage/gaoptout.
+
+- Remarketing with Google Analytics
+- Google Display Network Impressions Reporting
+- Google Analytics Demographics and Interests Reporting
+
+To opt out of being tracked by Google Analytics across the Services, visit [https://tools.google.com/dlpage/gaoptout](https://tools.google.com/dlpage/gaoptout).
 You can opt out of Google Analytics Advertising Features through [Ads Settings](https://adssettings.google.com) and Ad Settings for mobile apps.
+
 Other opt out means include [http://optout.networkadvertising.org/](http://optout.networkadvertising.org/) and [http://www.networkadvertising.org/mobile-choice](http://www.networkadvertising.org/mobile-choice).
+
 For more information on the privacy practices of Google, please visit the [Google Privacy & Terms](https://policies.google.com/privacy).
 
 ## 6. How long do we keep your information?
@@ -304,25 +321,25 @@ However, these rights are not absolute, and in certain cases, we may decline you
 These rights include:
 
 - **Right to know**
-  whether or not we are processing your personal data
+    whether or not we are processing your personal data
 - **Right to access**
-  your personal data
+    your personal data
 - **Right to correct**
-  inaccuracies in your personal data
+    inaccuracies in your personal data
 - **Right to request**
-  the deletion of your personal data
+    the deletion of your personal data
 - **Right to obtain a copy**
-  of the personal data you previously shared with us
+    of the personal data you previously shared with us
 - **Right to non-discrimination**
-  against you for exercising your rights
+    against you for exercising your rights
 - **Right to opt-out**
-  - of the processing of your personal data if it is used for targeted advertising (or sharing as defined under applicable laws), the sale of personal data, or profiling in furtherance of decisions that produce legal or similarly significant effects ('profiling') concerning you
-  - of the collection of sensitive data and personal data collected through the operation of a voice or facial recognition feature
+    - of the processing of your personal data if it is used for targeted advertising (or sharing as defined under applicable laws), the sale of personal data, or profiling in furtherance of decisions that produce legal or similarly significant effects ('profiling') concerning you
+    - of the collection of sensitive data and personal data collected through the operation of a voice or facial recognition feature
 - **Right to obtain**
-  - a list of the categories of third parties to which we have disclosed personal data
-  - a list of specific third parties to which we have disclosed personal data
+    - a list of the categories of third parties to which we have disclosed personal data
+    - a list of specific third parties to which we have disclosed personal data
 - **Right to limit**
-  use and disclosure of sensitive personal data
+    use and disclosure of sensitive personal data
 
 ### How to exercise your rights
 
@@ -332,17 +349,16 @@ We are unable to reply to and act on data subject access request as we do not sa
 
 If you believe we are unlawfully processing your personal information, you can contact the relevant data protection regulator, state attorney general, or other competent authority in your jurisdiction.
 
-If you are a resident in the European Economic Area or the United Kingdom, you can contact your [Member State's data protection supervisory authority](https://edpb.europa.eu/about-edpb/board/members_en) or [UK Information Commissioner's Office](https://ico.org.uk/make-a-complaint/).
-
-If you are a resident in Australia or New Zealand, you can contact [Office of the Australian Information Commissioner](https://www.oaic.gov.au/privacy/privacy-complaints/) or [Office of New Zealand Privacy Commissioner](https://www.privacy.org.nz/your-rights/making-a-complaint-to-the-privacy-commissioner/).
-
-If you are a resident in Canada, you can contact the [Office of the Privacy Commissioner of Canada](https://www.priv.gc.ca/en/).
-
-If you are a resident in the state of California of the United States, you can contact [California Privacy Protection Agency](https://cppa.ca.gov/webapplications/complaint/).
-
-If you are a resident in Switzerland, you can contact [Federal Data Protection and Information Commissioner](https://www.edoeb.admin.ch/edoeb/en/home/the-fdpic/contact.html).
-
-If you are a resident in South Africa, you can contact the [Information Regulator](https://inforegulator.org.za/training/wp/complaints/).
+| Residency                       | Authority                                                                                                                            |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| European Economic Area          | [Member State's data protection supervisory authority](https://edpb.europa.eu/about-edpb/board/members_en)                           |
+| United Kingdom                  | [Information Commissioner's Office](https://ico.org.uk/make-a-complaint/)                                                            |
+| Australia                       | [Office of the Australian Information Commissioner](https://www.oaic.gov.au/privacy/privacy-complaints/)                             |
+| New Zealand                     | [Office of New Zealand Privacy Commissioner](https://www.privacy.org.nz/your-rights/making-a-complaint-to-the-privacy-commissioner/) |
+| Canada                          | [Office of the Privacy Commissioner of Canada](https://www.priv.gc.ca/en/)                                                           |
+| California of the United States | [California Privacy Protection Agency](https://cppa.ca.gov/webapplications/complaint/)                                               |
+| Switzerland                     | [Federal Data Protection and Information Commissioner](https://www.edoeb.admin.ch/edoeb/en/home/the-fdpic/contact.html)              |
+| South Africa                    | [Information Regulator](https://inforegulator.org.za/training/wp/complaints/)                                                        |
 
 #### Withdraw your consent
 

@@ -24,8 +24,8 @@ from typing import Callable, Dict
 import requests
 from chanfig import NestedDict
 
-from feishu.api import FeishuException, variables
-from feishu.api.auth import get_tenant_access_token as _get_tenant_access_token
+from feishu import FeishuException, variables
+from feishu.auth import get_tenant_access_token as _get_tenant_access_token
 
 token_cache = {"tenant_access_token": None, "expire": 0, "timestamp": 0}
 
@@ -423,6 +423,7 @@ def patch(
 def delete(
     dest: str,
     data: Dict | None = None,
+    params: Dict | None = None,
     headers: Dict | None = None,
     timeout: int = 120,
     token: str | None = None,
@@ -460,8 +461,9 @@ def delete(
     return request(
         "DELETE",
         dest,
-        headers=headers,
         data=data,
+        params=params,
+        headers=headers,
         timeout=timeout,
         token=token,
         app_id=app_id,
