@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    <url>
+        <loc>https://feishu.danling.org/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/about/license/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/about/license/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/about/license/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/about/privacy/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/about/privacy/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/about/privacy/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/api/encrypt/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/api/encrypt/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/api/encrypt/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/api/exceptions/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/api/exceptions/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/api/exceptions/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/api/request/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/api/request/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/api/request/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/api/auth/app_access_token/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/api/auth/app_access_token/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/api/auth/app_access_token/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/api/auth/tenant_access_token/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/api/auth/tenant_access_token/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/api/auth/tenant_access_token/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/api/im/messages/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/api/im/messages/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/api/im/messages/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/en/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/en/about/license/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/about/license/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/about/license/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/en/about/privacy/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/about/privacy/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/about/privacy/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/en/api/encrypt/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/api/encrypt/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/api/encrypt/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/en/api/exceptions/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/api/exceptions/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/api/exceptions/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/en/api/request/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/api/request/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/api/request/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/en/api/auth/app_access_token/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/api/auth/app_access_token/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/api/auth/app_access_token/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/en/api/auth/tenant_access_token/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/api/auth/tenant_access_token/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/api/auth/tenant_access_token/"/>
+    </url>
+    <url>
+        <loc>https://feishu.danling.org/en/api/im/messages/</loc>
+        <lastmod>2024-07-27</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://feishu.danling.org/en/api/im/messages/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://feishu.danling.org/api/im/messages/"/>
+    </url>
+</urlset>
