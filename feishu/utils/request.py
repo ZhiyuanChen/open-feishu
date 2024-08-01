@@ -102,12 +102,17 @@ def request(
 
     attempt = 0
     while attempt <= max_retries:
-        if callable(method):
-            response = method(url, headers=headers, json=data, params=params, timeout=timeout, **kwargs)
-        else:
-            response = requests.request(
-                method, url, headers=headers, json=data, params=params, timeout=timeout, **kwargs
-            )
+        try:
+            if callable(method):
+                response = method(url, headers=headers, json=data, params=params, timeout=timeout, **kwargs)
+            else:
+                response = requests.request(
+                    method, url, headers=headers, json=data, params=params, timeout=timeout, **kwargs
+                )
+        except Exception:
+            time.sleep(backoff_factor**attempt)
+            attempt += 1
+            continue
         ret = response.json()
         if ret.get("code") == 0:
             return NestedDict(ret)

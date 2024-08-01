@@ -75,7 +75,7 @@ def send_message(
     if id is None:
         raise ValueError("Unable to identify receiver")
     if id.startswith("om_"):
-        return reply_message(message=message, messaege_id=id, **kwargs)
+        return reply_message(message, id, uuid=uuid, **kwargs)
     if openai_available and isinstance(message, Stream):
         return send_message_stream(stream=message, receive_id=id, receive_id_type=receive_id_type, uuid=uuid, **kwargs)
     return send_message_content(
@@ -206,7 +206,7 @@ def reply_message(
     | 回复流式消息 | [feishu.im.messages.reply_message_stream][]  |
     """
     if openai_available and isinstance(message, Stream):
-        return reply_message_stream(message=message, message_id=message_id, uuid=uuid, **kwargs)
+        return reply_message_stream(stream=message, message_id=message_id, uuid=uuid, **kwargs)
     return reply_message_content(
         message=message,
         message_id=message_id,
@@ -275,7 +275,10 @@ def reply_message_stream(stream: Stream, message_id: str, uuid: str = "", **kwar
     飞书文档:
         [回复消息](https://open.feishu.cn/document/server-docs/im-v1/message/reply)
     """
-    content = ""
+    chunk = next(stream)
+    if chunk.choices is None:
+        raise ValueError("The first chunk of message stream does not have any choices")
+    content = chunk.choices[0].delta.content
     message = get_stream_message(content)
     response = reply_message(message, message_id, uuid=uuid, **kwargs)
     message_id = response["data"]["message_id"]

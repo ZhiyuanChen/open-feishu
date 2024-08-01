@@ -45,7 +45,7 @@ def get_message_text(message: NestedDict) -> str:
             text = f"## {content['title']}\n\n" + text
     if mentions := message.get("mentions"):
         for mention in mentions:
-            text = text.replace(mention.key, f"@{mention.name}")
+            text = text.replace(mention["key"], f"@{mention['name']}")
     return text
 
 

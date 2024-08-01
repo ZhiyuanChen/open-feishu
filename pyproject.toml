@@ -45,7 +45,7 @@ dynamic = [
 ]
 dependencies = [
   "attrs",
-  "chanfig",
+  "chanfig>=0.0.102",
   "lazy-imports",
   "pycryptodome",
   "pytz",
