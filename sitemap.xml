@@ -91,11 +91,6 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://feishu.danling.org/robot/utils/</loc>
-         <lastmod>2024-08-01</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://feishu.danling.org/robot/verification/</loc>
          <lastmod>2024-08-01</lastmod>
          <changefreq>daily</changefreq>
