@@ -1024,7 +1024,7 @@
             <td>
               <div class="doc-md-description">
                 <p>OpenAI API 密钥。
-默认读取<a class="autorefs autorefs-internal" href="../variables/#feishu.variables">feishu.variables</a>中的 <code>OPENAI_KEY</code>。</p>
+默认读取<a class="autorefs autorefs-internal" href="../variables/#feishu.variables">feishu.variables</a>中的 <code>OPENAI_API_KEY</code>。</p>
               </div>
             </td>
             <td>
@@ -1039,7 +1039,7 @@
             <td>
               <div class="doc-md-description">
                 <p>OpenAI API 地址。
-默认读取<a class="autorefs autorefs-internal" href="../variables/#feishu.variables">feishu.variables</a>中的 <code>OPENAI_URL</code>。</p>
+默认读取<a class="autorefs autorefs-internal" href="../variables/#feishu.variables">feishu.variables</a>中的 <code>OPENAI_BASE_URL</code>。</p>
               </div>
             </td>
             <td>
@@ -1139,17 +1139,17 @@
 </span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">        stream: 是否使用流式 API。默认为 ``True``。</span>
 </span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">        system_prompt: 系统提示。</span>
 </span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">        api_key: OpenAI API 密钥。</span>
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">            默认读取[feishu.variables][]中的 `OPENAI_KEY`。</span>
+</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">            默认读取[feishu.variables][]中的 `OPENAI_API_KEY`。</span>
 </span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">        base_url: OpenAI API 地址。</span>
-</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">            默认读取[feishu.variables][]中的 `OPENAI_URL`。</span>
+</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">            默认读取[feishu.variables][]中的 `OPENAI_BASE_URL`。</span>
 </span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">        model: OpenAI API 模型。</span>
 </span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">            默认读取[feishu.variables][]中的 `OPENAI_MODEL`。</span>
 </span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">        kwargs: 系统信息。</span>
 </span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="n">openai</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
 </span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="n">client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">(</span>
-</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span> <span class="ow">or</span> <span class="n">variables</span><span class="o">.</span><span class="n">OPENAI_KEY</span><span class="p">,</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span> <span class="ow">or</span> <span class="n">variables</span><span class="o">.</span><span class="n">OPENAI_URL</span><span class="p">,</span>
+</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span> <span class="ow">or</span> <span class="n">variables</span><span class="o">.</span><span class="n">OPENAI_API_KEY</span><span class="p">,</span>
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span> <span class="ow">or</span> <span class="n">variables</span><span class="o">.</span><span class="n">OPENAI_BASE_URL</span><span class="p">,</span>
 </span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="p">)</span>
 </span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="n">model</span> <span class="o">=</span> <span class="n">model</span> <span class="ow">or</span> <span class="n">variables</span><span class="o">.</span><span class="n">OPENAI_MODEL</span>
 </span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>
@@ -1305,7 +1305,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime">2024-08-01 13:02:50</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime">2024-08-01 15:37:50</span>
   </span>
 
     
