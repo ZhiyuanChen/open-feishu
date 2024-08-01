@@ -111,6 +111,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://feishu.danling.org/utils/async_request/</loc>
+         <lastmod>2024-08-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://feishu.danling.org/utils/crypto/</loc>
          <lastmod>2024-08-01</lastmod>
          <changefreq>daily</changefreq>
