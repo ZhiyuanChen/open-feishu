@@ -14,10 +14,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import annotations
 
-from lazy_imports import try_import
+from chanfig import NestedDict
 
-with try_import() as _:
-    from .openai import get_gpt_completions, get_system_prompt
+from feishu import variables
 
-__all__ = ["get_gpt_completions", "get_system_prompt"]
+
+def handle_verification(request: NestedDict) -> dict:
+    r"""
+    处理飞书URL验证请求
+
+    飞书文档:
+        [配置订阅方式](https://open.feishu.cn/document/server-docs/event-subscription-guide/event-subscription-configure-/request-url-configuration-case)
+    """
+    if request.get("token") and variables.VERIFICATION_TOKEN and request["token"] != variables.VERIFICATION_TOKEN:
+        raise ValueError("Invalid verification token")
+    return {"challenge": request["challenge"]}

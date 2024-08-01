@@ -17,7 +17,8 @@
 from __future__ import annotations
 
 import json
-from typing import Dict
+
+from chanfig import NestedDict
 
 from feishu import FeishuException
 from feishu.utils import authorize, delete, get, pagination, patch, post, put
@@ -34,7 +35,7 @@ except ImportError:
 
 @authorize
 def send_message(
-    message: str | Dict | Stream,
+    message: str | dict | Stream,
     id: str | None = None,
     receive_id_type: str | None = None,
     message_type: str | None = None,
@@ -70,7 +71,7 @@ def send_message(
             "content": json.dumps({"text": message}),
         }
     if id is None:
-        id = message.get("receive_id")
+        id = message.pop("receive_id", kwargs.pop("receive_id", kwargs.pop("message_id")))
     if id is None:
         raise ValueError("Unable to identify receiver")
     if id.startswith("om_"):
@@ -89,7 +90,7 @@ def send_message(
 
 @authorize
 def send_message_content(
-    message: str | Dict,
+    message: str | dict,
     receive_id: str | None = None,
     receive_id_type: str | None = None,
     message_type: str | None = None,
@@ -158,9 +159,12 @@ def send_message_stream(
     """
     if receive_id_type is None:
         receive_id_type = infer_receive_id_type(receive_id)
-    content = ""
+    chunk = next(stream)
+    if chunk.choices is None:
+        raise ValueError("The first chunk of message stream does not have any choices")
+    content = chunk.choices[0].delta.content
     message = get_stream_message(content)
-    response = send_message(message, receive_id=receive_id, receive_id_type=receive_id_type, uuid=uuid, **kwargs)
+    response = send_message(message, id=receive_id, receive_id_type=receive_id_type, uuid=uuid, **kwargs)
     message_id = response["data"]["message_id"]
     try:
         for chunk in stream:
@@ -176,7 +180,7 @@ def send_message_stream(
 
 @authorize
 def reply_message(
-    message: str | Dict | Stream,
+    message: str | dict | Stream,
     message_id: str,
     message_type: str | None = None,
     reply_in_thread: bool | None = None,
@@ -215,7 +219,7 @@ def reply_message(
 
 @authorize
 def reply_message_content(
-    message: str | Dict | Stream,
+    message: str | dict | Stream,
     message_id: str,
     message_type: str | None = None,
     reply_in_thread: bool | None = None,
@@ -288,7 +292,7 @@ def reply_message_stream(stream: Stream, message_id: str, uuid: str = "", **kwar
 
 
 @authorize
-def update_message(message: str | Dict, message_id: str, **kwargs):
+def update_message(message: str | dict, message_id: str, **kwargs):
     r"""
     编辑消息
 
@@ -310,7 +314,7 @@ def update_message(message: str | Dict, message_id: str, **kwargs):
 
 
 @authorize
-def patch_message(message: str | Dict, message_id: str, **kwargs):
+def patch_message(message: str | dict, message_id: str, **kwargs):
     r"""
     更新应用发送的消息卡片
 
@@ -405,11 +409,11 @@ def get_message_resource(message_id: str, file_key: str, type: str, **kwargs):
 def get_messages(
     id: str,
     container_id_type: str = "chat",
+    sort_type: str = "ByCreateTimeDesc",
     max_num_messages: int | float = float("inf"),
     max_message_length: int | float = float("inf"),
     start_time: int | None = None,
     end_time: int | None = None,
-    sort_type: str = "ByCreateTimeAsc",
     page_size: int = 50,
     page_token: str | None = None,
     **kwargs,
@@ -424,6 +428,7 @@ def get_messages(
         id: 消息 ID / 会话 ID
         container_id_type: 容器 ID 类型。默认为 `chat`。
             只用于 `id` 以其他方式开头时。
+        sort_type: 排序方式。默认为 `ByCreateTimeAsc`。
         max_num_messages: 最大历史消息数量。默认为正无穷。
             只用于 `id` 以 `om_` 开头时。
         max_message_length: 最大历史消息长度。默认为正无穷。
@@ -431,8 +436,6 @@ def get_messages(
         start_time: 开始时间。默认为 `None`。
             只用于 `id` 以其他方式开头时。
         end_time: 结束时间。默认为 `None`。
-            只用于 `id` 以其他方式开头时。
-        sort_type: 排序方式。默认为 `ByCreateTimeAsc`。
             只用于 `id` 以其他方式开头时。
         page_size: 每页数量。默认为 50。
             只用于 `id` 以其他方式开头时。
@@ -451,14 +454,18 @@ def get_messages(
     """
     if id.startswith("om_"):
         return get_messages_chain(
-            message_id=id, max_num_messages=max_num_messages, max_message_length=max_message_length, **kwargs
+            message_id=id,
+            sort_type=sort_type,
+            max_num_messages=max_num_messages,
+            max_message_length=max_message_length,
+            **kwargs,
         )
     return get_messages_history(
         container_id=id,
         container_id_type=container_id_type,
+        sort_type=sort_type,
         start_time=start_time,
         end_time=end_time,
-        sort_type=sort_type,
         page_size=page_size,
         page_token=page_token,
         **kwargs,
@@ -468,6 +475,7 @@ def get_messages(
 @authorize
 def get_messages_chain(
     message_id: str,
+    sort_type: str = "ByCreateTimeDesc",
     max_num_messages: int | float = float("inf"),
     max_message_length: int | float = float("inf"),
     **kwargs,
@@ -479,6 +487,7 @@ def get_messages_chain(
         message_id: 消息 ID
         max_num_messages: 最大历史消息数量。默认为正无穷。
         max_message_length: 最大历史消息长度。默认为正无穷。
+        sort_type: 排序方式。默认为 `ByCreateTimeAsc`。可以是 `ByCreateTimeAsc` 或 `ByCreateTimeDesc`。
 
     飞书文档:
         [获取指定消息的内容](https://open.feishu.cn/document/server-docs/im-v1/message/get)
@@ -497,7 +506,11 @@ def get_messages_chain(
             message_length += len(response.body.content)
         except FeishuException:
             break
-    message.data = all_items
+    if sort_type == "ByCreateTimeAsc":
+        all_items.reverse()
+    elif sort_type != "ByCreateTimeDesc":
+        raise ValueError("Invalid sort type")
+    message.data = NestedDict(items=all_items)
     return message
 
 
@@ -506,9 +519,9 @@ def get_messages_chain(
 def get_messages_history(
     container_id: str,
     container_id_type: str = "chat",
+    sort_type: str = "ByCreateTimeDesc",
     start_time: int | None = None,
     end_time: int | None = None,
-    sort_type: str = "ByCreateTimeAsc",
     page_size: int = 50,
     page_token: str | None = None,
     **kwargs,
@@ -533,9 +546,9 @@ def get_messages_history(
         {
             "container_id": container_id,
             "container_id_type": container_id_type,
+            "sort_type": sort_type,
             "start_time": start_time,
             "end_time": end_time,
-            "sort_type": sort_type,
             "page_size": page_size,
             "page_token": page_token,
         },
@@ -633,7 +646,7 @@ def read_users(message_id: str, user_id_type: str = "open_id", **kwargs):
 
 
 @authorize
-def push_follow_up(message_id: str, follow_ups: str | Dict, **kwargs):
+def push_follow_up(message_id: str, follow_ups: str | dict, **kwargs):
     r"""
     添加跟随气泡
 

@@ -18,7 +18,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, overload
+from typing import TYPE_CHECKING, overload
 
 if TYPE_CHECKING:
     from openai import Stream
@@ -33,7 +33,7 @@ def send_message(
 ): ...
 @overload
 def send_message(
-    message: Dict,
+    message: dict,
     receive_id: str | None = None,
     receive_id_type: str | None = None,
     uuid: str = "",
@@ -55,7 +55,7 @@ def send_message(
 ): ...
 @overload
 def send_message(
-    message: Dict,
+    message: dict,
     message_id: str,
     **kwargs,
 ): ...
@@ -75,7 +75,7 @@ def send_message_content(
 ): ...
 @overload
 def send_message_content(
-    content: Dict,
+    content: dict,
     receive_id: str | None = None,
     receive_id_type: str | None = None,
     uuid: str = "",
@@ -99,7 +99,7 @@ def reply_message(
 ): ...
 @overload
 def reply_message(
-    message: Dict,
+    message: dict,
     message_id: str,
     message_type: str | None = None,
     reply_in_thread: bool | None = None,
@@ -124,7 +124,7 @@ def reply_message_content(
 ): ...
 @overload
 def reply_message_content(
-    message: Dict,
+    message: dict,
     message_id: str,
     message_type: str | None = None,
     reply_in_thread: bool | None = None,
@@ -132,8 +132,8 @@ def reply_message_content(
     **kwargs,
 ): ...
 def reply_message_stream(stream: Stream, message_id: str, uuid: str = "", **kwargs): ...
-def update_message(message: str | Dict, message_id: str, **kwargs): ...
-def patch_message(message: str | Dict, message_id: str, **kwargs): ...
+def update_message(message: str | dict, message_id: str, **kwargs): ...
+def patch_message(message: str | dict, message_id: str, **kwargs): ...
 def recall_message(message_id: str, **kwargs): ...
 def get_message(
     message_id: str,
@@ -192,4 +192,4 @@ def forward_message_list(
     **kwargs,
 ): ...
 def read_users(message_id: str, user_id_type: str = "open_id", **kwargs): ...
-def push_follow_up(message_id: str, follow_ups: str | Dict, **kwargs): ...
+def push_follow_up(message_id: str, follow_ups: str | dict, **kwargs): ...

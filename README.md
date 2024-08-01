@@ -24,14 +24,33 @@ send_message('hello, world!', 'chat_id')
 ### 调用 ChatGPT 回复用户消息
 
 ```python
-from feishu import variables, send_message, get_openai_completions
+from feishu import variables, send_message, get_gpt_completions
 
 variables.app_id = 'app_id'
 variables.app_secret = 'app_secret'
 variables.openai_key = 'openai_key'
 
-content = get_openai_completions([dict(role='user', content='Hi, How are you?')])
+content = get_gpt_completions([dict(role='user', content='Hi, How are you?')])
 send_message(content, "message_id")
+```
+
+### 飞书机器人
+
+```python
+from feishu.robot import han
+
+variables.app_id = 'app_id'
+variables.app_secret = 'app_secret'
+variables.openai_key = 'openai_key'
+
+def handle_event(request: NestedDict) -> dict:
+    if not isinstance(request, NestedDict):
+        request = NestedDict(request)
+    event = request.get("event")
+    event["id"] = request.get("header", {}).get("event_id")
+    event["type"] = request.get("header", {}).get("event_type")
+    if event["type"] == "im.message.receive_v1":
+        return handle_chat(env, request)
 ```
 
 ## 安装

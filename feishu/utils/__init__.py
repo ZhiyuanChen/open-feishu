@@ -15,8 +15,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from .crypto import decrypt
 from .decorators import authorize, flexible_decorator, pagination
-from .encrypt import AESCipher
 from .request import delete, get, patch, post, put
 
-__all__ = ["post", "get", "put", "patch", "delete", "AESCipher", "flexible_decorator", "authorize", "pagination"]
+__all__ = [
+    "post",
+    "get",
+    "put",
+    "patch",
+    "delete",
+    "decrypt",
+    "flexible_decorator",
+    "authorize",
+    "pagination",
+]

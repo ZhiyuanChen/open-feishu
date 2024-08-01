@@ -14,10 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from .chat import handle_chat
+from .verification import handle_verification
 
-from lazy_imports import try_import
-
-with try_import() as _:
-    from .openai import get_gpt_completions, get_system_prompt
-
-__all__ = ["get_gpt_completions", "get_system_prompt"]
+__all__ = ["handle_verification", "handle_chat"]

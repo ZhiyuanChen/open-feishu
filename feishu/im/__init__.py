@@ -24,6 +24,7 @@ from .messages import (
     send_message,
     update_message,
 )
+from .utils import get_message_text, is_mentioned
 
 __all__ = [
     "send_message",
@@ -34,4 +35,6 @@ __all__ = [
     "forward_message",
     "read_users",
     "push_follow_up",
+    "get_message_text",
+    "is_mentioned",
 ]

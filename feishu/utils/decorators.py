@@ -91,13 +91,14 @@ def authorize(func: Callable) -> Callable:
 
 
 @flexible_decorator
-def pagination(stop_on_page: Callable | None = None, stop_on_accum: Callable | None = None):
+def pagination(early_stop: Callable | None = None):
     r"""
     分页装饰器，用于收集分页数据。
 
     Args:
-        stop_on_page: 根据当前分页数据判断是否应该停止分页的函数。
-        stop_on_accum: 根据累积数据判断是否应该停止分页的函数。
+        early_stop: 判断是否提前停止的函数。默认为 `None`。
+            该函数应当接受两个参数，分别是累积的所有数据，和即将添加的数据。
+            如果返回 `True`，则停止将数据添加到累积的数据中，并返回结果。
 
     注意：
         该装饰器会读取函数参数中的 `stop_on_page` 和 `stop_on_accum` 参数，如果没有提供则使用默认值。
@@ -105,20 +106,30 @@ def pagination(stop_on_page: Callable | None = None, stop_on_accum: Callable | N
 
     def decorator(func):
         def wrapper(*args, **kwargs):
-            _stop_on_page = kwargs.pop("stop_on_page", stop_on_page)
-            _stop_on_accum = kwargs.pop("stop_on_accum", stop_on_accum)
+            _early_stop = kwargs.pop("early_stop", early_stop)
+            max_num_items = kwargs.pop("max_num_items", None)
+            early_break = False
+            kwargs.pop("page_token", None)
             all_items = []
             page_token = None
 
             while True:
                 response = func(*args, **kwargs, page_token=page_token)
                 items = response["data"]["items"]
-                if _stop_on_page and _stop_on_page(items):
-                    break
-                all_items.extend(items)
-                if _stop_on_accum and _stop_on_accum(all_items):
-                    break
-                if not response["data"].get("has_more"):
+                if max_num_items is not None:
+                    items = items[: max_num_items - len(all_items)]
+                    if not items:
+                        early_break = True
+                        break
+                if _early_stop is not None:
+                    for item in items:
+                        if _early_stop(all_items, item):
+                            early_break = True
+                            break
+                        all_items.append(item)
+                else:
+                    all_items.extend(items)
+                if early_break or not response["data"].get("has_more"):
                     break
                 page_token = response["data"]["page_token"]
 

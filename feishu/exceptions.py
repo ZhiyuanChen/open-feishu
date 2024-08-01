@@ -24,7 +24,7 @@ class FeishuException(Exception):
     r"""
     通用异常
 
-    阅读更多:
+    飞书文档:
         [通用错误码](https://open.feishu.cn/document/server-docs/api-call-guide/generic-error-code)
     """
 

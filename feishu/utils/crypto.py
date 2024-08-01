@@ -19,7 +19,10 @@ from __future__ import annotations
 import base64
 import hashlib
 
+from chanfig import NestedDict
 from Crypto.Cipher import AES
+
+from feishu import variables
 
 
 class AESCipher:
@@ -29,7 +32,7 @@ class AESCipher:
     Args:
         key: 用于加密/解密的密钥
 
-    阅读更多:
+    飞书文档:
         [配置 Encrypt Key](https://open.feishu.cn/document/server-docs/event-subscription-guide/event-subscription-configure-/configure-encrypt-key)
 
     Examples:
@@ -65,3 +68,20 @@ class AESCipher:
         iv = enc[: AES.block_size]
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
         return self._unpad(cipher.decrypt(enc[AES.block_size :]))
+
+
+def decrypt(request: str | dict) -> NestedDict:
+    r"""
+    解密飞书请求
+
+    Args:
+        request: 飞书请求
+
+    飞书文档:
+        [配置 Encrypt Key](https://open.feishu.cn/document/server-docs/event-subscription-guide/event-subscription-configure-/configure-encrypt-key)
+    """  # noqa: E501
+    if isinstance(request, str):
+        encrypted = request
+    if isinstance(request, dict):
+        encrypted = request["encrypt"]
+    return NestedDict.from_jsons(AESCipher(variables.ENCRYPT_KEY).decrypt(encrypted))  # type: ignore[arg-type]

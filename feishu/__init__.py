@@ -27,7 +27,8 @@ from .im import (
     send_message,
     update_message,
 )
-from .utils import AESCipher, delete, get, patch, post, put
+from .robot import handle_chat
+from .utils import decrypt, delete, get, patch, post, put
 
 __all__ = [
     "post",
@@ -35,7 +36,7 @@ __all__ = [
     "put",
     "patch",
     "delete",
-    "AESCipher",
+    "decrypt",
     "FeishuException",
     "get_tenant_access_token",
     "get_app_access_token",
@@ -47,4 +48,5 @@ __all__ = [
     "forward_message",
     "read_users",
     "push_follow_up",
+    "handle_chat",
 ]

@@ -70,12 +70,13 @@ def get_tenant_access_token(input_a: str, input_b: str, timeout: int = 120) -> F
     Returns:
         租户访问凭证
 
-    阅读更多:
+    飞书文档:
         [通用参数介绍](https://open.feishu.cn/document/server-docs/api-call-guide/terminology)
 
-        获取自建应用的租户访问凭证：[feishu.auth.get_tenant_access_token_internal][]
-
-        获取商店应用的租户访问凭证：[feishu.auth.get_tenant_access_token_store][]
+    | 功能            | 实现函数                                                              |
+    |---------------|-------------------------------------------------------------------|
+    | 获取自建应用的租户访问凭证 | [feishu.auth.app_access_token.get_tenant_access_token_internal][] |
+    | 获取商店应用的租户访问凭证 | [feishu.auth.app_access_token.get_tenant_access_token_store][]    |
 
     Examples:
         >>> get_tenant_access_token("cli_slkdjalasdkjasd", "dskLLdkasdjlasdKK")  # doctest:+SKIP
@@ -112,7 +113,7 @@ def get_tenant_access_token_internal(app_id: str, app_secret: str, timeout: int 
     Returns:
         租户访问凭证
 
-    阅读更多:
+    飞书文档:
         [通用参数介绍](https://open.feishu.cn/document/server-docs/api-call-guide/terminology)
 
         [自建应用获取租户访问凭证](https://open.feishu.cn/document/server-docs/authentication-management/access-token/tenant_access_token_internal)
@@ -149,7 +150,7 @@ def get_tenant_access_token_store(app_access_token: str, tenant_key: str, timeou
     Returns:
         租户访问凭证
 
-    阅读更多:
+    飞书文档:
         [通用参数介绍](https://open.feishu.cn/document/server-docs/api-call-guide/terminology)
 
         [商店应用获取租户访问凭证](https://open.feishu.cn/document/server-docs/authentication-management/access-token/tenant_access_token)

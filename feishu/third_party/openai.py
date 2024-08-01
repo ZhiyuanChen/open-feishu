@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any
 
 import pytz
 from chanfig import FlatDict
@@ -38,7 +38,7 @@ Current Time: {time:%Y-%m-%d %H:%M:%S %Z}
 """
 
 
-def get_openai_completions(
+def get_gpt_completions(
     messages: list[dict[str, str]],
     stream: bool = True,
     system_prompt: str | None = None,
@@ -105,14 +105,14 @@ def get_system_prompt(system_prompt: str | None = None, **kwargs) -> str:
     return system_prompt.format(**get_system_info(**kwargs))
 
 
-def get_system_info(**kwargs) -> Dict[str, Any]:
+def get_system_info(**kwargs) -> dict[str, Any]:
     r"""
     系统信息。
 
     Args:
         kwargs: 系统信息。
     """
-    system_info: Dict[str, Any] = {}
+    system_info: dict[str, Any] = {}
     if hasattr(variables, "SYSTEM_INFO") and variables.SYSTEM_INFO:
         system_info = variables.SYSTEM_INFO
     elif hasattr(variables, "SYSTEM_INFO_FILE") and variables.SYSTEM_INFO_FILE:
