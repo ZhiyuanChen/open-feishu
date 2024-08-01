@@ -57,17 +57,17 @@ def get_gpt_completions(
         stream: 是否使用流式 API。默认为 ``True``。
         system_prompt: 系统提示。
         api_key: OpenAI API 密钥。
-            默认读取[feishu.variables][]中的 `OPENAI_KEY`。
+            默认读取[feishu.variables][]中的 `OPENAI_API_KEY`。
         base_url: OpenAI API 地址。
-            默认读取[feishu.variables][]中的 `OPENAI_URL`。
+            默认读取[feishu.variables][]中的 `OPENAI_BASE_URL`。
         model: OpenAI API 模型。
             默认读取[feishu.variables][]中的 `OPENAI_MODEL`。
         kwargs: 系统信息。
     """
     openai.check()
     client = OpenAI(
-        api_key=api_key or variables.OPENAI_KEY,
-        base_url=base_url or variables.OPENAI_URL,
+        api_key=api_key or variables.OPENAI_API_KEY,
+        base_url=base_url or variables.OPENAI_BASE_URL,
     )
     model = model or variables.OPENAI_MODEL
 

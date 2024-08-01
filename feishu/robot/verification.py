@@ -16,12 +16,10 @@
 
 from __future__ import annotations
 
-from chanfig import NestedDict
-
 from feishu import variables
 
 
-def handle_verification(request: NestedDict) -> dict:
+def handle_verification(request: dict) -> dict:
     r"""
     处理飞书URL验证请求
 

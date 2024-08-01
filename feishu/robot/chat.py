@@ -53,6 +53,8 @@ def handle_chat(
     | 回复私聊消息 | [feishu.robot.chat.handle_chat_history][] |
     | 回复群聊消息 | [feishu.robot.chat.handle_chat_chain][]   |
     """
+    if not isinstance(request, NestedDict):
+        request = NestedDict(request)
     chat_type = request.event.message.chat_type
     if chat_type in {
         "p2p",
@@ -81,6 +83,8 @@ def handle_chat_chain(
     相关函数:
         [feishu.im.messages.get_messages_chain][]
     """
+    if not isinstance(request, NestedDict):
+        request = NestedDict(request)
     message_id = request.event.message.message_id
     max_num_messages = max_num_messages or variables.MAX_NUM_MESSAGES
     max_message_length = max_message_length or variables.MAX_MESSAGE_LENGTH
@@ -112,6 +116,8 @@ def handle_chat_history(
     相关函数:
         [feishu.im.messages.get_messages_history][]
     """
+    if not isinstance(request, NestedDict):
+        request = NestedDict(request)
     stop_words = stop_words or variables.STOP_WORDS
     sender_id = request.event.sender.sender_id.open_id
     chat_id = request.event.message.chat_id

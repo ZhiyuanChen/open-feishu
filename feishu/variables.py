@@ -38,8 +38,8 @@ Attributes: 机器人:
     STOP_WORDS: 机器人回复消息时，遇到这些关键词将停止读取历史消息。默认为 `{"/clear"}`。
 
 Attributes: OpenAI:
-    OPENAI_KEY: OpenAI API 密钥。默认读取环境变量的 `OPENAI_KEY`。
-    OPENAI_URL: OpenAI API URL。默认为 `"https://api.openai.com"`。
+    OPENAI_API_KEY: OpenAI API 密钥。默认读取环境变量的 `OPENAI_API_KEY`。
+    OPENAI_BASE_URL: OpenAI API URL。默认读取环境变量的 `OPENAI_BASE_URL`。
     OPENAI_MODEL: OpenAI API 模型。默认为 `"gpt-4o-mini"`。
     SYSTEM_PROMPT: OpenAI API 系统提示。
     SYSTEM_PROMPT_FILE: OpenAI API 系统提示文件，应当是 TEXT 格式。
@@ -67,8 +67,8 @@ BACKOFF_FACTOR = 4
 OPEN_ID: str | None = getenv("OPEN_ID")
 UNION_ID: str | None = getenv("UNION_ID")
 
-OPENAI_KEY: str | None = getenv("OPENAI_KEY")
-OPENAI_URL: str = getenv("OPENAI_URL", "https://api.openai.com")
+OPENAI_API_KEY: str | None = getenv("OPENAI_API_KEY")
+OPENAI_BASE_URL: str | None = getenv("OPENAI_BASE_URL")
 OPENAI_MODEL: str = getenv("OPENAI_MODEL", "gpt-4o-mini")
 SYSTEM_PROMPT: str
 SYSTEM_PROMPT_FILE: str | None = getenv("SYSTEM_PROMPT_FILE")
