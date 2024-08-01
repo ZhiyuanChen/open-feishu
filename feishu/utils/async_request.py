@@ -18,34 +18,20 @@
 
 from __future__ import annotations
 
-import time
+import asyncio
 from typing import Callable, Dict
 
 import httpx
 from chanfig import NestedDict
 
 from feishu import FeishuException, variables
-from feishu.auth import get_tenant_access_token as _get_tenant_access_token
 
 from .decorators import authorize
-
-token_cache = {"tenant_access_token": None, "expire": 0, "timestamp": 0}
-
-
-def get_tenant_access_token(app_id: str, app_secret: str, timeout: int = 120) -> str:
-    current_time = int(time.time())
-    token: str = token_cache["tenant_access_token"]  # type: ignore[assignment]
-
-    if token is None or token_cache["expire"] < current_time:  # type: ignore[operator]
-        response = _get_tenant_access_token(app_id, app_secret, timeout)
-        token = token_cache["tenant_access_token"] = response["tenant_access_token"]
-        token_cache["expire"] = current_time + response["expire"] - variables.ACCESS_TOKEN_REFRESH_OFFSET
-        token_cache["timestamp"] = current_time
-    return token
+from .request import get_tenant_access_token
 
 
 @authorize
-def request(
+async def async_request(
     method: str | Callable,
     dest: str,
     data: Dict | None = None,
@@ -86,8 +72,10 @@ def request(
         ValueError: 如果 token, app_id, 和 app_secret 都为 `None`。
         FeishuException: 飞书 API 返回的错误。
     """
-    max_retries = max_retries or variables.MAX_RETRIES
-    backoff_factor = backoff_factor or variables.BACKOFF_FACTOR
+    if max_retries is None:
+        max_retries = variables.MAX_RETRIES
+    if backoff_factor is None:
+        backoff_factor = variables.BACKOFF_FACTOR
     if dest.startswith("/"):
         dest = dest[1:]
     url = variables.BASE_URL + dest
@@ -105,27 +93,28 @@ def request(
     while attempt <= max_retries:
         try:
             if callable(method):
-                response = method(url, headers=headers, json=data, params=params, timeout=timeout, **kwargs)
+                response = await method(url, headers=headers, json=data, params=params, timeout=timeout, **kwargs)
             else:
-                response = httpx.request(
-                    method, url, headers=headers, json=data, params=params, timeout=timeout, **kwargs
-                )
+                async with httpx.AsyncClient() as client:
+                    response = await client.request(
+                        method, url, headers=headers, json=data, params=params, timeout=timeout, **kwargs
+                    )
         except Exception:
-            time.sleep(backoff_factor**attempt)
+            await asyncio.sleep(backoff_factor**attempt)
             attempt += 1
             continue
         ret = response.json()
         if ret.get("code") == 0:
             return NestedDict(ret)
         if response.status_code in retry_codes:
-            time.sleep(backoff_factor**attempt)
+            await asyncio.sleep(backoff_factor**attempt)
             attempt += 1
         raise FeishuException(ret.get("code"), ret.get("msg"))
 
     raise FeishuException(ret.get("code"), f"Request failed after {max_retries} retries.")
 
 
-def post(
+async def async_post(
     dest: str,
     data: Dict | None = None,
     params: Dict | None = None,
@@ -163,11 +152,14 @@ def post(
         ...     "content": "{\"text\":\"test content\"}",
         ...     "uuid": "a0d69e20-1dd1-458b-k525-dfeca4015204"
         ... }
-        >>> post(
-        ...     'im/v1/messages',
-        ...     data=data,
-        ...     app_id='cli_slkdjalasdkjasd',
-        ...     app_secret='dskLLdkasdjlasdKK'
+        >>> loop = asyncio.get_event_loop()
+        >>> loop.run_until_complete(
+        ...     async_post(
+        ...         'im/v1/messages',
+        ...         data=data,
+        ...         app_id='cli_slkdjalasdkjasd',
+        ...         app_secret='dskLLdkasdjlasdKK'
+        ...     )
         ... )  # doctest:+SKIP
         NestedDict(
           ('code'): 0
@@ -203,7 +195,7 @@ def post(
           )
         )
     """
-    return request(
+    return await async_request(
         "POST",
         dest,
         data=data,
@@ -217,7 +209,7 @@ def post(
     )
 
 
-def get(
+async def async_get(
     dest: str,
     params: Dict | None = None,
     headers: Dict | None = None,
@@ -247,10 +239,13 @@ def get(
         ValueError: 如果 token, app_id, 和 app_secret 都为 `None`。
 
     Examples:
-        >>> get(
-        ...     'im/v1/messages/:message_id',
-        ...     app_id='cli_slkdjalasdkjasd',
-        ...     app_secret='dskLLdkasdjlasdKK'
+        >>> loop = asyncio.get_event_loop()
+        >>> loop.run_until_complete(
+        ...     async_get(
+        ...         'im/v1/messages/:message_id',
+        ...         app_id='cli_slkdjalasdkjasd',
+        ...         app_secret='dskLLdkasdjlasdKK'
+        ...     )
         ... )  # doctest:+SKIP
         NestedDict(
           ('code'): 0
@@ -288,7 +283,7 @@ def get(
           )
         )
     """
-    return request(
+    return await async_request(
         "GET",
         dest,
         headers=headers,
@@ -301,7 +296,7 @@ def get(
     )
 
 
-def put(
+async def async_put(
     dest: str,
     data: Dict | None = None,
     params: Dict | None = None,
@@ -333,11 +328,14 @@ def put(
 
     Examples:
         >>> data = {"msg_type": "text", "content": "{\"text\":\"test content\"}"}
-        >>> put(
-        ...     'im/v1/messages/:message_id',
-        ...     data=data,
-        ...     app_id='cli_slkdjalasdkjasd',
-        ...     app_secret='dskLLdkasdjlasdKK'
+        >>> loop = asyncio.get_event_loop()
+        >>> loop.run_until_complete(
+        ...     async_put(
+        ...         'im/v1/messages/:message_id',
+        ...         data=data,
+        ...         app_id='cli_slkdjalasdkjasd',
+        ...         app_secret='dskLLdkasdjlasdKK'
+        ...     )
         ... )  # doctest:+SKIP
         NestedDict(
           ('code'): 0
@@ -373,7 +371,7 @@ def put(
           )
         )
     """
-    return request(
+    return await async_request(
         "PUT",
         dest,
         data=data,
@@ -387,7 +385,7 @@ def put(
     )
 
 
-def patch(
+async def async_patch(
     dest: str,
     data: Dict | None = None,
     params: Dict | None = None,
@@ -419,11 +417,14 @@ def patch(
 
     Examples:
         >>> data = {"content": "{\"text\":\"test content\"}"}
-        >>> patch(
-        ...     'im/v1/messages/:message_id',
-        ...     data=data,
-        ...     app_id='cli_slkdjalasdkjasd',
-        ...     app_secret='dskLLdkasdjlasdKK'
+        >>> loop = asyncio.get_event_loop()
+        >>> loop.run_until_complete(
+        ...     async_patch(
+        ...         'im/v1/messages/:message_id',
+        ...         data=data,
+        ...         app_id='cli_slkdjalasdkjasd',
+        ...         app_secret='dskLLdkasdjlasdKK'
+        ...     )
         ... )  # doctest:+SKIP
         NestedDict(
           ('code'): 0
@@ -431,7 +432,7 @@ def patch(
           ('data'): NestedDict()
         )
     """
-    return request(
+    return await async_request(
         "PATCH",
         dest,
         data=data,
@@ -445,7 +446,7 @@ def patch(
     )
 
 
-def delete(
+async def async_delete(
     dest: str,
     data: Dict | None = None,
     params: Dict | None = None,
@@ -476,10 +477,13 @@ def delete(
         ValueError: 如果 token, app_id, 和 app_secret 都为 `None`。
 
     Examples:
-        >>> delete(
-        ...     'im/v1/messages/:message_id',
-        ...     app_id='cli_slkdjalasdkjasd',
-        ...     app_secret='dskLLdkasdjlasdKK'
+        >>> loop = asyncio.get_event_loop()
+        >>> loop.run_until_complete(
+        ...     async_delete(
+        ...         'im/v1/messages/:message_id',
+        ...         app_id='cli_slkdjalasdkjasd',
+        ...         app_secret='dskLLdkasdjlasdKK'
+        ...     )
         ... )  # doctest:+SKIP
         NestedDict(
           ('code'): 0
@@ -487,7 +491,7 @@ def delete(
           ('data'): NestedDict()
         )
     """
-    return request(
+    return await async_request(
         "DELETE",
         dest,
         data=data,

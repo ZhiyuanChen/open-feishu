@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import overload
 
-import requests
+import httpx
 from chanfig import FlatDict
 
 from feishu import variables
@@ -138,7 +138,7 @@ def get_app_access_token_internal(app_id: str, app_secret: str, timeout: int = 1
     """
     url = variables.BASE_URL + "auth/v3/app_access_token/internal"
     data = {"app_id": app_id, "app_secret": app_secret}
-    response = requests.post(url, json=data, timeout=timeout)
+    response = httpx.post(url, json=data, timeout=timeout)
     if response.status_code != 200:
         raise FeishuException(response.status_code, response.text)
     ret = response.json()
@@ -176,7 +176,7 @@ def get_app_access_token_store(app_id: str, app_secret: str, app_ticket: str, ti
     """  # noqa: E501
     url = variables.BASE_URL + "auth/v3/app_access_token"
     data = {"app_id": app_id, "app_secret": app_secret, "app_ticket": app_ticket}
-    response = requests.post(url, json=data, timeout=timeout)
+    response = httpx.post(url, json=data, timeout=timeout)
     if response.status_code != 200:
         raise FeishuException(response.status_code, response.text)
     ret = response.json()

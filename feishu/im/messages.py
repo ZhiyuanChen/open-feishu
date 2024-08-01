@@ -16,12 +16,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
+import time
 
 from chanfig import NestedDict
 
-from feishu import FeishuException
-from feishu.utils import authorize, delete, get, pagination, patch, post, put
+from feishu import FeishuException, variables
+from feishu.utils import async_patch, delete, get, pagination, post, put
 
 from .utils import convert_json_to_dict, get_stream_message, infer_receive_id_type
 
@@ -33,15 +35,14 @@ except ImportError:
     openai_available = False
 
 
-@authorize
 def send_message(
     message: str | dict | Stream,
     id: str | None = None,
     receive_id_type: str | None = None,
     message_type: str | None = None,
-    uuid: str | None = None,
+    uuid: str = "",
     **kwargs,
-):
+) -> NestedDict:
     r"""
     发送消息
 
@@ -51,7 +52,7 @@ def send_message(
     Args:
         message: 消息内容
         id: 接收者 ID 或消息 ID
-        receive_id_type: 接收者 ID 类型。默认为 `open_id`。
+        receive_id_type: 接收者 ID 类型。会根据`receive_id`来自动推断。
         message_type: 消息类型。默认为 `text`。
         uuid: 消息唯一标识，用于消息去重。
 
@@ -63,7 +64,7 @@ def send_message(
     | 功能     | 实现函数                                        |
     |--------|---------------------------------------------|
     | 发送内容消息 | [feishu.im.messages.send_message_content][] |
-    | 发送流式消息 | [feishu.im.messages.send_message_stream][]  |
+    | 流式消息   | [feishu.im.messages.stream_message][]       |
     | 回复消息   | [feishu.im.messages.reply_message][]        |
     """
     if isinstance(message, str):
@@ -74,10 +75,10 @@ def send_message(
         id = message.pop("receive_id", kwargs.pop("receive_id", kwargs.pop("message_id")))
     if id is None:
         raise ValueError("Unable to identify receiver")
+    if openai_available and isinstance(message, Stream):
+        return stream_message(stream=message, receive_id=id, receive_id_type=receive_id_type, uuid=uuid, **kwargs)
     if id.startswith("om_"):
         return reply_message(message, id, uuid=uuid, **kwargs)
-    if openai_available and isinstance(message, Stream):
-        return send_message_stream(stream=message, receive_id=id, receive_id_type=receive_id_type, uuid=uuid, **kwargs)
     return send_message_content(
         message=message,
         receive_id=id,
@@ -88,22 +89,21 @@ def send_message(
     )
 
 
-@authorize
 def send_message_content(
     message: str | dict,
     receive_id: str | None = None,
     receive_id_type: str | None = None,
     message_type: str | None = None,
-    uuid: str | None = None,
+    uuid: str = "",
     **kwargs,
-):
+) -> NestedDict:
     r"""
     发送消息
 
     Args:
         message: 消息内容
         receive_id: 接收者 ID
-        receive_id_type: 接收者 ID 类型。默认为 `open_id`。
+        receive_id_type: 接收者 ID 类型。会根据`receive_id`来自动推断。
         message_type: 消息类型。默认为 `text`。
         uuid: 消息唯一标识，用于消息去重。
 
@@ -133,60 +133,14 @@ def send_message_content(
     return message
 
 
-@authorize
-def send_message_stream(
-    stream: Stream,
-    receive_id: str,
-    receive_id_type: str | None = None,
-    uuid: str = "",
-    **kwargs,
-):
-    r"""
-    发送流式消息
-
-    由于飞书暂时没有提供流式消息的直接支持，我们通过卡片消息的方式来模拟流式消息。
-
-    这个方法会先发送一个空的卡片消息，然后通过不断地更新这个消息来模拟流式消息。
-
-    Args:
-        stream: 消息内容流
-        receive_id: 接收者 ID
-        receive_id_type: 接收者 ID 类型。默认为 `open_id`。
-        uuid: 消息唯一标识，用于消息去重。
-
-    飞书文档:
-        [发送消息](https://open.feishu.cn/document/server-docs/im-v1/message/create)
-    """
-    if receive_id_type is None:
-        receive_id_type = infer_receive_id_type(receive_id)
-    chunk = next(stream)
-    if chunk.choices is None:
-        raise ValueError("The first chunk of message stream does not have any choices")
-    content = chunk.choices[0].delta.content
-    message = get_stream_message(content)
-    response = send_message(message, id=receive_id, receive_id_type=receive_id_type, uuid=uuid, **kwargs)
-    message_id = response["data"]["message_id"]
-    try:
-        for chunk in stream:
-            content += chunk.choices[0].delta.content
-            message = get_stream_message(content, streaming=True)
-            patch_message(message, message_id, **kwargs)
-    except Exception as e:
-        raise e
-    finally:
-        message = get_stream_message(content)
-        patch_message(message, message_id, **kwargs)
-
-
-@authorize
 def reply_message(
     message: str | dict | Stream,
     message_id: str,
     message_type: str | None = None,
     reply_in_thread: bool | None = None,
-    uuid: str | None = None,
+    uuid: str = "",
     **kwargs,
-):
+) -> NestedDict:
     r"""
     回复消息
 
@@ -203,10 +157,10 @@ def reply_message(
     | 功能     | 实现函数                                         |
     |--------|----------------------------------------------|
     | 回复内容消息 | [feishu.im.messages.reply_message_content][] |
-    | 回复流式消息 | [feishu.im.messages.reply_message_stream][]  |
+    | 流式消息   | [feishu.im.messages.stream_message][]        |
     """
     if openai_available and isinstance(message, Stream):
-        return reply_message_stream(stream=message, message_id=message_id, uuid=uuid, **kwargs)
+        return stream_message(stream=message, receive_id=message_id, uuid=uuid, **kwargs)
     return reply_message_content(
         message=message,
         message_id=message_id,
@@ -217,15 +171,14 @@ def reply_message(
     )
 
 
-@authorize
 def reply_message_content(
-    message: str | dict | Stream,
+    message: str | dict,
     message_id: str,
     message_type: str | None = None,
     reply_in_thread: bool | None = None,
-    uuid: str | None = None,
+    uuid: str = "",
     **kwargs,
-):
+) -> NestedDict:
     r"""
     回复消息
 
@@ -239,8 +192,6 @@ def reply_message_content(
     飞书文档:
         [回复消息](https://open.feishu.cn/document/server-docs/im-v1/message/reply)
     """
-    if openai_available and isinstance(message, Stream):
-        return reply_message_stream(message, message_id, uuid, **kwargs)
     if isinstance(message, str):
         message = {
             "content": json.dumps({"text": message}),
@@ -254,14 +205,15 @@ def reply_message_content(
     if uuid is not None:
         message["uuid"] = uuid
     message = post(f"im/v1/messages/{message_id}/reply", message, **kwargs)
-    message.data.body.content = convert_json_to_dict(message.data.body.content)
+    message.data.body.content = convert_json_to_dict(message.data.body.content)  # type: ignore[union-attr]
     return message
 
 
-@authorize
-def reply_message_stream(stream: Stream, message_id: str, uuid: str = "", **kwargs):
+def stream_message(
+    stream: Stream, receive_id: str, receive_id_type: str | None = None, uuid: str = "", **kwargs
+) -> NestedDict:
     r"""
-    回复流式消息
+    传输流式消息
 
     由于飞书暂时没有提供流式消息的直接支持，我们通过卡片消息的方式来模拟流式消息。
 
@@ -269,33 +221,65 @@ def reply_message_stream(stream: Stream, message_id: str, uuid: str = "", **kwar
 
     Args:
         stream: 消息内容流
-        message_id: 接收者 ID
+        receive_id: 接收者 ID 或 消息 ID
+        receive_id_type: 接收者 ID 类型。会根据`receive_id`来自动推断。
         uuid: 消息唯一标识，用于消息去重。
-
-    飞书文档:
-        [回复消息](https://open.feishu.cn/document/server-docs/im-v1/message/reply)
     """
+    loop = asyncio.new_event_loop()
+    try:
+        return loop.run_until_complete(stream_message_async(stream, receive_id, receive_id_type, uuid=uuid, **kwargs))
+    finally:
+        loop.close()
+
+
+async def stream_message_async(
+    stream: Stream, receive_id: str, receive_id_type: str | None = None, uuid: str = "", **kwargs
+) -> NestedDict:
     chunk = next(stream)
     if chunk.choices is None:
         raise ValueError("The first chunk of message stream does not have any choices")
     content = chunk.choices[0].delta.content
-    message = get_stream_message(content)
-    response = reply_message(message, message_id, uuid=uuid, **kwargs)
+    message = get_stream_message(content, streaming=True)
+    response = send_message(message, receive_id, receive_id_type, uuid=uuid, **kwargs)
     message_id = response["data"]["message_id"]
     try:
+        t = time.time()
         for chunk in stream:
             content += chunk.choices[0].delta.content
-            message = get_stream_message(content, streaming=True)
-            patch_message(message, message_id, **kwargs)
+            if time.time() - t > variables.STREAM_MESSAGE_INTERVAL:
+                message = get_stream_message(content, streaming=True)
+                await patch_message(message, message_id, **kwargs)
+                t = time.time()
     except Exception as e:
         raise e
     finally:
         message = get_stream_message(content)
-        patch_message(message, message_id, **kwargs)
+        await patch_message(message, message_id, **kwargs)
+    return response
 
 
-@authorize
-def update_message(message: str | dict, message_id: str, **kwargs):
+async def patch_message(message: str | dict, message_id: str, **kwargs) -> NestedDict:
+    r"""
+    更新应用发送的消息卡片
+
+    Warning:
+        这是一个异步函数。
+
+    Args:
+        message: 消息内容
+        message_id: 消息 ID
+
+    飞书文档:
+        [更新应用发送的消息卡片](https://open.feishu.cn/document/server-docs/im-v1/message-card/patch)
+    """
+    if isinstance(message, str):
+        message = {
+            "content": json.dumps({"text": message}),
+        }
+    return await async_patch(f"im/v1/messages/{message_id}", message, **kwargs)
+
+
+def update_message(message: str | dict, message_id: str, **kwargs) -> NestedDict:
     r"""
     编辑消息
 
@@ -316,27 +300,7 @@ def update_message(message: str | dict, message_id: str, **kwargs):
     return message
 
 
-@authorize
-def patch_message(message: str | dict, message_id: str, **kwargs):
-    r"""
-    更新应用发送的消息卡片
-
-    Args:
-        message: 消息内容
-        message_id: 消息 ID
-
-    飞书文档:
-        [更新应用发送的消息卡片](https://open.feishu.cn/document/server-docs/im-v1/message-card/patch)
-    """
-    if isinstance(message, str):
-        message = {
-            "content": json.dumps({"text": message}),
-        }
-    return patch(f"im/v1/messages/{message_id}", message, **kwargs)
-
-
-@authorize
-def recall_message(message_id: str, **kwargs):
+def recall_message(message_id: str, **kwargs) -> NestedDict:
     r"""
     撤回消息
 
@@ -349,8 +313,7 @@ def recall_message(message_id: str, **kwargs):
     return delete(f"im/v1/messages/{message_id}", **kwargs)
 
 
-@authorize
-def get_message(message_id: str, file_key: str | None = None, file_type: str | None = None, **kwargs):
+def get_message(message_id: str, file_key: str | None = None, file_type: str | None = None, **kwargs) -> NestedDict:
     r"""
     获取消息
 
@@ -373,12 +336,11 @@ def get_message(message_id: str, file_key: str | None = None, file_type: str | N
     | 获取消息中的资源文件 | [feishu.im.messages.get_message_resource][] |
     """
     if file_key is not None:
-        return get_message_resource(message_id, file_key, file_type, **kwargs)
+        return get_message_resource(message_id, file_key, file_type, **kwargs)  # type: ignore[arg-type]
     return get_message_content(message_id, **kwargs)
 
 
-@authorize
-def get_message_content(message_id: str, **kwargs):
+def get_message_content(message_id: str, **kwargs) -> NestedDict:
     r"""
     获取消息内容
 
@@ -394,8 +356,7 @@ def get_message_content(message_id: str, **kwargs):
     return message
 
 
-@authorize
-def get_message_resource(message_id: str, file_key: str, type: str, **kwargs):
+def get_message_resource(message_id: str, file_key: str, file_type: str, **kwargs) -> NestedDict:
     r"""
     获取消息中的资源文件
 
@@ -405,10 +366,9 @@ def get_message_resource(message_id: str, file_key: str, type: str, **kwargs):
     飞书文档:
         [获取消息中的资源文件](https://open.feishu.cn/document/server-docs/im-v1/message/get-2)
     """
-    return get(f"im/v1/messages/{message_id}/resources/{file_key}?type={type}", **kwargs)
+    return get(f"im/v1/messages/{message_id}/resources/{file_key}?type={file_type}", **kwargs)
 
 
-@authorize
 def get_messages(
     id: str,
     container_id_type: str = "chat",
@@ -420,7 +380,7 @@ def get_messages(
     page_size: int = 50,
     page_token: str | None = None,
     **kwargs,
-):
+) -> NestedDict:
     r"""
     获取消息
 
@@ -475,14 +435,13 @@ def get_messages(
     )
 
 
-@authorize
 def get_messages_chain(
     message_id: str,
     sort_type: str = "ByCreateTimeDesc",
     max_num_messages: int | float = float("inf"),
     max_message_length: int | float = float("inf"),
     **kwargs,
-):
+) -> NestedDict:
     r"""
     获取消息及其回复链中所有消息的内容
 
@@ -518,7 +477,6 @@ def get_messages_chain(
 
 
 @pagination
-@authorize
 def get_messages_history(
     container_id: str,
     container_id_type: str = "chat",
@@ -528,7 +486,7 @@ def get_messages_history(
     page_size: int = 50,
     page_token: str | None = None,
     **kwargs,
-):
+) -> NestedDict:
     r"""
     获取会话历史消息
 
@@ -562,10 +520,9 @@ def get_messages_history(
     return message
 
 
-@authorize
 def forward_message(
     message_id: str | list[str], receive_id: str, receive_id_type: str | None = None, uuid: str = "", **kwargs
-):
+) -> NestedDict:
     r"""
     转发消息
 
@@ -575,7 +532,7 @@ def forward_message(
     Args:
         message_id: 消息 ID
         receive_id: 接收者 ID
-        receive_id_type: 接收者 ID 类型。默认为 `open_id`。
+        receive_id_type: 接收者 ID 类型。会根据`receive_id`来自动推断。
 
     飞书文档:
         [转发消息](https://open.feishu.cn/document/server-docs/im-v1/message/forward)
@@ -601,21 +558,20 @@ def forward_message(
     return message
 
 
-@authorize
 def forward_message_list(
     message_id_list: list[str],
     receive_id: str,
     receive_id_type: str | None = None,
     uuid: str = "",
     **kwargs,
-):
+) -> NestedDict:
     r"""
     合并转发消息
 
     Args:
         message_id_list: 消息 ID 列表
         receive_id: 接收者 ID
-        receive_id_type: 接收者 ID 类型。默认为 `open_id`。
+        receive_id_type: 接收者 ID 类型。会根据`receive_id`来自动推断。
 
     飞书文档:
         [合并转发消息](https://open.feishu.cn/document/server-docs/im-v1/message/merge_forward)
@@ -633,14 +589,14 @@ def forward_message_list(
 
 
 @pagination
-@authorize
-def read_users(message_id: str, user_id_type: str = "open_id", **kwargs):
+def read_users(message_id: str, user_id_type: str = "open_id", **kwargs) -> NestedDict:
     r"""
     查询消息已读信息
 
     Args:
         message_id: 消息 ID
-        user_id_type: 用户 ID 类型。默认为 `open_id`。可以是 `open_id` 或 "union_id" 或 `user_id`。
+        user_id_type: 用户 ID 类型。默认为 `open_id`。
+            可以是 `open_id` 或 "union_id" 或 `user_id`。
 
     飞书文档:
         [查询消息已读信息](https://open.feishu.cn/document/server-docs/im-v1/message/read_users)
@@ -648,8 +604,7 @@ def read_users(message_id: str, user_id_type: str = "open_id", **kwargs):
     return get(f"im/v1/messages/{message_id}/read_users", {"user_id_type": user_id_type}, **kwargs)
 
 
-@authorize
-def push_follow_up(message_id: str, follow_ups: str | dict, **kwargs):
+def push_follow_up(message_id: str, follow_ups: str | dict, **kwargs) -> NestedDict:
     r"""
     添加跟随气泡
 

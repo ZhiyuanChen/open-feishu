@@ -28,14 +28,19 @@ from .im import (
     update_message,
 )
 from .robot import handle_chat
-from .utils import decrypt, delete, get, patch, post, put
+from .utils import async_delete, async_get, async_patch, async_post, async_put, decrypt, delete, get, patch, post, put
 
 __all__ = [
     "post",
+    "async_post",
     "get",
+    "async_get",
     "put",
+    "async_put",
     "patch",
+    "async_patch",
     "delete",
+    "async_delete",
     "decrypt",
     "FeishuException",
     "get_tenant_access_token",

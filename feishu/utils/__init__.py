@@ -15,16 +15,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from .async_request import async_delete, async_get, async_patch, async_post, async_put
 from .crypto import decrypt
 from .decorators import authorize, flexible_decorator, pagination
 from .request import delete, get, patch, post, put
 
 __all__ = [
     "post",
+    "async_post",
     "get",
+    "async_get",
     "put",
+    "async_put",
     "patch",
+    "async_patch",
     "delete",
+    "async_delete",
     "decrypt",
     "flexible_decorator",
     "authorize",

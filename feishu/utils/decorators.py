@@ -16,9 +16,12 @@
 
 from __future__ import annotations
 
+import asyncio
 from functools import wraps
 from inspect import isfunction
-from typing import Callable, Optional
+from typing import Awaitable, Callable, Optional
+
+from chanfig import NestedDict
 
 from feishu import variables
 
@@ -104,8 +107,42 @@ def pagination(early_stop: Callable | None = None):
         该装饰器会读取函数参数中的 `stop_on_page` 和 `stop_on_accum` 参数，如果没有提供则使用默认值。
     """
 
-    def decorator(func):
-        def wrapper(*args, **kwargs):
+    def decorator(func: Callable | Callable[..., Awaitable[NestedDict]]) -> Callable:
+        # Zhiyuan: Can pagination work with async functions?
+        @wraps(func)
+        async def wrapper_async(*args, **kwargs):
+            _early_stop = kwargs.pop("early_stop", early_stop)
+            max_num_items = kwargs.pop("max_num_items", None)
+            early_break = False
+            kwargs.pop("page_token", None)
+            all_items = []
+            page_token = None
+
+            while True:
+                response = await func(*args, **kwargs, page_token=page_token)
+                items = response["data"]["items"]
+                if max_num_items is not None:
+                    items = items[: max_num_items - len(all_items)]
+                    if not items:
+                        early_break = True
+                        break
+                if _early_stop is not None:
+                    for item in items:
+                        if _early_stop(all_items, item):
+                            early_break = True
+                            break
+                        all_items.append(item)
+                else:
+                    all_items.extend(items)
+                if early_break or not response["data"].get("has_more"):
+                    break
+                page_token = response["data"]["page_token"]
+
+            response["data"]["items"] = all_items
+            return response
+
+        @wraps(func)
+        def wrapper_sync(*args, **kwargs):
             _early_stop = kwargs.pop("early_stop", early_stop)
             max_num_items = kwargs.pop("max_num_items", None)
             early_break = False
@@ -136,6 +173,6 @@ def pagination(early_stop: Callable | None = None):
             response["data"]["items"] = all_items
             return response
 
-        return wrapper
+        return wrapper_async if asyncio.iscoroutinefunction(func) else wrapper_sync
 
     return decorator

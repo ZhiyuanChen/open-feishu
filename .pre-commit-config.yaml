@@ -33,7 +33,6 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies:
-          - types-requests
           - types-pytz
         exclude_types:
           - pyi
