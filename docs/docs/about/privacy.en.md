@@ -6,7 +6,7 @@
 
 This privacy notice for DanLing Team (also known as DanLing) ('we', 'us', or 'our'), describes how and why we might collect, store, use, and/or share ('process') your information when you use our services ('Services'), such as when you:
 
-- Visit our website at [multimolecule.danling.org](https://multimolecule.danling.org), or any website of ours that links to this privacy notice
+- Visit our website at [danling.org](https://danling.org), or any website of ours that links to this privacy notice
 
 You can change your privacy settings at any time by clicking the button below:
 
@@ -271,7 +271,7 @@ To the extent these online tracking technologies are deemed to be a 'sale'/'shar
 
 [Privacy Control](#__consent){ .md-button }
 
-<!-- Specific information about how we use such technologies and how you can refuse certain cookies is set out in our Cookie Notice: multimolecule.danling.org/about/cookie. -->
+<!-- Specific information about how we use such technologies and how you can refuse certain cookies is set out in our Cookie Notice: danling.org/about/cookie. -->
 
 ### Google Analytics
 
