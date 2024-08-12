@@ -18,18 +18,24 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Callable, Dict
 
 import httpx
 from chanfig import NestedDict
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
 
-from feishu import FeishuException, variables
+from feishu import variables
+from feishu.exceptions import FeishuException, FeishuServerError
 
 from .decorators import authorize
 from .request import get_tenant_access_token
 
 
+@retry(
+    stop=stop_after_attempt(variables.MAX_RETRIES),
+    wait=wait_random_exponential(exp_base=variables.BACKOFF_BASE),
+    retry=retry_if_exception_type((httpx.RequestError, FeishuException)),
+)
 @authorize
 async def async_request(
     method: str | Callable,
@@ -41,8 +47,6 @@ async def async_request(
     token: str | None = None,
     app_id: str | None = None,
     app_secret: str | None = None,
-    max_retries: int | None = None,
-    backoff_factor: float | None = None,
     retry_codes: tuple[int, ...] = (500, 502, 503, 504),
     **kwargs,
 ) -> NestedDict:
@@ -61,8 +65,6 @@ async def async_request(
         app_id: 应用唯一标识（以`cli_`开头）。默认为 `None`。
         app_secret: 应用秘钥。默认为 `None`。
         max_retries: 最大重试次数。默认为 `variables.MAX_RETRIES`。
-        backoff_factor: 重试间隔因子。默认为 `variables.BACKOFF_FACTOR`。
-        retry_codes: 需要重试的状态码。默认为 `(500, 502, 503, 504)`
         kwargs: 其他参数。
 
     Returns:
@@ -72,46 +74,39 @@ async def async_request(
         ValueError: 如果 token, app_id, 和 app_secret 都为 `None`。
         FeishuException: 飞书 API 返回的错误。
     """
-    if max_retries is None:
-        max_retries = variables.MAX_RETRIES
-    if backoff_factor is None:
-        backoff_factor = variables.BACKOFF_FACTOR
     if dest.startswith("/"):
         dest = dest[1:]
-    url = variables.BASE_URL + dest
-    if headers is None:
-        headers = {}
+    url = f"{variables.BASE_URL}{dest}"
+    headers = headers or {}
+
     if token is None:
         if app_id is None or app_secret is None:
             raise ValueError("token, app_id, and app_secret cannot all be None.")
         token = get_tenant_access_token(app_id, app_secret, timeout)
     headers["Authorization"] = f"Bearer {token}"
+
     if data is not None:
         headers["Content-Type"] = "application/json"
 
-    attempt = 0
-    while attempt <= max_retries:
-        try:
-            if callable(method):
-                response = await method(url, headers=headers, json=data, params=params, timeout=timeout, **kwargs)
-            else:
-                async with httpx.AsyncClient() as client:
-                    response = await client.request(
-                        method, url, headers=headers, json=data, params=params, timeout=timeout, **kwargs
-                    )
-        except Exception:
-            await asyncio.sleep(backoff_factor**attempt)
-            attempt += 1
-            continue
+    try:
+        if callable(method):
+            response = await method(url, headers=headers, json=data, params=params, timeout=timeout, **kwargs)
+        else:
+            async with httpx.AsyncClient() as client:
+                response = await client.request(
+                    method, url, headers=headers, json=data, params=params, timeout=timeout, **kwargs
+                )
+
         ret = response.json()
         if ret.get("code") == 0:
             return NestedDict(ret)
         if response.status_code in retry_codes:
-            await asyncio.sleep(backoff_factor**attempt)
-            attempt += 1
-        raise FeishuException(ret.get("code"), ret.get("msg"))
+            raise FeishuServerError(ret.get("code"), ret.get("msg"))
 
-    raise FeishuException(ret.get("code"), f"Request failed after {max_retries} retries.")
+        raise FeishuException(ret.get("code"), f"Unexpected error: {ret.get('msg')}")
+
+    except (httpx.RequestError, FeishuException) as e:
+        raise e
 
 
 async def async_post(
@@ -145,6 +140,7 @@ async def async_post(
         ValueError: 如果 token, app_id, 和 app_secret 都为 `None`。
 
     Examples:
+        >>> import asyncio
         >>> data = {
         ...     "receive_id_type": "open_id",
         ...     "receive_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs",
@@ -239,6 +235,7 @@ async def async_get(
         ValueError: 如果 token, app_id, 和 app_secret 都为 `None`。
 
     Examples:
+        >>> import asyncio
         >>> loop = asyncio.get_event_loop()
         >>> loop.run_until_complete(
         ...     async_get(
@@ -327,6 +324,7 @@ async def async_put(
         ValueError: 如果 token, app_id, 和 app_secret 都为 `None`。
 
     Examples:
+        >>> import asyncio
         >>> data = {"msg_type": "text", "content": "{\"text\":\"test content\"}"}
         >>> loop = asyncio.get_event_loop()
         >>> loop.run_until_complete(
@@ -416,6 +414,7 @@ async def async_patch(
         ValueError: 如果 token, app_id, 和 app_secret 都为 `None`。
 
     Examples:
+        >>> import asyncio
         >>> data = {"content": "{\"text\":\"test content\"}"}
         >>> loop = asyncio.get_event_loop()
         >>> loop.run_until_complete(
@@ -477,6 +476,7 @@ async def async_delete(
         ValueError: 如果 token, app_id, 和 app_secret 都为 `None`。
 
     Examples:
+        >>> import asyncio
         >>> loop = asyncio.get_event_loop()
         >>> loop.run_until_complete(
         ...     async_delete(

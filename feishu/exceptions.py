@@ -32,4 +32,10 @@ class FeishuException(Exception):
     message: str
 
     def __repr__(self):
-        return f"FeishuException(code={self.code}, message={self.message})"
+        return f"{self.__class__.__name__}(code={self.code}, message={self.message})"
+
+
+class FeishuServerError(FeishuException):
+    r"""
+    飞书服务器异常
+    """

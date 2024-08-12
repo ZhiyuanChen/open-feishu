@@ -29,8 +29,8 @@ Attributes: 飞书:
 Attributes: 请求:
     ACCESS_TOKEN_REFRESH_OFFSET: 飞书访问刷新偏移量。默认为 1800 秒。
     MAX_RETRIES: 飞书请求最大重试次数。默认为 5 次。
-    BACKOFF_FACTOR: 飞书请求指数退避因子。默认为 1.2。
-        每次重试的等待时间为 `retry_count ** backoff_factor`。
+    BACKOFF_BASE: 飞书请求指数退避因子。默认为 1.2。
+        每次重试的等待时间为 `random.uniform(BACKOFF_BASE ** retry_count)`。
     STREAMING_STATUS_TEXT: 飞书流状态文本。默认为 `"生成中..."`。
 
 Attributes: 消息:
@@ -67,7 +67,7 @@ BASE_URL = "https://open.feishu.cn/open-apis/"
 
 ACCESS_TOKEN_REFRESH_OFFSET = 1800
 MAX_RETRIES = 5
-BACKOFF_FACTOR = 1.2
+BACKOFF_BASE = 1.2
 OPEN_ID: str | None = getenv("OPEN_ID")
 UNION_ID: str | None = getenv("UNION_ID")
 
