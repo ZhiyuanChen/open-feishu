@@ -16,12 +16,12 @@ keywords = [
   "Protein",
   "RNA",
 ]
-license = {file = "LICENSE"}
+license = { file = "LICENSE" }
 maintainers = [
-    {name = "Zhiyuan Chen", email = "this@zyc.ai"},
+  { name = "Zhiyuan Chen", email = "this@zyc.ai" },
 ]
 authors = [
-    {name = "Zhiyuan Chen", email = "this@zyc.ai"},
+  { name = "Zhiyuan Chen", email = "this@zyc.ai" },
 ]
 requires-python = ">=3.7"
 classifiers = [
@@ -54,13 +54,12 @@ dependencies = [
   "tenacity",
   "tzlocal",
 ]
-[project.urls]
-documentation = "https://feishu.danling.org"
-homepage = "https://feishu.danling.org"
-repository = "https://github.com/ZhiyuanChen/open-feishu"
+urls.documentation = "https://feishu.danling.org"
+urls.homepage = "https://feishu.danling.org"
+urls.repository = "https://github.com/ZhiyuanChen/open-feishu"
 
 [tool.setuptools]
-packages = ["feishu"]
+packages = [ "feishu" ]
 
 [tool.setuptools_scm]
 write_to = "feishu/_version.py"
@@ -95,15 +94,15 @@ fail-under = 9.8
 [tool.pytest.ini_options]
 addopts = "--doctest-modules --cov --ignore=docs"
 markers = [
-    "lfs: tests that involve large file handling and should be excluded from CI"
+  "lfs: tests that involve large file handling and should be excluded from CI",
 ]
 
 [tool.coverage.run]
 branch = true
-include = ["feishu/**"]
+include = [ "feishu/**" ]
 
 [tool.coverage.paths]
-source = ["feishu"]
+source = [ "feishu" ]
 
 [tool.coverage.xml]
 output = "coverage.xml"
