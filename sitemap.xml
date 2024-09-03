@@ -2,132 +2,106 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://feishu.danling.org/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/SUMMARY/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/exceptions/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/variables/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/about/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/about/index.en/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/about/license.en/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/about/license/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/about/privacy.en/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/about/privacy/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/auth/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/auth/app_access_token/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/auth/tenant_access_token/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/im/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/im/messages/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/im/utils/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/robot/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/robot/chat/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/robot/verification/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/third_party/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/third_party/openai/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/utils/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/utils/async_request/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/utils/crypto/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/utils/decorators/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
     <url>
          <loc>https://feishu.danling.org/utils/request/</loc>
-         <lastmod>2024-08-12</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2024-09-03</lastmod>
     </url>
 </urlset>
