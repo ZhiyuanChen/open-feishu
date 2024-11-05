@@ -20,16 +20,16 @@ repos:
           - flake8-comprehensions
           - flake8-simplify
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.18.0
+    rev: v3.19.0
     hooks:
       - id: pyupgrade
         args: [--keep-runtime-typing]
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: 2.3.1
+    rev: v2.5.0
     hooks:
       - id: pyproject-fmt
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.2
+    rev: v1.13.0
     hooks:
       - id: mypy
         additional_dependencies:
