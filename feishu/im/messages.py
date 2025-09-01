@@ -22,8 +22,10 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import time
+import uuid as uuid_
 
 from chanfig import NestedDict
 
@@ -40,12 +42,42 @@ except ImportError:
     openai_available = False
 
 
+def _generate_uuid_from_content(content, current_time: float | None = None) -> str:
+    """
+    Generate a UUID based on content and current time.
+
+    Args:
+        content: The message content (can be any type)
+        current_time: Current timestamp, defaults to time.time() if None
+
+    Returns:
+        A UUID string generated from content and time
+    """
+    if current_time is None:
+        current_time = time.time()
+
+    if hasattr(content, "__dict__") and not isinstance(content, (str, int, float, bool)):
+        content_str = f"{content.__class__.__name__}_{current_time}"
+    elif isinstance(content, (dict, list)):
+        try:
+            content_str = json.dumps(content, sort_keys=True)
+        except (TypeError, ValueError):
+            content_str = str(content)
+    else:
+        content_str = str(content)
+
+    hash_input = f"{content_str}_{current_time}".encode()
+    hash_digest = hashlib.md5(hash_input).hexdigest()
+
+    return str(uuid_.uuid5(uuid_.NAMESPACE_DNS, hash_digest))
+
+
 def send_message(
     message: str | dict | Stream,
     id: str | None = None,
     receive_id_type: str | None = None,
     message_type: str | None = None,
-    uuid: str = "",
+    uuid: str | None = None,
     **kwargs,
 ) -> NestedDict:
     r"""
@@ -72,6 +104,9 @@ def send_message(
     | 流式消息   | [feishu.im.messages.stream_message][]       |
     | 回复消息   | [feishu.im.messages.reply_message][]        |
     """
+    if uuid is None:
+        uuid = _generate_uuid_from_content(message)
+
     if isinstance(message, str):
         message = {
             "content": json.dumps({"text": message}),
@@ -99,7 +134,7 @@ def send_message_content(
     receive_id: str | None = None,
     receive_id_type: str | None = None,
     message_type: str | None = None,
-    uuid: str = "",
+    uuid: str | None = None,
     **kwargs,
 ) -> NestedDict:
     r"""
@@ -115,6 +150,9 @@ def send_message_content(
     飞书文档:
         [发送消息](https://open.feishu.cn/document/server-docs/im-v1/message/create)
     """
+    if uuid is None:
+        uuid = _generate_uuid_from_content(message)
+
     if isinstance(message, str):
         message = {
             "content": json.dumps({"text": message}),
@@ -143,7 +181,7 @@ def reply_message(
     message_id: str,
     message_type: str | None = None,
     reply_in_thread: bool | None = None,
-    uuid: str = "",
+    uuid: str | None = None,
     **kwargs,
 ) -> NestedDict:
     r"""
@@ -164,6 +202,9 @@ def reply_message(
     | 回复内容消息 | [feishu.im.messages.reply_message_content][] |
     | 流式消息   | [feishu.im.messages.stream_message][]        |
     """
+    if uuid is None:
+        uuid = _generate_uuid_from_content(message)
+
     if openai_available and isinstance(message, Stream):
         return stream_message(stream=message, receive_id=message_id, uuid=uuid, **kwargs)
     return reply_message_content(
@@ -181,7 +222,7 @@ def reply_message_content(
     message_id: str,
     message_type: str | None = None,
     reply_in_thread: bool | None = None,
-    uuid: str = "",
+    uuid: str | None = None,
     **kwargs,
 ) -> NestedDict:
     r"""
@@ -197,6 +238,9 @@ def reply_message_content(
     飞书文档:
         [回复消息](https://open.feishu.cn/document/server-docs/im-v1/message/reply)
     """
+    if uuid is None:
+        uuid = _generate_uuid_from_content(message)
+
     if isinstance(message, str):
         message = {
             "content": json.dumps({"text": message}),
@@ -215,7 +259,7 @@ def reply_message_content(
 
 
 def stream_message(
-    stream: Stream, receive_id: str, receive_id_type: str | None = None, uuid: str = "", **kwargs
+    stream: Stream, receive_id: str, receive_id_type: str | None = None, uuid: str | None = None, **kwargs
 ) -> NestedDict:
     r"""
     传输流式消息
@@ -230,6 +274,9 @@ def stream_message(
         receive_id_type: 接收者 ID 类型。会根据`receive_id`来自动推断。
         uuid: 消息唯一标识，用于消息去重。
     """
+    if uuid is None:
+        uuid = _generate_uuid_from_content(stream)
+
     loop = asyncio.new_event_loop()
     try:
         return loop.run_until_complete(stream_message_async(stream, receive_id, receive_id_type, uuid=uuid, **kwargs))
@@ -238,8 +285,11 @@ def stream_message(
 
 
 async def stream_message_async(
-    stream: Stream, receive_id: str, receive_id_type: str | None = None, uuid: str = "", **kwargs
+    stream: Stream, receive_id: str, receive_id_type: str | None = None, uuid: str | None = None, **kwargs
 ) -> NestedDict:
+    if uuid is None:
+        uuid = _generate_uuid_from_content(stream)
+
     chunk = next(stream)
     if chunk.choices is None:
         raise ValueError("The first chunk of message stream does not have any choices")
@@ -526,7 +576,11 @@ def get_messages_history(
 
 
 def forward_message(
-    message_id: str | list[str], receive_id: str, receive_id_type: str | None = None, uuid: str = "", **kwargs
+    message_id: str | list[str],
+    receive_id: str,
+    receive_id_type: str | None = None,
+    uuid: str | None = None,
+    **kwargs,
 ) -> NestedDict:
     r"""
     转发消息
@@ -538,6 +592,7 @@ def forward_message(
         message_id: 消息 ID
         receive_id: 接收者 ID
         receive_id_type: 接收者 ID 类型。会根据`receive_id`来自动推断。
+        uuid: 消息唯一标识，用于消息去重。
 
     飞书文档:
         [转发消息](https://open.feishu.cn/document/server-docs/im-v1/message/forward)
@@ -549,6 +604,9 @@ def forward_message(
     | 转发消息     | [feishu.im.messages.forward_message][]      |
     | 合并转发多条消息 | [feishu.im.messages.forward_message_list][] |
     """
+    if uuid is None:
+        uuid = _generate_uuid_from_content({"message_id": message_id, "receive_id": receive_id})
+
     if isinstance(message_id, list):
         return forward_message_list(message_id, receive_id, receive_id_type, uuid, **kwargs)
     if receive_id_type is None:
@@ -567,7 +625,7 @@ def forward_message_list(
     message_id_list: list[str],
     receive_id: str,
     receive_id_type: str | None = None,
-    uuid: str = "",
+    uuid: str | None = None,
     **kwargs,
 ) -> NestedDict:
     r"""
@@ -577,10 +635,14 @@ def forward_message_list(
         message_id_list: 消息 ID 列表
         receive_id: 接收者 ID
         receive_id_type: 接收者 ID 类型。会根据`receive_id`来自动推断。
+        uuid: 消息唯一标识，用于消息去重。
 
     飞书文档:
         [合并转发消息](https://open.feishu.cn/document/server-docs/im-v1/message/merge_forward)
     """
+    if uuid is None:
+        uuid = _generate_uuid_from_content({"message_id_list": message_id_list, "receive_id": receive_id})
+
     if receive_id_type is None:
         receive_id_type = infer_receive_id_type(receive_id)
     message = post(
