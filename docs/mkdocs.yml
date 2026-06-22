@@ -138,7 +138,7 @@ plugins:
       scripts:
         - generate_reference.py
   - literate-nav:
-      nav_files: SUMMARY.md
+      nav_file: SUMMARY.md
   - mkdocstrings:
       handlers:
         python:
@@ -151,10 +151,10 @@ plugins:
             separate_signature: true
             show_signature_annotations: true
             signature_crossrefs: true
-          import:
-            - https://docs.python.org/3/objects.inv
-            - https://chanfig.danling.org/objects.inv
-            - https://attrs.org/en/stable/objects.inv
+          inventories:
+            - url: https://docs.python.org/3/objects.inv
+            - url: https://chanfig.danling.org/objects.inv
+            - url: https://attrs.org/en/stable/objects.inv
   - section-index
   # - i18n:
   #     docs_structure: suffix
