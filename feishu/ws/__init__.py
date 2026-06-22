@@ -19,7 +19,8 @@
 # For additional terms and clarifications, please refer to our License FAQ at:
 # <https://multimolecule.danling.org/about/license-faq>.
 
-from .chat import handle_chat
-from .verification import handle_verification
+from __future__ import annotations
 
-__all__ = ["handle_verification", "handle_chat"]
+from .client import WsClient
+
+__all__ = ["WsClient"]

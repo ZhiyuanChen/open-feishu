@@ -21,16 +21,6 @@
 
 from __future__ import annotations
 
-from feishu import variables
+from .cardkit import stream_card
 
-
-def handle_verification(request: dict) -> dict:
-    r"""
-    处理飞书URL验证请求
-
-    飞书文档:
-        [配置订阅方式](https://open.feishu.cn/document/server-docs/event-subscription-guide/event-subscription-configure-/request-url-configuration-case)
-    """
-    if request.get("token") and variables.VERIFICATION_TOKEN and request["token"] != variables.VERIFICATION_TOKEN:
-        raise ValueError("Invalid verification token")
-    return {"challenge": request["challenge"]}
+__all__ = ["stream_card"]
