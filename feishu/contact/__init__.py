@@ -21,19 +21,22 @@
 
 from __future__ import annotations
 
-from .chats import ChatNamespace
-from .inbound import is_mentioned, message_text
-from .messages import IMNamespace, infer_msg_type, infer_receive_id_type
-from .pins import PinsNamespace
-from .reactions import ReactionsNamespace
+from .normalize import (
+    get_user_department_ids,
+    get_user_email,
+    get_user_identity,
+    get_user_status,
+    is_active_user,
+    normalize_department,
+    normalize_user,
+)
 
 __all__ = [
-    "ChatNamespace",
-    "IMNamespace",
-    "PinsNamespace",
-    "ReactionsNamespace",
-    "infer_msg_type",
-    "infer_receive_id_type",
-    "is_mentioned",
-    "message_text",
+    "get_user_department_ids",
+    "get_user_email",
+    "get_user_identity",
+    "get_user_status",
+    "is_active_user",
+    "normalize_department",
+    "normalize_user",
 ]
