@@ -1,0 +1,6 @@
+anthropic
+openai
+pytest
+pytest-asyncio
+pytest-cov
+websockets
