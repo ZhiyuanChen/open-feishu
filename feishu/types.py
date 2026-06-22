@@ -21,26 +21,25 @@
 
 from __future__ import annotations
 
-from attrs import define
+from typing import Any, TypedDict
 
 
-@define
-class FeishuException(Exception):
-    r"""
-    通用异常
-
-    飞书文档:
-        [通用错误码](https://open.feishu.cn/document/server-docs/api-call-guide/generic-error-code)
-    """
-
-    code: int
-    message: str
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}(code={self.code}, message={self.message})"
+class NormalizedUser(TypedDict):
+    user_id: str
+    open_id: str
+    union_id: str
+    name: str
+    email: str | None
+    department_ids: list[str]
+    status: dict[str, Any]
+    active: bool
+    raw: Any
 
 
-class FeishuServerError(FeishuException):
-    r"""
-    飞书服务器异常
-    """
+class NormalizedDepartment(TypedDict):
+    department_id: str
+    open_department_id: str
+    parent_department_id: str
+    name: str
+    member_count: int
+    raw: Any
