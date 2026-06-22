@@ -43,7 +43,7 @@
         <link rel="alternate" type="application/rss+xml" title="已更新内容的 RSS 订阅" href="../../feed_rss_updated.xml">
       
       <link rel="icon" href="../../assets/images/logo.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -2505,7 +2505,9 @@
 
 
 
-  <div class="doc doc-children">
+
+<div class="doc doc-children">
+
 
 
 
@@ -2528,6 +2530,7 @@
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
               Bases: <code><span title="feishu._namespace.Namespace">Namespace</span></code></p>
+
 
 
         <p>通讯录接口命名空间。</p>
@@ -2558,8 +2561,9 @@
 
 
 
-              <details class="quote">
-                <summary>Source code in <code>feishu/contact/contact.py</code></summary>
+
+              <details class="mkdocstrings-source">
+                <summary>源代码位于： <code>feishu/contact/contact.py</code></summary>
                 <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-33">33</a></span>
 <span class="normal"><a href="#__codelineno-0-34">34</a></span>
 <span class="normal"><a href="#__codelineno-0-35">35</a></span>
@@ -2692,7 +2696,7 @@
 
 
 
-  <div class="doc doc-children">
+<div class="doc doc-children">
 
 
 
@@ -2723,12 +2727,12 @@
 展开上级部门链，以及创建、更新与删除部门。</p>
 
 
-    <p><span class="doc-section-title">Returns:</span></p>
+    <p><span class="doc-section-title">返回：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -2751,7 +2755,7 @@
   <p><a href="https://open.feishu.cn/document/server-docs/contact-v3/department/field-overview">通讯录 / 部门</a></p>
 </details>
 
-<p><span class="doc-section-title">Examples:</span></p>
+<p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">contact</span><span class="o">.</span><span class="n">departments</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">&lt;feishu.contact.departments.DepartmentNamespace object at ...&gt;</span>
@@ -2783,12 +2787,12 @@
 <p>惰性创建并返回 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;UserNamespace&lt;/span&gt;" href="../users/#feishu.contact.users.UserNamespace">feishu.contact.users.UserNamespace</a>，用于查询、批量查询、创建、更新与删除用户。</p>
 
 
-    <p><span class="doc-section-title">Returns:</span></p>
+    <p><span class="doc-section-title">返回：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -2811,7 +2815,7 @@
   <p><a href="https://open.feishu.cn/document/server-docs/contact-v3/user/field-overview">通讯录 / 用户</a></p>
 </details>
 
-<p><span class="doc-section-title">Examples:</span></p>
+<p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">contact</span><span class="o">.</span><span class="n">users</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">&lt;feishu.contact.users.UserNamespace object at ...&gt;</span>
@@ -2820,6 +2824,7 @@
     </div>
 
 </div>
+
 
 
 
@@ -2859,7 +2864,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月22日 15:07:08 UTC">2026-06-22 15:07:08</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月22日 15:55:05 UTC">2026-06-22 15:55:05</span>
   </span>
 
     

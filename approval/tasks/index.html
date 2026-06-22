@@ -43,7 +43,7 @@
         <link rel="alternate" type="application/rss+xml" title="已更新内容的 RSS 订阅" href="../../feed_rss_updated.xml">
       
       <link rel="icon" href="../../assets/images/logo.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -2657,7 +2657,9 @@
 
 
 
-  <div class="doc doc-children">
+
+<div class="doc doc-children">
+
 
 
 
@@ -2682,6 +2684,7 @@
               Bases: <code><span title="feishu._namespace.Namespace">Namespace</span></code></p>
 
 
+
         <p>审批任务接口命名空间。</p>
 <p>通过 <code>client.approval.tasks</code> 访问，封装飞书审批中审批任务（task）相关的服务端接口，
 包括同意、拒绝与转交审批任务等能力。审批任务隶属于某个审批实例（<code>instance_code</code>），
@@ -2699,8 +2702,9 @@
 
 
 
-              <details class="quote">
-                <summary>Source code in <code>feishu/approval/tasks.py</code></summary>
+
+              <details class="mkdocstrings-source">
+                <summary>源代码位于： <code>feishu/approval/tasks.py</code></summary>
                 <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-31"> 31</a></span>
 <span class="normal"><a href="#__codelineno-0-32"> 32</a></span>
 <span class="normal"><a href="#__codelineno-0-33"> 33</a></span>
@@ -2893,7 +2897,8 @@
 
 
 
-  <div class="doc doc-children">
+<div class="doc doc-children">
+
 
 
 
@@ -2925,14 +2930,14 @@
 <code>instance_code</code>、<code>task_id</code>、<code>user_id</code>、<code>comment</code> 等。</p>
 
 
-<p><span class="doc-section-title">Parameters:</span></p>
+<p><span class="doc-section-title">参数：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
         </tr>
       </thead>
       <tbody>
@@ -2951,19 +2956,19 @@
               </div>
             </td>
             <td>
-                <em>required</em>
+                <em>必需</em>
             </td>
           </tr>
       </tbody>
     </table>
 
 
-    <p><span class="doc-section-title">Returns:</span></p>
+    <p><span class="doc-section-title">返回：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -2981,12 +2986,12 @@
     </table>
 
 
-<p><span class="doc-section-title">Raises:</span></p>
+<p><span class="doc-section-title">引发：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -3009,15 +3014,15 @@
   <p><a href="https://open.feishu.cn/document/server-docs/approval-v4/task/approve">同意审批任务</a></p>
 </details>
 
-<p><span class="doc-section-title">Examples:</span></p>
+<p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">approval</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">approve</span><span class="p">({</span><span class="s2">&quot;task_id&quot;</span><span class="p">:</span> <span class="s2">&quot;T1&quot;</span><span class="p">,</span> <span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;u1&quot;</span><span class="p">})</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">{}</span>
 </span></code></pre></div></td></tr></table></div>
 
 
-            <details class="quote">
-              <summary>Source code in <code>feishu/approval/tasks.py</code></summary>
+            <details class="mkdocstrings-source">
+              <summary>源代码位于： <code>feishu/approval/tasks.py</code></summary>
               <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-45">45</a></span>
 <span class="normal"><a href="#__codelineno-0-46">46</a></span>
 <span class="normal"><a href="#__codelineno-0-47">47</a></span>
@@ -3097,14 +3102,14 @@
 <code>instance_code</code>、<code>task_id</code>、<code>user_id</code>、<code>comment</code> 等。</p>
 
 
-<p><span class="doc-section-title">Parameters:</span></p>
+<p><span class="doc-section-title">参数：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
         </tr>
       </thead>
       <tbody>
@@ -3123,19 +3128,19 @@
               </div>
             </td>
             <td>
-                <em>required</em>
+                <em>必需</em>
             </td>
           </tr>
       </tbody>
     </table>
 
 
-    <p><span class="doc-section-title">Returns:</span></p>
+    <p><span class="doc-section-title">返回：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -3153,12 +3158,12 @@
     </table>
 
 
-<p><span class="doc-section-title">Raises:</span></p>
+<p><span class="doc-section-title">引发：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -3181,15 +3186,15 @@
   <p><a href="https://open.feishu.cn/document/server-docs/approval-v4/task/reject">拒绝审批任务</a></p>
 </details>
 
-<p><span class="doc-section-title">Examples:</span></p>
+<p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">approval</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">reject</span><span class="p">({</span><span class="s2">&quot;task_id&quot;</span><span class="p">:</span> <span class="s2">&quot;T1&quot;</span><span class="p">,</span> <span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;u1&quot;</span><span class="p">})</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">{}</span>
 </span></code></pre></div></td></tr></table></div>
 
 
-            <details class="quote">
-              <summary>Source code in <code>feishu/approval/tasks.py</code></summary>
+            <details class="mkdocstrings-source">
+              <summary>源代码位于： <code>feishu/approval/tasks.py</code></summary>
               <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-72">72</a></span>
 <span class="normal"><a href="#__codelineno-0-73">73</a></span>
 <span class="normal"><a href="#__codelineno-0-74">74</a></span>
@@ -3269,14 +3274,14 @@
 <code>instance_code</code>、<code>task_id</code>、<code>user_id</code>、<code>transfer_user_id</code>、<code>comment</code> 等。</p>
 
 
-<p><span class="doc-section-title">Parameters:</span></p>
+<p><span class="doc-section-title">参数：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
         </tr>
       </thead>
       <tbody>
@@ -3295,19 +3300,19 @@
               </div>
             </td>
             <td>
-                <em>required</em>
+                <em>必需</em>
             </td>
           </tr>
       </tbody>
     </table>
 
 
-    <p><span class="doc-section-title">Returns:</span></p>
+    <p><span class="doc-section-title">返回：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -3325,12 +3330,12 @@
     </table>
 
 
-<p><span class="doc-section-title">Raises:</span></p>
+<p><span class="doc-section-title">引发：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -3353,15 +3358,15 @@
   <p><a href="https://open.feishu.cn/document/server-docs/approval-v4/task/transfer">转交审批任务</a></p>
 </details>
 
-<p><span class="doc-section-title">Examples:</span></p>
+<p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">approval</span><span class="o">.</span><span class="n">tasks</span><span class="o">.</span><span class="n">transfer</span><span class="p">({</span><span class="s2">&quot;task_id&quot;</span><span class="p">:</span> <span class="s2">&quot;T1&quot;</span><span class="p">,</span> <span class="s2">&quot;transfer_user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;u2&quot;</span><span class="p">})</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">{}</span>
 </span></code></pre></div></td></tr></table></div>
 
 
-            <details class="quote">
-              <summary>Source code in <code>feishu/approval/tasks.py</code></summary>
+            <details class="mkdocstrings-source">
+              <summary>源代码位于： <code>feishu/approval/tasks.py</code></summary>
               <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
 <span class="normal"><a href="#__codelineno-0-100">100</a></span>
 <span class="normal"><a href="#__codelineno-0-101">101</a></span>
@@ -3455,7 +3460,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月22日 15:07:04 UTC">2026-06-22 15:07:04</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月22日 15:55:03 UTC">2026-06-22 15:55:03</span>
   </span>
 
     

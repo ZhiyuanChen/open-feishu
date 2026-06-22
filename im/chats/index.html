@@ -43,7 +43,7 @@
         <link rel="alternate" type="application/rss+xml" title="已更新内容的 RSS 订阅" href="../../feed_rss_updated.xml">
       
       <link rel="icon" href="../../assets/images/logo.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -3377,7 +3377,9 @@
 
 
 
-  <div class="doc doc-children">
+
+<div class="doc doc-children">
+
 
 
 
@@ -3402,6 +3404,7 @@
               Bases: <code><span title="feishu._namespace.Namespace">Namespace</span></code></p>
 
 
+
         <p>群组接口命名空间。</p>
 <p>封装飞书群组相关的服务端接口，包括创建、查询、更新、解散群组，以及添加、移除、列举群成员等能力。</p>
 <p>通常无需直接实例化，应通过 <code>client.im.chats</code> 访问。</p>
@@ -3417,8 +3420,9 @@
 
 
 
-              <details class="quote">
-                <summary>Source code in <code>feishu/im/chats.py</code></summary>
+
+              <details class="mkdocstrings-source">
+                <summary>源代码位于： <code>feishu/im/chats.py</code></summary>
                 <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-33"> 33</a></span>
 <span class="normal"><a href="#__codelineno-0-34"> 34</a></span>
 <span class="normal"><a href="#__codelineno-0-35"> 35</a></span>
@@ -3997,7 +4001,8 @@
 
 
 
-  <div class="doc doc-children">
+<div class="doc doc-children">
+
 
 
 
@@ -4019,12 +4024,7 @@
   </span>
 
 <a href="#feishu.im.chats.ChatNamespace.add_members" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">add_members</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;chat_id&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.add_members(chat_id)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.add_members(chat_id)">chat_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;id_list&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.add_members(id_list)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.add_members(id_list)">id_list</a></span><span class="p">:</span> <span class="n"><span title="builtins.list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">],</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;member_id_type&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.add_members(member_id_type)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.add_members(member_id_type)">member_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;open_id&quot;</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">add_members</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;chat_id&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.add_members(chat_id)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.add_members(chat_id)">chat_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;id_list&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.add_members(id_list)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.add_members(id_list)">id_list</a></span><span class="p">:</span> <span class="n"><span title="builtins.list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;member_id_type&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.add_members(member_id_type)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.add_members(member_id_type)">member_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s1">&#39;open_id&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4032,14 +4032,14 @@
         <p>将用户或机器人拉入群组。</p>
 
 
-<p><span class="doc-section-title">Parameters:</span></p>
+<p><span class="doc-section-title">参数：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
         </tr>
       </thead>
       <tbody>
@@ -4056,7 +4056,7 @@
               </div>
             </td>
             <td>
-                <em>required</em>
+                <em>必需</em>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -4072,7 +4072,7 @@
               </div>
             </td>
             <td>
-                <em>required</em>
+                <em>必需</em>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -4095,12 +4095,12 @@
     </table>
 
 
-    <p><span class="doc-section-title">Returns:</span></p>
+    <p><span class="doc-section-title">返回：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -4118,12 +4118,12 @@
     </table>
 
 
-<p><span class="doc-section-title">Raises:</span></p>
+<p><span class="doc-section-title">引发：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -4146,15 +4146,15 @@
   <p><a href="https://open.feishu.cn/document/server-docs/group/chat-member/create">将用户或机器人拉入群聊</a></p>
 </details>
 
-<p><span class="doc-section-title">Examples:</span></p>
+<p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">chats</span><span class="o">.</span><span class="n">add_members</span><span class="p">(</span><span class="s2">&quot;oc_chat1&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;ou_user1&quot;</span><span class="p">,</span> <span class="s2">&quot;ou_user2&quot;</span><span class="p">])</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">{&#39;invalid_id_list&#39;: [], ...}  # noqa: E501</span>
 </span></code></pre></div></td></tr></table></div>
 
 
-            <details class="quote">
-              <summary>Source code in <code>feishu/im/chats.py</code></summary>
+            <details class="mkdocstrings-source">
+              <summary>源代码位于： <code>feishu/im/chats.py</code></summary>
               <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-45">45</a></span>
 <span class="normal"><a href="#__codelineno-0-46">46</a></span>
 <span class="normal"><a href="#__codelineno-0-47">47</a></span>
@@ -4232,16 +4232,7 @@
   </span>
 
 <a href="#feishu.im.chats.ChatNamespace.create" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">create</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;name&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.create(name)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.create(name)">name</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;description&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.create(description)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.create(description)">description</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_list&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.create(user_id_list)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.create(user_id_list)">user_id_list</a></span><span class="p">:</span> <span class="n"><span title="builtins.list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;bot_id_list&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.create(bot_id_list)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.create(bot_id_list)">bot_id_list</a></span><span class="p">:</span> <span class="n"><span title="builtins.list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;chat_mode&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.create(chat_mode)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.create(chat_mode)">chat_mode</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;group&quot;</span><span class="p">,</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_type&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.create(user_id_type)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.create(user_id_type)">user_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;open_id&quot;</span><span class="p">,</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="o">**</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;**opts&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.create(**opts)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.create(**opts)">opts</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;typing.Any&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">create</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;name&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.create(name)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.create(name)">name</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;description&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.create(description)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.create(description)">description</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_list&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.create(user_id_list)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.create(user_id_list)">user_id_list</a></span><span class="p">:</span> <span class="n"><span title="builtins.list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;bot_id_list&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.create(bot_id_list)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.create(bot_id_list)">bot_id_list</a></span><span class="p">:</span> <span class="n"><span title="builtins.list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;chat_mode&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.create(chat_mode)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.create(chat_mode)">chat_mode</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s1">&#39;group&#39;</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_type&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.create(user_id_type)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.create(user_id_type)">user_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s1">&#39;open_id&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;**opts&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.create(**opts)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.create(**opts)">opts</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;typing.Any&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4251,14 +4242,14 @@
 <code>None</code> 的项也会被忽略，其余项原样并入请求体。</p>
 
 
-<p><span class="doc-section-title">Parameters:</span></p>
+<p><span class="doc-section-title">参数：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
         </tr>
       </thead>
       <tbody>
@@ -4378,12 +4369,12 @@
     </table>
 
 
-    <p><span class="doc-section-title">Returns:</span></p>
+    <p><span class="doc-section-title">返回：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -4401,12 +4392,12 @@
     </table>
 
 
-<p><span class="doc-section-title">Raises:</span></p>
+<p><span class="doc-section-title">引发：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -4429,15 +4420,15 @@
   <p><a href="https://open.feishu.cn/document/server-docs/group/chat/create">创建群</a></p>
 </details>
 
-<p><span class="doc-section-title">Examples:</span></p>
+<p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">chats</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;My Chat&quot;</span><span class="p">,</span> <span class="n">user_id_list</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ou_abc&quot;</span><span class="p">])</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">{&#39;chat_id&#39;: &#39;oc_test123&#39;, ...}  # noqa: E501</span>
 </span></code></pre></div></td></tr></table></div>
 
 
-            <details class="quote">
-              <summary>Source code in <code>feishu/im/chats.py</code></summary>
+            <details class="mkdocstrings-source">
+              <summary>源代码位于： <code>feishu/im/chats.py</code></summary>
               <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-76"> 76</a></span>
 <span class="normal"><a href="#__codelineno-0-77"> 77</a></span>
 <span class="normal"><a href="#__codelineno-0-78"> 78</a></span>
@@ -4567,14 +4558,14 @@
         <p>解散群组。</p>
 
 
-<p><span class="doc-section-title">Parameters:</span></p>
+<p><span class="doc-section-title">参数：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
         </tr>
       </thead>
       <tbody>
@@ -4591,19 +4582,19 @@
               </div>
             </td>
             <td>
-                <em>required</em>
+                <em>必需</em>
             </td>
           </tr>
       </tbody>
     </table>
 
 
-    <p><span class="doc-section-title">Returns:</span></p>
+    <p><span class="doc-section-title">返回：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -4621,12 +4612,12 @@
     </table>
 
 
-<p><span class="doc-section-title">Raises:</span></p>
+<p><span class="doc-section-title">引发：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -4649,15 +4640,15 @@
   <p><a href="https://open.feishu.cn/document/server-docs/group/chat/delete">解散群</a></p>
 </details>
 
-<p><span class="doc-section-title">Examples:</span></p>
+<p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">chats</span><span class="o">.</span><span class="n">disband</span><span class="p">(</span><span class="s2">&quot;oc_chat1&quot;</span><span class="p">)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">{}</span>
 </span></code></pre></div></td></tr></table></div>
 
 
-            <details class="quote">
-              <summary>Source code in <code>feishu/im/chats.py</code></summary>
+            <details class="mkdocstrings-source">
+              <summary>源代码位于： <code>feishu/im/chats.py</code></summary>
               <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-129">129</a></span>
 <span class="normal"><a href="#__codelineno-0-130">130</a></span>
 <span class="normal"><a href="#__codelineno-0-131">131</a></span>
@@ -4717,9 +4708,7 @@
   </span>
 
 <a href="#feishu.im.chats.ChatNamespace.get" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;chat_id&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.get(chat_id)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.get(chat_id)">chat_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_type&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.get(user_id_type)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.get(user_id_type)">user_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;open_id&quot;</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;chat_id&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.get(chat_id)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.get(chat_id)">chat_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_type&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.get(user_id_type)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.get(user_id_type)">user_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s1">&#39;open_id&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4727,14 +4716,14 @@
         <p>获取群信息。</p>
 
 
-<p><span class="doc-section-title">Parameters:</span></p>
+<p><span class="doc-section-title">参数：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
         </tr>
       </thead>
       <tbody>
@@ -4751,7 +4740,7 @@
               </div>
             </td>
             <td>
-                <em>required</em>
+                <em>必需</em>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -4774,12 +4763,12 @@
     </table>
 
 
-    <p><span class="doc-section-title">Returns:</span></p>
+    <p><span class="doc-section-title">返回：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -4797,12 +4786,12 @@
     </table>
 
 
-<p><span class="doc-section-title">Raises:</span></p>
+<p><span class="doc-section-title">引发：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -4825,15 +4814,15 @@
   <p><a href="https://open.feishu.cn/document/server-docs/group/chat/get">获取群信息</a></p>
 </details>
 
-<p><span class="doc-section-title">Examples:</span></p>
+<p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">chats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;oc_chat1&quot;</span><span class="p">)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">{&#39;chat_id&#39;: &#39;oc_test123&#39;, ...}  # noqa: E501</span>
 </span></code></pre></div></td></tr></table></div>
 
 
-            <details class="quote">
-              <summary>Source code in <code>feishu/im/chats.py</code></summary>
+            <details class="mkdocstrings-source">
+              <summary>源代码位于： <code>feishu/im/chats.py</code></summary>
               <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-151">151</a></span>
 <span class="normal"><a href="#__codelineno-0-152">152</a></span>
 <span class="normal"><a href="#__codelineno-0-153">153</a></span>
@@ -4899,12 +4888,7 @@
   </span>
 
 <a href="#feishu.im.chats.ChatNamespace.list" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">list</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="nf"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_type&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.list(user_id_type)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.list(user_id_type)">user_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;open_id&quot;</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;page_size&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.list(page_size)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.list(page_size)">page_size</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;max_items&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.list(max_items)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.list(max_items)">max_items</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="builtins.list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span><span class="p">]</span>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">list</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_type&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.list(user_id_type)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.list(user_id_type)">user_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s1">&#39;open_id&#39;</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;page_size&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.list(page_size)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.list(page_size)">page_size</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;max_items&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.list(max_items)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.list(max_items)">max_items</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="builtins.list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4914,14 +4898,14 @@
 [feishu.consts.MAX_PAGE_SIZE][] 以内。</p>
 
 
-<p><span class="doc-section-title">Parameters:</span></p>
+<p><span class="doc-section-title">参数：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
         </tr>
       </thead>
       <tbody>
@@ -4977,12 +4961,12 @@
     </table>
 
 
-    <p><span class="doc-section-title">Returns:</span></p>
+    <p><span class="doc-section-title">返回：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -5000,12 +4984,12 @@
     </table>
 
 
-<p><span class="doc-section-title">Raises:</span></p>
+<p><span class="doc-section-title">引发：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -5028,15 +5012,15 @@
   <p><a href="https://open.feishu.cn/document/server-docs/group/chat/list">获取用户或机器人所在的群列表</a></p>
 </details>
 
-<p><span class="doc-section-title">Examples:</span></p>
+<p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">chats</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">[{&#39;chat_id&#39;: &#39;oc_1&#39;, ...}, {&#39;chat_id&#39;: &#39;oc_2&#39;, ...}]  # noqa: E501</span>
 </span></code></pre></div></td></tr></table></div>
 
 
-            <details class="quote">
-              <summary>Source code in <code>feishu/im/chats.py</code></summary>
+            <details class="mkdocstrings-source">
+              <summary>源代码位于： <code>feishu/im/chats.py</code></summary>
               <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-176">176</a></span>
 <span class="normal"><a href="#__codelineno-0-177">177</a></span>
 <span class="normal"><a href="#__codelineno-0-178">178</a></span>
@@ -5120,13 +5104,7 @@
   </span>
 
 <a href="#feishu.im.chats.ChatNamespace.list_members" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">list_members</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;chat_id&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.list_members(chat_id)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.list_members(chat_id)">chat_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;member_id_type&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.list_members(member_id_type)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.list_members(member_id_type)">member_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;open_id&quot;</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;page_size&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.list_members(page_size)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.list_members(page_size)">page_size</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;max_items&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.list_members(max_items)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.list_members(max_items)">max_items</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="builtins.list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span><span class="p">]</span>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">list_members</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;chat_id&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.list_members(chat_id)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.list_members(chat_id)">chat_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;member_id_type&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.list_members(member_id_type)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.list_members(member_id_type)">member_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s1">&#39;open_id&#39;</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;page_size&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.list_members(page_size)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.list_members(page_size)">page_size</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;max_items&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.list_members(max_items)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.list_members(max_items)">max_items</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="builtins.list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -5136,14 +5114,14 @@
 [feishu.consts.MAX_PAGE_SIZE][] 以内。</p>
 
 
-<p><span class="doc-section-title">Parameters:</span></p>
+<p><span class="doc-section-title">参数：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
         </tr>
       </thead>
       <tbody>
@@ -5160,7 +5138,7 @@
               </div>
             </td>
             <td>
-                <em>required</em>
+                <em>必需</em>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -5215,12 +5193,12 @@
     </table>
 
 
-    <p><span class="doc-section-title">Returns:</span></p>
+    <p><span class="doc-section-title">返回：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -5238,12 +5216,12 @@
     </table>
 
 
-<p><span class="doc-section-title">Raises:</span></p>
+<p><span class="doc-section-title">引发：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -5266,15 +5244,15 @@
   <p><a href="https://open.feishu.cn/document/server-docs/group/chat-member/get">获取群成员列表</a></p>
 </details>
 
-<p><span class="doc-section-title">Examples:</span></p>
+<p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">chats</span><span class="o">.</span><span class="n">list_members</span><span class="p">(</span><span class="s2">&quot;oc_chat1&quot;</span><span class="p">)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">[{&#39;member_id&#39;: &#39;ou_1&#39;, ...}, {&#39;member_id&#39;: &#39;ou_2&#39;, ...}]  # noqa: E501</span>
 </span></code></pre></div></td></tr></table></div>
 
 
-            <details class="quote">
-              <summary>Source code in <code>feishu/im/chats.py</code></summary>
+            <details class="mkdocstrings-source">
+              <summary>源代码位于： <code>feishu/im/chats.py</code></summary>
               <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-210">210</a></span>
 <span class="normal"><a href="#__codelineno-0-211">211</a></span>
 <span class="normal"><a href="#__codelineno-0-212">212</a></span>
@@ -5360,12 +5338,7 @@
   </span>
 
 <a href="#feishu.im.chats.ChatNamespace.remove_members" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">remove_members</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;chat_id&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.remove_members(chat_id)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.remove_members(chat_id)">chat_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;id_list&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.remove_members(id_list)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.remove_members(id_list)">id_list</a></span><span class="p">:</span> <span class="n"><span title="builtins.list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">],</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;member_id_type&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.remove_members(member_id_type)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.remove_members(member_id_type)">member_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;open_id&quot;</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">remove_members</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;chat_id&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.remove_members(chat_id)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.remove_members(chat_id)">chat_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;id_list&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.remove_members(id_list)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.remove_members(id_list)">id_list</a></span><span class="p">:</span> <span class="n"><span title="builtins.list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;member_id_type&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.remove_members(member_id_type)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.remove_members(member_id_type)">member_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s1">&#39;open_id&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -5373,14 +5346,14 @@
         <p>将用户或机器人移出群组。</p>
 
 
-<p><span class="doc-section-title">Parameters:</span></p>
+<p><span class="doc-section-title">参数：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
         </tr>
       </thead>
       <tbody>
@@ -5397,7 +5370,7 @@
               </div>
             </td>
             <td>
-                <em>required</em>
+                <em>必需</em>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -5413,7 +5386,7 @@
               </div>
             </td>
             <td>
-                <em>required</em>
+                <em>必需</em>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -5436,12 +5409,12 @@
     </table>
 
 
-    <p><span class="doc-section-title">Returns:</span></p>
+    <p><span class="doc-section-title">返回：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -5459,12 +5432,12 @@
     </table>
 
 
-<p><span class="doc-section-title">Raises:</span></p>
+<p><span class="doc-section-title">引发：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -5487,15 +5460,15 @@
   <p><a href="https://open.feishu.cn/document/server-docs/group/chat-member/delete">将用户或机器人移出群聊</a></p>
 </details>
 
-<p><span class="doc-section-title">Examples:</span></p>
+<p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">chats</span><span class="o">.</span><span class="n">remove_members</span><span class="p">(</span><span class="s2">&quot;oc_chat1&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;ou_user1&quot;</span><span class="p">])</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">{&#39;invalid_id_list&#39;: [], ...}  # noqa: E501</span>
 </span></code></pre></div></td></tr></table></div>
 
 
-            <details class="quote">
-              <summary>Source code in <code>feishu/im/chats.py</code></summary>
+            <details class="mkdocstrings-source">
+              <summary>源代码位于： <code>feishu/im/chats.py</code></summary>
               <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-245">245</a></span>
 <span class="normal"><a href="#__codelineno-0-246">246</a></span>
 <span class="normal"><a href="#__codelineno-0-247">247</a></span>
@@ -5573,14 +5546,7 @@
   </span>
 
 <a href="#feishu.im.chats.ChatNamespace.update" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">update</span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;chat_id&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.update(chat_id)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.update(chat_id)">chat_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;name&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.update(name)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.update(name)">name</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;description&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.update(description)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.update(description)">description</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_type&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.update(user_id_type)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.update(user_id_type)">user_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s2">&quot;open_id&quot;</span><span class="p">,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="o">**</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;**opts&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.update(**opts)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.update(**opts)">opts</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;typing.Any&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">update</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;chat_id&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.update(chat_id)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.update(chat_id)">chat_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;name&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.update(name)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.update(name)">name</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;description&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.update(description)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.update(description)">description</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_type&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.update(user_id_type)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.update(user_id_type)">user_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s1">&#39;open_id&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;**opts&lt;/code&gt; (&lt;code&gt;feishu.im.chats.ChatNamespace.update(**opts)&lt;/code&gt;)" href="#feishu.im.chats.ChatNamespace.update(**opts)">opts</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;typing.Any&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -5590,14 +5556,14 @@
 <code>None</code> 的项也会被忽略。</p>
 
 
-<p><span class="doc-section-title">Parameters:</span></p>
+<p><span class="doc-section-title">参数：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
         </tr>
       </thead>
       <tbody>
@@ -5614,7 +5580,7 @@
               </div>
             </td>
             <td>
-                <em>required</em>
+                <em>必需</em>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -5685,12 +5651,12 @@
     </table>
 
 
-    <p><span class="doc-section-title">Returns:</span></p>
+    <p><span class="doc-section-title">返回：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -5708,12 +5674,12 @@
     </table>
 
 
-<p><span class="doc-section-title">Raises:</span></p>
+<p><span class="doc-section-title">引发：</span></p>
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Description</th>
+          <th>类型</th>
+          <th>描述</th>
         </tr>
       </thead>
       <tbody>
@@ -5736,15 +5702,15 @@
   <p><a href="https://open.feishu.cn/document/server-docs/group/chat/update">更新群信息</a></p>
 </details>
 
-<p><span class="doc-section-title">Examples:</span></p>
+<p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">chats</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s2">&quot;oc_chat1&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;New Name&quot;</span><span class="p">)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">{&#39;chat_id&#39;: &#39;oc_chat1&#39;, ...}  # noqa: E501</span>
 </span></code></pre></div></td></tr></table></div>
 
 
-            <details class="quote">
-              <summary>Source code in <code>feishu/im/chats.py</code></summary>
+            <details class="mkdocstrings-source">
+              <summary>源代码位于： <code>feishu/im/chats.py</code></summary>
               <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-276">276</a></span>
 <span class="normal"><a href="#__codelineno-0-277">277</a></span>
 <span class="normal"><a href="#__codelineno-0-278">278</a></span>
@@ -5874,7 +5840,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月22日 15:07:11 UTC">2026-06-22 15:07:11</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月22日 15:55:07 UTC">2026-06-22 15:55:07</span>
   </span>
 
     
