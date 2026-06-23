@@ -33,6 +33,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from chanfig import NestedDict
+
 
 def is_mentioned(message: dict[str, Any], *, open_id: str | None = None, union_id: str | None = None) -> bool:
     r"""
@@ -72,6 +74,83 @@ def is_mentioned(message: dict[str, Any], *, open_id: str | None = None, union_i
     )
 
 
+def message_content(message: dict[str, Any]) -> NestedDict:
+    r"""
+    解析飞书消息体中的 `content` JSON。
+
+    Args:
+        message: 飞书消息体字典，含 `content`。
+
+    Returns:
+        解析后的 `content`；缺失、格式错误或非对象时返回空 [chanfig.NestedDict][]。
+
+    Examples:
+        >>> message_content({"content": '{"text":"hi"}'}).text
+        'hi'
+        >>> message_content({"content": "not json"})
+        {}
+    """
+    raw = message.get("content")
+    if not raw:
+        return NestedDict()
+    try:
+        content = json.loads(raw) if isinstance(raw, str) else raw
+    except (TypeError, ValueError):
+        return NestedDict()
+    if isinstance(content, NestedDict):
+        return content
+    if isinstance(content, dict):
+        return NestedDict(content)
+    return NestedDict()
+
+
+def message_resource(message: dict[str, Any]) -> NestedDict | None:
+    r"""
+    从图片或文件消息中提取可下载资源。
+
+    返回值中的 `key` 可传给 [feishu.im.messages.IMNamespace.get_resource][] 的 `file_key`，
+    `resource_type` 可作为同名参数传入。
+
+    Args:
+        message: 飞书消息体字典。
+
+    Returns:
+        资源描述；没有图片或文件资源时返回 `None`。
+
+    Examples:
+        >>> message_resource({"message_type": "image", "content": '{"image_key":"img_1"}'}).key
+        'img_1'
+        >>> message_resource({"message_type": "file", "content": '{"file_key":"file_1","file_name":"a.pdf"}'}).name
+        'a.pdf'
+    """
+    content = message_content(message)
+    message_type = str(message.get("message_type") or message.get("msg_type") or "")
+    image_key = _string(content.get("image_key"))
+    if image_key:
+        return NestedDict(
+            kind="image",
+            key=image_key,
+            resource_type="image",
+            message_type=message_type,
+            name=_string(content.get("file_name")) or _string(content.get("name")),
+            mime_type=_string(content.get("mime_type")) or _string(content.get("file_type")),
+            size=content.get("size") or content.get("file_size"),
+        )
+
+    file_key = _string(content.get("file_key"))
+    if file_key:
+        return NestedDict(
+            kind="file",
+            key=file_key,
+            resource_type="file",
+            message_type=message_type,
+            name=_string(content.get("file_name")) or _string(content.get("name")),
+            mime_type=_string(content.get("mime_type")) or _string(content.get("file_type")),
+            size=content.get("size") or content.get("file_size"),
+        )
+    return None
+
+
 def message_text(message: dict[str, Any]) -> str:
     r"""
     从飞书消息体中提取可读文本。
@@ -105,10 +184,7 @@ def message_text(message: dict[str, Any]) -> str:
         >>> message_text(post_message)
         '## 标题\n\n正文'
     """
-    raw = message.get("content")
-    if not raw:
-        return ""
-    content = json.loads(raw) if isinstance(raw, str) else raw
+    content = message_content(message)
     text = _content_text(content)
     for mention in message.get("mentions") or []:
         key = mention.get("key")
@@ -145,3 +221,7 @@ def _mention_matches(mention: dict[str, Any], *, open_id: str | None, union_id: 
     if union_id is not None and ident == union_id:
         return True
     return False
+
+
+def _string(value: Any) -> str | None:
+    return value if isinstance(value, str) and value else None

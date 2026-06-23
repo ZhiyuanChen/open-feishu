@@ -20,3 +20,13 @@
 # <https://multimolecule.danling.org/about/license-faq>.
 
 from __future__ import annotations
+
+from .comments import CommentsNamespace
+from .task import TaskNamespace
+from .tasks import TasksNamespace
+
+__all__ = [
+    "CommentsNamespace",
+    "TaskNamespace",
+    "TasksNamespace",
+]

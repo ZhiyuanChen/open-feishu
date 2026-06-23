@@ -20,3 +20,17 @@
 # <https://multimolecule.danling.org/about/license-faq>.
 
 from __future__ import annotations
+
+from .apps import AppsNamespace
+from .bitable import BitableNamespace
+from .fields import FieldsNamespace
+from .records import RecordsNamespace
+from .tables import TablesNamespace
+
+__all__ = [
+    "AppsNamespace",
+    "BitableNamespace",
+    "FieldsNamespace",
+    "RecordsNamespace",
+    "TablesNamespace",
+]

@@ -20,3 +20,9 @@
 # <https://multimolecule.danling.org/about/license-faq>.
 
 from __future__ import annotations
+
+from .documents import DocxNamespace
+
+__all__ = [
+    "DocxNamespace",
+]
