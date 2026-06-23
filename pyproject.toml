@@ -49,6 +49,9 @@ dependencies = [
 optional-dependencies.anthropic = [
   "anthropic",
 ]
+optional-dependencies.mcp = [
+  "mcp",
+]
 optional-dependencies.openai = [
   "openai",
 ]
@@ -58,6 +61,7 @@ optional-dependencies.ws = [
 urls.documentation = "https://feishu.danling.org"
 urls.homepage = "https://feishu.danling.org"
 urls.repository = "https://github.com/ZhiyuanChen/open-feishu"
+scripts.feishu-mcp = "feishu.mcp.server:main"
 
 [tool.setuptools]
 packages.find.include = [ "feishu*" ]

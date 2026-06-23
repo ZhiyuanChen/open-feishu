@@ -22,7 +22,7 @@
 from __future__ import annotations
 
 from .chats import ChatNamespace
-from .inbound import is_mentioned, message_text
+from .inbound import is_mentioned, message_content, message_resource, message_text
 from .messages import IMNamespace, infer_msg_type, infer_receive_id_type
 from .pins import PinsNamespace
 from .reactions import ReactionsNamespace
@@ -35,5 +35,7 @@ __all__ = [
     "infer_msg_type",
     "infer_receive_id_type",
     "is_mentioned",
+    "message_content",
+    "message_resource",
     "message_text",
 ]

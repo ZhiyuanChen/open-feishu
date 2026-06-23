@@ -20,3 +20,21 @@
 # <https://multimolecule.danling.org/about/license-faq>.
 
 from __future__ import annotations
+
+from .approval import ApprovalNamespace
+from .builders import approval_form, approval_form_field, approval_instance
+from .comments import CommentsNamespace
+from .definitions import DefinitionsNamespace
+from .instances import InstancesNamespace
+from .tasks import TasksNamespace
+
+__all__ = [
+    "ApprovalNamespace",
+    "CommentsNamespace",
+    "DefinitionsNamespace",
+    "InstancesNamespace",
+    "TasksNamespace",
+    "approval_form",
+    "approval_form_field",
+    "approval_instance",
+]

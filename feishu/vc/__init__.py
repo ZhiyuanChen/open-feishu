@@ -20,3 +20,13 @@
 # <https://multimolecule.danling.org/about/license-faq>.
 
 from __future__ import annotations
+
+from .meetings import MeetingsNamespace
+from .reserves import ReservesNamespace
+from .vc import VCNamespace
+
+__all__ = [
+    "MeetingsNamespace",
+    "ReservesNamespace",
+    "VCNamespace",
+]

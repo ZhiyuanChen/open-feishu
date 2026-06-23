@@ -34,7 +34,7 @@ from .errors import (
     FeishuSignatureError,
     FeishuTransportError,
 )
-from .signature import SignatureVerifier
+from .signature import SignatureVerifier, verify_signature
 
 install_redaction()
 
@@ -50,4 +50,6 @@ __all__ = [
     "FeishuSignatureError",
     "FeishuCryptoError",
     "SignatureVerifier",
+    "install_redaction",
+    "verify_signature",
 ]

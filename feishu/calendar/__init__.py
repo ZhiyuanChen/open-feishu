@@ -20,3 +20,33 @@
 # <https://multimolecule.danling.org/about/license-faq>.
 
 from __future__ import annotations
+
+from .attendees import AttendeesNamespace
+from .builders import (
+    DEFAULT_TIMEZONE,
+    calendar_attendees,
+    calendar_event,
+    calendar_time,
+    freebusy_body,
+    rfc3339,
+    unix_seconds,
+)
+from .calendar import CalendarNamespace
+from .calendars import CalendarsNamespace
+from .events import EventsNamespace
+from .freebusy import FreebusyNamespace
+
+__all__ = [
+    "AttendeesNamespace",
+    "CalendarNamespace",
+    "CalendarsNamespace",
+    "DEFAULT_TIMEZONE",
+    "EventsNamespace",
+    "FreebusyNamespace",
+    "calendar_attendees",
+    "calendar_event",
+    "calendar_time",
+    "freebusy_body",
+    "rfc3339",
+    "unix_seconds",
+]

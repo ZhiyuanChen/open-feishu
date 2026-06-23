@@ -22,5 +22,10 @@
 from __future__ import annotations
 
 from .client import WsClient
+from .model import ClientConfig, client_config_from_dict
 
-__all__ = ["WsClient"]
+__all__ = [
+    "ClientConfig",
+    "WsClient",
+    "client_config_from_dict",
+]
