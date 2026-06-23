@@ -22,8 +22,12 @@
 from __future__ import annotations
 
 import asyncio
+import json
+import os
 import time
 from collections.abc import Callable
+from contextlib import suppress
+from pathlib import Path
 from typing import Protocol, runtime_checkable
 
 
@@ -39,7 +43,12 @@ class SeenStore(Protocol):
     通过 [InMemorySeenStore][feishu.events.idempotency.InMemorySeenStore] 即得到一个内置实现，
     生产环境可改用基于 Redis 等共享存储的实现。
 
-    本协议使用 `runtime_checkable`，可用 `isinstance` 进行结构化校验。
+    本协议使用 `runtime_checkable`，可用 `isinstance` 进行结构化校验；结构化校验仅要求实现
+    `seen` / `mark` 两个基础方法。
+
+    实现可以额外提供原子的 `claim`（见下）作为快路径。当存储支持时，
+    [claim][feishu.events.idempotency.claim] 会优先调用它，从而在并发重复投递下原子地完成
+    「检查并标记」；未提供时则回退到 `seen()` + `mark()` 两步。
 
     飞书文档:
         [接收事件](https://open.feishu.cn/document/server-docs/event-subscription-guide/event-subscription-configure-/request-url-configuration-case)
@@ -85,7 +94,7 @@ class InMemorySeenStore:
         self._store: dict[str, float] = {}
         self._lock = asyncio.Lock()
 
-    async def add(self, event_id: str) -> bool:
+    async def claim(self, event_id: str) -> bool:
         r"""
         原子地认领 `event_id`：此前未标记（或已过期）则标记并返回 `True`，否则返回 `False`。
 
@@ -137,11 +146,97 @@ class InMemorySeenStore:
             del self._store[k]
 
 
+class FileSeenStore:
+    r"""
+    基于本地 JSON 文件、带 TTL 的 [SeenStore][feishu.events.idempotency.SeenStore] 实现。
+
+    与 [InMemorySeenStore][feishu.events.idempotency.InMemorySeenStore] 不同，本实现会把
+    已处理的 `event_id` 持久化到文件中，适合单机长连接进程在重启后继续去重。
+    多副本部署仍应使用 Redis 等共享存储。
+
+    Args:
+        path: JSON 文件路径。
+        ttl: 记录的存活时长（秒），超过后视为未见过。默认 7 天。
+        now: wall-clock 时间函数，默认 `time.time`；使用 wall-clock 是为了跨进程重启仍可判断过期。
+    """
+
+    def __init__(
+        self, path: str | os.PathLike[str], ttl: float = 7 * 24 * 3600, *, now: Callable[[], float] = time.time
+    ) -> None:
+        self._path = Path(path)
+        self._ttl = ttl
+        self._now = now
+        self._lock = asyncio.Lock()
+
+    async def claim(self, event_id: str) -> bool:
+        r"""
+        原子地认领 `event_id`：此前未标记（或已过期）则标记并返回 `True`，否则返回 `False`。
+        """
+        async with self._lock:
+            data = self._load()
+            self._purge(data)
+            if event_id in data:
+                self._save(data)
+                return False
+            data[event_id] = self._now() + self._ttl
+            self._save(data)
+            return True
+
+    async def seen(self, event_id: str) -> bool:
+        r"""查询 `event_id` 是否在 TTL 内被标记过。"""
+        async with self._lock:
+            data = self._load()
+            self._purge(data)
+            found = event_id in data
+            self._save(data)
+            return found
+
+    async def mark(self, event_id: str) -> None:
+        r"""标记 `event_id` 为已处理，并按 TTL 设置过期时间。"""
+        async with self._lock:
+            data = self._load()
+            self._purge(data)
+            data[event_id] = self._now() + self._ttl
+            self._save(data)
+
+    def _load(self) -> dict[str, float]:
+        if not self._path.is_file():
+            return {}
+        try:
+            raw = json.loads(self._path.read_text())
+        except (OSError, json.JSONDecodeError):
+            return {}
+        if not isinstance(raw, dict):
+            return {}
+        data: dict[str, float] = {}
+        for key, value in raw.items():
+            if not isinstance(key, str):
+                continue
+            if isinstance(value, (int, float)):
+                data[key] = float(value)
+        return data
+
+    def _save(self, data: dict[str, float]) -> None:
+        if self._path.parent != Path("."):
+            self._path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = self._path.with_suffix(f"{self._path.suffix}.tmp")
+        tmp_path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        tmp_path.replace(self._path)
+        with suppress(OSError):
+            os.chmod(self._path, 0o600)
+
+    def _purge(self, data: dict[str, float]) -> None:
+        now = self._now()
+        expired = [key for key, expires_at in data.items() if expires_at <= now]
+        for key in expired:
+            del data[key]
+
+
 async def claim(store: SeenStore, event_id: str) -> bool:
     r"""
     向 `store` 认领 `event_id`，返回是否为首次见到（应处理）。
 
-    若 `store` 提供原子的 `add(event_id) -> bool`（如
+    若 `store` 提供原子的 `claim(event_id) -> bool`（如
     [InMemorySeenStore][feishu.events.idempotency.InMemorySeenStore]）则优先使用，从而在并发重复投递下
     也能保证「检查并标记」原子完成；否则回退到 `seen()` + `mark()` 两步（语义不变，其原子性由具体存储自行保证）。
 
@@ -152,9 +247,9 @@ async def claim(store: SeenStore, event_id: str) -> bool:
     Returns:
         首次见到返回 `True`（应处理该事件），重复返回 `False`（应跳过）。
     """
-    add = getattr(store, "add", None)
-    if callable(add):
-        return bool(await add(event_id))
+    store_claim = getattr(store, "claim", None)
+    if callable(store_claim):
+        return bool(await store_claim(event_id))
     if await store.seen(event_id):
         return False
     await store.mark(event_id)

@@ -11,11 +11,11 @@ class TestInMemorySeenStore:
         assert await store.seen("evt_1") is True
         assert await store.seen("evt_other") is False
 
-    async def test_add_is_atomic_claim(self):
-        # add() is the atomic check-and-set: first call claims, duplicates return False.
+    async def test_claim_is_atomic(self):
+        # claim() is the atomic check-and-set: first call claims, duplicates return False.
         store = InMemorySeenStore()
-        assert await store.add("evt_1") is True
-        assert await store.add("evt_1") is False
+        assert await store.claim("evt_1") is True
+        assert await store.claim("evt_1") is False
         assert await store.seen("evt_1") is True
 
     @pytest.mark.parametrize(
@@ -36,7 +36,7 @@ class TestInMemorySeenStore:
 
 
 class SeenMarkOnly:
-    """A store exposing only seen()/mark() -- no atomic add()."""
+    """A store exposing only seen()/mark() -- no atomic claim()."""
 
     def __init__(self):
         self._ids: set[str] = set()
@@ -49,10 +49,13 @@ class SeenMarkOnly:
 
 
 class TestClaim:
+    async def test_seen_mark_only_store_implements_protocol(self):
+        assert isinstance(SeenMarkOnly(), SeenStore)
+
     @pytest.mark.parametrize(
         "store",
         [InMemorySeenStore(), SeenMarkOnly()],
-        ids=["atomic-add", "seen-mark-fallback"],
+        ids=["atomic-claim", "seen-mark-fallback"],
     )
     async def test_first_seen_then_duplicate(self, store):
         assert await claim(store, "evt_1") is True  # first-seen -> process

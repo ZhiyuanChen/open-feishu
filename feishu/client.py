@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from .docx.documents import DocxNamespace
     from .drive.drive import DriveNamespace
     from .im.messages import IMNamespace
+    from .meeting_room.rooms import MeetingRoomNamespace
     from .sheets.spreadsheets import SheetsNamespace
     from .task.task import TaskNamespace
     from .vc.vc import VCNamespace
@@ -90,6 +91,7 @@ _NAMESPACE_SLOTS = (
     "_docx",
     "_drive",
     "_im",
+    "_meeting_room",
     "_oauth",
     "_sheets",
     "_task",
@@ -186,6 +188,7 @@ class FeishuClient:
         self._docx: DocxNamespace | None = None
         self._drive: DriveNamespace | None = None
         self._im: IMNamespace | None = None
+        self._meeting_room: MeetingRoomNamespace | None = None
         self._oauth: OAuthNamespace | None = None
         self._sheets: SheetsNamespace | None = None
         self._task: TaskNamespace | None = None
@@ -356,6 +359,23 @@ class FeishuClient:
 
             self._im = IMNamespace(self)
         return self._im
+
+    @property
+    def meeting_room(self) -> MeetingRoomNamespace:
+        r"""
+        会议室命名空间，提供会议室列表、详情与忙闲查询能力。
+
+        Returns:
+            绑定到本客户端的 MeetingRoom 命名空间对象（首次访问时惰性创建）。
+
+        飞书文档:
+            [会议室](https://open.feishu.cn/document/server-docs/calendar-v4/meeting-room-event/query-room-availability)
+        """
+        if self._meeting_room is None:
+            from .meeting_room.rooms import MeetingRoomNamespace
+
+            self._meeting_room = MeetingRoomNamespace(self)
+        return self._meeting_room
 
     @property
     def oauth(self) -> OAuthNamespace:

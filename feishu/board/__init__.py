@@ -20,3 +20,9 @@
 # <https://multimolecule.danling.org/about/license-faq>.
 
 from __future__ import annotations
+
+from .whiteboards import BoardNamespace
+
+__all__ = [
+    "BoardNamespace",
+]

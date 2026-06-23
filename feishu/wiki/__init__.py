@@ -20,3 +20,9 @@
 # <https://multimolecule.danling.org/about/license-faq>.
 
 from __future__ import annotations
+
+from .spaces import WikiNamespace
+
+__all__ = [
+    "WikiNamespace",
+]

@@ -20,3 +20,11 @@
 # <https://multimolecule.danling.org/about/license-faq>.
 
 from __future__ import annotations
+
+from .anthropic import AnthropicBackend
+from .openai import OpenAIBackend
+
+__all__ = [
+    "AnthropicBackend",
+    "OpenAIBackend",
+]
