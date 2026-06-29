@@ -36,6 +36,7 @@ import pytest
 
 from feishu.agent.adapters.anthropic import AnthropicBackend
 from feishu.agent.adapters.openai import OpenAIBackend
+from feishu.agent.approval import ApprovalStatus, DefaultApprovalEngine
 from feishu.agent.llm import (
     Message,
     MessageStop,
@@ -54,7 +55,6 @@ from feishu.agent.loop import (
     session_id_for,
     user_message_from_event,
 )
-from feishu.agent.approval import ApprovalStatus, DefaultApprovalEngine
 from feishu.agent.result import ToolOutcome, ToolResult
 from feishu.agent.session import ClaimResult, InMemoryPendingApprovalStore, InMemorySessionStore, PendingApproval
 from feishu.agent.tools import ToolRegistry
