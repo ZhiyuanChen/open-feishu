@@ -81,14 +81,13 @@ write_to = "feishu/_version.py"
 line-length = 120
 
 [tool.isort]
-line_length = 120
 profile = "black"
+line_length = 120
 
 [tool.flake8]
 max-line-length = 120
 
 [tool.pylint]
-format.max-line-length = 120
 main.fail-under = 9.8
 messages_control.disable = """
   E0012,
@@ -97,9 +96,18 @@ messages_control.disable = """
   R0801,
 """
 reports.output-format = "colorized"
+format.max-line-length = 120
+
+[tool.mypy]
+ignore_missing_imports = true
+overrides = [
+  # Honest typing: every function in the shipped package must be fully annotated
+  # (params + return). Scoped to feishu.* so test/example helpers stay untyped-friendly.
+  # Enforced in CI via the pre-commit mypy hook.
+  { module = [ "feishu", "feishu.*" ], disallow_untyped_defs = true, disallow_incomplete_defs = true, warn_unused_ignores = true },
+]
 
 [tool.pytest]
-ini_options.asyncio_mode = "auto"
 # Scope collection to the package (for --doctest-modules) and its tests, so
 # doctest collection never wanders into examples/ or repo-root scratch files.
 ini_options.testpaths = [ "feishu", "tests" ]
@@ -110,6 +118,7 @@ ini_options.addopts = "--cov=feishu --doctest-modules --ignore=docs --no-cov-on-
 ini_options.filterwarnings = [
   "ignore:Using `httpx` with `starlette.testclient` is deprecated",
 ]
+ini_options.asyncio_mode = "auto"
 
 [tool.coverage]
 run.branch = true
@@ -118,12 +127,3 @@ report.fail_under = 60
 report.show_missing = true
 json.output = "coverage.json"
 xml.output = "coverage.xml"
-
-[tool.mypy]
-ignore_missing_imports = true
-overrides = [
-  # Honest typing: every function in the shipped package must be fully annotated
-  # (params + return). Scoped to feishu.* so test/example helpers stay untyped-friendly.
-  # Enforced in CI via the pre-commit mypy hook.
-  { module = [ "feishu", "feishu.*" ], disallow_untyped_defs = true, disallow_incomplete_defs = true, warn_unused_ignores = true },
-]
