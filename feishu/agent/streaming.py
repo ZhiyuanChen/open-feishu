@@ -28,7 +28,7 @@ from typing import Any, AsyncIterator, Iterator
 
 from .adapters.anthropic import _translate_events as _anthropic_translate
 from .adapters.openai import _translate_chunks as _openai_translate
-from .llm import TextDelta
+from .llm import ReasoningDelta, TextDelta
 
 __all__ = ["stream_text"]
 
@@ -205,7 +205,7 @@ async def _stream_text_async(async_iter: AsyncIterator[Any]) -> AsyncIterator[st
         # OpenAI ChatCompletionChunk: has a .choices list
         async for text in _yield_text_from_openai(_replay()):
             yield text
-    elif isinstance(head, TextDelta):
+    elif isinstance(head, (TextDelta, ReasoningDelta)):
         # Already-normalized StreamChunk iterator from LlmBackend.stream()
         async for item in _replay():
             if isinstance(item, TextDelta):

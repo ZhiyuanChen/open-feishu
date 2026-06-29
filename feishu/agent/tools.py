@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .llm import ToolSpec
+from .result import ToolOutcome, ToolResult
 
 
 class ToolValidationError(ValueError):
@@ -104,7 +105,7 @@ class ToolRegistry:
         >>> _ = reg.register("weather", weather, input_schema=schema, description="天气")
         >>> reg.specs()
         [ToolSpec(name='weather', description='天气', input_schema={'type': 'object'})]
-        >>> asyncio.run(reg.dispatch("weather", {"city": "上海"}))
+        >>> asyncio.run(reg.dispatch("weather", {"city": "上海"})).content
         '上海：晴'
     """
 
@@ -166,6 +167,29 @@ class ToolRegistry:
             return _add(handler)
         return _add  # decorator form
 
+    def add(self, tool: Tool) -> Tool:
+        r"""
+        注册一个已构造的 [feishu.agent.tools.Tool][]，并原样返回。
+
+        适用于注册由工厂产出的工具（如 [feishu.agent.toolkit][] 中的工厂），无需经 `register` 重新声明
+        Schema 与描述。
+
+        Args:
+            tool: 待注册的工具。
+
+        Returns:
+            原样返回 `tool`，便于链式使用。
+
+        Examples:
+            >>> reg = ToolRegistry()
+            >>> async def ping(): return "pong"
+            >>> tool = Tool(name="ping", description="心跳", input_schema={"type": "object"}, handler=ping)
+            >>> reg.add(tool).name
+            'ping'
+        """
+        self._tools[tool.name] = tool
+        return tool
+
     def specs(self) -> list[ToolSpec]:
         r"""
         将所有已注册工具导出为 [feishu.agent.llm.ToolSpec][] 列表。
@@ -200,9 +224,9 @@ class ToolRegistry:
         """
         return self._tools[name]
 
-    async def dispatch(self, name: str, arguments: dict[str, Any]) -> Any:
+    async def dispatch(self, name: str, arguments: dict[str, Any]) -> ToolResult:
         r"""
-        校验参数并执行指定工具，返回其结果。
+        校验参数并执行指定工具，返回归一化的 [feishu.agent.result.ToolResult][]。
 
         先依据工具的 `input_schema` 校验 `arguments`，再调用对应处理函数。协程处理函数会被 `await`；
         同步处理函数则放到工作线程中执行，避免阻塞事件循环。
@@ -212,7 +236,8 @@ class ToolRegistry:
             arguments: 已解析为字典的工具参数。
 
         Returns:
-            工具处理函数的返回值。
+            归一化后的 [feishu.agent.result.ToolResult][]；处理函数返回的原始值会被包装为 `COMPLETED` 结果，
+            使调用方（主循环、审批引擎）始终拿到统一的结果形状。
 
         Raises:
             KeyError: 工具未注册时抛出。
@@ -225,14 +250,17 @@ class ToolRegistry:
             >>> async def weather(city):
             ...     return f"{city}：晴"
             >>> _ = reg.register("weather", weather, input_schema=schema, description="查询天气")
-            >>> asyncio.run(reg.dispatch("weather", {"city": "北京"}))
+            >>> asyncio.run(reg.dispatch("weather", {"city": "北京"})).content
             '北京：晴'
         """
         tool = self._tools[name]  # raises KeyError if unknown
         _validate(name, tool.input_schema, arguments)
         if inspect.iscoroutinefunction(tool.handler) or inspect.iscoroutinefunction(type(tool.handler).__call__):
-            return await tool.handler(**arguments)
-        result = await asyncio.to_thread(tool.handler, **arguments)
-        if inspect.isawaitable(result):
-            return await result
-        return result
+            result = await tool.handler(**arguments)
+        else:
+            result = await asyncio.to_thread(tool.handler, **arguments)
+            if inspect.isawaitable(result):
+                result = await result
+        # Normalize every handler's return into a ToolResult so callers get one uniform shape; a raw value
+        # becomes a COMPLETED result carrying it verbatim.
+        return result if isinstance(result, ToolResult) else ToolResult(ToolOutcome.COMPLETED, content=result)

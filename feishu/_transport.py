@@ -189,6 +189,10 @@ class Transport:
             await self._client.aclose()
 
     def _url(self, path: str) -> str:
+        # Absolute URLs pass through unchanged: a few Feishu endpoints (e.g. approval file upload) live on a
+        # different host outside the /open-apis prefix. Relative paths get the standard Open API prefix.
+        if path.startswith(("http://", "https://")):
+            return path
         return f"{self.base_url}{API_PREFIX}/{path.lstrip('/')}"
 
     async def request(

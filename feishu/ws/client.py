@@ -42,6 +42,11 @@ from .model import ClientConfig, client_config_from_dict
 # 握手端点位于站点根路径下，而非 Open API 前缀（/open-apis）之下。
 _ENDPOINT_PATH = "/callback/ws/endpoint"
 
+# 卡片回调须把处理结果（toast / 更新后的卡片）编码进 ACK 帧，故「先分发、后 ACK」同步处理；
+# 其余事件（尤其是可能触发慢速 Agent 循环的 `im.message.receive_v1`）一律「先即时 ACK、再后台分发」——
+# 否则慢处理函数迟迟不 ACK，会被飞书按「至少一次」语义重投，导致同一条消息被重复处理、重复回复。
+_SYNC_ACK_EVENT_TYPES = frozenset({"card.action.trigger"})
+
 # 分片重组缓冲中同时在途（尚未集齐）的消息数上限：超出时丢弃最旧的未完成分片，
 # 避免上游漏发某个分片导致缓冲无界增长。
 _MAX_PARTIAL_MESSAGES = 1024
@@ -215,11 +220,10 @@ class WsClient:
             with suppress(ValueError, KeyError):
                 self._ping_interval = client_config_from_dict(json.loads(frame.payload.decode("utf-8"))).ping_interval
 
-    async def _build_ack_for(self, frame: Frame, payload: bytes) -> Frame:
-        r"""解析完整载荷、交由分发器处理，并把分发结果编码进 ACK 帧返回。"""
-        event = Event.from_payload(json.loads(payload.decode("utf-8")))
-        result = await self._dispatcher.dispatch(event)
-        return _build_ack(frame, result)
+    async def _send_frame(self, websocket: Any, frame: Frame, send_lock: asyncio.Lock) -> None:
+        r"""在 `send_lock` 保护下回送一帧（ACK），保证并发任务间的发送不交错。"""
+        async with send_lock:
+            await websocket.send(encode_frame(frame))
 
     def _reassemble(self, frame: Frame) -> bytes | None:
         r"""
@@ -292,7 +296,7 @@ class WsClient:
                 payload = self._reassemble(frame)
                 if payload is None:
                     continue
-                task = asyncio.ensure_future(self._send_ack(websocket, frame, payload, send_lock))
+                task = asyncio.ensure_future(self._handle_frame(websocket, frame, payload, send_lock))
                 pending.add(task)
                 task.add_done_callback(pending.discard)
         finally:
@@ -302,17 +306,28 @@ class WsClient:
                 await asyncio.gather(*pending, return_exceptions=True)
             self._websocket = None
 
-    async def _send_ack(self, websocket: Any, frame: Frame, payload: bytes, send_lock: asyncio.Lock) -> None:
+    async def _handle_frame(self, websocket: Any, frame: Frame, payload: bytes, send_lock: asyncio.Lock) -> None:
         r"""
-        分发完整消息并在 `send_lock` 保护下回送 ACK（作为独立任务并发执行）。
+        处理一条完整入站消息：解析事件、回送 ACK、交由分发器处理（作为独立任务并发执行）。
+
+        卡片回调（[_SYNC_ACK_EVENT_TYPES][feishu.ws.client._SYNC_ACK_EVENT_TYPES]）须把处理结果
+        （toast / 更新后的卡片）编码进 ACK 帧，故「先分发、后 ACK」；其余事件（尤其是可能触发慢速
+        Agent 循环的 `im.message.receive_v1`）则「先即时 ACK、再后台分发」，避免慢处理函数迟迟不 ACK
+        被飞书按「至少一次」语义重投而重复处理同一条消息。
 
         作为脱离收发循环的独立任务运行，其异常不会冒泡到 `_serve`；因此在此捕获并记录
         （载荷解析失败、处理函数异常或连接已关闭导致的发送失败），避免在连接存活期间被静默吞掉。
         """
         try:
-            ack = await self._build_ack_for(frame, payload)
-            async with send_lock:
-                await websocket.send(encode_frame(ack))
+            event = Event.from_payload(json.loads(payload.decode("utf-8")))
+            if event.event_type in _SYNC_ACK_EVENT_TYPES:
+                # Card actions: the ACK carries the toast / updated card, so dispatch first.
+                result = await self._dispatcher.dispatch(event)
+                await self._send_frame(websocket, _build_ack(frame, result), send_lock)
+            else:
+                # ACK immediately so the broker can't redeliver while a slow handler runs, then dispatch.
+                await self._send_frame(websocket, _build_ack(frame, None), send_lock)
+                await self._dispatcher.dispatch(event)
         except Exception:  # noqa: BLE001 - a per-message task failure must be logged, not silently dropped
             self.logger.exception("ws ack/dispatch failed for frame seq_id=%s", frame.seq_id)
 

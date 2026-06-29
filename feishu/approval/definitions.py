@@ -25,6 +25,7 @@ from chanfig import NestedDict
 
 from .._namespace import Namespace
 from .._url import quote_segment
+from ..consts import MAX_PAGE_SIZE
 
 
 class DefinitionsNamespace(Namespace):
@@ -39,6 +40,41 @@ class DefinitionsNamespace(Namespace):
     飞书文档:
         [审批 / 审批定义](https://open.feishu.cn/document/server-docs/approval-v4/approval/get)
     """
+
+    async def list(
+        self,
+        *,
+        page_size: int = 50,
+        max_items: int | None = None,
+        locale: str | None = None,
+    ) -> list[NestedDict]:
+        r"""
+        查询当前身份可发起的审批定义列表。
+
+        飞书按调用身份过滤可发起的审批定义；该接口通常需要通过
+        [feishu.client.FeishuClient.as_user][] 派生的用户视图调用。
+
+        Args:
+            page_size: 每页条数，超过 [feishu.consts.MAX_PAGE_SIZE][] 时由客户端收敛。
+            max_items: 最多返回的条数；为空表示返回全部。
+            locale: 国际化语言，如 `zh-CN`、`en-US`；为空时省略该参数。
+
+        Returns:
+            审批定义摘要列表，每项通常包含 `approval_code` 与 `approval_name`。
+
+        飞书文档:
+            [查询审批定义列表](https://feishu.apifox.cn/api-59181909)
+        """
+        params = {}
+        if locale is not None:
+            params["locale"] = locale
+        items = await self._client.paginate_get(
+            "approval/v4/approvals",
+            params=params,
+            page_size=min(page_size, MAX_PAGE_SIZE),
+            max_items=max_items,
+        )
+        return [NestedDict(item) for item in items if isinstance(item, dict)]
 
     async def get(self, approval_code: str, *, locale: str | None = None, user_id: str | None = None) -> NestedDict:
         r"""

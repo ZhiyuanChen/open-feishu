@@ -212,3 +212,34 @@ class EventsNamespace(Namespace):
             f"calendar/v4/calendars/{quote_segment(calendar_id)}/events/{quote_segment(event_id)}",
             json=event,
         )
+
+    async def reply(self, calendar_id: str, event_id: str, *, rsvp_status: str) -> NestedDict:
+        r"""
+        回复（RSVP）日程邀请。
+
+        将当前身份对某个日程邀请的出席意向设置为 `rsvp_status`：`"accept"` 接受、`"tentative"` 待定、
+        `"decline"` 拒绝。
+
+        Args:
+            calendar_id: 日历的 `calendar_id`。
+            event_id: 日程的 `event_id`。
+            rsvp_status: 出席意向，`"accept"`/`"tentative"`/`"decline"` 之一。
+
+        Returns:
+            接口返回的数据（通常为空）。
+
+        Raises:
+            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
+
+        飞书文档:
+            [回复日程](https://open.feishu.cn/document/server-docs/calendar-v4/calendar-event/reply)
+
+        Examples:
+            >>> await client.calendar.events.reply("feishu.cn_xxx", "evtxxx", rsvp_status="accept")  # doctest:+SKIP
+            {}
+        """
+        return await self._request_data(
+            "POST",
+            f"calendar/v4/calendars/{quote_segment(calendar_id)}/events/{quote_segment(event_id)}/reply",
+            json={"rsvp_status": rsvp_status},
+        )

@@ -48,7 +48,7 @@ class TestRegister:
         tool = reg.get("echo")
         assert tool.requires_approval is True
         assert tool.handler is echo
-        assert await reg.dispatch("echo", {"city": "sh"}) == "sh"
+        assert (await reg.dispatch("echo", {"city": "sh"})).content == "sh"
 
     def test_get_returns_tool(self, reg):
         assert isinstance(reg.get("weather"), Tool)
@@ -60,7 +60,7 @@ class TestRegister:
 
 class TestDispatch:
     async def test_async_handler(self, reg):
-        assert await reg.dispatch("weather", {"city": "beijing"}) == "sunny in beijing"
+        assert (await reg.dispatch("weather", {"city": "beijing"})).content == "sunny in beijing"
 
     async def test_sync_handler_runs_off_event_loop(self):
         reg = ToolRegistry()
@@ -72,7 +72,7 @@ class TestDispatch:
             return city.upper()
 
         reg.register("up", blocking, input_schema=SCHEMA, description="d")
-        assert await reg.dispatch("up", {"city": "shanghai"}) == "SHANGHAI"
+        assert (await reg.dispatch("up", {"city": "shanghai"})).content == "SHANGHAI"
         # sync handler must run in a worker thread, not block the event loop thread
         assert seen["thread"] != loop_thread
 
@@ -85,7 +85,7 @@ class TestDispatch:
                 return f"async-class:{city}"
 
         reg.register("async_class", AsyncCityHandler(), input_schema=SCHEMA, description="d")
-        assert await reg.dispatch("async_class", {"city": "tokyo"}) == "async-class:tokyo"
+        assert (await reg.dispatch("async_class", {"city": "tokyo"})).content == "async-class:tokyo"
 
     @pytest.mark.parametrize(
         "arguments",

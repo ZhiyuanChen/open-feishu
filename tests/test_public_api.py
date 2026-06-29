@@ -24,6 +24,10 @@ EXPECTED_EXPORTS = {
     "FeishuSignatureError",
     "FeishuCryptoError",
     "SignatureVerifier",
+    "verify_signature",
+    "is_permission_error",
+    "permission_subjects",
+    "install_redaction",
 }
 
 

@@ -33,6 +33,8 @@ from .errors import (
     FeishuServerError,
     FeishuSignatureError,
     FeishuTransportError,
+    is_permission_error,
+    permission_subjects,
 )
 from .signature import SignatureVerifier, verify_signature
 
@@ -49,6 +51,8 @@ __all__ = [
     "FeishuTransportError",
     "FeishuSignatureError",
     "FeishuCryptoError",
+    "is_permission_error",
+    "permission_subjects",
     "SignatureVerifier",
     "install_redaction",
     "verify_signature",

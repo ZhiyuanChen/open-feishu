@@ -122,3 +122,48 @@ class TasksNamespace(Namespace):
             {}
         """
         return await self._request_data("POST", "approval/v4/tasks/transfer", json=task)
+
+    async def query(
+        self,
+        user_id: str,
+        *,
+        topic: str = "1",
+        user_id_type: str = "open_id",
+        page_size: int = 50,
+        max_items: int | None = None,
+    ) -> list[NestedDict]:
+        r"""
+        查询某个用户的审批任务列表（默认待办）。
+
+        自动翻页并将各页结果拼接为单个列表返回。`user_id` 为必填查询参数；`topic` 指定任务类型：
+        `"1"` 待办、`"2"` 已办、`"3"` 发起、`"4"` 抄送，默认 `"1"`（待办）。任务条目位于响应体的
+        `tasks` 字段下，每个条目为含 `id`（`task_id`）、`instance_code`、`approval_code`、`status`
+        等字段的对象。
+
+        Args:
+            user_id: 目标用户标识（与 `user_id_type` 对应），必填。
+            topic: 任务类型，`"1"`/`"2"`/`"3"`/`"4"`。默认为 `"1"`（待办）。
+            user_id_type: `user_id` 的标识类型，如 `open_id`/`union_id`/`user_id`。默认为 `open_id`。
+            page_size: 每页条数，默认为 50，超过上限时按上限截断。
+            max_items: 最多返回的条数；为空表示返回全部。
+
+        Returns:
+            审批任务对象列表。
+
+        Raises:
+            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
+
+        飞书文档:
+            [查询用户的任务列表](https://open.feishu.cn/document/server-docs/approval-v4/task/query)
+
+        Examples:
+            >>> await client.approval.tasks.query("ou_1", topic="1")  # doctest:+SKIP
+            [{'id': 'T1', 'instance_code': 'INST1', ...}]  # noqa: E501
+        """
+        return await self._client.paginate_get(
+            "approval/v4/tasks/query",
+            params={"user_id": user_id, "topic": topic, "user_id_type": user_id_type},
+            page_size=page_size,
+            max_items=max_items,
+            items_key="tasks",
+        )

@@ -21,6 +21,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 RATE_LIMIT_CODES = {99991400}
@@ -120,6 +121,49 @@ class FeishuPermissionError(FeishuAuthError):
         >>> isinstance(err, FeishuAuthError)
         True
     """
+
+
+def permission_subjects(error: Exception) -> tuple[str, ...]:
+    r"""
+    Extract missing permission subjects from a Feishu permission error.
+
+    Feishu permission failures may nest ``permission_violations`` under
+    ``message`` or the raw response envelope. This helper returns the distinct
+    ``subject`` values in discovery order.
+    """
+    subjects: list[str] = []
+    for value in (getattr(error, "message", None), getattr(error, "raw", None)):
+        _collect_permission_subjects(value, subjects)
+    return tuple(dict.fromkeys(subjects))
+
+
+def is_permission_error(error: Exception) -> bool:
+    r"""
+    Return whether an exception represents a Feishu permission-scope failure.
+    """
+    if isinstance(error, FeishuPermissionError):
+        return True
+    if permission_subjects(error):
+        return True
+    code = getattr(error, "code", None)
+    return code in PERMISSION_ERROR_CODES
+
+
+def _collect_permission_subjects(value: Any, subjects: list[str]) -> None:
+    if isinstance(value, Mapping):
+        violations = value.get("permission_violations")
+        if isinstance(violations, list):
+            for violation in violations:
+                if isinstance(violation, Mapping):
+                    subject = violation.get("subject")
+                    if isinstance(subject, str) and subject:
+                        subjects.append(subject)
+        for item in value.values():
+            _collect_permission_subjects(item, subjects)
+        return
+    if isinstance(value, list | tuple):
+        for item in value:
+            _collect_permission_subjects(item, subjects)
 
 
 class FeishuApiError(FeishuError):

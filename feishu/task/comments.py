@@ -27,14 +27,15 @@ from typing import Any
 from chanfig import NestedDict
 
 from .._namespace import Namespace
+from .._url import quote_segment
 
 
 class CommentsNamespace(Namespace):
     r"""
     任务评论（Comment）接口命名空间。
 
-    通过 `client.task.comments` 访问，封装飞书任务 v2 中评论的创建与列举。评论挂载在某个资源上，
-    由 `resource_type`（默认 `task`）与 `resource_id`（任务的 `guid`）共同定位。
+    通过 `client.task.comments` 访问，封装飞书任务 v2 中评论的增删改查（创建、列举、更新、删除）。
+    评论挂载在某个资源上，由 `resource_type`（默认 `task`）与 `resource_id`（任务的 `guid`）共同定位。
 
     通常无需直接实例化，应通过 `client.task.comments` 访问。
 
@@ -119,3 +120,54 @@ class CommentsNamespace(Namespace):
         return await self._client.paginate_get(
             "task/v2/comments", params=params, page_size=page_size, max_items=max_items
         )
+
+    async def patch(self, comment_id: str, content: str) -> NestedDict:
+        r"""
+        更新评论内容。
+
+        仅评论的创建者可编辑评论内容。需要 `task:comment:write` 权限。
+
+        Args:
+            comment_id: 评论的唯一标识 `id`。
+            content: 更新后的评论内容文本。
+
+        Returns:
+            更新后的评论数据，含 `comment` 字段，内含 `id`、`content`、`creator`、`resource_id`、
+            `resource_type` 等信息。
+
+        Raises:
+            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
+
+        飞书文档:
+            [更新评论](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/comment/patch)
+
+        Examples:
+            >>> await client.task.comments.patch("7654...", "已完成终稿")  # doctest:+SKIP
+            {'comment': {'id': '7654...', 'content': '已完成终稿'}}
+        """
+        body = {"comment": {"content": content}, "update_fields": ["content"]}
+        return await self._request_data("PATCH", f"task/v2/comments/{quote_segment(comment_id)}", json=body)
+
+    async def delete(self, comment_id: str) -> NestedDict:
+        r"""
+        删除评论。
+
+        需要 `task:comment:write` 权限。
+
+        Args:
+            comment_id: 评论的唯一标识 `id`。
+
+        Returns:
+            空数据体（接口成功时不返回额外字段）。
+
+        Raises:
+            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
+
+        飞书文档:
+            [删除评论](https://open.feishu.cn/document/task-v2/comment/delete)
+
+        Examples:
+            >>> await client.task.comments.delete("7654...")  # doctest:+SKIP
+            {}
+        """
+        return await self._request_data("DELETE", f"task/v2/comments/{quote_segment(comment_id)}")

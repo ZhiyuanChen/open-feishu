@@ -21,6 +21,7 @@
 
 from __future__ import annotations
 
+from .builders import task_payload
 from .comments import CommentsNamespace
 from .task import TaskNamespace
 from .tasks import TasksNamespace
@@ -29,4 +30,5 @@ __all__ = [
     "CommentsNamespace",
     "TaskNamespace",
     "TasksNamespace",
+    "task_payload",
 ]

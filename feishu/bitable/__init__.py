@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from .apps import AppsNamespace
 from .bitable import BitableNamespace
+from .builders import bitable_record
 from .fields import FieldsNamespace
 from .records import RecordsNamespace
 from .tables import TablesNamespace
@@ -33,4 +34,5 @@ __all__ = [
     "FieldsNamespace",
     "RecordsNamespace",
     "TablesNamespace",
+    "bitable_record",
 ]

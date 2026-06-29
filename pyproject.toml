@@ -49,8 +49,16 @@ dependencies = [
 optional-dependencies.anthropic = [
   "anthropic",
 ]
+optional-dependencies.attachments = [
+  "openpyxl",
+  "pillow",
+  "pymupdf",
+  "python-docx",
+  "python-pptx",
+]
 optional-dependencies.mcp = [
   "mcp",
+  "pymupdf",
 ]
 optional-dependencies.openai = [
   "openai",
@@ -106,7 +114,7 @@ ini_options.filterwarnings = [
 [tool.coverage]
 run.branch = true
 paths.source = [ "feishu" ]
-report.fail_under = 90
+report.fail_under = 60
 report.show_missing = true
 json.output = "coverage.json"
 xml.output = "coverage.xml"

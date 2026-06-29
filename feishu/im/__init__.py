@@ -22,7 +22,20 @@
 from __future__ import annotations
 
 from .chats import ChatNamespace
-from .inbound import is_mentioned, message_content, message_resource, message_text
+from .inbound import (
+    card_text,
+    card_title,
+    collect_card_text,
+    interactive_card_text,
+    is_mentioned,
+    message_body_text,
+    message_content,
+    message_resource,
+    message_resources,
+    message_sender_label,
+    message_text,
+    message_transcript,
+)
 from .messages import IMNamespace, infer_msg_type, infer_receive_id_type
 from .pins import PinsNamespace
 from .reactions import ReactionsNamespace
@@ -32,10 +45,18 @@ __all__ = [
     "IMNamespace",
     "PinsNamespace",
     "ReactionsNamespace",
+    "card_text",
+    "card_title",
+    "collect_card_text",
     "infer_msg_type",
     "infer_receive_id_type",
+    "interactive_card_text",
     "is_mentioned",
+    "message_body_text",
     "message_content",
     "message_resource",
+    "message_resources",
+    "message_sender_label",
     "message_text",
+    "message_transcript",
 ]

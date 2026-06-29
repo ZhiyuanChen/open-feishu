@@ -21,6 +21,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from chanfig import NestedDict
@@ -46,9 +47,10 @@ class AttendeesNamespace(Namespace):
         self,
         calendar_id: str,
         event_id: str,
-        attendees: list[dict[str, Any]],
+        attendees: Sequence[Mapping[str, Any]],
         *,
         need_notification: bool | None = None,
+        user_id_type: str | None = None,
     ) -> NestedDict:
         r"""
         添加日程参与人。
@@ -62,6 +64,9 @@ class AttendeesNamespace(Namespace):
             event_id: 日程的 `event_id`。
             attendees: 待添加的参与人列表，例如 `[{"type": "user", "user_id": "ou_xxx"}]`。
             need_notification: 是否在添加后发送 Bot 通知；为空时省略该字段。
+            user_id_type: 参与人 `user_id` 的类型（`open_id` / `union_id` / `user_id`）；为空时随接口默认
+                （`open_id`）。当 `attendees` 用非 `open_id` 形式标识用户时必须显式指定，否则飞书按 `open_id`
+                解析会找不到人。
 
         Returns:
             包含 `attendees` 字段的数据，`attendees` 为新增参与人列表（每项含
@@ -81,10 +86,13 @@ class AttendeesNamespace(Namespace):
         body: dict[str, Any] = {"attendees": attendees}
         if need_notification is not None:
             body["need_notification"] = need_notification
+        kwargs: dict[str, Any] = {"json": body}
+        if user_id_type is not None:
+            kwargs["params"] = {"user_id_type": user_id_type}
         return await self._request_data(
             "POST",
             f"calendar/v4/calendars/{quote_segment(calendar_id)}/events/{quote_segment(event_id)}/attendees",
-            json=body,
+            **kwargs,
         )
 
     async def delete(self, calendar_id: str, event_id: str, attendee_ids: list[str]) -> NestedDict:
