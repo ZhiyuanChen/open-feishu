@@ -7378,8 +7378,8 @@
         <p>返回一个可独立运行、处理飞书 Webhook 推送的 Starlette 应用。</p>
 <p>始终在 <code>event_path</code> 挂载事件路由；当 <code>card_path</code> 不为 <code>None</code> 时，额外在该路径挂载卡片回调路由。
 全部安全与路由逻辑分别委托给 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;create_event_route&lt;/span&gt;" href="receiver/#feishu.events.receiver.create_event_route">create_event_route</a>
-与 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;create_card_route&lt;/span&gt;" href="receiver/#feishu.events.receiver.create_card_route">create_card_route</a>，因此默认即带有
-签名新鲜度（防重放）时间窗与去重保护。</p>
+与 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;create_card_route&lt;/span&gt;" href="receiver/#feishu.events.receiver.create_card_route">create_card_route</a>。默认启用去重；仅在传入
+<code>encrypt_key</code> 时启用签名校验与新鲜度（防重放）时间窗。</p>
 
 
 <p><span class="doc-section-title">参数：</span></p>
@@ -7663,8 +7663,8 @@
 </span><span id="__span-0-324"><a id="__codelineno-0-324" name="__codelineno-0-324"></a>
 </span><span id="__span-0-325"><a id="__codelineno-0-325" name="__codelineno-0-325"></a><span class="sd">    始终在 `event_path` 挂载事件路由；当 `card_path` 不为 `None` 时，额外在该路径挂载卡片回调路由。</span>
 </span><span id="__span-0-326"><a id="__codelineno-0-326" name="__codelineno-0-326"></a><span class="sd">    全部安全与路由逻辑分别委托给 [create_event_route][feishu.events.receiver.create_event_route]</span>
-</span><span id="__span-0-327"><a id="__codelineno-0-327" name="__codelineno-0-327"></a><span class="sd">    与 [create_card_route][feishu.events.receiver.create_card_route]，因此默认即带有</span>
-</span><span id="__span-0-328"><a id="__codelineno-0-328" name="__codelineno-0-328"></a><span class="sd">    签名新鲜度（防重放）时间窗与去重保护。</span>
+</span><span id="__span-0-327"><a id="__codelineno-0-327" name="__codelineno-0-327"></a><span class="sd">    与 [create_card_route][feishu.events.receiver.create_card_route]。默认启用去重；仅在传入</span>
+</span><span id="__span-0-328"><a id="__codelineno-0-328" name="__codelineno-0-328"></a><span class="sd">    `encrypt_key` 时启用签名校验与新鲜度（防重放）时间窗。</span>
 </span><span id="__span-0-329"><a id="__codelineno-0-329" name="__codelineno-0-329"></a>
 </span><span id="__span-0-330"><a id="__codelineno-0-330" name="__codelineno-0-330"></a><span class="sd">    Args:</span>
 </span><span id="__span-0-331"><a id="__codelineno-0-331" name="__codelineno-0-331"></a><span class="sd">        dispatcher: 事件分发器。</span>
@@ -8127,7 +8127,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月30日 09:34:04 UTC">2026-06-30 09:34:04</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月30日 12:15:58 UTC">2026-06-30 12:15:58</span>
   </span>
 
     

@@ -3398,16 +3398,16 @@
 </span><span id="__span-0-120"><a id="__codelineno-0-120" name="__codelineno-0-120"></a>
 </span><span id="__span-0-121"><a id="__codelineno-0-121" name="__codelineno-0-121"></a><span class="sd">        授权回调拿到的 `code` 调用本方法换取用户访问凭证。应用凭据在请求体中传递，</span>
 </span><span id="__span-0-122"><a id="__codelineno-0-122" name="__codelineno-0-122"></a><span class="sd">        因此该请求不携带 Bearer（`token_type=None`），且响应为非信封格式</span>
-</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">        （`expect_envelope=False`），直接返回包含 `access_token`、`refresh_token`、</span>
-</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">        `expires_in` 等字段的结果。</span>
+</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">        （`expect_envelope=False`），直接返回包含 `access_token`、`expires_in` 等字段的结果；</span>
+</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">        仅当授权范围包含 `offline_access` 时，响应才包含 `refresh_token`。</span>
 </span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a>
 </span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a><span class="sd">        Args:</span>
 </span><span id="__span-0-127"><a id="__codelineno-0-127" name="__codelineno-0-127"></a><span class="sd">            code: 授权回调中获得的登录预授权码。</span>
 </span><span id="__span-0-128"><a id="__codelineno-0-128" name="__codelineno-0-128"></a><span class="sd">            redirect_uri: 回调地址，需与换取授权码时使用的一致。默认不传。</span>
 </span><span id="__span-0-129"><a id="__codelineno-0-129" name="__codelineno-0-129"></a>
 </span><span id="__span-0-130"><a id="__codelineno-0-130" name="__codelineno-0-130"></a><span class="sd">        Returns:</span>
-</span><span id="__span-0-131"><a id="__codelineno-0-131" name="__codelineno-0-131"></a><span class="sd">            包含 `access_token`、`refresh_token`、`expires_in`、`refresh_token_expires_in`、</span>
-</span><span id="__span-0-132"><a id="__codelineno-0-132" name="__codelineno-0-132"></a><span class="sd">            `scope` 等字段的结果。</span>
+</span><span id="__span-0-131"><a id="__codelineno-0-131" name="__codelineno-0-131"></a><span class="sd">            包含 `access_token`、`expires_in`、`scope` 等字段的结果；若授权范围包含</span>
+</span><span id="__span-0-132"><a id="__codelineno-0-132" name="__codelineno-0-132"></a><span class="sd">            `offline_access`，还会包含 `refresh_token` 与 `refresh_token_expires_in`。</span>
 </span><span id="__span-0-133"><a id="__codelineno-0-133" name="__codelineno-0-133"></a>
 </span><span id="__span-0-134"><a id="__codelineno-0-134" name="__codelineno-0-134"></a><span class="sd">        Raises:</span>
 </span><span id="__span-0-135"><a id="__codelineno-0-135" name="__codelineno-0-135"></a><span class="sd">            ValueError: 当客户端未配置 [feishu.auth.credentials.InternalCredential][] 时抛出。</span>
@@ -3421,7 +3421,7 @@
 </span><span id="__span-0-143"><a id="__codelineno-0-143" name="__codelineno-0-143"></a><span class="sd">        Examples:</span>
 </span><span id="__span-0-144"><a id="__codelineno-0-144" name="__codelineno-0-144"></a><span class="sd">            &gt;&gt;&gt; redirect_uri = &quot;https://app.example.com/cb&quot;</span>
 </span><span id="__span-0-145"><a id="__codelineno-0-145" name="__codelineno-0-145"></a><span class="sd">            &gt;&gt;&gt; resp = await client.oauth.exchange_code(&quot;the-code&quot;, redirect_uri=redirect_uri)  # doctest: +SKIP</span>
-</span><span id="__span-0-146"><a id="__codelineno-0-146" name="__codelineno-0-146"></a><span class="sd">            &gt;&gt;&gt; resp[&quot;access_token&quot;], resp[&quot;refresh_token&quot;], resp[&quot;expires_in&quot;]  # doctest: +SKIP</span>
+</span><span id="__span-0-146"><a id="__codelineno-0-146" name="__codelineno-0-146"></a><span class="sd">            &gt;&gt;&gt; resp[&quot;access_token&quot;], resp.get(&quot;refresh_token&quot;), resp[&quot;expires_in&quot;]  # doctest: +SKIP</span>
 </span><span id="__span-0-147"><a id="__codelineno-0-147" name="__codelineno-0-147"></a><span class="sd">            (&#39;u-acc&#39;, &#39;u-ref&#39;, 7200)</span>
 </span><span id="__span-0-148"><a id="__codelineno-0-148" name="__codelineno-0-148"></a><span class="sd">        &quot;&quot;&quot;</span>
 </span><span id="__span-0-149"><a id="__codelineno-0-149" name="__codelineno-0-149"></a>        <span class="n">credential</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_credential</span><span class="p">()</span>
@@ -3875,8 +3875,8 @@
         <p>用授权码换取 <code>user_access_token</code>。</p>
 <p>授权回调拿到的 <code>code</code> 调用本方法换取用户访问凭证。应用凭据在请求体中传递，
 因此该请求不携带 Bearer（<code>token_type=None</code>），且响应为非信封格式
-（<code>expect_envelope=False</code>），直接返回包含 <code>access_token</code>、<code>refresh_token</code>、
-<code>expires_in</code> 等字段的结果。</p>
+（<code>expect_envelope=False</code>），直接返回包含 <code>access_token</code>、<code>expires_in</code> 等字段的结果；
+仅当授权范围包含 <code>offline_access</code> 时，响应才包含 <code>refresh_token</code>。</p>
 
 
 <p><span class="doc-section-title">参数：</span></p>
@@ -3941,7 +3941,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>包含 <code>access_token</code>、<code>refresh_token</code>、<code>expires_in</code>、<code>refresh_token_expires_in</code>、</p>
+                <p>包含 <code>access_token</code>、<code>expires_in</code>、<code>scope</code> 等字段的结果；若授权范围包含</p>
               </div>
             </td>
           </tr>
@@ -3951,7 +3951,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p><code>scope</code> 等字段的结果。</p>
+                <p><code>offline_access</code>，还会包含 <code>refresh_token</code> 与 <code>refresh_token_expires_in</code>。</p>
               </div>
             </td>
           </tr>
@@ -4014,7 +4014,7 @@
 <span class="normal"><a href="#__codelineno-0-3">3</a></span>
 <span class="normal"><a href="#__codelineno-0-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">redirect_uri</span> <span class="o">=</span> <span class="s2">&quot;https://app.example.com/cb&quot;</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">resp</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">oauth</span><span class="o">.</span><span class="n">exchange_code</span><span class="p">(</span><span class="s2">&quot;the-code&quot;</span><span class="p">,</span> <span class="n">redirect_uri</span><span class="o">=</span><span class="n">redirect_uri</span><span class="p">)</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">resp</span><span class="p">[</span><span class="s2">&quot;access_token&quot;</span><span class="p">],</span> <span class="n">resp</span><span class="p">[</span><span class="s2">&quot;refresh_token&quot;</span><span class="p">],</span> <span class="n">resp</span><span class="p">[</span><span class="s2">&quot;expires_in&quot;</span><span class="p">]</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">resp</span><span class="p">[</span><span class="s2">&quot;access_token&quot;</span><span class="p">],</span> <span class="n">resp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;refresh_token&quot;</span><span class="p">),</span> <span class="n">resp</span><span class="p">[</span><span class="s2">&quot;expires_in&quot;</span><span class="p">]</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="go">(&#39;u-acc&#39;, &#39;u-ref&#39;, 7200)</span>
 </span></code></pre></div></td></tr></table></div>
 
@@ -4068,16 +4068,16 @@
 </span><span id="__span-0-120"><a id="__codelineno-0-120" name="__codelineno-0-120"></a>
 </span><span id="__span-0-121"><a id="__codelineno-0-121" name="__codelineno-0-121"></a><span class="sd">    授权回调拿到的 `code` 调用本方法换取用户访问凭证。应用凭据在请求体中传递，</span>
 </span><span id="__span-0-122"><a id="__codelineno-0-122" name="__codelineno-0-122"></a><span class="sd">    因此该请求不携带 Bearer（`token_type=None`），且响应为非信封格式</span>
-</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">    （`expect_envelope=False`），直接返回包含 `access_token`、`refresh_token`、</span>
-</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">    `expires_in` 等字段的结果。</span>
+</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">    （`expect_envelope=False`），直接返回包含 `access_token`、`expires_in` 等字段的结果；</span>
+</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">    仅当授权范围包含 `offline_access` 时，响应才包含 `refresh_token`。</span>
 </span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a>
 </span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a><span class="sd">    Args:</span>
 </span><span id="__span-0-127"><a id="__codelineno-0-127" name="__codelineno-0-127"></a><span class="sd">        code: 授权回调中获得的登录预授权码。</span>
 </span><span id="__span-0-128"><a id="__codelineno-0-128" name="__codelineno-0-128"></a><span class="sd">        redirect_uri: 回调地址，需与换取授权码时使用的一致。默认不传。</span>
 </span><span id="__span-0-129"><a id="__codelineno-0-129" name="__codelineno-0-129"></a>
 </span><span id="__span-0-130"><a id="__codelineno-0-130" name="__codelineno-0-130"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-131"><a id="__codelineno-0-131" name="__codelineno-0-131"></a><span class="sd">        包含 `access_token`、`refresh_token`、`expires_in`、`refresh_token_expires_in`、</span>
-</span><span id="__span-0-132"><a id="__codelineno-0-132" name="__codelineno-0-132"></a><span class="sd">        `scope` 等字段的结果。</span>
+</span><span id="__span-0-131"><a id="__codelineno-0-131" name="__codelineno-0-131"></a><span class="sd">        包含 `access_token`、`expires_in`、`scope` 等字段的结果；若授权范围包含</span>
+</span><span id="__span-0-132"><a id="__codelineno-0-132" name="__codelineno-0-132"></a><span class="sd">        `offline_access`，还会包含 `refresh_token` 与 `refresh_token_expires_in`。</span>
 </span><span id="__span-0-133"><a id="__codelineno-0-133" name="__codelineno-0-133"></a>
 </span><span id="__span-0-134"><a id="__codelineno-0-134" name="__codelineno-0-134"></a><span class="sd">    Raises:</span>
 </span><span id="__span-0-135"><a id="__codelineno-0-135" name="__codelineno-0-135"></a><span class="sd">        ValueError: 当客户端未配置 [feishu.auth.credentials.InternalCredential][] 时抛出。</span>
@@ -4091,7 +4091,7 @@
 </span><span id="__span-0-143"><a id="__codelineno-0-143" name="__codelineno-0-143"></a><span class="sd">    Examples:</span>
 </span><span id="__span-0-144"><a id="__codelineno-0-144" name="__codelineno-0-144"></a><span class="sd">        &gt;&gt;&gt; redirect_uri = &quot;https://app.example.com/cb&quot;</span>
 </span><span id="__span-0-145"><a id="__codelineno-0-145" name="__codelineno-0-145"></a><span class="sd">        &gt;&gt;&gt; resp = await client.oauth.exchange_code(&quot;the-code&quot;, redirect_uri=redirect_uri)  # doctest: +SKIP</span>
-</span><span id="__span-0-146"><a id="__codelineno-0-146" name="__codelineno-0-146"></a><span class="sd">        &gt;&gt;&gt; resp[&quot;access_token&quot;], resp[&quot;refresh_token&quot;], resp[&quot;expires_in&quot;]  # doctest: +SKIP</span>
+</span><span id="__span-0-146"><a id="__codelineno-0-146" name="__codelineno-0-146"></a><span class="sd">        &gt;&gt;&gt; resp[&quot;access_token&quot;], resp.get(&quot;refresh_token&quot;), resp[&quot;expires_in&quot;]  # doctest: +SKIP</span>
 </span><span id="__span-0-147"><a id="__codelineno-0-147" name="__codelineno-0-147"></a><span class="sd">        (&#39;u-acc&#39;, &#39;u-ref&#39;, 7200)</span>
 </span><span id="__span-0-148"><a id="__codelineno-0-148" name="__codelineno-0-148"></a><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="__span-0-149"><a id="__codelineno-0-149" name="__codelineno-0-149"></a>    <span class="n">credential</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_credential</span><span class="p">()</span>
@@ -4575,7 +4575,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月30日 09:33:59 UTC">2026-06-30 09:33:59</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月30日 12:15:53 UTC">2026-06-30 12:15:53</span>
   </span>
 
     
