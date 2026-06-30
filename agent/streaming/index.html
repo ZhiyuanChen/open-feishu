@@ -1073,8 +1073,6 @@
       
         
       
-        
-      
     
     
     
@@ -1287,34 +1285,6 @@
     
   
     loop
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../payment_accounts/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    payment_accounts
   
 
     
@@ -1617,7 +1587,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_14" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_13" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1639,14 +1609,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_8_14" id="__nav_8_14_label" tabindex="">
+              <label class="md-nav__link " for="__nav_8_13" id="__nav_8_13_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_14_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8_14">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_13">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1771,7 +1741,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_15" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_14" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1793,14 +1763,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_8_15" id="__nav_8_15_label" tabindex="">
+              <label class="md-nav__link " for="__nav_8_14" id="__nav_8_14_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_15_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8_15">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_14">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3582,12 +3552,12 @@
 <li>
 <p><strong>Anthropic 上下文管理器</strong>（<code>AsyncMessageStreamManager</code>，带 <code>__aenter__</code>
   但无 <code>__aiter__</code>）：进入上下文后迭代原始 SSE 事件，经
-  [feishu.agent.adapters.anthropic._translate_events][] 归一化。</p>
+  <code>feishu.agent.adapters.anthropic._translate_events</code> 归一化。</p>
 </li>
 <li>
 <p><strong>OpenAI 异步流</strong>（<code>AsyncStream[ChatCompletionChunk]</code> 或 chunk 带
   <code>choices</code> 属性）：直接异步迭代，经
-  [feishu.agent.adapters.openai._translate_chunks][] 归一化。</p>
+  <code>feishu.agent.adapters.openai._translate_chunks</code> 归一化。</p>
 </li>
 <li>
 <p><strong>OpenAI 同步流</strong>（<code>Stream[ChatCompletionChunk]</code>，同步可迭代，首个元素有
@@ -3647,7 +3617,12 @@
 <li><code>openai.Stream[ChatCompletionChunk]</code>（同步）</li>
 <li><code>anthropic.AsyncMessageStreamManager</code>（<code>async with</code> 风格）</li>
 <li>产出原始 Anthropic SSE 事件的异步/同步可迭代对象</li>
-<li>产出 [feishu.agent.llm.StreamChunk][] 的异步迭代器
+<li>产出 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-attribute&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-attribute-name&quot;&gt;StreamChunk&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-module-attribute&quot;&gt;&lt;code&gt;module-attribute&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="../llm/#feishu.agent.llm.StreamChunk">feishu.agent.llm.StreamChunk</a> 的异步迭代器
   （即 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;stream&lt;/span&gt;" href="../llm/#feishu.agent.llm.LlmBackend.stream">feishu.agent.llm.LlmBackend.stream</a> 的返回值）</li>
 </ul>
               </div>
@@ -3841,11 +3816,11 @@
 </span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a>
 </span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">    - **Anthropic 上下文管理器**（``AsyncMessageStreamManager``，带 ``__aenter__``</span>
 </span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="sd">      但无 ``__aiter__``）：进入上下文后迭代原始 SSE 事件，经</span>
-</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="sd">      [feishu.agent.adapters.anthropic._translate_events][] 归一化。</span>
+</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="sd">      `feishu.agent.adapters.anthropic._translate_events` 归一化。</span>
 </span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99"></a>
 </span><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">    - **OpenAI 异步流**（``AsyncStream[ChatCompletionChunk]`` 或 chunk 带</span>
 </span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="sd">      ``choices`` 属性）：直接异步迭代，经</span>
-</span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">      [feishu.agent.adapters.openai._translate_chunks][] 归一化。</span>
+</span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">      `feishu.agent.adapters.openai._translate_chunks` 归一化。</span>
 </span><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103"></a>
 </span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="sd">    - **OpenAI 同步流**（``Stream[ChatCompletionChunk]``，同步可迭代，首个元素有</span>
 </span><span id="__span-0-105"><a id="__codelineno-0-105" name="__codelineno-0-105"></a><span class="sd">      ``choices`` 属性）：通过 ``loop.run_in_executor`` 包装后同上处理。</span>
@@ -3956,7 +3931,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月29日 15:18:48 UTC">2026-06-29 15:18:48</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月30日 06:08:46 UTC">2026-06-30 06:08:46</span>
   </span>
 
     

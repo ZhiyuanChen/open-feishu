@@ -96,7 +96,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#openfeishu" class="md-skip">
+        <a href="#_1" class="md-skip">
           跳转至
         </a>
       
@@ -856,8 +856,6 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
-        
-      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -900,8 +898,6 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -913,27 +909,15 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        使用
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="使用">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
         快速开始
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         命名空间
@@ -942,9 +926,9 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         接收事件
@@ -953,14 +937,9 @@
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
-  
-</li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         安装
@@ -971,7 +950,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         许可证
@@ -1159,8 +1138,6 @@
   
     
     
-      
-        
       
         
       
@@ -2546,8 +2523,6 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -2559,27 +2534,15 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        使用
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="使用">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
         快速开始
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         命名空间
@@ -2588,9 +2551,9 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         接收事件
@@ -2599,14 +2562,9 @@
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
-  
-</li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         安装
@@ -2617,7 +2575,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         许可证
@@ -2647,10 +2605,9 @@
   
 
 
-<h1 id="openfeishu">OpenFeishu<a class="headerlink" href="#openfeishu" title="Permanent link">&para;</a></h1>
-<p>OpenFeishu 是一个飞书开放平台的 Python SDK，提供了飞书开放平台的接口封装，方便开发者使用飞书开放平台的接口。</p>
-<h2 id="_1">使用<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<h3 id="_2">快速开始<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+  <h1>feishu</h1>
+
+<h3 id="_1">快速开始<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
 <p><code>FeishuClient</code> 是一个异步客户端，统一管理应用凭证、令牌的自动获取与缓存，以及带自动重试的 HTTP 传输。推荐通过 <code>async with</code> 使用，以便自动释放底层连接。消息接口以接收者为第一个参数（其 ID 类型会自动推断），消息内容为第二个参数；<code>client.im.send</code> 还会根据内容的形态自动推断消息类型（<code>msg_type</code>）。</p>
 <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-0-2"> 2</a></span>
@@ -2675,7 +2632,7 @@
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </span></code></pre></div></td></tr></table></div>
 <p>应用凭证也可以通过环境变量 <code>FEISHU_APP_ID</code> / <code>FEISHU_APP_SECRET</code> 提供，此时可省略构造参数：<code>async with FeishuClient() as client: ...</code>。</p>
-<h3 id="_3">命名空间<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<h3 id="_2">命名空间<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
 <p>各业务能力按资源划分到不同命名空间下，每个命名空间提供「裸动词」式的 CRUD 方法（如 <code>create</code> / <code>get</code> / <code>update</code> / <code>delete</code> / <code>list</code>）。常用入口：</p>
 <table>
 <thead>
@@ -2718,7 +2675,7 @@
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a>    <span class="n">user</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">contact</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ou_xxx&quot;</span><span class="p">,</span> <span class="n">user_id_type</span><span class="o">=</span><span class="s2">&quot;open_id&quot;</span><span class="p">)</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a>    <span class="n">records</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">bitable</span><span class="o">.</span><span class="n">records</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="s2">&quot;app_token&quot;</span><span class="p">,</span> <span class="s2">&quot;tbl_xxx&quot;</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
-<h3 id="_4">接收事件<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<h3 id="_3">接收事件<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
 <p>要接收飞书推送的事件（如「接收消息」），先用 <code>EventDispatcher</code> 按事件类型注册异步处理函数，Webhook 接收器与长连接两种接入方式共用同一套处理函数。</p>
 <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span>
 <span class="normal"><a href="#__codelineno-2-2">2</a></span>
@@ -2759,14 +2716,17 @@
 </span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a><span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">ws</span><span class="o">.</span><span class="n">start</span><span class="p">())</span>
 </span></code></pre></div></td></tr></table></div>
 <p>长连接依赖可选的 <code>websockets</code> 包，可通过 <code>pip install open-feishu[ws]</code> 安装。</p>
-<h2 id="_5">安装<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<h2 id="_4">安装<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <p>从 PyPI 安装最新的稳定版本：</p>
 <div class="language-shell highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a>pip<span class="w"> </span>install<span class="w"> </span>open-feishu
 </span></code></pre></div></td></tr></table></div>
-<p>从源代码安装最新版本：</p>
-<div class="language-shell highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/ZhiyuanChen/open-feishu.git
+<p>如果需要使用 <code>feishu-mcp</code> 命令，请安装 MCP 可选依赖：</p>
+<div class="language-shell highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;open-feishu[mcp]&quot;</span>
 </span></code></pre></div></td></tr></table></div>
-<h2 id="_6">许可证<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>从源代码安装最新版本：</p>
+<div class="language-shell highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Bash</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/ZhiyuanChen/open-feishu.git
+</span></code></pre></div></td></tr></table></div>
+<h2 id="_5">许可证<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <p><code>SPDX-License-Identifier: AGPL-3.0-or-later</code></p>
 
 
@@ -2788,7 +2748,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月29日 15:18:43 UTC">2026-06-29 15:18:43</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月30日 06:08:41 UTC">2026-06-30 06:08:41</span>
   </span>
 
     

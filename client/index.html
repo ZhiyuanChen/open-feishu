@@ -1954,8 +1954,6 @@
       
         
       
-        
-      
     
     
     
@@ -4461,7 +4459,12 @@
               </div>
             </td>
             <td>
-                  <code><span title="feishu.consts.DEFAULT_TIMEOUT">DEFAULT_TIMEOUT</span></code>
+                  <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-attribute&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-attribute-name&quot;&gt;DEFAULT_TIMEOUT&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-module-attribute&quot;&gt;&lt;code&gt;module-attribute&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt; (&lt;code&gt;feishu.consts.DEFAULT_TIMEOUT&lt;/code&gt;)" href="../consts/#feishu.consts.DEFAULT_TIMEOUT">DEFAULT_TIMEOUT</a></code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -4473,7 +4476,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>重试策略 [feishu._transport.RetryPolicy][]，缺省使用默认策略。</p>
+                <p>重试策略 <code>feishu._transport.RetryPolicy</code>，缺省使用默认策略。</p>
               </div>
             </td>
             <td>
@@ -5320,7 +5323,7 @@
 </span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">        accounts_url: 自定义 OAuth 授权（accounts）域名，优先于 `region`；可用于覆盖 `lark`</span>
 </span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">            区域下尚未经线上确认的默认主机，与 `base_url`（API 域名）相互独立。</span>
 </span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="sd">        timeout: 请求超时时间（秒）。</span>
-</span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a><span class="sd">        retry: 重试策略 [feishu._transport.RetryPolicy][]，缺省使用默认策略。</span>
+</span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a><span class="sd">        retry: 重试策略 `feishu._transport.RetryPolicy`，缺省使用默认策略。</span>
 </span><span id="__span-0-127"><a id="__codelineno-0-127" name="__codelineno-0-127"></a><span class="sd">        credential: 自定义凭证对象；提供后将忽略 `app_id` / `app_secret`。</span>
 </span><span id="__span-0-128"><a id="__codelineno-0-128" name="__codelineno-0-128"></a><span class="sd">        token_cache: 自定义令牌缓存。</span>
 </span><span id="__span-0-129"><a id="__codelineno-0-129" name="__codelineno-0-129"></a><span class="sd">        transport: 自定义 `httpx.AsyncClient`；由调用方提供时其生命周期不归本客户端管理。</span>
@@ -7398,7 +7401,12 @@
 
         <p>遍历飞书分页 GET 接口并将全部条目收集为列表。</p>
 <p>每页在 <code>params</code> 基础上追加 <code>page_token</code> 翻页，并将 <code>page_size</code> 截断至
-[feishu.consts.MAX_PAGE_SIZE][] 以内；值为 <code>None</code> 的查询参数由传输层自动剔除。
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-attribute&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-attribute-name&quot;&gt;MAX_PAGE_SIZE&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-module-attribute&quot;&gt;&lt;code&gt;module-attribute&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="../consts/#feishu.consts.MAX_PAGE_SIZE">feishu.consts.MAX_PAGE_SIZE</a> 以内；值为 <code>None</code> 的查询参数由传输层自动剔除。
 <code>items_key</code> 指定条目所在的响应字段（默认 <code>items</code>，如日历列表使用 <code>calendar_list</code>）。
 少数接口使用非标准分页字段时，可通过 <code>map_page</code> 将响应信封改写为
 <code>{"data": {"items": ..., "has_more": ..., "page_token": ...}}</code> 形态。</p>
@@ -8804,7 +8812,7 @@ multipart 边界，调用方不应自行指定 Content-Type。</p>
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月29日 15:18:43 UTC">2026-06-29 15:18:43</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月30日 06:08:41 UTC">2026-06-30 06:08:41</span>
   </span>
 
     

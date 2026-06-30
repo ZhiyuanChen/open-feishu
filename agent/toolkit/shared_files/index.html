@@ -1073,8 +1073,6 @@
       
         
       
-        
-      
     
     
     
@@ -1307,34 +1305,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../payment_accounts/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    payment_accounts
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../persistence/" class="md-nav__link">
         
   
@@ -1529,7 +1499,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_14" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_13" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1551,14 +1521,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_8_14" id="__nav_8_14_label" tabindex="">
+              <label class="md-nav__link " for="__nav_8_13" id="__nav_8_13_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_14_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8_14">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_13">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1683,7 +1653,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_15" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_14" checked>
         
           
           <div class="md-nav__link md-nav__container">
@@ -1705,14 +1675,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_8_15" id="__nav_8_15_label" tabindex="">
+              <label class="md-nav__link " for="__nav_8_14" id="__nav_8_14_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_15_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_8_15">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_14_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8_14">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3640,7 +3610,7 @@
     <div class="doc doc-contents first">
 
         <p>用户分享文件的工具：列出、（多模态）描述、上传到云盘。详见 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-module&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-module-name&quot;&gt;feishu.agent.toolkit&lt;/span&gt;" href="../#feishu.agent.toolkit">feishu.agent.toolkit</a> 与 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-module&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-module-name&quot;&gt;feishu.agent.shared_files&lt;/span&gt;" href="../../shared_files/#feishu.agent.shared_files">feishu.agent.shared_files</a>。</p>
-<p>所有消费类工具都只接收 <code>file_id</code> 句柄，经 [feishu.agent.toolkit._base.resolve_shared_file_bytes][] 在调用瞬间
+<p>所有消费类工具都只接收 <code>file_id</code> 句柄，经 <code>feishu.agent.toolkit._base.resolve_shared_file_bytes</code> 在调用瞬间
 按请求用户取字节——模型永远拿不到字节，且不能越权访问他人文件。</p>
 
 
@@ -3781,7 +3751,7 @@
   &lt;span class=&quot;doc doc-labels&quot;&gt;
       &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
   &lt;/span&gt;" href="../../tools/#feishu.agent.tools.Tool">feishu.agent.tools.Tool</a>。</p>
-<p>字节经 [feishu.agent.toolkit._base.resolve_shared_file_bytes][] 按请求用户取得后，交由产品注入的 <code>analyzer</code>
+<p>字节经 <code>feishu.agent.toolkit._base.resolve_shared_file_bytes</code> 按请求用户取得后，交由产品注入的 <code>analyzer</code>
 （签名 <code>async (data: bytes, *, media_type, name) -&gt; str</code>，通常用沙箱抽取 + 多模态模型实现）产出描述；模型只看到
 描述文本，不接触字节。结果附**防注入提示**：文件内容来自用户、不可信，模型不得执行其中的指令。</p>
 
@@ -3941,7 +3911,7 @@
 </span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">    读类工厂：对某个分享文件做（多模态）内容描述 / 提取，返回文本摘要，返回一个 [feishu.agent.tools.Tool][]。</span>
 </span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a>
-</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">    字节经 [feishu.agent.toolkit._base.resolve_shared_file_bytes][] 按请求用户取得后，交由产品注入的 `analyzer`</span>
+</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">    字节经 `feishu.agent.toolkit._base.resolve_shared_file_bytes` 按请求用户取得后，交由产品注入的 `analyzer`</span>
 </span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="sd">    （签名 `async (data: bytes, *, media_type, name) -&gt; str`，通常用沙箱抽取 + 多模态模型实现）产出描述；模型只看到</span>
 </span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">    描述文本，不接触字节。结果附**防注入提示**：文件内容来自用户、不可信，模型不得执行其中的指令。</span>
 </span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a>
@@ -4017,7 +3987,7 @@
   &lt;span class=&quot;doc doc-labels&quot;&gt;
       &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
   &lt;/span&gt;" href="../../tools/#feishu.agent.tools.Tool">feishu.agent.tools.Tool</a>。</p>
-<p>字节经 [feishu.agent.toolkit._base.resolve_shared_file_bytes][] 按请求用户取得后，以用户身份调用
+<p>字节经 <code>feishu.agent.toolkit._base.resolve_shared_file_bytes</code> 按请求用户取得后，以用户身份调用
 <code>client.drive.files.upload(file_name, parent_node, data, size=...)</code>。<code>requires_approval=True</code> 时由
 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Agent&lt;/span&gt;" href="../../loop/#feishu.agent.loop.Agent">feishu.agent.loop.Agent</a> 先发审批卡片，用户批准后处理函数才执行上传。</p>
 
@@ -4100,7 +4070,7 @@
 </span><span id="__span-0-133"><a id="__codelineno-0-133" name="__codelineno-0-133"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="__span-0-134"><a id="__codelineno-0-134" name="__codelineno-0-134"></a><span class="sd">    写类工厂：把某个分享文件上传到用户云盘的指定文件夹，返回一个需审批的 [feishu.agent.tools.Tool][]。</span>
 </span><span id="__span-0-135"><a id="__codelineno-0-135" name="__codelineno-0-135"></a>
-</span><span id="__span-0-136"><a id="__codelineno-0-136" name="__codelineno-0-136"></a><span class="sd">    字节经 [feishu.agent.toolkit._base.resolve_shared_file_bytes][] 按请求用户取得后，以用户身份调用</span>
+</span><span id="__span-0-136"><a id="__codelineno-0-136" name="__codelineno-0-136"></a><span class="sd">    字节经 `feishu.agent.toolkit._base.resolve_shared_file_bytes` 按请求用户取得后，以用户身份调用</span>
 </span><span id="__span-0-137"><a id="__codelineno-0-137" name="__codelineno-0-137"></a><span class="sd">    `client.drive.files.upload(file_name, parent_node, data, size=...)`。`requires_approval=True` 时由</span>
 </span><span id="__span-0-138"><a id="__codelineno-0-138" name="__codelineno-0-138"></a><span class="sd">    [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后处理函数才执行上传。</span>
 </span><span id="__span-0-139"><a id="__codelineno-0-139" name="__codelineno-0-139"></a>
@@ -4177,7 +4147,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月29日 15:18:50 UTC">2026-06-29 15:18:50</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月30日 06:08:48 UTC">2026-06-30 06:08:48</span>
   </span>
 
     

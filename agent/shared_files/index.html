@@ -1073,8 +1073,6 @@
       
         
       
-        
-      
     
     
     
@@ -1287,34 +1285,6 @@
     
   
     loop
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../payment_accounts/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    payment_accounts
   
 
     
@@ -1866,7 +1836,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_14" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_13" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1888,14 +1858,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_8_14" id="__nav_8_14_label" tabindex="">
+              <label class="md-nav__link " for="__nav_8_13" id="__nav_8_13_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_14_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8_14">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_13">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2020,7 +1990,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_15" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_14" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2042,14 +2012,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_8_15" id="__nav_8_15_label" tabindex="">
+              <label class="md-nav__link " for="__nav_8_14" id="__nav_8_14_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_15_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8_15">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_14">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4039,7 +4009,7 @@ kind}</code> 等中性元数据；真正的字节由（后续阶段的）<code>S
   &lt;/span&gt;" href="../../im/messages/#feishu.im.messages.IMNamespace.get_resource">feishu.im.messages.IMNamespace.get_resource</a> 按需重取——零字节落盘（除审批绑定时的临时 pin 缓存外）。</p>
 <p>设计对标 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-module&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-module-name&quot;&gt;feishu.auth.user_tokens&lt;/span&gt;" href="../../auth/user_tokens/#feishu.auth.user_tokens">feishu.auth.user_tokens</a>：<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SharedFileStore&lt;/span&gt;" href="#feishu.agent.shared_files.SharedFileStore">feishu.agent.shared_files.SharedFileStore</a> 抽象「按用户多别名
 （open_id/union_id/user_id）存取句柄」，内置 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;InMemorySharedFileStore&lt;/span&gt;" href="#feishu.agent.shared_files.InMemorySharedFileStore">feishu.agent.shared_files.InMemorySharedFileStore</a> 与
-<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SqliteSharedFileStore&lt;/span&gt;" href="#feishu.agent.shared_files.SqliteSharedFileStore">feishu.agent.shared_files.SqliteSharedFileStore</a>（后者经 [feishu._sqlite.connect][] 加固：WAL + 0o700 目录
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SqliteSharedFileStore&lt;/span&gt;" href="#feishu.agent.shared_files.SqliteSharedFileStore">feishu.agent.shared_files.SqliteSharedFileStore</a>（后者经 <code>feishu._sqlite.connect</code> 加固：WAL + 0o700 目录
 + 0o600 文件）。<code>file_id</code> 为随机不可枚举令牌（非内容寻址、非由 <code>file_key</code> 派生），跨用户访问在解析期按请求
 用户别名集合拦截。</p>
 
@@ -5109,7 +5079,7 @@ kind}</code> 等中性元数据；真正的字节由（后续阶段的）<code>S
         <p>基于 SQLite 的 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SharedFileStore&lt;/span&gt;" href="#feishu.agent.shared_files.SharedFileStore">feishu.agent.shared_files.SharedFileStore</a> 实现，句柄跨重启存活。</p>
 <p>采用两张表：<code>shared_files</code>（每个 <code>file_id</code> 一行，含重取配方 / 可选 pin 缓存字节 / 过期时间）与
 <code>shared_file_owners</code>（每个 (别名, file_id) 一行，供 open_id/union_id/user_id 任一命中且不重复缓存字节）。
-经 [feishu._sqlite.connect][] 加固（WAL + 0o700 目录 + 0o600 文件），保护可能缓存的文件字节。</p>
+经 <code>feishu._sqlite.connect</code> 加固（WAL + 0o700 目录 + 0o600 文件），保护可能缓存的文件字节。</p>
 
 
 <p><span class="doc-section-title">参数：</span></p>
@@ -5319,7 +5289,7 @@ kind}</code> 等中性元数据；真正的字节由（后续阶段的）<code>S
 </span><span id="__span-0-328"><a id="__codelineno-0-328" name="__codelineno-0-328"></a>
 </span><span id="__span-0-329"><a id="__codelineno-0-329" name="__codelineno-0-329"></a><span class="sd">    采用两张表：`shared_files`（每个 `file_id` 一行，含重取配方 / 可选 pin 缓存字节 / 过期时间）与</span>
 </span><span id="__span-0-330"><a id="__codelineno-0-330" name="__codelineno-0-330"></a><span class="sd">    `shared_file_owners`（每个 (别名, file_id) 一行，供 open_id/union_id/user_id 任一命中且不重复缓存字节）。</span>
-</span><span id="__span-0-331"><a id="__codelineno-0-331" name="__codelineno-0-331"></a><span class="sd">    经 [feishu._sqlite.connect][] 加固（WAL + 0o700 目录 + 0o600 文件），保护可能缓存的文件字节。</span>
+</span><span id="__span-0-331"><a id="__codelineno-0-331" name="__codelineno-0-331"></a><span class="sd">    经 `feishu._sqlite.connect` 加固（WAL + 0o700 目录 + 0o600 文件），保护可能缓存的文件字节。</span>
 </span><span id="__span-0-332"><a id="__codelineno-0-332" name="__codelineno-0-332"></a>
 </span><span id="__span-0-333"><a id="__codelineno-0-333" name="__codelineno-0-333"></a><span class="sd">    Args:</span>
 </span><span id="__span-0-334"><a id="__codelineno-0-334" name="__codelineno-0-334"></a><span class="sd">        db_path: SQLite 数据库文件路径。</span>
@@ -6078,7 +6048,7 @@ kind}</code> 等中性元数据；真正的字节由（后续阶段的）<code>S
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月29日 15:18:48 UTC">2026-06-29 15:18:48</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月30日 06:08:46 UTC">2026-06-30 06:08:46</span>
   </span>
 
     
