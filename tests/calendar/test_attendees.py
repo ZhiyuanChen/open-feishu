@@ -48,6 +48,12 @@ class TestList:
         assert int(recorder[0][2]["page_size"]) <= 50
         await client.aclose()
 
+    async def test_forwards_user_id_type(self, client_factory, recorder):
+        client = client_factory(recorder=recorder, responder=paginated_responder([[]]))
+        await client.calendar.attendees.list("cal1", "evt1", user_id_type="union_id")
+        assert recorder[0][2]["user_id_type"] == "union_id"
+        await client.aclose()
+
 
 class TestDelete:
     async def test_posts_attendee_ids(self, attendees, recorder):

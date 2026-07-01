@@ -47,7 +47,7 @@ class WikiNamespace(Namespace):
     async def create_node(
         self,
         space_id: str,
-        doc_type: str,
+        obj_type: str,
         *,
         parent_node_token: str | None = None,
         title: str | None = None,
@@ -61,7 +61,7 @@ class WikiNamespace(Namespace):
 
         Args:
             space_id: 知识空间 ID。
-            doc_type: 节点关联的实体对象类型，例如 `docx`、`doc`、`sheet`、`mindnote`、
+            obj_type: 节点关联的实体对象类型，例如 `docx`、`doc`、`sheet`、`mindnote`、
                 `bitable`、`file` 等。
             parent_node_token: 父节点 token；为空时创建在知识空间根目录下。
             title: 节点标题；为空时使用默认标题。
@@ -81,7 +81,7 @@ class WikiNamespace(Namespace):
             >>> await client.wiki.create_node("7001", "docx", title="New Doc")  # doctest:+SKIP
             {'node': {'node_token': 'wikcnnew', 'obj_type': 'docx', 'title': 'New Doc', ...}}  # noqa: E501
         """
-        body: dict[str, Any] = {"obj_type": doc_type}
+        body: dict[str, Any] = {"obj_type": obj_type}
         if parent_node_token is not None:
             body["parent_node_token"] = parent_node_token
         if title is not None:
@@ -89,17 +89,17 @@ class WikiNamespace(Namespace):
         body.update({k: v for k, v in opts.items() if v is not None})
         return await self._request_data("POST", f"wiki/v2/spaces/{quote_segment(space_id)}/nodes", json=body)
 
-    async def get_node(self, token: str, *, doc_type: str | None = None) -> NestedDict:
+    async def get_node(self, token: str, *, obj_type: str | None = None) -> NestedDict:
         r"""
         获取知识节点信息。
 
         通过实体对象的 `token` 查询其对应的知识节点（wiki node）信息，可用于将文档、表格等
-        实体反查到所属知识空间与节点。`doc_type` 为空时由飞书按 `token` 自动推断。
+        实体反查到所属知识空间与节点。`obj_type` 为空时由飞书按 `token` 自动推断。
 
         Args:
             token: 实体对象的 token（如文档 `doc`/`docx`、表格 `sheet`、思维笔记 `mindnote`
-                等的 token），也可直接传入知识节点的 `node_token`（搭配 `doc_type="wiki"`）。
-            doc_type: 实体对象类型，例如 `doc`、`docx`、`sheet`、`mindnote`、`bitable`、`file`、
+                等的 token），也可直接传入知识节点的 `node_token`（搭配 `obj_type="wiki"`）。
+            obj_type: 实体对象类型，例如 `doc`、`docx`、`sheet`、`mindnote`、`bitable`、`file`、
                 `wiki` 等；为空时省略该查询参数。
 
         Returns:
@@ -116,7 +116,7 @@ class WikiNamespace(Namespace):
             >>> await client.wiki.get_node("doccnxxx")  # doctest:+SKIP
             {'node': {'node_token': 'wikcnxxx', 'space_id': '7001', 'obj_type': 'docx', ...}}  # noqa: E501
         """
-        params = {"token": token, "obj_type": doc_type}
+        params = {"token": token, "obj_type": obj_type}
         return await self._request_data("GET", "wiki/v2/spaces/get_node", params=params)
 
     async def get_space(self, space_id: str) -> NestedDict:

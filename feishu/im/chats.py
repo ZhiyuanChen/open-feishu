@@ -30,7 +30,7 @@ from .._namespace import Namespace
 from .._url import quote_segment
 
 
-class ChatNamespace(Namespace):
+class ChatsNamespace(Namespace):
     r"""
     群组接口命名空间。
 

@@ -26,8 +26,8 @@ from typing import TYPE_CHECKING
 from .._namespace import Namespace
 
 if TYPE_CHECKING:
-    from .departments import DepartmentNamespace
-    from .users import UserNamespace
+    from .departments import DepartmentsNamespace
+    from .users import UsersNamespace
 
 
 class ContactNamespace(Namespace):
@@ -42,18 +42,18 @@ class ContactNamespace(Namespace):
     通常无需直接实例化，应通过 `client.contact` 访问。
 
     飞书文档:
-        [服务端 API / 通讯录](https://open.feishu.cn/document/server-docs/contact-v3/contact-overview)
+        [服务端 API / 通讯录](https://open.feishu.cn/document/server-docs/contact-v3/resources)
     """
 
-    _departments: DepartmentNamespace | None = None
-    _users: UserNamespace | None = None
+    _departments: DepartmentsNamespace | None = None
+    _users: UsersNamespace | None = None
 
     @property
-    def departments(self) -> DepartmentNamespace:
+    def departments(self) -> DepartmentsNamespace:
         r"""
         部门接口命名空间。
 
-        惰性创建并返回 [feishu.contact.departments.DepartmentNamespace][]，用于查询部门、遍历子部门、
+        惰性创建并返回 [feishu.contact.departments.DepartmentsNamespace][]，用于查询部门、遍历子部门、
         展开上级部门链，以及创建、更新与删除部门。
 
         Returns:
@@ -64,20 +64,20 @@ class ContactNamespace(Namespace):
 
         Examples:
             >>> client.contact.departments  # doctest:+SKIP
-            <feishu.contact.departments.DepartmentNamespace object at ...>
+            <feishu.contact.departments.DepartmentsNamespace object at ...>
         """
         if self._departments is None:
-            from .departments import DepartmentNamespace
+            from .departments import DepartmentsNamespace
 
-            self._departments = DepartmentNamespace(self._client)
+            self._departments = DepartmentsNamespace(self._client)
         return self._departments
 
     @property
-    def users(self) -> UserNamespace:
+    def users(self) -> UsersNamespace:
         r"""
         用户接口命名空间。
 
-        惰性创建并返回 [feishu.contact.users.UserNamespace][]，用于查询、批量查询、创建、更新与删除用户。
+        惰性创建并返回 [feishu.contact.users.UsersNamespace][]，用于查询、批量查询、创建、更新与删除用户。
 
         Returns:
             用户接口命名空间实例。
@@ -87,10 +87,10 @@ class ContactNamespace(Namespace):
 
         Examples:
             >>> client.contact.users  # doctest:+SKIP
-            <feishu.contact.users.UserNamespace object at ...>
+            <feishu.contact.users.UsersNamespace object at ...>
         """
         if self._users is None:
-            from .users import UserNamespace
+            from .users import UsersNamespace
 
-            self._users = UserNamespace(self._client)
+            self._users = UsersNamespace(self._client)
         return self._users

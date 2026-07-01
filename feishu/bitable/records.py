@@ -42,10 +42,17 @@ class RecordsNamespace(Namespace):
     通常无需直接实例化，应通过 `client.bitable.records` 访问。
 
     飞书文档:
-        [记录概述](https://open.feishu.cn/document/server-docs/docs/bitable-v1/app-table-record/bitable-record-overview)
+        [记录数据结构](https://open.feishu.cn/document/docs/bitable-v1/app-table-record/bitable-record-data-structure-overview)
     """
 
-    async def batch_create(self, app_token: str, table_id: str, records: builtins.list[dict[str, Any]]) -> NestedDict:
+    async def batch_create(
+        self,
+        app_token: str,
+        table_id: str,
+        records: builtins.list[dict[str, Any]],
+        *,
+        user_id_type: str | None = None,
+    ) -> NestedDict:
         r"""
         批量新增记录。
 
@@ -56,6 +63,7 @@ class RecordsNamespace(Namespace):
             app_token: 多维表格的唯一标识 `app_token`。
             table_id: 数据表的 `table_id`。
             records: 待新增记录列表，每个元素形如 `{"fields": {"Title": "hi"}}`。
+            user_id_type: 用户字段的 ID 类型；为空时使用飞书接口默认值。
 
         Returns:
             批量新增结果数据，含新建的 `records` 列表（每项含 `record_id`、`fields`）。
@@ -74,6 +82,7 @@ class RecordsNamespace(Namespace):
         return await self._request_data(
             "POST",
             f"bitable/v1/apps/{quote_segment(app_token)}/tables/{quote_segment(table_id)}/records/batch_create",
+            params=_user_id_type_params(user_id_type),
             json={"records": records},
         )
 
@@ -107,7 +116,14 @@ class RecordsNamespace(Namespace):
             json={"records": record_ids},
         )
 
-    async def batch_update(self, app_token: str, table_id: str, records: builtins.list[dict[str, Any]]) -> NestedDict:
+    async def batch_update(
+        self,
+        app_token: str,
+        table_id: str,
+        records: builtins.list[dict[str, Any]],
+        *,
+        user_id_type: str | None = None,
+    ) -> NestedDict:
         r"""
         批量更新记录。
 
@@ -119,6 +135,7 @@ class RecordsNamespace(Namespace):
             table_id: 数据表的 `table_id`。
             records: 待更新记录列表，每个元素形如
                 `{"record_id": "recxxx", "fields": {"Title": "new"}}`。
+            user_id_type: 用户字段的 ID 类型；为空时使用飞书接口默认值。
 
         Returns:
             批量更新结果数据，含更新后的 `records` 列表（每项含 `record_id`、`fields`）。
@@ -137,10 +154,13 @@ class RecordsNamespace(Namespace):
         return await self._request_data(
             "POST",
             f"bitable/v1/apps/{quote_segment(app_token)}/tables/{quote_segment(table_id)}/records/batch_update",
+            params=_user_id_type_params(user_id_type),
             json={"records": records},
         )
 
-    async def create(self, app_token: str, table_id: str, fields: dict[str, Any]) -> NestedDict:
+    async def create(
+        self, app_token: str, table_id: str, fields: dict[str, Any], *, user_id_type: str | None = None
+    ) -> NestedDict:
         r"""
         新增一条记录。
 
@@ -151,6 +171,7 @@ class RecordsNamespace(Namespace):
             app_token: 多维表格的唯一标识 `app_token`。
             table_id: 数据表的 `table_id`。
             fields: 记录字段值映射，例如 `{"Title": "hi", "Done": True}`。
+            user_id_type: 用户字段的 ID 类型；为空时使用飞书接口默认值。
 
         Returns:
             包含 `record` 字段的数据，`record` 内含新建记录的 `record_id`、`fields` 等字段。
@@ -168,6 +189,7 @@ class RecordsNamespace(Namespace):
         return await self._request_data(
             "POST",
             f"bitable/v1/apps/{quote_segment(app_token)}/tables/{quote_segment(table_id)}/records",
+            params=_user_id_type_params(user_id_type),
             json={"fields": fields},
         )
 
@@ -199,7 +221,9 @@ class RecordsNamespace(Namespace):
             f"/records/{quote_segment(record_id)}",
         )
 
-    async def get(self, app_token: str, table_id: str, record_id: str) -> NestedDict:
+    async def get(
+        self, app_token: str, table_id: str, record_id: str, *, user_id_type: str | None = None
+    ) -> NestedDict:
         r"""
         获取单条记录。
 
@@ -207,6 +231,7 @@ class RecordsNamespace(Namespace):
             app_token: 多维表格的唯一标识 `app_token`。
             table_id: 数据表的 `table_id`。
             record_id: 记录的 `record_id`。
+            user_id_type: 用户字段的 ID 类型；为空时使用飞书接口默认值。
 
         Returns:
             包含 `record` 字段的数据，`record` 内含 `record_id`、`fields` 等字段。
@@ -225,6 +250,7 @@ class RecordsNamespace(Namespace):
             "GET",
             f"bitable/v1/apps/{quote_segment(app_token)}/tables/{quote_segment(table_id)}"
             f"/records/{quote_segment(record_id)}",
+            params=_user_id_type_params(user_id_type),
         )
 
     async def list(
@@ -238,6 +264,7 @@ class RecordsNamespace(Namespace):
         filter: str | None = None,
         sort: str | None = None,
         field_names: str | None = None,
+        user_id_type: str | None = None,
     ) -> builtins.list[NestedDict]:
         r"""
         列出数据表的记录。
@@ -259,6 +286,7 @@ class RecordsNamespace(Namespace):
             filter: 筛选条件表达式；为空时省略该参数。
             sort: 排序条件；为空时省略该参数。
             field_names: 指定返回的字段集合；为空时省略该参数。
+            user_id_type: 用户字段的 ID 类型；为空时使用飞书接口默认值。
 
         Returns:
             记录数据列表，每项包含 `record_id`、`fields` 等字段。
@@ -282,6 +310,8 @@ class RecordsNamespace(Namespace):
             params["sort"] = sort
         if field_names is not None:
             params["field_names"] = field_names
+        if user_id_type is not None:
+            params["user_id_type"] = user_id_type
         return await self._client.paginate_get(
             f"bitable/v1/apps/{quote_segment(app_token)}/tables/{quote_segment(table_id)}/records",
             params=params,
@@ -297,6 +327,7 @@ class RecordsNamespace(Namespace):
         *,
         page_size: int = 50,
         max_items: int | None = None,
+        user_id_type: str | None = None,
     ) -> builtins.list[NestedDict]:
         r"""
         检索数据表的记录。
@@ -317,6 +348,7 @@ class RecordsNamespace(Namespace):
                 `{"filter": {...}, "sort": [...], "field_names": [...]}`。
             page_size: 每页条数，默认为 50，超过上限时按上限截断。
             max_items: 最多返回的条数；为空表示返回全部。
+            user_id_type: 用户字段的 ID 类型；为空时使用飞书接口默认值。
 
         Returns:
             记录数据列表，每项包含 `record_id`、`fields` 等字段。
@@ -325,7 +357,7 @@ class RecordsNamespace(Namespace):
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [检索记录](https://open.feishu.cn/document/server-docs/docs/bitable-v1/app-table-record/search)
+            [检索记录](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/bitable-v1/app-table-record/search)
 
         Examples:
             >>> await client.bitable.records.search("bascnxxx", "tblcn1", {"field_names": ["Title"]})  # doctest:+SKIP
@@ -337,6 +369,8 @@ class RecordsNamespace(Namespace):
                 "page_size": min(page_size, MAX_PAGE_SIZE),
                 "page_token": page_token,
             }
+            if user_id_type is not None:
+                params["user_id_type"] = user_id_type
             return await self._client.request(
                 "POST",
                 f"bitable/v1/apps/{quote_segment(app_token)}/tables/{quote_segment(table_id)}/records/search",
@@ -346,7 +380,15 @@ class RecordsNamespace(Namespace):
 
         return await paginate(fetch, max_items=max_items)
 
-    async def update(self, app_token: str, table_id: str, record_id: str, fields: dict[str, Any]) -> NestedDict:
+    async def update(
+        self,
+        app_token: str,
+        table_id: str,
+        record_id: str,
+        fields: dict[str, Any],
+        *,
+        user_id_type: str | None = None,
+    ) -> NestedDict:
         r"""
         更新一条记录。
 
@@ -358,6 +400,7 @@ class RecordsNamespace(Namespace):
             table_id: 数据表的 `table_id`。
             record_id: 待更新记录的 `record_id`。
             fields: 待更新的字段值映射，例如 `{"Title": "new"}`。
+            user_id_type: 用户字段的 ID 类型；为空时使用飞书接口默认值。
 
         Returns:
             包含 `record` 字段的数据，`record` 内含更新后记录的 `record_id`、`fields` 等字段。
@@ -376,5 +419,10 @@ class RecordsNamespace(Namespace):
             "PUT",
             f"bitable/v1/apps/{quote_segment(app_token)}/tables/{quote_segment(table_id)}"
             f"/records/{quote_segment(record_id)}",
+            params=_user_id_type_params(user_id_type),
             json={"fields": fields},
         )
+
+
+def _user_id_type_params(user_id_type: str | None) -> dict[str, str] | None:
+    return {"user_id_type": user_id_type} if user_id_type is not None else None

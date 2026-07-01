@@ -89,19 +89,19 @@ class PermissionsNamespace(Namespace):
     """
 
     async def create(
-        self, token: str, member: dict[str, Any], *, doc_type: str, need_notification: bool | None = None
+        self, token: str, member: dict[str, Any], *, type: str, need_notification: bool | None = None
     ) -> NestedDict:
         r"""
         增加协作者权限。
 
         为指定云文档新增一个协作者。`member` 为协作者条目，需包含 `member_type`（如 `openid`）、
-        `member_id` 与 `perm`（如 `view`、`edit`、`full_access`）。`doc_type` 为云文档类型，作为查询参数
+        `member_id` 与 `perm`（如 `view`、`edit`、`full_access`）。`type` 为云文档类型，作为查询参数
         发送，必填。
 
         Args:
             token: 云文档的 token。
             member: 协作者条目，形如 `{"member_type": "openid", "member_id": "ou_xxx", "perm": "view"}`。
-            doc_type: 云文档类型，例如 `doc`、`docx`、`sheet`、`bitable`、`file`、`folder`、`wiki`。
+            type: 云文档类型，例如 `doc`、`docx`、`sheet`、`bitable`、`file`、`folder`、`wiki`。
             need_notification: 是否向新增协作者发送通知；为空时省略该查询参数。
 
         Returns:
@@ -118,29 +118,29 @@ class PermissionsNamespace(Namespace):
             >>> await client.drive.permissions.create(
             ...     "doxcabc",
             ...     {"member_type": "openid", "member_id": "ou_xxx", "perm": "view"},
-            ...     doc_type="docx",
+            ...     type="docx",
             ... )  # doctest:+SKIP
             {'member': {'member_type': 'openid', 'member_id': 'ou_xxx', 'perm': 'view'}}  # noqa: E501
         """
-        params: dict[str, Any] = {"type": doc_type}
+        params: dict[str, Any] = {"type": type}
         if need_notification is not None:
             params["need_notification"] = need_notification
         return await self._request_data(
             "POST", f"drive/v1/permissions/{quote_segment(token)}/members", params=params, json=member
         )
 
-    async def delete(self, token: str, member_id: str, *, doc_type: str, member_type: str | None = None) -> NestedDict:
+    async def delete(self, token: str, member_id: str, *, type: str, member_type: str | None = None) -> NestedDict:
         r"""
         移除协作者权限。
 
-        移除指定云文档的某个协作者。`doc_type` 为云文档类型，必填。`member_type` 为协作者 ID 类型，
+        移除指定云文档的某个协作者。`type` 为云文档类型，必填。`member_type` 为协作者 ID 类型，
         留空时由 [feishu.drive.permissions.infer_member_type][] 依据 `member_id` 前缀自动推断
         （`userid` 无固定前缀，须显式传入）；二者均作为查询参数发送。
 
         Args:
             token: 云文档的 token。
             member_id: 待移除协作者的 ID。
-            doc_type: 云文档类型，例如 `doc`、`docx`、`sheet`、`bitable`、`file`、`folder`、`wiki`。
+            type: 云文档类型，例如 `doc`、`docx`、`sheet`、`bitable`、`file`、`folder`、`wiki`。
             member_type: 协作者 ID 类型，例如 `openid`、`unionid`、`userid`、`openchat`、`opendepartmentid`；
                 留空时按 `member_id` 前缀自动推断。
 
@@ -156,25 +156,25 @@ class PermissionsNamespace(Namespace):
             参见 [feishu.drive.permissions.PermissionsNamespace.create][]。
 
         Examples:
-            >>> await client.drive.permissions.delete("doxcabc", "ou_xxx", doc_type="docx")  # doctest:+SKIP
+            >>> await client.drive.permissions.delete("doxcabc", "ou_xxx", type="docx")  # doctest:+SKIP
             {}
         """
         return await self._request_data(
             "DELETE",
             f"drive/v1/permissions/{quote_segment(token)}/members/{quote_segment(member_id)}",
-            params={"type": doc_type, "member_type": member_type or infer_member_type(member_id)},
+            params={"type": type, "member_type": member_type or infer_member_type(member_id)},
         )
 
-    async def get_public(self, token: str, *, doc_type: str) -> NestedDict:
+    async def get_public(self, token: str, *, type: str) -> NestedDict:
         r"""
         获取云文档权限设置。
 
         获取指定云文档的公共权限设置（如外部访问、可分享、链接分享范围、评论与复制权限等）。
-        `doc_type` 为云文档类型，作为查询参数发送，必填。
+        `type` 为云文档类型，作为查询参数发送，必填。
 
         Args:
             token: 云文档的 token。
-            doc_type: 云文档类型，例如 `doc`、`docx`、`sheet`、`bitable`、`file`、`folder`、`wiki`。
+            type: 云文档类型，例如 `doc`、`docx`、`sheet`、`bitable`、`file`、`folder`、`wiki`。
 
         Returns:
             权限设置数据，含 `permission_public` 字段（其中含 `external_access`、`link_share_entity`、
@@ -189,24 +189,24 @@ class PermissionsNamespace(Namespace):
 
         Examples:
             >>> await client.drive.permissions.get_public(
-            ...     "doxcabc", doc_type="docx"
+            ...     "doxcabc", type="docx"
             ... )  # doctest:+SKIP
             {'permission_public': {'external_access': True, 'link_share_entity': 'tenant_readable', ...}}  # noqa: E501
         """
         return await self._request_data(
-            "GET", f"drive/v1/permissions/{quote_segment(token)}/public", params={"type": doc_type}
+            "GET", f"drive/v1/permissions/{quote_segment(token)}/public", params={"type": type}
         )
 
-    async def list(self, token: str, *, doc_type: str, fields: str | None = None) -> list[NestedDict]:
+    async def list(self, token: str, *, type: str, fields: str | None = None) -> list[NestedDict]:
         r"""
         获取协作者列表。
 
-        获取指定云文档的全部协作者。该接口不分页，一次性返回全部协作者。`doc_type` 为云文档类型，
+        获取指定云文档的全部协作者。该接口不分页，一次性返回全部协作者。`type` 为云文档类型，
         作为查询参数发送，必填。
 
         Args:
             token: 云文档的 token。
-            doc_type: 云文档类型，例如 `doc`、`docx`、`sheet`、`bitable`、`file`、`folder`、`wiki`。
+            type: 云文档类型，例如 `doc`、`docx`、`sheet`、`bitable`、`file`、`folder`、`wiki`。
             fields: 指定返回的协作者字段集合（如 `*`）；为空时省略该查询参数。
 
         Returns:
@@ -221,11 +221,11 @@ class PermissionsNamespace(Namespace):
 
         Examples:
             >>> await client.drive.permissions.list(
-            ...     "doxcabc", doc_type="docx"
+            ...     "doxcabc", type="docx"
             ... )  # doctest:+SKIP
             [{'member_type': 'openid', 'member_id': 'ou_xxx', 'perm': 'view', ...}]  # noqa: E501
         """
-        params = {"type": doc_type}
+        params = {"type": type}
         if fields is not None:
             params["fields"] = fields
         envelope = await self._client.request(
@@ -233,18 +233,18 @@ class PermissionsNamespace(Namespace):
         )
         return list(_data(envelope).get("items", []))
 
-    async def set_public(self, token: str, settings: dict[str, Any], *, doc_type: str) -> NestedDict:
+    async def set_public(self, token: str, settings: dict[str, Any], *, type: str) -> NestedDict:
         r"""
         更新云文档权限设置。
 
         更新指定云文档的公共权限设置。`settings` 为待更新的设置项（仅传需修改的字段，如
-        `link_share_entity`、`comment_entity`、`copy_entity` 等）。`doc_type` 为云文档类型，作为查询
+        `link_share_entity`、`comment_entity`、`copy_entity` 等）。`type` 为云文档类型，作为查询
         参数发送，必填。
 
         Args:
             token: 云文档的 token。
             settings: 待更新的权限设置项，形如 `{"link_share_entity": "tenant_readable"}`。
-            doc_type: 云文档类型，例如 `doc`、`docx`、`sheet`、`bitable`、`file`、`folder`、`wiki`。
+            type: 云文档类型，例如 `doc`、`docx`、`sheet`、`bitable`、`file`、`folder`、`wiki`。
 
         Returns:
             更新后的权限设置数据，含 `permission_public` 字段。
@@ -258,10 +258,10 @@ class PermissionsNamespace(Namespace):
 
         Examples:
             >>> await client.drive.permissions.set_public(
-            ...     "doxcabc", {"link_share_entity": "tenant_readable"}, doc_type="docx"
+            ...     "doxcabc", {"link_share_entity": "tenant_readable"}, type="docx"
             ... )  # doctest:+SKIP
             {'permission_public': {'link_share_entity': 'tenant_readable', ...}}  # noqa: E501
         """
         return await self._request_data(
-            "PATCH", f"drive/v1/permissions/{quote_segment(token)}/public", params={"type": doc_type}, json=settings
+            "PATCH", f"drive/v1/permissions/{quote_segment(token)}/public", params={"type": type}, json=settings
         )

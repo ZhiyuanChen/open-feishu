@@ -18,3 +18,7 @@ class TestQuery:
         assert method == "POST" and path.endswith("/calendar/v4/freebusy/list")
         assert sent == body
         assert resp["freebusy_list"] == []
+
+    async def test_forwards_user_id_type(self, freebusy, recorder):
+        await freebusy.query({"time_min": "t0", "time_max": "t1", "user_id": "u_1"}, user_id_type="user_id")
+        assert recorder.last[2]["user_id_type"] == "user_id"

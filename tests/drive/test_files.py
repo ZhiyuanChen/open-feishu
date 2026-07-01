@@ -87,10 +87,10 @@ class TestList:
         assert len(recorder) == 1
 
 
-class TestGetMetas:
+class TestBatchQueryMetas:
     async def test_posts_request_docs(self, files, recorder):
         docs = [{"doc_token": "doxcabc", "doc_type": "docx"}]
-        resp = await files.get_metas(docs, with_url=True)
+        resp = await files.batch_query_metas(docs, with_url=True)
         method, path, _, body = recorder.last
         assert method == "POST" and path.endswith("/drive/v1/metas/batch_query")
         assert body["request_docs"] == docs
@@ -98,24 +98,24 @@ class TestGetMetas:
         assert "metas" in resp
 
     async def test_defaults_and_forwards_options(self, files, recorder):
-        await files.get_metas([{"doc_token": "d", "doc_type": "docx"}], user_id_type="open_id")
+        await files.batch_query_metas([{"doc_token": "d", "doc_type": "docx"}], user_id_type="open_id")
         method, path, params, body = recorder.last
         assert params["user_id_type"] == "open_id"
         assert body["with_url"] is False
 
     async def test_omits_unset_user_id_type(self, files, recorder):
-        await files.get_metas([{"doc_token": "d", "doc_type": "docx"}])
+        await files.batch_query_metas([{"doc_token": "d", "doc_type": "docx"}])
         assert "user_id_type" not in recorder.last[2]
 
 
 class TestCopy:
     async def test_posts_copy_request(self, files, recorder):
         extra = [{"key": "k", "value": "v"}]
-        resp = await files.copy("f1", "Copy", doc_type="file", folder_token="fld_1", extra=extra)
+        resp = await files.copy("f1", "Copy", type="file", folder_token="fld_1", extra=extra)
         method, path, _, body = recorder.last
         assert method == "POST" and path.endswith("/drive/v1/files/f1/copy")
         assert body["name"] == "Copy"
-        assert body["type"] == "file"  # doc_type maps to the wire field "type"
+        assert body["type"] == "file"  # type is the wire field
         assert body["folder_token"] == "fld_1"
         assert body["extra"] == extra
         assert "file" in resp
@@ -123,17 +123,17 @@ class TestCopy:
 
 class TestMove:
     async def test_posts_move_request(self, files, recorder):
-        resp = await files.move("f1", folder_token="fld_1", doc_type="file")
+        resp = await files.move("f1", folder_token="fld_1", type="file")
         method, path, _, body = recorder.last
         assert method == "POST" and path.endswith("/drive/v1/files/f1/move")
-        assert body["type"] == "file"  # doc_type maps to the wire field "type"
+        assert body["type"] == "file"  # type is the wire field
         assert body["folder_token"] == "fld_1"
         assert "task_id" in resp
 
 
 class TestDelete:
-    async def test_sends_doc_type_as_query_param(self, files, recorder):
-        resp = await files.delete("f1", doc_type="file")
+    async def test_sends_type_as_query_param(self, files, recorder):
+        resp = await files.delete("f1", type="file")
         method, path, params, _ = recorder.last
         assert method == "DELETE" and path.endswith("/drive/v1/files/f1")
         assert params["type"] == "file"
@@ -216,10 +216,10 @@ class TestDownload:
 
 class TestExportTask:
     async def test_create_posts_flat_body(self, files, recorder):
-        resp = await files.create_export_task("doxcabc", "pdf", doc_type="docx", sub_id="sub1")
+        resp = await files.create_export_task("doxcabc", "pdf", type="docx", sub_id="sub1")
         method, path, _, body = recorder.last
         assert method == "POST" and path.endswith("/drive/v1/export_tasks")
-        # Body is the flat ExportTask shape (not wrapped under a sub-key); doc_type maps to "type".
+        # Body is the flat ExportTask shape (not wrapped under a sub-key); `type` is the wire field.
         assert body["file_extension"] == "pdf"
         assert body["token"] == "doxcabc"
         assert body["type"] == "docx"
@@ -227,7 +227,7 @@ class TestExportTask:
         assert "ticket" in resp
 
     async def test_create_omits_unset_sub_id(self, files, recorder):
-        await files.create_export_task("doxcabc", "pdf", doc_type="docx")
+        await files.create_export_task("doxcabc", "pdf", type="docx")
         assert "sub_id" not in recorder.last[3]
 
     async def test_get_fetches_ticket(self, client_factory, recorder):

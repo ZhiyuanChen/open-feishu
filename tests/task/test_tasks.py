@@ -34,14 +34,14 @@ class TestGet:
 
 class TestPatch:
     async def test_patch_wraps_task_and_fields(self, tasks, recorder):
-        await tasks.patch("d116", {"summary": "写月报"}, ["summary"])
+        await tasks.update("d116", {"summary": "写月报"}, ["summary"])
         method, path, _, body = recorder.last
         assert method == "PATCH" and path.endswith("/task/v2/tasks/d116")
         # Feishu's whitelist-update semantics: task carries new values, update_fields names them.
         assert body == {"task": {"summary": "写月报"}, "update_fields": ["summary"]}
 
     async def test_patch_materializes_fields_iterable(self, tasks, recorder):
-        await tasks.patch("d116", {"summary": "x"}, (f for f in ["summary", "due"]))
+        await tasks.update("d116", {"summary": "x"}, (f for f in ["summary", "due"]))
         assert recorder.last[3]["update_fields"] == ["summary", "due"]
 
 
@@ -86,7 +86,7 @@ class TestUserIdType:
         [
             lambda ns: ns.create({"summary": "x"}, user_id_type="open_id"),
             lambda ns: ns.get("d116", user_id_type="open_id"),
-            lambda ns: ns.patch("d116", {"summary": "x"}, ["summary"], user_id_type="open_id"),
+            lambda ns: ns.update("d116", {"summary": "x"}, ["summary"], user_id_type="open_id"),
         ],
         ids=["create", "get", "patch"],
     )

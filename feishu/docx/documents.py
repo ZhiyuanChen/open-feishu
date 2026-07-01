@@ -30,7 +30,7 @@ from .._namespace import Namespace
 from .._url import quote_segment
 from ..pagination import paginate
 
-# 文档块（block）列表接口允许的最大每页条数，远高于通用的 50。
+# Maximum page size accepted by the block-list API; much larger than the generic 50-item limit.
 MAX_BLOCK_PAGE_SIZE = 500
 
 
@@ -44,7 +44,7 @@ class DocxNamespace(Namespace):
     通常无需直接实例化，应通过客户端的 `client.docx` 访问。
 
     飞书文档:
-        [文档概述](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/intro)
+        [文档概述](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/docx-overview)
     """
 
     async def append_blocks(
@@ -74,7 +74,7 @@ class DocxNamespace(Namespace):
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [创建块](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document-block-children/create)
+            [创建块](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document-block/create)
             参见 [feishu.docx.documents.DocxNamespace.patch_block][]。
 
         Examples:
@@ -226,7 +226,7 @@ class DocxNamespace(Namespace):
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [获取文档所有块](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document-block/list)
+            [获取文档所有块](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/list)
             参见 [feishu.docx.documents.DocxNamespace.get_block][]。
 
         Examples:
@@ -234,8 +234,8 @@ class DocxNamespace(Namespace):
             [{'block_id': 'doxcabc', 'block_type': 1, ...}, {'block_id': 'blk2', 'block_type': 2, ...}]
         """
 
-        # 不走 client.paginate_get：块列表上限为 MAX_BLOCK_PAGE_SIZE=500，
-        # 而 paginate_get 会将 page_size 截断至通用的 MAX_PAGE_SIZE=50，对块列表过小，故保留手写翻页闭包。
+        # Do not use client.paginate_get here: the block-list endpoint allows MAX_BLOCK_PAGE_SIZE=500, while
+        # paginate_get clamps page_size to the generic MAX_PAGE_SIZE=50, which is too small for document blocks.
         async def fetch(page_token: str | None) -> NestedDict:
             params = {
                 "page_size": min(page_size, MAX_BLOCK_PAGE_SIZE),

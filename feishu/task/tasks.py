@@ -161,7 +161,7 @@ class TasksNamespace(Namespace):
             params["user_id_type"] = user_id_type
         return await self._client.paginate_get("task/v2/tasks", params=params, page_size=page_size, max_items=max_items)
 
-    async def patch(
+    async def update(
         self,
         task_guid: str,
         task: dict[str, Any],
@@ -191,7 +191,7 @@ class TasksNamespace(Namespace):
             [更新任务](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/task/patch)
 
         Examples:
-            >>> await client.task.tasks.patch("d116...", {"summary": "写月报"}, ["summary"])  # doctest:+SKIP
+            >>> await client.task.tasks.update("d116...", {"summary": "写月报"}, ["summary"])  # doctest:+SKIP
             {'task': {'guid': 'd116...', 'summary': '写月报'}}
         """
         params: dict[str, Any] = {}

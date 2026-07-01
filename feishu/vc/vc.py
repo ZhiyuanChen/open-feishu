@@ -42,7 +42,7 @@ class VCNamespace(Namespace):
     通常无需直接实例化，应通过 `client.vc` 访问。
 
     飞书文档:
-        [视频会议概述](https://open.feishu.cn/document/server-docs/vc-v1/vc-overview)
+        [视频会议概述](https://open.feishu.cn/document/server-docs/vc-v1/video-conferencing-overview)
     """
 
     _meetings: MeetingsNamespace | None = None

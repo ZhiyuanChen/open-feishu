@@ -29,6 +29,10 @@ class TestWriteAndRead:
         assert body["fields"] == {"Title": "hi"}
         assert resp["record"]["record_id"] == "recxxx"
 
+    async def test_create_forwards_user_id_type(self, records, recorder):
+        await records.create("bascnxxx", "tbl1", {"Person": [{"id": "u_1"}]}, user_id_type="user_id")
+        assert recorder.last[2]["user_id_type"] == "user_id"
+
     async def test_update(self, records, recorder):
         resp = await records.update("bascnxxx", "tbl1", "recxxx", {"Title": "new"})
         method, path, _, body = recorder.last
@@ -36,11 +40,19 @@ class TestWriteAndRead:
         assert body["fields"] == {"Title": "new"}
         assert resp["record"]["record_id"] == "recxxx"
 
+    async def test_update_forwards_user_id_type(self, records, recorder):
+        await records.update("bascnxxx", "tbl1", "recxxx", {"Person": [{"id": "u_1"}]}, user_id_type="user_id")
+        assert recorder.last[2]["user_id_type"] == "user_id"
+
     async def test_get(self, records, recorder):
         resp = await records.get("bascnxxx", "tbl1", "recxxx")
         method, path, _, _ = recorder.last
         assert method == "GET" and path.endswith(f"{PREFIX}/recxxx")
         assert resp["record"]["record_id"] == "recxxx"
+
+    async def test_get_forwards_user_id_type(self, records, recorder):
+        await records.get("bascnxxx", "tbl1", "recxxx", user_id_type="union_id")
+        assert recorder.last[2]["user_id_type"] == "union_id"
 
     async def test_delete(self, client_factory, recorder):
         client = client_factory(recorder=recorder, responder=lambda r: envelope({"deleted": True}))
@@ -64,6 +76,21 @@ class TestWriteAndRead:
         method, path, _, body = recorder.last
         assert method == "POST" and path.endswith(f"{PREFIX}/{suffix}")
         assert body["records"] == args[0]
+        await client.aclose()
+
+    @pytest.mark.parametrize(
+        "op, args, suffix",
+        [
+            ("batch_create", ([{"fields": {"Person": [{"id": "u_1"}]}}],), "batch_create"),
+            ("batch_update", ([{"record_id": "rec1", "fields": {"Person": [{"id": "u_1"}]}}],), "batch_update"),
+        ],
+    )
+    async def test_batch_write_ops_forward_user_id_type(self, client_factory, recorder, op, args, suffix):
+        client = client_factory(recorder=recorder, responder=lambda r: envelope({"records": []}))
+        await getattr(client.bitable.records, op)("bascnxxx", "tbl1", *args, user_id_type="user_id")
+        method, path, params, _ = recorder.last
+        assert method == "POST" and path.endswith(f"{PREFIX}/{suffix}")
+        assert params["user_id_type"] == "user_id"
         await client.aclose()
 
 
@@ -102,6 +129,12 @@ class TestList:
         assert params["field_names"] == "Title"
         await client.aclose()
 
+    async def test_forwards_user_id_type(self, client_factory, recorder):
+        client = client_factory(recorder=recorder, responder=paginated_responder([[]]))
+        await client.bitable.records.list("bascnxxx", "tbl1", user_id_type="open_id")
+        assert recorder[0][2]["user_id_type"] == "open_id"
+        await client.aclose()
+
     async def test_omits_unset_params(self, client_factory, recorder):
         client = client_factory(recorder=recorder, responder=paginated_responder([[]]))
         await client.bitable.records.list("bascnxxx", "tbl1")
@@ -126,4 +159,10 @@ class TestSearch:
         client = client_factory(recorder=recorder, responder=paginated_responder([[]]))
         await client.bitable.records.search("bascnxxx", "tbl1", {}, page_size=999)
         assert int(recorder[0][2]["page_size"]) <= 50
+        await client.aclose()
+
+    async def test_forwards_user_id_type(self, client_factory, recorder):
+        client = client_factory(recorder=recorder, responder=paginated_responder([[]]))
+        await client.bitable.records.search("bascnxxx", "tbl1", {}, user_id_type="union_id")
+        assert recorder[0][2]["user_id_type"] == "union_id"
         await client.aclose()

@@ -44,7 +44,7 @@ class SheetsNamespace(Namespace):
     通常无需直接实例化，应通过 `client.sheets` 访问。
 
     飞书文档:
-        [电子表格概述](https://open.feishu.cn/document/server-docs/docs/sheets/sheets-overview)
+        [电子表格概述](https://open.feishu.cn/document/server-docs/docs/sheets-v3/overview)
     """
 
     async def append_rows(self, spreadsheet_token: str, range: str, values: list[list[Any]]) -> NestedDict:
@@ -107,6 +107,62 @@ class SheetsNamespace(Namespace):
         if folder_token is not None:
             body["folder_token"] = folder_token
         return await self._request_data("POST", "sheets/v3/spreadsheets", json=body)
+
+    async def delete_dimension(
+        self,
+        spreadsheet_token: str,
+        sheet_id: str,
+        *,
+        major_dimension: str = "ROWS",
+        start_index: int,
+        end_index: int,
+    ) -> NestedDict:
+        r"""
+        删除工作表中的若干行或列。
+
+        该接口走 sheets/v2 数据操作路径（v3 暂未提供该能力）。请求体按
+        `{"dimension": {"sheetId": ..., "majorDimension": ..., "startIndex": ..., "endIndex": ...}}`
+        构造。
+
+        注意：按飞书 dimension_range 约定，`start_index` 与 `end_index` 均为 1 起始
+        （1-based），且区间为闭区间（含首含尾）。例如 `start_index=2, end_index=3`
+        会删除第 2 行与第 3 行两行。`major_dimension` 取值为 `"ROWS"`（行）或
+        `"COLUMNS"`（列）。
+
+        Args:
+            spreadsheet_token: 电子表格 token。
+            sheet_id: 工作表 ID。
+            major_dimension: 删除维度，`"ROWS"` 删除行、`"COLUMNS"` 删除列；默认 `"ROWS"`。
+            start_index: 起始位置，1 起始，包含该位置。
+            end_index: 结束位置，1 起始，包含该位置。
+
+        Returns:
+            删除结果数据，通常包含 `spreadsheetToken`、`delCount`、`majorDimension`
+            等字段。
+
+        Raises:
+            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
+
+        飞书文档:
+            [删除行列](https://open.feishu.cn/document/server-docs/docs/sheets-v3/sheet-rowcol/-delete-rows-or-columns)
+
+        Examples:
+            >>> await client.sheets.delete_dimension(  # doctest:+SKIP
+            ...     "shtcn_xxx", "Q7PlXT", major_dimension="ROWS", start_index=2, end_index=3
+            ... )
+            {'spreadsheetToken': 'shtcn_xxx', 'delCount': 2, 'majorDimension': 'ROWS'}
+        """
+        body = {
+            "dimension": {
+                "sheetId": sheet_id,
+                "majorDimension": major_dimension,
+                "startIndex": start_index,
+                "endIndex": end_index,
+            }
+        }
+        return await self._request_data(
+            "DELETE", f"sheets/v2/spreadsheets/{quote_segment(spreadsheet_token)}/dimension_range", json=body
+        )
 
     async def get(self, spreadsheet_token: str) -> NestedDict:
         r"""

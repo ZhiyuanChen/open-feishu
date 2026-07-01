@@ -113,7 +113,7 @@ class BitableNamespace(Namespace):
             多维表格记录接口命名空间实例。
 
         飞书文档:
-            [记录概述](https://open.feishu.cn/document/server-docs/docs/bitable-v1/app-table-record/bitable-record-overview)
+            [记录数据结构](https://open.feishu.cn/document/docs/bitable-v1/app-table-record/bitable-record-data-structure-overview)
 
         Examples:
             >>> client.bitable.records  # doctest:+SKIP

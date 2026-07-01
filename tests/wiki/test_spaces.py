@@ -62,7 +62,7 @@ class TestGetNode:
         assert resp["node"]["node_token"] == "wikcn1"
 
     async def test_forwards_obj_type(self, wiki, recorder):
-        await wiki(lambda r: envelope({"node": {}})).get_node("doccnxxx", doc_type="docx")
+        await wiki(lambda r: envelope({"node": {}})).get_node("doccnxxx", obj_type="docx")
         assert recorder.last[2]["obj_type"] == "docx"
 
 

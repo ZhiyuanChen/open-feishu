@@ -32,15 +32,15 @@ class FreebusyNamespace(Namespace):
     r"""
     忙闲接口命名空间。
 
-    通过 `client.calendar.freebusy` 访问，封装飞书日历中忙闲（freebusy）查询相关的服务端接口。
+    通过 `client.calendar.freebusy` 访问，封装飞书日历中忙闲（free/busy）查询相关的服务端接口。
 
     通常无需直接实例化，应通过 `client.calendar.freebusy` 访问。
 
     飞书文档:
-        [查询主日历忙闲信息](https://open.feishu.cn/document/server-docs/calendar-v4/calendar-event/list-2)
+        [查询主日历忙闲信息](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/calendar-v4/freebusy/list)
     """
 
-    async def query(self, body: dict[str, Any]) -> NestedDict:
+    async def query(self, body: dict[str, Any], *, user_id_type: str | None = None) -> NestedDict:
         r"""
         查询主日历忙闲信息。
 
@@ -50,6 +50,7 @@ class FreebusyNamespace(Namespace):
         Args:
             body: 忙闲查询请求体，原样作为 JSON 发送，例如
                 `{"time_min": "...", "time_max": "...", "user_id": "ou_xxx"}`。
+            user_id_type: `body.user_id` 的 ID 类型；为空时使用飞书接口默认值。
 
         Returns:
             忙闲查询结果数据，含 `freebusy_list`（每项含 `start_time`、`end_time`）。
@@ -58,10 +59,15 @@ class FreebusyNamespace(Namespace):
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [查询主日历忙闲信息](https://open.feishu.cn/document/server-docs/calendar-v4/calendar-event/list-2)
+            [查询主日历忙闲信息](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/calendar-v4/freebusy/list)
 
         Examples:
             >>> await client.calendar.freebusy.query({"time_min": "...", "time_max": "...", "user_id": "ou_xxx"})  # doctest:+SKIP
             {'freebusy_list': [{'start_time': '...', 'end_time': '...'}, ...]}  # noqa: E501
         """
-        return await self._request_data("POST", "calendar/v4/freebusy/list", json=body)
+        return await self._request_data(
+            "POST",
+            "calendar/v4/freebusy/list",
+            params={"user_id_type": user_id_type} if user_id_type is not None else None,
+            json=body,
+        )

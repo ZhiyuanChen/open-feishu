@@ -32,7 +32,7 @@ from .._namespace import Namespace
 from .._url import quote_segment
 
 
-class UserNamespace(Namespace):
+class UsersNamespace(Namespace):
     r"""
     用户接口命名空间。
 
@@ -74,7 +74,7 @@ class UserNamespace(Namespace):
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [批量获取用户信息](https://open.feishu.cn/document/server-docs/contact-v3/user/batch)
+            [批量获取用户信息](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/contact-v3/user/batch)
 
         Examples:
             >>> users = await client.contact.users.batch_get(["u1", "u2"])  # doctest: +SKIP
@@ -92,7 +92,7 @@ class UserNamespace(Namespace):
         envelope = await self._client.request("GET", "contact/v3/users/batch", params=params)
         return [NestedDict(u) for u in _data(envelope)["items"]]
 
-    async def batch_get_ids(
+    async def batch_get_id(
         self,
         *,
         emails: builtins.list[str] | None = None,
@@ -117,7 +117,7 @@ class UserNamespace(Namespace):
             [通过手机号或邮箱获取用户 ID](https://open.feishu.cn/document/server-docs/contact-v3/user/batch_get_id)
 
         Examples:
-            >>> data = await client.contact.users.batch_get_ids(emails=["alice@example.com"])  # doctest: +SKIP
+            >>> data = await client.contact.users.batch_get_id(emails=["alice@example.com"])  # doctest: +SKIP
             >>> data["user_list"]  # doctest: +SKIP
             [{'email': 'alice@example.com', 'user_id': 'u1'}]
         """
@@ -298,7 +298,7 @@ class UserNamespace(Namespace):
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [搜索用户](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/search-v1/user/search)
+            [搜索用户](https://open.feishu.cn/document/server-docs/contact-v3/user/search-users)
 
         Examples:
             >>> me = client.as_user("u-xxx")  # doctest: +SKIP

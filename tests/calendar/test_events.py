@@ -23,6 +23,10 @@ class TestCreate:
         await events.create("cal1", {"summary": "周会"}, idempotency_key="idem1")
         assert recorder.last[2]["idempotency_key"] == "idem1"
 
+    async def test_forwards_user_id_type(self, events, recorder):
+        await events.create("cal1", {"summary": "周会"}, user_id_type="union_id")
+        assert recorder.last[2]["user_id_type"] == "union_id"
+
 
 class TestGet:
     async def test_get_returns_event(self, events, recorder):
@@ -30,6 +34,10 @@ class TestGet:
         method, path, _, _ = recorder.last
         assert method == "GET" and path.endswith("/calendar/v4/calendars/cal1/events/evt1")
         assert resp["event"]["event_id"] == "evt1"
+
+    async def test_forwards_user_id_type(self, events, recorder):
+        await events.get("cal1", "evt1", user_id_type="user_id")
+        assert recorder.last[2]["user_id_type"] == "user_id"
 
 
 class TestUpdate:
@@ -39,6 +47,10 @@ class TestUpdate:
         assert method == "PATCH" and path.endswith("/calendar/v4/calendars/cal1/events/evt1")
         assert body["summary"] == "改期"
         assert resp["event"]["event_id"] == "evt1"
+
+    async def test_forwards_user_id_type(self, events, recorder):
+        await events.update("cal1", "evt1", {"summary": "改期"}, user_id_type="open_id")
+        assert recorder.last[2]["user_id_type"] == "open_id"
 
 
 class TestDelete:
@@ -87,4 +99,17 @@ class TestList:
         await client.calendar.events.list("cal1", start_time="100", end_time="200")
         params = recorder[0][2]
         assert params["start_time"] == "100" and params["end_time"] == "200"
+        await client.aclose()
+
+    async def test_time_range_paginates(self, client_factory, recorder):
+        responder = paginated_responder([[{"event_id": "evt1"}], [{"event_id": "evt2"}]])
+        client = client_factory(recorder=recorder, responder=responder)
+        items = await client.calendar.events.list("cal1", start_time="100", end_time="200")
+        assert [item["event_id"] for item in items] == ["evt1", "evt2"]
+        assert len(recorder) == 2
+        assert recorder[0][2]["start_time"] == "100"
+        assert recorder[0][2]["end_time"] == "200"
+        assert recorder[1][2]["start_time"] == "100"
+        assert recorder[1][2]["end_time"] == "200"
+        assert recorder[1][2]["page_token"] == "p2"
         await client.aclose()
