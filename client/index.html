@@ -2271,6 +2271,8 @@
       
         
       
+        
+      
     
     
     
@@ -2291,7 +2293,7 @@
   
   
   
-    <a href="../board/whiteboards/" class="md-nav__link">
+    <a href="../board/board/" class="md-nav__link">
       
   
   
@@ -4474,11 +4476,21 @@
 <h4 id="feishu.client.FeishuClient(retry)" class="doc doc-heading doc-heading-parameter">                  <code>retry</code>
 <a href="#feishu.client.FeishuClient(retry)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
             <td>
-                  <code><span title="feishu._transport.RetryPolicy">RetryPolicy</span> | None</code>
+                  <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;feishu.RetryPolicy&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt; (&lt;code&gt;feishu._transport.RetryPolicy&lt;/code&gt;)" href="../#feishu.RetryPolicy">RetryPolicy</a> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>重试策略 [feishu.RetryPolicy][]，缺省使用默认策略。</p>
+                <p>重试策略 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;feishu.RetryPolicy&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="../#feishu.RetryPolicy">feishu.RetryPolicy</a>，缺省使用默认策略。</p>
               </div>
             </td>
             <td>
@@ -4578,7 +4590,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/server-docs/api-call-guide/server-api-list">服务端 API 调用指南</a></p>
+  <p><a href="https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/overview">服务端 API 调用流程</a></p>
 </details>
 
 <p><span class="doc-section-title">示例：</span></p>
@@ -5335,7 +5347,7 @@
 </span><span id="__span-0-133"><a id="__codelineno-0-133" name="__codelineno-0-133"></a><span class="sd">        ValueError: 当既未提供凭证，也无法从环境变量解析出 `app_id` / `app_secret` 时抛出。</span>
 </span><span id="__span-0-134"><a id="__codelineno-0-134" name="__codelineno-0-134"></a>
 </span><span id="__span-0-135"><a id="__codelineno-0-135" name="__codelineno-0-135"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-136"><a id="__codelineno-0-136" name="__codelineno-0-136"></a><span class="sd">        [服务端 API 调用指南](https://open.feishu.cn/document/server-docs/api-call-guide/server-api-list)</span>
+</span><span id="__span-0-136"><a id="__codelineno-0-136" name="__codelineno-0-136"></a><span class="sd">        [服务端 API 调用流程](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/overview)</span>
 </span><span id="__span-0-137"><a id="__codelineno-0-137" name="__codelineno-0-137"></a>
 </span><span id="__span-0-138"><a id="__codelineno-0-138" name="__codelineno-0-138"></a><span class="sd">    Examples:</span>
 </span><span id="__span-0-139"><a id="__codelineno-0-139" name="__codelineno-0-139"></a><span class="sd">        &gt;&gt;&gt; import asyncio</span>
@@ -5408,7 +5420,7 @@
 </span><span id="__span-0-206"><a id="__codelineno-0-206" name="__codelineno-0-206"></a><span class="sd">            绑定到本客户端的 Approval 命名空间对象（首次访问时惰性创建）。</span>
 </span><span id="__span-0-207"><a id="__codelineno-0-207" name="__codelineno-0-207"></a>
 </span><span id="__span-0-208"><a id="__codelineno-0-208" name="__codelineno-0-208"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-209"><a id="__codelineno-0-209" name="__codelineno-0-209"></a><span class="sd">            [审批概述](https://open.feishu.cn/document/server-docs/approval-v4/overview)</span>
+</span><span id="__span-0-209"><a id="__codelineno-0-209" name="__codelineno-0-209"></a><span class="sd">            [审批概述](https://open.feishu.cn/document/server-docs/approval-v4/approval-overview)</span>
 </span><span id="__span-0-210"><a id="__codelineno-0-210" name="__codelineno-0-210"></a><span class="sd">        &quot;&quot;&quot;</span>
 </span><span id="__span-0-211"><a id="__codelineno-0-211" name="__codelineno-0-211"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_approval</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="__span-0-212"><a id="__codelineno-0-212" name="__codelineno-0-212"></a>            <span class="kn">from</span><span class="w"> </span><span class="nn">.approval.approval</span><span class="w"> </span><span class="kn">import</span> <span class="n">ApprovalNamespace</span>
@@ -5436,16 +5448,16 @@
 </span><span id="__span-0-234"><a id="__codelineno-0-234" name="__codelineno-0-234"></a>    <span class="nd">@property</span>
 </span><span id="__span-0-235"><a id="__codelineno-0-235" name="__codelineno-0-235"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">board</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BoardNamespace</span><span class="p">:</span>
 </span><span id="__span-0-236"><a id="__codelineno-0-236" name="__codelineno-0-236"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="__span-0-237"><a id="__codelineno-0-237" name="__codelineno-0-237"></a><span class="sd">        画板（Board）命名空间，提供画板元信息、节点列举与导出为图片等能力。</span>
+</span><span id="__span-0-237"><a id="__codelineno-0-237" name="__codelineno-0-237"></a><span class="sd">        画板（Board）命名空间，通过 `client.board.whiteboards` 提供画板主题、节点列举与导出为图片等能力。</span>
 </span><span id="__span-0-238"><a id="__codelineno-0-238" name="__codelineno-0-238"></a>
 </span><span id="__span-0-239"><a id="__codelineno-0-239" name="__codelineno-0-239"></a><span class="sd">        Returns:</span>
 </span><span id="__span-0-240"><a id="__codelineno-0-240" name="__codelineno-0-240"></a><span class="sd">            绑定到本客户端的 Board 命名空间对象（首次访问时惰性创建）。</span>
 </span><span id="__span-0-241"><a id="__codelineno-0-241" name="__codelineno-0-241"></a>
 </span><span id="__span-0-242"><a id="__codelineno-0-242" name="__codelineno-0-242"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-243"><a id="__codelineno-0-243" name="__codelineno-0-243"></a><span class="sd">            [画板概述](https://open.feishu.cn/document/server-docs/docs/board-v1/overview)</span>
+</span><span id="__span-0-243"><a id="__codelineno-0-243" name="__codelineno-0-243"></a><span class="sd">            [画板概述](https://open.feishu.cn/document/docs/board-v1/overview)</span>
 </span><span id="__span-0-244"><a id="__codelineno-0-244" name="__codelineno-0-244"></a><span class="sd">        &quot;&quot;&quot;</span>
 </span><span id="__span-0-245"><a id="__codelineno-0-245" name="__codelineno-0-245"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_board</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-246"><a id="__codelineno-0-246" name="__codelineno-0-246"></a>            <span class="kn">from</span><span class="w"> </span><span class="nn">.board.whiteboards</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoardNamespace</span>
+</span><span id="__span-0-246"><a id="__codelineno-0-246" name="__codelineno-0-246"></a>            <span class="kn">from</span><span class="w"> </span><span class="nn">.board.board</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoardNamespace</span>
 </span><span id="__span-0-247"><a id="__codelineno-0-247" name="__codelineno-0-247"></a>
 </span><span id="__span-0-248"><a id="__codelineno-0-248" name="__codelineno-0-248"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_board</span> <span class="o">=</span> <span class="n">BoardNamespace</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 </span><span id="__span-0-249"><a id="__codelineno-0-249" name="__codelineno-0-249"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_board</span>
@@ -5503,7 +5515,7 @@
 </span><span id="__span-0-301"><a id="__codelineno-0-301" name="__codelineno-0-301"></a><span class="sd">            绑定到本客户端的通讯录命名空间对象（首次访问时惰性创建）。</span>
 </span><span id="__span-0-302"><a id="__codelineno-0-302" name="__codelineno-0-302"></a>
 </span><span id="__span-0-303"><a id="__codelineno-0-303" name="__codelineno-0-303"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-304"><a id="__codelineno-0-304" name="__codelineno-0-304"></a><span class="sd">            [通讯录](https://open.feishu.cn/document/server-docs/contact-v3/contact-overview)</span>
+</span><span id="__span-0-304"><a id="__codelineno-0-304" name="__codelineno-0-304"></a><span class="sd">            [通讯录](https://open.feishu.cn/document/server-docs/contact-v3/resources)</span>
 </span><span id="__span-0-305"><a id="__codelineno-0-305" name="__codelineno-0-305"></a><span class="sd">        &quot;&quot;&quot;</span>
 </span><span id="__span-0-306"><a id="__codelineno-0-306" name="__codelineno-0-306"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contact</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="__span-0-307"><a id="__codelineno-0-307" name="__codelineno-0-307"></a>            <span class="kn">from</span><span class="w"> </span><span class="nn">.contact.contact</span><span class="w"> </span><span class="kn">import</span> <span class="n">ContactNamespace</span>
@@ -5520,7 +5532,7 @@
 </span><span id="__span-0-318"><a id="__codelineno-0-318" name="__codelineno-0-318"></a><span class="sd">            绑定到本客户端的 Docx 命名空间对象（首次访问时惰性创建）。</span>
 </span><span id="__span-0-319"><a id="__codelineno-0-319" name="__codelineno-0-319"></a>
 </span><span id="__span-0-320"><a id="__codelineno-0-320" name="__codelineno-0-320"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-321"><a id="__codelineno-0-321" name="__codelineno-0-321"></a><span class="sd">            [文档概述](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/intro)</span>
+</span><span id="__span-0-321"><a id="__codelineno-0-321" name="__codelineno-0-321"></a><span class="sd">            [文档概述](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/docx-overview)</span>
 </span><span id="__span-0-322"><a id="__codelineno-0-322" name="__codelineno-0-322"></a><span class="sd">        &quot;&quot;&quot;</span>
 </span><span id="__span-0-323"><a id="__codelineno-0-323" name="__codelineno-0-323"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_docx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="__span-0-324"><a id="__codelineno-0-324" name="__codelineno-0-324"></a>            <span class="kn">from</span><span class="w"> </span><span class="nn">.docx.documents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocxNamespace</span>
@@ -5605,7 +5617,7 @@
 </span><span id="__span-0-403"><a id="__codelineno-0-403" name="__codelineno-0-403"></a><span class="sd">            绑定到本客户端的 Sheets 命名空间对象（首次访问时惰性创建）。</span>
 </span><span id="__span-0-404"><a id="__codelineno-0-404" name="__codelineno-0-404"></a>
 </span><span id="__span-0-405"><a id="__codelineno-0-405" name="__codelineno-0-405"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-406"><a id="__codelineno-0-406" name="__codelineno-0-406"></a><span class="sd">            [电子表格概述](https://open.feishu.cn/document/server-docs/docs/sheets/sheets-overview)</span>
+</span><span id="__span-0-406"><a id="__codelineno-0-406" name="__codelineno-0-406"></a><span class="sd">            [电子表格概述](https://open.feishu.cn/document/server-docs/docs/sheets-v3/overview)</span>
 </span><span id="__span-0-407"><a id="__codelineno-0-407" name="__codelineno-0-407"></a><span class="sd">        &quot;&quot;&quot;</span>
 </span><span id="__span-0-408"><a id="__codelineno-0-408" name="__codelineno-0-408"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sheets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="__span-0-409"><a id="__codelineno-0-409" name="__codelineno-0-409"></a>            <span class="kn">from</span><span class="w"> </span><span class="nn">.sheets.spreadsheets</span><span class="w"> </span><span class="kn">import</span> <span class="n">SheetsNamespace</span>
@@ -5649,7 +5661,7 @@
 </span><span id="__span-0-447"><a id="__codelineno-0-447" name="__codelineno-0-447"></a><span class="sd">            绑定到本客户端的 VC 命名空间对象（首次访问时惰性创建）。</span>
 </span><span id="__span-0-448"><a id="__codelineno-0-448" name="__codelineno-0-448"></a>
 </span><span id="__span-0-449"><a id="__codelineno-0-449" name="__codelineno-0-449"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-450"><a id="__codelineno-0-450" name="__codelineno-0-450"></a><span class="sd">            [视频会议概述](https://open.feishu.cn/document/server-docs/vc-v1/vc-overview)</span>
+</span><span id="__span-0-450"><a id="__codelineno-0-450" name="__codelineno-0-450"></a><span class="sd">            [视频会议概述](https://open.feishu.cn/document/server-docs/vc-v1/video-conferencing-overview)</span>
 </span><span id="__span-0-451"><a id="__codelineno-0-451" name="__codelineno-0-451"></a><span class="sd">        &quot;&quot;&quot;</span>
 </span><span id="__span-0-452"><a id="__codelineno-0-452" name="__codelineno-0-452"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="__span-0-453"><a id="__codelineno-0-453" name="__codelineno-0-453"></a>            <span class="kn">from</span><span class="w"> </span><span class="nn">.vc.vc</span><span class="w"> </span><span class="kn">import</span> <span class="n">VCNamespace</span>
@@ -5804,7 +5816,7 @@
 </span><span id="__span-0-602"><a id="__codelineno-0-602" name="__codelineno-0-602"></a><span class="sd">            汇总后的条目列表。</span>
 </span><span id="__span-0-603"><a id="__codelineno-0-603" name="__codelineno-0-603"></a>
 </span><span id="__span-0-604"><a id="__codelineno-0-604" name="__codelineno-0-604"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-605"><a id="__codelineno-0-605" name="__codelineno-0-605"></a><span class="sd">            [分页查询](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/paging)</span>
+</span><span id="__span-0-605"><a id="__codelineno-0-605" name="__codelineno-0-605"></a><span class="sd">            [调用流程](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/overview)</span>
 </span><span id="__span-0-606"><a id="__codelineno-0-606" name="__codelineno-0-606"></a><span class="sd">        &quot;&quot;&quot;</span>
 </span><span id="__span-0-607"><a id="__codelineno-0-607" name="__codelineno-0-607"></a>
 </span><span id="__span-0-608"><a id="__codelineno-0-608" name="__codelineno-0-608"></a>        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="n">page_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedDict</span><span class="p">:</span>
@@ -5861,7 +5873,7 @@
 </span><span id="__span-0-659"><a id="__codelineno-0-659" name="__codelineno-0-659"></a><span class="sd">            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
 </span><span id="__span-0-660"><a id="__codelineno-0-660" name="__codelineno-0-660"></a>
 </span><span id="__span-0-661"><a id="__codelineno-0-661" name="__codelineno-0-661"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-662"><a id="__codelineno-0-662" name="__codelineno-0-662"></a><span class="sd">            [服务端 API 调用指南](https://open.feishu.cn/document/server-docs/api-call-guide/server-api-list)</span>
+</span><span id="__span-0-662"><a id="__codelineno-0-662" name="__codelineno-0-662"></a><span class="sd">            [服务端 API 调用流程](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/overview)</span>
 </span><span id="__span-0-663"><a id="__codelineno-0-663" name="__codelineno-0-663"></a>
 </span><span id="__span-0-664"><a id="__codelineno-0-664" name="__codelineno-0-664"></a><span class="sd">        Examples:</span>
 </span><span id="__span-0-665"><a id="__codelineno-0-665" name="__codelineno-0-665"></a><span class="sd">            &gt;&gt;&gt; import asyncio</span>
@@ -5915,7 +5927,7 @@
 </span><span id="__span-0-713"><a id="__codelineno-0-713" name="__codelineno-0-713"></a><span class="sd">            ValueError: 当 `receive_id` 与 `reply_to_message_id` 未恰好提供其一时抛出。</span>
 </span><span id="__span-0-714"><a id="__codelineno-0-714" name="__codelineno-0-714"></a>
 </span><span id="__span-0-715"><a id="__codelineno-0-715" name="__codelineno-0-715"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-716"><a id="__codelineno-0-716" name="__codelineno-0-716"></a><span class="sd">            [流式更新文本](https://open.feishu.cn/document/cardkit-v1/card/streaming-updates-openplatform)</span>
+</span><span id="__span-0-716"><a id="__codelineno-0-716" name="__codelineno-0-716"></a><span class="sd">            [流式更新文本](https://open.feishu.cn/document/cardkit-v1/card-element/content)</span>
 </span><span id="__span-0-717"><a id="__codelineno-0-717" name="__codelineno-0-717"></a>
 </span><span id="__span-0-718"><a id="__codelineno-0-718" name="__codelineno-0-718"></a><span class="sd">        Examples:</span>
 </span><span id="__span-0-719"><a id="__codelineno-0-719" name="__codelineno-0-719"></a><span class="sd">            &gt;&gt;&gt; import asyncio</span>
@@ -6060,7 +6072,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/server-docs/approval-v4/overview">审批概述</a></p>
+  <p><a href="https://open.feishu.cn/document/server-docs/approval-v4/approval-overview">审批概述</a></p>
 </details>
     </div>
 
@@ -6131,12 +6143,12 @@
   </span>
 
 <a href="#feishu.client.FeishuClient.board" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">board</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;BoardNamespace&lt;/span&gt; (&lt;code&gt;feishu.board.whiteboards.BoardNamespace&lt;/code&gt;)" href="../board/whiteboards/#feishu.board.whiteboards.BoardNamespace">BoardNamespace</a></span>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">board</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;BoardNamespace&lt;/span&gt; (&lt;code&gt;feishu.board.board.BoardNamespace&lt;/code&gt;)" href="../board/board/#feishu.board.board.BoardNamespace">BoardNamespace</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>画板（Board）命名空间，提供画板元信息、节点列举与导出为图片等能力。</p>
+        <p>画板（Board）命名空间，通过 <code>client.board.whiteboards</code> 提供画板主题、节点列举与导出为图片等能力。</p>
 
 
     <p><span class="doc-section-title">返回：</span></p>
@@ -6150,7 +6162,7 @@
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;BoardNamespace&lt;/span&gt; (&lt;code&gt;feishu.board.whiteboards.BoardNamespace&lt;/code&gt;)" href="../board/whiteboards/#feishu.board.whiteboards.BoardNamespace">BoardNamespace</a></code>
+                  <code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;BoardNamespace&lt;/span&gt; (&lt;code&gt;feishu.board.board.BoardNamespace&lt;/code&gt;)" href="../board/board/#feishu.board.board.BoardNamespace">BoardNamespace</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -6164,7 +6176,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/server-docs/docs/board-v1/overview">画板概述</a></p>
+  <p><a href="https://open.feishu.cn/document/docs/board-v1/overview">画板概述</a></p>
 </details>
     </div>
 
@@ -6335,7 +6347,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/server-docs/contact-v3/contact-overview">通讯录</a></p>
+  <p><a href="https://open.feishu.cn/document/server-docs/contact-v3/resources">通讯录</a></p>
 </details>
     </div>
 
@@ -6387,7 +6399,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/intro">文档概述</a></p>
+  <p><a href="https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/docx-overview">文档概述</a></p>
 </details>
     </div>
 
@@ -6647,7 +6659,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/server-docs/docs/sheets/sheets-overview">电子表格概述</a></p>
+  <p><a href="https://open.feishu.cn/document/server-docs/docs/sheets-v3/overview">电子表格概述</a></p>
 </details>
     </div>
 
@@ -6798,7 +6810,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/server-docs/vc-v1/vc-overview">视频会议概述</a></p>
+  <p><a href="https://open.feishu.cn/document/server-docs/vc-v1/video-conferencing-overview">视频会议概述</a></p>
 </details>
     </div>
 
@@ -7566,7 +7578,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/paging">分页查询</a></p>
+  <p><a href="https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/overview">调用流程</a></p>
 </details>
 
             <details class="mkdocstrings-source">
@@ -7648,7 +7660,7 @@
 </span><span id="__span-0-602"><a id="__codelineno-0-602" name="__codelineno-0-602"></a><span class="sd">        汇总后的条目列表。</span>
 </span><span id="__span-0-603"><a id="__codelineno-0-603" name="__codelineno-0-603"></a>
 </span><span id="__span-0-604"><a id="__codelineno-0-604" name="__codelineno-0-604"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-605"><a id="__codelineno-0-605" name="__codelineno-0-605"></a><span class="sd">        [分页查询](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/paging)</span>
+</span><span id="__span-0-605"><a id="__codelineno-0-605" name="__codelineno-0-605"></a><span class="sd">        [调用流程](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/overview)</span>
 </span><span id="__span-0-606"><a id="__codelineno-0-606" name="__codelineno-0-606"></a><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="__span-0-607"><a id="__codelineno-0-607" name="__codelineno-0-607"></a>
 </span><span id="__span-0-608"><a id="__codelineno-0-608" name="__codelineno-0-608"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="n">page_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedDict</span><span class="p">:</span>
@@ -7889,7 +7901,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/server-docs/api-call-guide/server-api-list">服务端 API 调用指南</a></p>
+  <p><a href="https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/overview">服务端 API 调用流程</a></p>
 </details>
 
 <p><span class="doc-section-title">示例：</span></p>
@@ -8013,7 +8025,7 @@
 </span><span id="__span-0-659"><a id="__codelineno-0-659" name="__codelineno-0-659"></a><span class="sd">        feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
 </span><span id="__span-0-660"><a id="__codelineno-0-660" name="__codelineno-0-660"></a>
 </span><span id="__span-0-661"><a id="__codelineno-0-661" name="__codelineno-0-661"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-662"><a id="__codelineno-0-662" name="__codelineno-0-662"></a><span class="sd">        [服务端 API 调用指南](https://open.feishu.cn/document/server-docs/api-call-guide/server-api-list)</span>
+</span><span id="__span-0-662"><a id="__codelineno-0-662" name="__codelineno-0-662"></a><span class="sd">        [服务端 API 调用流程](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/overview)</span>
 </span><span id="__span-0-663"><a id="__codelineno-0-663" name="__codelineno-0-663"></a>
 </span><span id="__span-0-664"><a id="__codelineno-0-664" name="__codelineno-0-664"></a><span class="sd">    Examples:</span>
 </span><span id="__span-0-665"><a id="__codelineno-0-665" name="__codelineno-0-665"></a><span class="sd">        &gt;&gt;&gt; import asyncio</span>
@@ -8250,7 +8262,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/cardkit-v1/card/streaming-updates-openplatform">流式更新文本</a></p>
+  <p><a href="https://open.feishu.cn/document/cardkit-v1/card-element/content">流式更新文本</a></p>
 </details>
 
 <p><span class="doc-section-title">示例：</span></p>
@@ -8373,7 +8385,7 @@
 </span><span id="__span-0-713"><a id="__codelineno-0-713" name="__codelineno-0-713"></a><span class="sd">        ValueError: 当 `receive_id` 与 `reply_to_message_id` 未恰好提供其一时抛出。</span>
 </span><span id="__span-0-714"><a id="__codelineno-0-714" name="__codelineno-0-714"></a>
 </span><span id="__span-0-715"><a id="__codelineno-0-715" name="__codelineno-0-715"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-716"><a id="__codelineno-0-716" name="__codelineno-0-716"></a><span class="sd">        [流式更新文本](https://open.feishu.cn/document/cardkit-v1/card/streaming-updates-openplatform)</span>
+</span><span id="__span-0-716"><a id="__codelineno-0-716" name="__codelineno-0-716"></a><span class="sd">        [流式更新文本](https://open.feishu.cn/document/cardkit-v1/card-element/content)</span>
 </span><span id="__span-0-717"><a id="__codelineno-0-717" name="__codelineno-0-717"></a>
 </span><span id="__span-0-718"><a id="__codelineno-0-718" name="__codelineno-0-718"></a><span class="sd">    Examples:</span>
 </span><span id="__span-0-719"><a id="__codelineno-0-719" name="__codelineno-0-719"></a><span class="sd">        &gt;&gt;&gt; import asyncio</span>
@@ -8814,7 +8826,7 @@ multipart 边界，调用方不应自行指定 Content-Type。</p>
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年6月30日 15:57:26 UTC">2026-06-30 15:57:26</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月1日 04:59:13 UTC">2026-07-01 04:59:13</span>
   </span>
 
     
