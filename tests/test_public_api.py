@@ -14,6 +14,7 @@ import pytest
 
 EXPECTED_EXPORTS = {
     "FeishuClient",
+    "RetryPolicy",
     "FeishuError",
     "FeishuApiError",
     "FeishuRateLimitError",
@@ -24,6 +25,10 @@ EXPECTED_EXPORTS = {
     "FeishuSignatureError",
     "FeishuCryptoError",
     "SignatureVerifier",
+    "verify_signature",
+    "is_permission_error",
+    "permission_subjects",
+    "install_redaction",
 }
 
 
@@ -33,6 +38,12 @@ class TestPackageSurface:
         assert set(feishu.__all__) == EXPECTED_EXPORTS
         for name in EXPECTED_EXPORTS:
             assert hasattr(feishu, name), name
+
+    def test_retry_policy_export_is_transport_policy(self):
+        feishu = importlib.import_module("feishu")
+        transport = importlib.import_module("feishu._transport")
+
+        assert feishu.RetryPolicy is transport.RetryPolicy
 
     @pytest.mark.parametrize("gone", ["send_message", "get_tenant_access_token", "variables", "handle_chat"])
     def test_legacy_attr_gone(self, gone):
@@ -63,3 +74,9 @@ class TestAgentSurface:
     def test_core_name_exported(self, name):
         agent = importlib.import_module("feishu.agent")
         assert name in agent.__all__
+
+    @pytest.mark.parametrize("name", ["PaymentAccount", "PaymentAccountResolver", "list_my_payment_accounts"])
+    def test_payment_account_shortcut_exported(self, name):
+        agent = importlib.import_module("feishu.agent")
+        assert name in agent.__all__
+        assert hasattr(agent, name)
