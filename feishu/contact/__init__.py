@@ -22,7 +22,7 @@
 from __future__ import annotations
 
 from .contact import ContactNamespace
-from .departments import DepartmentNamespace
+from .departments import DepartmentsNamespace
 from .normalize import (
     get_user_department_ids,
     get_user_email,
@@ -32,12 +32,12 @@ from .normalize import (
     normalize_department,
     normalize_user,
 )
-from .users import UserNamespace
+from .users import UsersNamespace
 
 __all__ = [
     "ContactNamespace",
-    "DepartmentNamespace",
-    "UserNamespace",
+    "DepartmentsNamespace",
+    "UsersNamespace",
     "get_user_department_ids",
     "get_user_email",
     "get_user_identity",

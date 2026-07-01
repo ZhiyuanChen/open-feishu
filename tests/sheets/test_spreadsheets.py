@@ -118,7 +118,7 @@ class TestWriteRange:
 class TestAppendRows:
     async def test_posts_value_range(self, client_factory, recorder):
         client = client_factory(recorder=recorder, responder=lambda r: envelope({"tableRange": "Q7PlXT!A1:B3"}))
-        resp = await client.sheets.append_rows("shtcn_xxx", "Q7PlXT!A1:B2", [["e", "f"]])
+        resp = await client.sheets.append_range("shtcn_xxx", "Q7PlXT!A1:B2", [["e", "f"]])
         method, path, _, body = recorder.last
         assert method == "POST" and path.endswith("/sheets/v2/spreadsheets/shtcn_xxx/values_append")
         assert body["valueRange"] == {"range": "Q7PlXT!A1:B2", "values": [["e", "f"]]}

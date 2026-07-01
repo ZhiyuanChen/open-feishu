@@ -30,7 +30,7 @@ from .._namespace import Namespace
 from .._url import quote_segment
 
 
-class DepartmentNamespace(Namespace):
+class DepartmentsNamespace(Namespace):
     r"""
     部门接口命名空间。
 
@@ -121,7 +121,7 @@ class DepartmentNamespace(Namespace):
         将一组部门 ID 展开为包含其全部上级部门的去重列表。
 
         对每个传入的部门，先保留自身，再追加其由
-        [feishu.contact.departments.DepartmentNamespace.parent_ids][] 解析出的上级部门链；
+        [feishu.contact.departments.DepartmentsNamespace.parent_ids][] 解析出的上级部门链；
         最终按首次出现顺序去重，常用于将部门授权范围向上扩展。
 
         Args:
@@ -143,14 +143,14 @@ class DepartmentNamespace(Namespace):
             ['od-a', 'od-mid', 'od-root', 'od-b']
         """
         result: builtins.list[str] = []
-        for did in department_ids:
-            result.append(did)
-            result.extend(await self.parent_ids(did, department_id_type=department_id_type))
+        for department_id in department_ids:
+            result.append(department_id)
+            result.extend(await self.parent_ids(department_id, department_id_type=department_id_type))
         seen, unique = set(), []
-        for d in result:
-            if d not in seen:
-                seen.add(d)
-                unique.append(d)
+        for expanded_id in result:
+            if expanded_id not in seen:
+                seen.add(expanded_id)
+                unique.append(expanded_id)
         return unique
 
     async def get(self, department_id: str, *, department_id_type: str = "open_department_id") -> NestedDict:
@@ -226,6 +226,48 @@ class DepartmentNamespace(Namespace):
             max_items=max_items,
         )
 
+    async def parent(
+        self,
+        department_id: str,
+        *,
+        department_id_type: str = "open_department_id",
+        page_size: int = 50,
+        max_items: int | None = None,
+    ) -> builtins.list[NestedDict]:
+        r"""
+        获取父部门信息。
+
+        自动翻页并返回飞书原始父部门对象列表，按层级由近及远排列。如只需要 ID 链，可使用
+        [feishu.contact.departments.DepartmentsNamespace.parent_ids][]。
+
+        Args:
+            department_id: 目标部门 ID。
+            department_id_type: 部门 ID 类型，可选 `open_department_id`、`department_id`。默认为 `open_department_id`。
+            page_size: 每页数量，最大为 50。默认为 50。
+            max_items: 最多返回的父部门数量，`None` 表示不限制。默认为 `None`。
+
+        Returns:
+            飞书原始父部门对象列表。
+
+        Raises:
+            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
+
+        飞书文档:
+            [获取父部门信息](https://open.feishu.cn/document/server-docs/contact-v3/department/parent)
+
+        Examples:
+            >>> parents = await client.contact.departments.parent("od-child")  # doctest: +SKIP
+            >>> parents[0]["open_department_id"]  # doctest: +SKIP
+            'od-parent-1'
+        """
+
+        return await self._client.paginate_get(
+            "contact/v3/departments/parent",
+            params={"department_id": department_id, "department_id_type": department_id_type},
+            page_size=page_size,
+            max_items=max_items,
+        )
+
     async def parent_ids(
         self, department_id: str, *, department_id_type: str = "open_department_id"
     ) -> builtins.list[str]:
@@ -254,11 +296,7 @@ class DepartmentNamespace(Namespace):
             ['od-parent-1', 'od-parent-2']
         """
 
-        items = await self._client.paginate_get(
-            "contact/v3/departments/parent",
-            params={"department_id": department_id, "department_id_type": department_id_type},
-            page_size=50,
-        )
+        items = await self.parent(department_id, department_id_type=department_id_type)
         return [d.get("open_department_id") or d.get("department_id") for d in items]
 
     async def update(

@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
 class TaskNamespace(Namespace):
     r"""
-    任务（Task）接口命名空间。
+    任务与评论子命名空间的入口命名空间。
 
     通过 `client.task` 访问，作为任务与评论两个子命名空间的入口：
     [`TaskNamespace.tasks`][feishu.task.task.TaskNamespace.tasks] 暴露任务（task）的增删改查，

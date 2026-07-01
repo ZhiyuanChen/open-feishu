@@ -33,8 +33,11 @@ from .._namespace import Namespace
 from .._url import quote_segment
 from ..errors import FeishuApiError
 
+_NestedDictList = list[NestedDict]
+_StringList = list[str]
+
 if TYPE_CHECKING:
-    from .chats import ChatNamespace
+    from .chats import ChatsNamespace
     from .pins import PinsNamespace
     from .reactions import ReactionsNamespace
 
@@ -116,6 +119,8 @@ def infer_msg_type(content: dict[str, Any] | str) -> str:
         'file'
         >>> infer_msg_type({"config": {}, "elements": []})
         'interactive'
+        >>> infer_msg_type({"schema": "2.0", "body": {"elements": []}})
+        'interactive'
         >>> infer_msg_type({"text": "hi"})
         'text'
         >>> infer_msg_type("already json")
@@ -131,7 +136,7 @@ def infer_msg_type(content: dict[str, Any] | str) -> str:
         return "file"
     if "post" in content:
         return "post"
-    if content.get("type") == "template" or any(k in content for k in ("config", "elements", "header")):
+    if content.get("type") == "template" or any(k in content for k in ("config", "elements", "header", "body")):
         return "interactive"
     return "text"
 
@@ -149,16 +154,16 @@ class IMNamespace(Namespace):
         [消息管理概述](https://open.feishu.cn/document/server-docs/im-v1/message/intro)
     """
 
-    _chats: ChatNamespace | None = None
+    _chats: ChatsNamespace | None = None
     _pins: PinsNamespace | None = None
     _reactions: ReactionsNamespace | None = None
 
     @property
-    def chats(self) -> ChatNamespace:
+    def chats(self) -> ChatsNamespace:
         r"""
         群组接口命名空间。
 
-        惰性创建并返回 [feishu.im.chats.ChatNamespace][]，用于创建、查询、更新、解散群组以及管理群成员。
+        惰性创建并返回 [feishu.im.chats.ChatsNamespace][]，用于创建、查询、更新、解散群组以及管理群成员。
 
         Returns:
             群组接口命名空间实例。
@@ -168,12 +173,12 @@ class IMNamespace(Namespace):
 
         Examples:
             >>> client.im.chats  # doctest:+SKIP
-            <feishu.im.chats.ChatNamespace object at ...>
+            <feishu.im.chats.ChatsNamespace object at ...>
         """
         if self._chats is None:
-            from .chats import ChatNamespace
+            from .chats import ChatsNamespace
 
-            self._chats = ChatNamespace(self._client)
+            self._chats = ChatsNamespace(self._client)
         return self._chats
 
     async def forward(
@@ -268,7 +273,7 @@ class IMNamespace(Namespace):
             params={"type": resource_type},
         )
 
-    async def list_messages(
+    async def list(
         self,
         container_id: str,
         *,
@@ -278,7 +283,7 @@ class IMNamespace(Namespace):
         end_time: str | None = None,
         page_size: int = 50,
         max_items: int | None = None,
-    ) -> list[NestedDict]:
+    ) -> _NestedDictList:
         r"""
         获取会话历史消息。
 
@@ -303,7 +308,7 @@ class IMNamespace(Namespace):
             [获取会话历史消息](https://open.feishu.cn/document/server-docs/im-v1/message/list)
 
         Examples:
-            >>> await client.im.list_messages("oc_chat")  # doctest:+SKIP
+            >>> await client.im.list("oc_chat")  # doctest:+SKIP
             [{'message_id': 'm1', ...}, {'message_id': 'm2', ...}]  # noqa: E501
         """
         return await self._client.paginate_get(
@@ -326,7 +331,7 @@ class IMNamespace(Namespace):
         max_items: int | None = None,
         max_chars: int | None = None,
         oldest_first: bool = True,
-    ) -> list[NestedDict]:
+    ) -> _NestedDictList:
         r"""
         获取一条消息的回复链（自身及其全部父级消息）。
 
@@ -353,7 +358,7 @@ class IMNamespace(Namespace):
             >>> await client.im.list_reply_chain("om_leaf")  # doctest:+SKIP
             [{'message_id': 'om_root', ...}, {'message_id': 'om_leaf', ...}]  # noqa: E501
         """
-        chain: list[NestedDict] = []
+        chain: _NestedDictList = []
         total_chars = 0
         current_id: str | None = message_id
         while current_id is not None:
@@ -379,7 +384,7 @@ class IMNamespace(Namespace):
     async def merge_forward(
         self,
         receive_id: str,
-        message_id_list: list[str],
+        message_id_list: _StringList,
         *,
         receive_id_type: str | None = None,
         uuid: str | None = None,
@@ -483,7 +488,7 @@ class IMNamespace(Namespace):
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [添加跟随气泡](https://open.feishu.cn/document/server-docs/im-v1/message/push_follow_up)
+            [添加跟随气泡](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/push_follow_up)
 
         Examples:
             >>> import asyncio
@@ -524,7 +529,7 @@ class IMNamespace(Namespace):
 
     async def read_users(
         self, message_id: str, *, user_id_type: str = "open_id", max_items: int | None = None
-    ) -> list[NestedDict]:
+    ) -> _NestedDictList:
         r"""
         查询消息已读用户列表。
 

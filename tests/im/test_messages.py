@@ -67,6 +67,7 @@ class TestSend:
         "content,kwargs,expected_msg_type",
         [
             ({"image_key": "img_v2_x"}, {}, "image"),
+            ({"schema": "2.0", "body": {"elements": []}}, {}, "interactive"),
             ({"post": {}}, {"msg_type": "interactive"}, "interactive"),
         ],
     )
@@ -219,7 +220,7 @@ class TestMessageLifecycle:
 class TestListMessages:
     async def test_concatenates_pages(self, im, recorder):
         responder = paginated_responder([[{"message_id": "m1"}], [{"message_id": "m2"}]])
-        items = await im(responder).list_messages("oc_chat", page_size=999)
+        items = await im(responder).list("oc_chat", page_size=999)
         # Items are concatenated across both pages.
         assert [i["message_id"] for i in items] == ["m1", "m2"]
         method, path, params, _ = recorder[0]
@@ -234,7 +235,7 @@ class TestListMessages:
 
     async def test_honors_max_items(self, im, recorder):
         responder = paginated_responder([[{"message_id": "m1"}, {"message_id": "m2"}], [{"message_id": "m3"}]])
-        items = await im(responder).list_messages("oc_chat", max_items=1)
+        items = await im(responder).list("oc_chat", max_items=1)
         assert [i["message_id"] for i in items] == ["m1"]
         # The walk stops once max_items is satisfied (no second page fetched).
         assert len(recorder) == 1

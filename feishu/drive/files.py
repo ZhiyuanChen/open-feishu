@@ -48,7 +48,7 @@ class FilesNamespace(Namespace):
         file_token: str,
         name: str,
         *,
-        doc_type: str,
+        type: str,
         folder_token: str,
         user_id_type: str | None = None,
         **opts: Any,
@@ -56,14 +56,14 @@ class FilesNamespace(Namespace):
         r"""
         复制文件。
 
-        将指定文件复制到目标文件夹下。`doc_type` 为源文件类型，`folder_token` 为目标文件夹 token。
+        将指定文件复制到目标文件夹下。`type` 为源文件类型，`folder_token` 为目标文件夹 token。
         仅将显式传入的字段写入请求体，额外的关键字参数（`opts`）中值为 `None` 的项会被忽略，
         其余项原样并入请求体（如 `extra`）。
 
         Args:
             file_token: 源文件 token。
             name: 复制后的新文件名称。
-            doc_type: 源文件类型，例如 `doc`、`docx`、`sheet`、`bitable`、`file` 等。
+            type: 源文件类型，例如 `doc`、`docx`、`sheet`、`bitable`、`file` 等。
             folder_token: 目标文件夹 token。
             user_id_type: 返回的用户 ID 类型，例如 `open_id`；为空时省略该查询参数。
             **opts: 其他复制参数，例如 `extra`；值为 `None` 时忽略。
@@ -80,19 +80,19 @@ class FilesNamespace(Namespace):
 
         Examples:
             >>> await client.drive.files.copy(
-            ...     "boxcnxxx", "Copy", doc_type="file", folder_token="fldcnxxx"
+            ...     "boxcnxxx", "Copy", type="file", folder_token="fldcnxxx"
             ... )  # doctest:+SKIP
             {'file': {'token': 'boxcnyyy', 'name': 'Copy', 'type': 'file', ...}}  # noqa: E501
         """
         params = {"user_id_type": user_id_type}
-        body = {"name": name, "type": doc_type, "folder_token": folder_token}
+        body = {"name": name, "type": type, "folder_token": folder_token}
         body.update({k: v for k, v in opts.items() if v is not None})
         return await self._request_data(
             "POST", f"drive/v1/files/{quote_segment(file_token)}/copy", params=params, json=body
         )
 
     async def create_export_task(
-        self, token: str, file_extension: str, *, doc_type: str, sub_id: str | None = None
+        self, token: str, file_extension: str, *, type: str, sub_id: str | None = None
     ) -> NestedDict:
         r"""
         创建文档导出任务。
@@ -104,7 +104,7 @@ class FilesNamespace(Namespace):
         Args:
             token: 待导出的云文档 token。
             file_extension: 导出的目标文件扩展名，例如 `docx`、`pdf`、`xlsx`、`csv`。
-            doc_type: 待导出文档的类型，例如 `doc`、`docx`、`sheet`、`bitable`。
+            type: 待导出文档的类型，例如 `doc`、`docx`、`sheet`、`bitable`。
             sub_id: 子表 ID；导出电子表格中的某个工作表或多维表格中的某个数据表时使用，否则为空。
 
         Returns:
@@ -119,11 +119,11 @@ class FilesNamespace(Namespace):
 
         Examples:
             >>> await client.drive.files.create_export_task(
-            ...     "doxcabc", "pdf", doc_type="docx"
+            ...     "doxcabc", "pdf", type="docx"
             ... )  # doctest:+SKIP
             {'ticket': '6933093124755423251'}
         """
-        body = {"file_extension": file_extension, "token": token, "type": doc_type}
+        body = {"file_extension": file_extension, "token": token, "type": type}
         if sub_id is not None:
             body["sub_id"] = sub_id
         return await self._request_data("POST", "drive/v1/export_tasks", json=body)
@@ -156,15 +156,15 @@ class FilesNamespace(Namespace):
         body = {"name": name, "folder_token": folder_token}
         return await self._request_data("POST", "drive/v1/files/create_folder", json=body)
 
-    async def delete(self, file_token: str, *, doc_type: str) -> NestedDict:
+    async def delete(self, file_token: str, *, type: str) -> NestedDict:
         r"""
         删除文件或文件夹。
 
-        删除指定文件（或文件夹）。删除后文件会进入回收站。`doc_type` 为被删除对象的类型，作为查询参数发送。
+        删除指定文件（或文件夹）。删除后文件会进入回收站。`type` 为被删除对象的类型，作为查询参数发送。
 
         Args:
             file_token: 被删除的文件（或文件夹）token。
-            doc_type: 被删除对象的类型，例如 `file`、`docx`、`sheet`、`bitable`、`folder` 等。
+            type: 被删除对象的类型，例如 `file`、`docx`、`sheet`、`bitable`、`folder` 等。
 
         Returns:
             删除结果数据，含异步任务 `task_id`（删除文件夹等耗时操作时返回）。
@@ -177,12 +177,10 @@ class FilesNamespace(Namespace):
             参见 [feishu.drive.files.FilesNamespace.move][]。
 
         Examples:
-            >>> await client.drive.files.delete("boxcnxxx", doc_type="file")  # doctest:+SKIP
+            >>> await client.drive.files.delete("boxcnxxx", type="file")  # doctest:+SKIP
             {'task_id': '12345'}
         """
-        return await self._request_data(
-            "DELETE", f"drive/v1/files/{quote_segment(file_token)}", params={"type": doc_type}
-        )
+        return await self._request_data("DELETE", f"drive/v1/files/{quote_segment(file_token)}", params={"type": type})
 
     async def download(self, file_token: str) -> bytes:
         r"""
@@ -267,7 +265,7 @@ class FilesNamespace(Namespace):
             "GET", f"drive/v1/export_tasks/{quote_segment(ticket)}", params={"token": token}
         )
 
-    async def get_metas(
+    async def batch_query_metas(
         self, request_docs: list[dict[str, Any]], *, with_url: bool = False, user_id_type: str | None = None
     ) -> NestedDict:
         r"""
@@ -295,7 +293,7 @@ class FilesNamespace(Namespace):
 
         Examples:
             >>> docs = [{"doc_token": "doxcabc", "doc_type": "docx"}]
-            >>> await client.drive.files.get_metas(docs, with_url=True)  # doctest:+SKIP
+            >>> await client.drive.files.batch_query_metas(docs, with_url=True)  # doctest:+SKIP
             {'metas': [{'doc_token': 'doxcabc', 'doc_type': 'docx', ...}], 'failed_list': []}  # noqa: E501
         """
         params = {"user_id_type": user_id_type}
@@ -332,7 +330,7 @@ class FilesNamespace(Namespace):
 
         飞书文档:
             [获取文件夹下的清单](https://open.feishu.cn/document/server-docs/docs/drive-v1/folder/list)
-            参见 [feishu.drive.files.FilesNamespace.get_metas][]。
+            参见 [feishu.drive.files.FilesNamespace.batch_query_metas][]。
 
         Examples:
             >>> await client.drive.files.list(folder_token="fldcnxxx")  # doctest:+SKIP
@@ -348,17 +346,17 @@ class FilesNamespace(Namespace):
             map_page=_remap_files_page,
         )
 
-    async def move(self, file_token: str, *, folder_token: str, doc_type: str) -> NestedDict:
+    async def move(self, file_token: str, *, folder_token: str, type: str) -> NestedDict:
         r"""
         移动文件或文件夹。
 
-        将指定文件（或文件夹）移动到目标文件夹下。`doc_type` 为被移动对象的类型，`folder_token`
+        将指定文件（或文件夹）移动到目标文件夹下。`type` 为被移动对象的类型，`folder_token`
         为目标文件夹 token。
 
         Args:
             file_token: 被移动的文件（或文件夹）token。
             folder_token: 目标文件夹 token。
-            doc_type: 被移动对象的类型，例如 `file`、`docx`、`sheet`、`bitable`、`folder` 等。
+            type: 被移动对象的类型，例如 `file`、`docx`、`sheet`、`bitable`、`folder` 等。
 
         Returns:
             移动结果数据，含异步任务 `task_id`（移动文件夹等耗时操作时返回）。
@@ -372,11 +370,11 @@ class FilesNamespace(Namespace):
 
         Examples:
             >>> await client.drive.files.move(
-            ...     "boxcnxxx", folder_token="fldcnxxx", doc_type="file"
+            ...     "boxcnxxx", folder_token="fldcnxxx", type="file"
             ... )  # doctest:+SKIP
             {'task_id': '12345'}
         """
-        body = {"type": doc_type, "folder_token": folder_token}
+        body = {"type": type, "folder_token": folder_token}
         return await self._request_data("POST", f"drive/v1/files/{quote_segment(file_token)}/move", json=body)
 
     async def upload(

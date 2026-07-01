@@ -123,9 +123,9 @@ class TestBatchGetUsers:
 
 
 class TestBatchGetUserIds:
-    async def test_batch_get_ids_posts_body(self, users, recorder):
+    async def test_batch_get_id_posts_body(self, users, recorder):
         client = users(lambda r: envelope({"user_list": []}))
-        result = await client.contact.users.batch_get_ids(
+        result = await client.contact.users.batch_get_id(
             emails=["alice@example.com"], mobiles=["+8613800000000"], include_resigned=True
         )
         method, path, _, body = recorder.last

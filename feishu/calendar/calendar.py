@@ -139,7 +139,7 @@ class CalendarNamespace(Namespace):
             忙闲接口命名空间实例。
 
         飞书文档:
-            [查询主日历忙闲信息](https://open.feishu.cn/document/server-docs/calendar-v4/calendar-event/list-2)
+            [查询主日历忙闲信息](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/calendar-v4/freebusy/list)
 
         Examples:
             >>> client.calendar.freebusy  # doctest:+SKIP

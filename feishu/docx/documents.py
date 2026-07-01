@@ -30,7 +30,7 @@ from .._namespace import Namespace
 from .._url import quote_segment
 from ..pagination import paginate
 
-# 文档块（block）列表接口允许的最大每页条数，远高于通用的 50。
+# Maximum page size accepted by the block-list API; much larger than the generic 50-item limit.
 MAX_BLOCK_PAGE_SIZE = 500
 
 
@@ -44,7 +44,7 @@ class DocxNamespace(Namespace):
     通常无需直接实例化，应通过客户端的 `client.docx` 访问。
 
     飞书文档:
-        [文档概述](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/intro)
+        [文档概述](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/docx-overview)
     """
 
     async def append_blocks(
@@ -74,7 +74,7 @@ class DocxNamespace(Namespace):
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [创建块](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document-block-children/create)
+            [创建块](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document-block/create)
             参见 [feishu.docx.documents.DocxNamespace.patch_block][]。
 
         Examples:
@@ -99,6 +99,10 @@ class DocxNamespace(Namespace):
         在一次请求中对多个块执行更新操作，`requests` 为更新操作列表，每个元素与
         [feishu.docx.documents.DocxNamespace.patch_block][] 的 `update` 同构，并额外携带
         其作用的 `block_id`。
+
+        本方法与单块更新的 [feishu.docx.documents.DocxNamespace.patch_block][] 动作相同（均为更新块内容），
+        命名上刻意区分（`batch_update` 对 `patch`）以对齐各自的上游飞书接口
+        （`.../blocks/batch_update` 对 `.../blocks/{block_id}` 的 PATCH），此处的动词差异为有意为之。
 
         Args:
             document_id: 文档的唯一标识。
@@ -171,7 +175,7 @@ class DocxNamespace(Namespace):
 
         飞书文档:
             [获取文档基本信息](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/get)
-            参见 [feishu.docx.documents.DocxNamespace.raw_content][]。
+            参见 [feishu.docx.documents.DocxNamespace.get_raw_content][]。
 
         Examples:
             >>> await client.docx.get("doxcabc")  # doctest:+SKIP
@@ -226,7 +230,7 @@ class DocxNamespace(Namespace):
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [获取文档所有块](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document-block/list)
+            [获取文档所有块](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/list)
             参见 [feishu.docx.documents.DocxNamespace.get_block][]。
 
         Examples:
@@ -234,8 +238,8 @@ class DocxNamespace(Namespace):
             [{'block_id': 'doxcabc', 'block_type': 1, ...}, {'block_id': 'blk2', 'block_type': 2, ...}]
         """
 
-        # 不走 client.paginate_get：块列表上限为 MAX_BLOCK_PAGE_SIZE=500，
-        # 而 paginate_get 会将 page_size 截断至通用的 MAX_PAGE_SIZE=50，对块列表过小，故保留手写翻页闭包。
+        # Do not use client.paginate_get here: the block-list endpoint allows MAX_BLOCK_PAGE_SIZE=500, while
+        # paginate_get clamps page_size to the generic MAX_PAGE_SIZE=50, which is too small for document blocks.
         async def fetch(page_token: str | None) -> NestedDict:
             params = {
                 "page_size": min(page_size, MAX_BLOCK_PAGE_SIZE),
@@ -253,6 +257,10 @@ class DocxNamespace(Namespace):
 
         `update` 是描述更新操作的请求体，原样作为 JSON 发送，常见键包括
         `update_text_elements`、`update_text_style`、`update_table_property` 等。
+
+        本方法与批量更新的 [feishu.docx.documents.DocxNamespace.batch_update_blocks][] 动作相同（均为更新块内容），
+        命名上刻意区分（`patch` 对 `batch_update`）以对齐各自的上游飞书接口
+        （`.../blocks/{block_id}` 的 PATCH 对 `.../blocks/batch_update`），此处的动词差异为有意为之。
 
         Args:
             document_id: 文档的唯一标识。
@@ -278,7 +286,7 @@ class DocxNamespace(Namespace):
             "PATCH", f"docx/v1/documents/{quote_segment(document_id)}/blocks/{quote_segment(block_id)}", json=update
         )
 
-    async def raw_content(self, document_id: str, *, lang: int | None = None) -> str:
+    async def get_raw_content(self, document_id: str, *, lang: int | None = None) -> str:
         r"""
         获取文档纯文本内容。
 
@@ -300,7 +308,7 @@ class DocxNamespace(Namespace):
             参见 [feishu.docx.documents.DocxNamespace.list_blocks][]。
 
         Examples:
-            >>> await client.docx.raw_content("doxcabc")  # doctest:+SKIP
+            >>> await client.docx.get_raw_content("doxcabc")  # doctest:+SKIP
             'Hello world\n'
         """
         params = {"lang": lang}

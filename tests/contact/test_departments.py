@@ -86,6 +86,40 @@ class TestListDepartments:
         await client.aclose()
 
 
+class TestGetDepartmentParent:
+    async def test_parent_returns_raw_departments(self):
+        pages = [
+            ([{"open_department_id": "od-parent-1", "name": "Parent"}], True, "p2"),
+            ([{"department_id": "d-parent-2", "name": "Root"}], False, None),
+        ]
+        record = []
+        state = {"call": 0}
+
+        def handler(request):
+            tok = token_handler(request)
+            if tok is not None:
+                return tok
+            record.append((request.method, request.url.path, dict(request.url.params)))
+            items, has_more, token = pages[state["call"]]
+            state["call"] += 1
+            data = {"items": items, "has_more": has_more}
+            if token:
+                data["page_token"] = token
+            return httpx.Response(200, json=envelope(data))
+
+        client = make_client(handler)
+        parents = await client.contact.departments.parent("od-child")
+        assert parents == [
+            {"open_department_id": "od-parent-1", "name": "Parent"},
+            {"department_id": "d-parent-2", "name": "Root"},
+        ]
+        method, path, params = record[0]
+        assert method == "GET" and path.endswith("contact/v3/departments/parent")
+        assert params["department_id"] == "od-child"
+        assert record[1][2]["page_token"] == "p2"
+        await client.aclose()
+
+
 class TestGetDepartmentParentIds:
     async def test_prefers_open_id(self):
         # Page 1 yields a parent identified by open_department_id; page 2 yields one

@@ -44,25 +44,25 @@ class TestGet:
 
 class TestRawContent:
     @pytest.fixture
-    async def raw_content(self, client_factory, recorder):
+    async def get_raw_content(self, client_factory, recorder):
         client = client_factory(recorder=recorder, responder=lambda r: envelope({"content": "Hello world\n"}))
         try:
-            yield client.docx.raw_content
+            yield client.docx.get_raw_content
         finally:
             await client.aclose()
 
-    async def test_returns_content(self, raw_content, recorder):
-        content = await raw_content("doxcabc")
+    async def test_returns_content(self, get_raw_content, recorder):
+        content = await get_raw_content("doxcabc")
         method, path, _, _ = recorder.last
         assert method == "GET" and path.endswith("/docx/v1/documents/doxcabc/raw_content")
         assert content == "Hello world\n"
 
-    async def test_forwards_lang(self, raw_content, recorder):
-        await raw_content("doxcabc", lang=2)
+    async def test_forwards_lang(self, get_raw_content, recorder):
+        await get_raw_content("doxcabc", lang=2)
         assert recorder.last[2]["lang"] == "2"
 
-    async def test_omits_unset_lang(self, raw_content, recorder):
-        await raw_content("doxcabc")
+    async def test_omits_unset_lang(self, get_raw_content, recorder):
+        await get_raw_content("doxcabc")
         assert "lang" not in recorder.last[2]
 
 

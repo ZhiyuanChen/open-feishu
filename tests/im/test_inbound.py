@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from feishu.im import is_mentioned, message_text
+from feishu.im import card_text, card_title, interactive_card_text, is_mentioned, message_text, message_transcript
 
 
 class TestMessageText:
@@ -36,6 +36,45 @@ class TestMessageText:
 
     def test_empty_content(self):
         assert message_text({"message_type": "text", "content": ""}) == ""
+
+
+class TestMessageTranscript:
+    def test_renders_sender_prefixed_lines(self):
+        messages = [
+            {
+                "sender": {"name": "Alice"},
+                "message_type": "text",
+                "content": json.dumps({"text": "hello"}),
+            },
+            {"sender": {"open_id": "ou_1"}, "message_type": "image", "content": "{}"},
+        ]
+
+        assert message_transcript(messages, id_formatter=lambda value: f"redacted:{value}") == (
+            "Alice: hello\nredacted:ou_1: [image]"
+        )
+
+
+class TestCardText:
+    def test_extracts_title_and_nested_text(self):
+        card = {
+            "header": {"title": {"content": "Status"}},
+            "body": {
+                "elements": [
+                    {"tag": "markdown", "content": "**Done**"},
+                    {"tag": "div", "text": {"content": "Details"}},
+                    {"tag": "column_set", "columns": [{"elements": [{"tag": "markdown", "content": "Nested"}]}]},
+                ]
+            },
+        }
+
+        assert card_title(card) == "Status"
+        assert card_text(card) == "**Done**\n\nDetails\n\nNested"
+
+    def test_interactive_card_text_parses_message_content(self):
+        card = {"elements": [{"tag": "markdown", "content": "Card body"}]}
+        message = {"message_type": "interactive", "content": json.dumps(card)}
+
+        assert interactive_card_text(message) == "Card body"
 
 
 class TestIsMentioned:

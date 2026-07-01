@@ -43,7 +43,12 @@ class EventsNamespace(Namespace):
     """
 
     async def create(
-        self, calendar_id: str, event: dict[str, Any], *, idempotency_key: str | None = None
+        self,
+        calendar_id: str,
+        event: dict[str, Any],
+        *,
+        idempotency_key: str | None = None,
+        user_id_type: str | None = None,
     ) -> NestedDict:
         r"""
         创建日程。
@@ -58,6 +63,7 @@ class EventsNamespace(Namespace):
                 `{"summary": "周会", "start_time": {...}, "end_time": {...}}`。
             idempotency_key: 幂等键；设置后在一段时间内重复请求只会创建一个日程，
                 为空时省略该参数。
+            user_id_type: 日程相关用户字段的 ID 类型；为空时使用飞书接口默认值。
 
         Returns:
             包含 `event` 字段的数据，`event` 内含新建日程的 `event_id`、`summary`、
@@ -76,6 +82,8 @@ class EventsNamespace(Namespace):
         params = {}
         if idempotency_key is not None:
             params["idempotency_key"] = idempotency_key
+        if user_id_type is not None:
+            params["user_id_type"] = user_id_type
         return await self._request_data(
             "POST", f"calendar/v4/calendars/{quote_segment(calendar_id)}/events", params=params, json=event
         )
@@ -106,13 +114,14 @@ class EventsNamespace(Namespace):
             f"calendar/v4/calendars/{quote_segment(calendar_id)}/events/{quote_segment(event_id)}",
         )
 
-    async def get(self, calendar_id: str, event_id: str) -> NestedDict:
+    async def get(self, calendar_id: str, event_id: str, *, user_id_type: str | None = None) -> NestedDict:
         r"""
         获取日程信息。
 
         Args:
             calendar_id: 日历的 `calendar_id`。
             event_id: 日程的 `event_id`。
+            user_id_type: 日程相关用户字段的 ID 类型；为空时使用飞书接口默认值。
 
         Returns:
             包含 `event` 字段的数据，`event` 内含 `event_id`、`summary`、`description`、
@@ -131,6 +140,7 @@ class EventsNamespace(Namespace):
         return await self._request_data(
             "GET",
             f"calendar/v4/calendars/{quote_segment(calendar_id)}/events/{quote_segment(event_id)}",
+            params={"user_id_type": user_id_type} if user_id_type is not None else None,
         )
 
     async def list(
@@ -181,7 +191,9 @@ class EventsNamespace(Namespace):
             max_items=max_items,
         )
 
-    async def update(self, calendar_id: str, event_id: str, event: dict[str, Any]) -> NestedDict:
+    async def update(
+        self, calendar_id: str, event_id: str, event: dict[str, Any], *, user_id_type: str | None = None
+    ) -> NestedDict:
         r"""
         更新日程。
 
@@ -193,6 +205,7 @@ class EventsNamespace(Namespace):
             calendar_id: 日历的 `calendar_id`。
             event_id: 待更新日程的 `event_id`。
             event: 待更新字段的映射，例如 `{"summary": "已改期的周会"}`。
+            user_id_type: 日程相关用户字段的 ID 类型；为空时使用飞书接口默认值。
 
         Returns:
             包含 `event` 字段的数据，`event` 内含更新后日程的 `event_id`、`summary` 等字段。
@@ -210,5 +223,37 @@ class EventsNamespace(Namespace):
         return await self._request_data(
             "PATCH",
             f"calendar/v4/calendars/{quote_segment(calendar_id)}/events/{quote_segment(event_id)}",
+            params={"user_id_type": user_id_type} if user_id_type is not None else None,
             json=event,
+        )
+
+    async def reply(self, calendar_id: str, event_id: str, *, rsvp_status: str) -> NestedDict:
+        r"""
+        回复（RSVP）日程邀请。
+
+        将当前身份对某个日程邀请的出席意向设置为 `rsvp_status`：`"accept"` 接受、`"tentative"` 待定、
+        `"decline"` 拒绝。
+
+        Args:
+            calendar_id: 日历的 `calendar_id`。
+            event_id: 日程的 `event_id`。
+            rsvp_status: 出席意向，`"accept"`/`"tentative"`/`"decline"` 之一。
+
+        Returns:
+            接口返回的数据（通常为空）。
+
+        Raises:
+            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
+
+        飞书文档:
+            [回复日程](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/calendar-v4/calendar-event/reply)
+
+        Examples:
+            >>> await client.calendar.events.reply("feishu.cn_xxx", "evtxxx", rsvp_status="accept")  # doctest:+SKIP
+            {}
+        """
+        return await self._request_data(
+            "POST",
+            f"calendar/v4/calendars/{quote_segment(calendar_id)}/events/{quote_segment(event_id)}/reply",
+            json={"rsvp_status": rsvp_status},
         )

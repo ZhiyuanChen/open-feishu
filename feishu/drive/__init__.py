@@ -24,14 +24,25 @@ from __future__ import annotations
 from .drive import DriveNamespace
 from .files import FilesNamespace
 from .permissions import PermissionsNamespace, infer_member_type
-from .references import DocumentReference, parse_document_reference, raw_document_content, resolve_document_reference
+from .references import (
+    DocumentReference,
+    document_reference_from_mapping,
+    meeting_note_reference_from_mapping,
+    meeting_note_reference_from_meeting,
+    parse_document_reference,
+    raw_document_content,
+    resolve_document_reference,
+)
 
 __all__ = [
     "DocumentReference",
     "DriveNamespace",
     "FilesNamespace",
     "PermissionsNamespace",
+    "document_reference_from_mapping",
     "infer_member_type",
+    "meeting_note_reference_from_mapping",
+    "meeting_note_reference_from_meeting",
     "parse_document_reference",
     "resolve_document_reference",
     "raw_document_content",
