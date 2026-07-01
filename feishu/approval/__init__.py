@@ -22,19 +22,71 @@
 from __future__ import annotations
 
 from .approval import ApprovalNamespace
-from .builders import approval_form, approval_form_field, approval_instance
+from .builders import (
+    APPROVAL_API_UNSUPPORTED_WIDGET_TYPES,
+    approval_account_label,
+    approval_account_number,
+    approval_account_widgets,
+    approval_cached_definition_summary,
+    approval_definition_code,
+    approval_definition_index,
+    approval_definition_may_contain_file_widget,
+    approval_definition_schema,
+    approval_definition_summary,
+    approval_definition_widgets,
+    approval_field_key,
+    approval_file_fields,
+    approval_form,
+    approval_form_field,
+    approval_form_payloads,
+    approval_form_problems,
+    approval_instance,
+    approval_instance_participant_ids,
+    approval_nonempty_form,
+    is_approval_file_widget,
+    is_approval_file_widget_text,
+)
 from .comments import CommentsNamespace
 from .definitions import DefinitionsNamespace
+from .files import (
+    FilesNamespace,
+    approval_file_code,
+    approval_file_type_for_media_type,
+    normalize_approval_file_upload_response,
+)
 from .instances import InstancesNamespace
 from .tasks import TasksNamespace
 
 __all__ = [
+    "APPROVAL_API_UNSUPPORTED_WIDGET_TYPES",
     "ApprovalNamespace",
+    "approval_account_label",
+    "approval_account_number",
+    "approval_account_widgets",
+    "approval_instance_participant_ids",
     "CommentsNamespace",
     "DefinitionsNamespace",
+    "FilesNamespace",
     "InstancesNamespace",
     "TasksNamespace",
+    "approval_cached_definition_summary",
+    "approval_definition_code",
+    "approval_definition_index",
+    "approval_definition_may_contain_file_widget",
+    "approval_definition_schema",
+    "approval_definition_summary",
+    "approval_definition_widgets",
+    "approval_field_key",
+    "approval_file_code",
+    "approval_file_fields",
+    "approval_file_type_for_media_type",
     "approval_form",
     "approval_form_field",
+    "approval_form_payloads",
+    "approval_form_problems",
     "approval_instance",
+    "approval_nonempty_form",
+    "is_approval_file_widget",
+    "is_approval_file_widget_text",
+    "normalize_approval_file_upload_response",
 ]

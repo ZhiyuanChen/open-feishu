@@ -28,6 +28,7 @@ from .._namespace import Namespace
 if TYPE_CHECKING:
     from .comments import CommentsNamespace
     from .definitions import DefinitionsNamespace
+    from .files import FilesNamespace
     from .instances import InstancesNamespace
     from .tasks import TasksNamespace
 
@@ -36,7 +37,7 @@ class ApprovalNamespace(Namespace):
     r"""
     审批（Approval）接口命名空间。
 
-    通过 `client.approval` 访问，作为审批定义、实例、任务与评论四个子命名空间的入口：
+    通过 `client.approval` 访问，作为审批定义、实例、任务、评论与文件五个子命名空间的入口：
     [`ApprovalNamespace.definitions`][feishu.approval.approval.ApprovalNamespace.definitions]
     暴露审批定义（approval）的查询，
     [`ApprovalNamespace.instances`][feishu.approval.approval.ApprovalNamespace.instances]
@@ -44,18 +45,21 @@ class ApprovalNamespace(Namespace):
     [`ApprovalNamespace.tasks`][feishu.approval.approval.ApprovalNamespace.tasks]
     暴露审批任务（task）的同意、拒绝与转交，
     [`ApprovalNamespace.comments`][feishu.approval.approval.ApprovalNamespace.comments]
-    暴露审批评论（comment）的创建与列举。各子命名空间均在首次访问时惰性创建。
+    暴露审批评论（comment）的创建与列举，
+    [`ApprovalNamespace.files`][feishu.approval.approval.ApprovalNamespace.files]
+    暴露审批文件（file）的上传。各子命名空间均在首次访问时惰性创建。
     审批定义以 `approval_code` 标识，依据定义发起的实例以 `instance_id`（或 `instance_code`）
     标识，实例内含若干待办任务与评论。
 
     通常无需直接实例化，应通过 `client.approval` 访问。
 
     飞书文档:
-        [审批概述](https://open.feishu.cn/document/server-docs/approval-v4/overview)
+        [审批概述](https://open.feishu.cn/document/server-docs/approval-v4/approval-overview)
     """
 
     _comments: CommentsNamespace | None = None
     _definitions: DefinitionsNamespace | None = None
+    _files: FilesNamespace | None = None
     _instances: InstancesNamespace | None = None
     _tasks: TasksNamespace | None = None
 
@@ -104,6 +108,19 @@ class ApprovalNamespace(Namespace):
 
             self._definitions = DefinitionsNamespace(self._client)
         return self._definitions
+
+    @property
+    def files(self) -> FilesNamespace:
+        r"""
+        审批文件接口命名空间。
+
+        惰性创建并返回 [feishu.approval.files.FilesNamespace][]，用于上传审批图片或附件。
+        """
+        if self._files is None:
+            from .files import FilesNamespace
+
+            self._files = FilesNamespace(self._client)
+        return self._files
 
     @property
     def instances(self) -> InstancesNamespace:

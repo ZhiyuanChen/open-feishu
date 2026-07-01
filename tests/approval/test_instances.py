@@ -69,3 +69,10 @@ class TestCancel:
         method, path, _, body = recorder.last
         assert method == "POST" and path.endswith("/approval/v4/instances/cancel")
         assert body == {"approval_code": "ABC123", "instance_code": "INST1", "user_id": "u1"}
+
+    async def test_cancel_honors_user_id_type(self, instances, recorder):
+        await instances.cancel("ABC123", "INST1", "ou_1", user_id_type="open_id")
+        method, path, params, body = recorder.last
+        assert method == "POST" and path.endswith("/approval/v4/instances/cancel")
+        assert params["user_id_type"] == "open_id"
+        assert body == {"approval_code": "ABC123", "instance_code": "INST1", "user_id": "ou_1"}

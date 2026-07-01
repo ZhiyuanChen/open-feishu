@@ -21,12 +21,14 @@
 
 from __future__ import annotations
 
+import builtins
 from typing import Any
 
 from chanfig import NestedDict
 
 from .._namespace import Namespace
 from .._url import quote_segment
+from ..consts import MAX_PAGE_SIZE
 
 
 class InstancesNamespace(Namespace):
@@ -43,17 +45,20 @@ class InstancesNamespace(Namespace):
         [审批 / 审批实例](https://open.feishu.cn/document/server-docs/approval-v4/instance/create)
     """
 
-    async def cancel(self, approval_code: str, instance_code: str, user_id: str) -> NestedDict:
+    async def cancel(
+        self, approval_code: str, instance_code: str, user_id: str, *, user_id_type: str | None = None
+    ) -> NestedDict:
         r"""
         撤回审批实例。
 
-        将 `approval_code`、`instance_code`、`user_id` 作为请求体字段发送，撤回指定用户
-        发起的审批实例。
+        将 `approval_code`、`instance_code`、`user_id` 作为请求体字段发送，撤回指定用户发起的审批实例。
+        `user_id` 的类型由查询参数 `user_id_type` 指定；为空时使用接口默认值。
 
         Args:
             approval_code: 审批定义的唯一标识 `approval_code`。
             instance_code: 待撤回审批实例的 `instance_code`。
             user_id: 发起撤回操作的用户 ID。
+            user_id_type: 用户 ID 的类型，如 `open_id`、`union_id`、`user_id`；为空时使用接口默认值。
 
         Returns:
             接口返回的数据（通常为空）。
@@ -68,9 +73,13 @@ class InstancesNamespace(Namespace):
             >>> await client.approval.instances.cancel("ABC123", "INST123", "u1")  # doctest:+SKIP
             {}
         """
+        params: dict[str, Any] = {}
+        if user_id_type is not None:
+            params["user_id_type"] = user_id_type
         return await self._request_data(
             "POST",
             "approval/v4/instances/cancel",
+            params=params,
             json={"approval_code": approval_code, "instance_code": instance_code, "user_id": user_id},
         )
 
@@ -168,3 +177,74 @@ class InstancesNamespace(Namespace):
             max_items=max_items,
             items_key="instance_code_list",
         )
+
+    async def query(
+        self,
+        *,
+        user_id: str | None = None,
+        approval_code: str | None = None,
+        start_time: str | None = None,
+        end_time: str | None = None,
+        user_id_type: str = "open_id",
+        instance_status: str | None = None,
+        page_size: int = 100,
+        max_items: int | None = 100,
+        # builtins.list, not bare list: the `list` method above shadows the builtin in this class's
+        # scope, so an unqualified `list[...]` return annotation resolves to that method under mypy.
+    ) -> builtins.list[NestedDict]:
+        r"""
+        条件查询审批实例列表（`POST approval/v4/instances/query`），可按申请人 `user_id` 精确过滤。
+
+        与 [feishu.approval.instances.InstancesNamespace.list][]（仅按 `approval_code` + 时间范围返回实例编码）
+        不同，本接口支持按**申请人**过滤，因此可在最小权限下只取「某个用户本人发起」的实例——这是按用户隔离地
+        读取其历史填写（如收款账户）的关键。返回的每项为 `{approval, group, instance}` 概要，其中
+        `instance.code` 为实例编码、`instance.status` 为状态，可据此调用
+        [feishu.approval.instances.InstancesNamespace.get][] 取完整表单。
+
+        Args:
+            user_id: 申请人标识；类型由 `user_id_type` 指定。仅传本人标识即可实现按用户隔离。
+            approval_code: 审批定义编码，限定到某类审批。
+            start_time: 起始时间（毫秒时间戳字符串）。
+            end_time: 结束时间（毫秒时间戳字符串）。
+            user_id_type: `user_id` 的类型，默认 `"open_id"`。
+            instance_status: 可选状态过滤（如 `PENDING` / `APPROVED` / `REJECTED` 等）。
+            page_size: 每页条数，受 [feishu.consts.MAX_PAGE_SIZE][] 限制。
+            max_items: 最多返回条数；`None` 表示取全部（自动翻页）。
+
+        Returns:
+            实例概要列表（每项含 `approval` / `group` / `instance`）。
+
+        飞书文档:
+            [查询实例列表](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/approval-v4/instance/query)
+
+        Examples:
+            >>> await client.approval.instances.query(user_id="ou_x", approval_code="ABC")  # doctest:+SKIP
+            [NestedDict(...), ...]
+        """
+        body: dict[str, Any] = {}
+        if user_id:
+            body["user_id"] = user_id
+        if approval_code:
+            body["approval_code"] = approval_code
+        if start_time:
+            body["start_time"] = start_time
+        if end_time:
+            body["end_time"] = end_time
+        if instance_status:
+            body["instance_status"] = instance_status
+        results: list[NestedDict] = []
+        page_token: str | None = None
+        while True:
+            body["page_size"] = min(page_size, MAX_PAGE_SIZE)
+            if page_token:
+                body["page_token"] = page_token
+            data = await self._request_data(
+                "POST", "approval/v4/instances/query", params={"user_id_type": user_id_type}, json=body
+            )
+            for item in data.get("instance_list") or []:
+                results.append(item if isinstance(item, NestedDict) else NestedDict(item))
+                if max_items is not None and len(results) >= max_items:
+                    return results
+            page_token = data.get("page_token")
+            if not page_token or not data.get("has_more"):
+                return results
