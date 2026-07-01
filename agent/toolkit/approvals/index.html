@@ -2983,8 +2983,6 @@
       
         
       
-        
-      
     
     
     
@@ -3005,7 +3003,7 @@
   
   
   
-    <a href="../../../board/board/" class="md-nav__link">
+    <a href="../../../board/whiteboards/" class="md-nav__link">
       
   
   
@@ -5014,7 +5012,7 @@
   &lt;span class=&quot;doc doc-labels&quot;&gt;
       &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
   &lt;/span&gt;" href="../../tools/#feishu.agent.tools.Tool">feishu.agent.tools.Tool</a>。</p>
-<p>返回经 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;approval_definition_schema&lt;/span&gt;" href="../../../approval/builders/#feishu.approval.builders.approval_definition_schema">feishu.approval.approval_definition_schema</a> 归一化后的紧凑表单 schema（含 <code>fields</code>
+<p>返回经 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;approval_definition_schema&lt;/span&gt;" href="../../../approval/#feishu.approval.approval_definition_schema">feishu.approval.approval_definition_schema</a> 归一化后的紧凑表单 schema（含 <code>fields</code>
 控件列表），供模型据此构造 <code>create_approval_instance</code> 的 <code>form</code>。</p>
 
 
@@ -5295,7 +5293,7 @@
 <p><code>requires_approval=True</code> 时，<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Agent&lt;/span&gt;" href="../../loop/#feishu.agent.loop.Agent">feishu.agent.loop.Agent</a> 先挂起并发审批卡片；用户批准后处理函数才执行写入。
 申请人身份**强制**为当前轮的请求用户（<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;requesting_user&lt;/span&gt;" href="../../context/#feishu.agent.context.ToolContext.requesting_user">feishu.agent.context.ToolContext.requesting_user</a>），模型无法
 覆盖，以防越权代他人提交。<code>form</code> 接受 <code>widget_id -&gt; value</code> 映射、完整控件载荷列表或已序列化的 JSON 串，
-由 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;approval_instance&lt;/span&gt;" href="../../../approval/builders/#feishu.approval.builders.approval_instance">feishu.approval.approval_instance</a> 归一化为 Feishu 审批实例载荷。</p>
+由 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;approval_instance&lt;/span&gt;" href="../../../approval/#feishu.approval.approval_instance">feishu.approval.approval_instance</a> 归一化为 Feishu 审批实例载荷。</p>
 
 
 <p><span class="doc-section-title">参数：</span></p>
@@ -6171,7 +6169,7 @@
 <code>task_list</code> 中识别可供同意 / 拒绝的 <code>task_id</code>。<code>instance_code</code> 与飞书的 <code>instance_id</code> 同义，二者均可。</p>
 <p>最小权限（zero-trust）：实例读取走租户令牌，可按 id 取到**任意**实例（含收款账户等表单数据），故此处
 强制校验「请求用户必须是该实例的参与者」（发起人，或 <code>task_list</code>/<code>timeline</code> 中的审批人 / 处理人，见
-<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;approval_instance_participant_ids&lt;/span&gt;" href="../../../approval/builders/#feishu.approval.builders.approval_instance_participant_ids">feishu.approval.approval_instance_participant_ids</a>）；否则返回 <code>BLOCKED</code>——防止被越权操控的智能体凭
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;approval_instance_participant_ids&lt;/span&gt;" href="../../../approval/#feishu.approval.approval_instance_participant_ids">feishu.approval.approval_instance_participant_ids</a>）；否则返回 <code>BLOCKED</code>——防止被越权操控的智能体凭
 实例 id 拉取他人审批与银行账户信息。</p>
 
 
@@ -7551,7 +7549,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月1日 04:59:15 UTC">2026-07-01 04:59:15</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月1日 05:46:40 UTC">2026-07-01 05:46:40</span>
   </span>
 
     

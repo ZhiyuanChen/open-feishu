@@ -1781,8 +1781,6 @@
       
         
       
-        
-      
     
     
     
@@ -1803,7 +1801,7 @@
   
   
   
-    <a href="../../board/board/" class="md-nav__link">
+    <a href="../../board/whiteboards/" class="md-nav__link">
       
   
   
@@ -3101,7 +3099,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/obtain-code">获取登录预授权码</a></p>
+  <p><a href="https://open.feishu.cn/document/server-docs/authentication-management/login-state-management">网页应用登录</a></p>
 </details>
 
 
@@ -3324,7 +3322,7 @@
 </span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">    否则相关方法会抛出 [ValueError][]。</span>
 </span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a>
 </span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">        [获取登录预授权码](https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/obtain-code)</span>
+</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">        [网页应用登录](https://open.feishu.cn/document/server-docs/authentication-management/login-state-management)</span>
 </span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a>
 </span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">authorize_url</span><span class="p">(</span>
@@ -3357,7 +3355,7 @@
 </span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="sd">                或区域无法解析出 accounts 域名时抛出。</span>
 </span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a>
 </span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">            [获取登录预授权码](https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/obtain-code)</span>
+</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">            [获取登录预授权码](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/authentication-management/login-state-management/obtain-oauth-code)</span>
 </span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a>
 </span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">        Examples:</span>
 </span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">            &gt;&gt;&gt; from feishu import FeishuClient</span>
@@ -3418,7 +3416,7 @@
 </span><span id="__span-0-138"><a id="__codelineno-0-138" name="__codelineno-0-138"></a><span class="sd">            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
 </span><span id="__span-0-139"><a id="__codelineno-0-139" name="__codelineno-0-139"></a>
 </span><span id="__span-0-140"><a id="__codelineno-0-140" name="__codelineno-0-140"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-141"><a id="__codelineno-0-141" name="__codelineno-0-141"></a><span class="sd">            [获取用户访问凭证](https://open.feishu.cn/document/authentication-management/access-token/get-user-access-token)</span>
+</span><span id="__span-0-141"><a id="__codelineno-0-141" name="__codelineno-0-141"></a><span class="sd">            [获取用户访问凭证](https://open.feishu.cn/document/server-docs/authentication-management/access-token/get-user-access-token)</span>
 </span><span id="__span-0-142"><a id="__codelineno-0-142" name="__codelineno-0-142"></a>
 </span><span id="__span-0-143"><a id="__codelineno-0-143" name="__codelineno-0-143"></a><span class="sd">        Examples:</span>
 </span><span id="__span-0-144"><a id="__codelineno-0-144" name="__codelineno-0-144"></a><span class="sd">            &gt;&gt;&gt; redirect_uri = &quot;https://app.example.com/cb&quot;</span>
@@ -3460,7 +3458,7 @@
 </span><span id="__span-0-180"><a id="__codelineno-0-180" name="__codelineno-0-180"></a><span class="sd">            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
 </span><span id="__span-0-181"><a id="__codelineno-0-181" name="__codelineno-0-181"></a>
 </span><span id="__span-0-182"><a id="__codelineno-0-182" name="__codelineno-0-182"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-183"><a id="__codelineno-0-183" name="__codelineno-0-183"></a><span class="sd">            [刷新用户访问凭证](https://open.feishu.cn/document/authentication-management/access-token/refresh-user-access-token)</span>
+</span><span id="__span-0-183"><a id="__codelineno-0-183" name="__codelineno-0-183"></a><span class="sd">            [刷新用户访问凭证](https://open.feishu.cn/document/server-docs/authentication-management/access-token/refresh-user-access-token)</span>
 </span><span id="__span-0-184"><a id="__codelineno-0-184" name="__codelineno-0-184"></a>
 </span><span id="__span-0-185"><a id="__codelineno-0-185" name="__codelineno-0-185"></a><span class="sd">        Examples:</span>
 </span><span id="__span-0-186"><a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="sd">            &gt;&gt;&gt; resp = await client.oauth.refresh(&quot;u-ref-OLD&quot;)  # doctest: +SKIP</span>
@@ -3497,7 +3495,7 @@
 </span><span id="__span-0-217"><a id="__codelineno-0-217" name="__codelineno-0-217"></a><span class="sd">            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
 </span><span id="__span-0-218"><a id="__codelineno-0-218" name="__codelineno-0-218"></a>
 </span><span id="__span-0-219"><a id="__codelineno-0-219" name="__codelineno-0-219"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-220"><a id="__codelineno-0-220" name="__codelineno-0-220"></a><span class="sd">            [获取登录用户信息](https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/get)</span>
+</span><span id="__span-0-220"><a id="__codelineno-0-220" name="__codelineno-0-220"></a><span class="sd">            [获取登录用户信息](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/authentication-management/login-state-management/get-user-info)</span>
 </span><span id="__span-0-221"><a id="__codelineno-0-221" name="__codelineno-0-221"></a>
 </span><span id="__span-0-222"><a id="__codelineno-0-222" name="__codelineno-0-222"></a><span class="sd">        Examples:</span>
 </span><span id="__span-0-223"><a id="__codelineno-0-223" name="__codelineno-0-223"></a><span class="sd">            &gt;&gt;&gt; data = await client.oauth.user_info(&quot;u-acc-token&quot;)  # doctest: +SKIP</span>
@@ -3682,7 +3680,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/obtain-code">获取登录预授权码</a></p>
+  <p><a href="https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/authentication-management/login-state-management/obtain-oauth-code">获取登录预授权码</a></p>
 </details>
 
 <p><span class="doc-section-title">示例：</span></p>
@@ -3815,7 +3813,7 @@
 </span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="sd">            或区域无法解析出 accounts 域名时抛出。</span>
 </span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a>
 </span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">        [获取登录预授权码](https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/obtain-code)</span>
+</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">        [获取登录预授权码](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/authentication-management/login-state-management/obtain-oauth-code)</span>
 </span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a>
 </span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">    Examples:</span>
 </span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">        &gt;&gt;&gt; from feishu import FeishuClient</span>
@@ -4007,7 +4005,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/authentication-management/access-token/get-user-access-token">获取用户访问凭证</a></p>
+  <p><a href="https://open.feishu.cn/document/server-docs/authentication-management/access-token/get-user-access-token">获取用户访问凭证</a></p>
 </details>
 
 <p><span class="doc-section-title">示例：</span></p>
@@ -4088,7 +4086,7 @@
 </span><span id="__span-0-138"><a id="__codelineno-0-138" name="__codelineno-0-138"></a><span class="sd">        feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
 </span><span id="__span-0-139"><a id="__codelineno-0-139" name="__codelineno-0-139"></a>
 </span><span id="__span-0-140"><a id="__codelineno-0-140" name="__codelineno-0-140"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-141"><a id="__codelineno-0-141" name="__codelineno-0-141"></a><span class="sd">        [获取用户访问凭证](https://open.feishu.cn/document/authentication-management/access-token/get-user-access-token)</span>
+</span><span id="__span-0-141"><a id="__codelineno-0-141" name="__codelineno-0-141"></a><span class="sd">        [获取用户访问凭证](https://open.feishu.cn/document/server-docs/authentication-management/access-token/get-user-access-token)</span>
 </span><span id="__span-0-142"><a id="__codelineno-0-142" name="__codelineno-0-142"></a>
 </span><span id="__span-0-143"><a id="__codelineno-0-143" name="__codelineno-0-143"></a><span class="sd">    Examples:</span>
 </span><span id="__span-0-144"><a id="__codelineno-0-144" name="__codelineno-0-144"></a><span class="sd">        &gt;&gt;&gt; redirect_uri = &quot;https://app.example.com/cb&quot;</span>
@@ -4242,7 +4240,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/authentication-management/access-token/refresh-user-access-token">刷新用户访问凭证</a></p>
+  <p><a href="https://open.feishu.cn/document/server-docs/authentication-management/access-token/refresh-user-access-token">刷新用户访问凭证</a></p>
 </details>
 
 <p><span class="doc-section-title">示例：</span></p>
@@ -4316,7 +4314,7 @@
 </span><span id="__span-0-180"><a id="__codelineno-0-180" name="__codelineno-0-180"></a><span class="sd">        feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
 </span><span id="__span-0-181"><a id="__codelineno-0-181" name="__codelineno-0-181"></a>
 </span><span id="__span-0-182"><a id="__codelineno-0-182" name="__codelineno-0-182"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-183"><a id="__codelineno-0-183" name="__codelineno-0-183"></a><span class="sd">        [刷新用户访问凭证](https://open.feishu.cn/document/authentication-management/access-token/refresh-user-access-token)</span>
+</span><span id="__span-0-183"><a id="__codelineno-0-183" name="__codelineno-0-183"></a><span class="sd">        [刷新用户访问凭证](https://open.feishu.cn/document/server-docs/authentication-management/access-token/refresh-user-access-token)</span>
 </span><span id="__span-0-184"><a id="__codelineno-0-184" name="__codelineno-0-184"></a>
 </span><span id="__span-0-185"><a id="__codelineno-0-185" name="__codelineno-0-185"></a><span class="sd">    Examples:</span>
 </span><span id="__span-0-186"><a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="sd">        &gt;&gt;&gt; resp = await client.oauth.refresh(&quot;u-ref-OLD&quot;)  # doctest: +SKIP</span>
@@ -4456,7 +4454,7 @@
 
 <details class="飞书文档" open>
   <summary>飞书文档</summary>
-  <p><a href="https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/get">获取登录用户信息</a></p>
+  <p><a href="https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/authentication-management/login-state-management/get-user-info">获取登录用户信息</a></p>
 </details>
 
 <p><span class="doc-section-title">示例：</span></p>
@@ -4525,7 +4523,7 @@
 </span><span id="__span-0-217"><a id="__codelineno-0-217" name="__codelineno-0-217"></a><span class="sd">        feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
 </span><span id="__span-0-218"><a id="__codelineno-0-218" name="__codelineno-0-218"></a>
 </span><span id="__span-0-219"><a id="__codelineno-0-219" name="__codelineno-0-219"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-220"><a id="__codelineno-0-220" name="__codelineno-0-220"></a><span class="sd">        [获取登录用户信息](https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/get)</span>
+</span><span id="__span-0-220"><a id="__codelineno-0-220" name="__codelineno-0-220"></a><span class="sd">        [获取登录用户信息](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/authentication-management/login-state-management/get-user-info)</span>
 </span><span id="__span-0-221"><a id="__codelineno-0-221" name="__codelineno-0-221"></a>
 </span><span id="__span-0-222"><a id="__codelineno-0-222" name="__codelineno-0-222"></a><span class="sd">    Examples:</span>
 </span><span id="__span-0-223"><a id="__codelineno-0-223" name="__codelineno-0-223"></a><span class="sd">        &gt;&gt;&gt; data = await client.oauth.user_info(&quot;u-acc-token&quot;)  # doctest: +SKIP</span>
@@ -4577,7 +4575,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月1日 04:59:16 UTC">2026-07-01 04:59:16</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月1日 05:46:43 UTC">2026-07-01 05:46:43</span>
   </span>
 
     
