@@ -48,7 +48,7 @@ class TestRegister:
         tool = reg.get("echo")
         assert tool.requires_approval is True
         assert tool.handler is echo
-        assert await reg.dispatch("echo", {"city": "sh"}) == "sh"
+        assert (await reg.dispatch("echo", {"city": "sh"})).content == "sh"
 
     def test_get_returns_tool(self, reg):
         assert isinstance(reg.get("weather"), Tool)
@@ -60,7 +60,7 @@ class TestRegister:
 
 class TestDispatch:
     async def test_async_handler(self, reg):
-        assert await reg.dispatch("weather", {"city": "beijing"}) == "sunny in beijing"
+        assert (await reg.dispatch("weather", {"city": "beijing"})).content == "sunny in beijing"
 
     async def test_sync_handler_runs_off_event_loop(self):
         reg = ToolRegistry()
@@ -72,7 +72,7 @@ class TestDispatch:
             return city.upper()
 
         reg.register("up", blocking, input_schema=SCHEMA, description="d")
-        assert await reg.dispatch("up", {"city": "shanghai"}) == "SHANGHAI"
+        assert (await reg.dispatch("up", {"city": "shanghai"})).content == "SHANGHAI"
         # sync handler must run in a worker thread, not block the event loop thread
         assert seen["thread"] != loop_thread
 
@@ -85,7 +85,7 @@ class TestDispatch:
                 return f"async-class:{city}"
 
         reg.register("async_class", AsyncCityHandler(), input_schema=SCHEMA, description="d")
-        assert await reg.dispatch("async_class", {"city": "tokyo"}) == "async-class:tokyo"
+        assert (await reg.dispatch("async_class", {"city": "tokyo"})).content == "async-class:tokyo"
 
     @pytest.mark.parametrize(
         "arguments",
@@ -103,3 +103,69 @@ class TestDispatch:
         reg = ToolRegistry()
         with pytest.raises(KeyError):
             await reg.dispatch("nope", {})
+
+    @pytest.mark.parametrize(
+        "arguments",
+        [
+            pytest.param({"city": 123}, id="wrong-type"),
+            pytest.param({"city": "shanghai", "unit": "kelvin"}, id="bad-enum"),
+            pytest.param({"city": "shanghai", "options": {"days": "tomorrow"}}, id="nested-wrong-type"),
+            pytest.param({"city": "shanghai", "tags": ["ok", 1]}, id="array-item-wrong-type"),
+        ],
+    )
+    async def test_json_schema_type_enum_and_nested_validation(self, arguments):
+        reg = ToolRegistry()
+
+        async def weather(city, unit="celsius", options=None, tags=None):
+            return city
+
+        reg.register(
+            "weather",
+            weather,
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "city": {"type": "string"},
+                    "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
+                    "options": {
+                        "type": "object",
+                        "properties": {"days": {"type": "integer"}},
+                        "additionalProperties": False,
+                    },
+                    "tags": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["city"],
+                "additionalProperties": False,
+            },
+            description="get weather",
+        )
+
+        with pytest.raises(ToolValidationError):
+            await reg.dispatch("weather", arguments)
+
+    async def test_additional_properties_schema_validates_extra_values(self):
+        reg = ToolRegistry()
+
+        async def upload(attachments):
+            return attachments
+
+        reg.register(
+            "upload",
+            upload,
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "attachments": {
+                        "type": "object",
+                        "additionalProperties": {"type": ["string", "array"]},
+                    }
+                },
+                "required": ["attachments"],
+                "additionalProperties": False,
+            },
+            description="upload files",
+        )
+
+        assert (await reg.dispatch("upload", {"attachments": {"proof": "file_1"}})).content == {"proof": "file_1"}
+        with pytest.raises(ToolValidationError):
+            await reg.dispatch("upload", {"attachments": {"proof": 123}})

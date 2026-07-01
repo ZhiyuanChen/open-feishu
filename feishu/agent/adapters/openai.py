@@ -27,6 +27,7 @@ from typing import Any, AsyncIterator, Sequence
 from ..llm import (
     Message,
     MessageStop,
+    ReasoningDelta,
     StopReason,
     StreamChunk,
     TextDelta,
@@ -95,7 +96,6 @@ def _to_openai_messages(messages: Sequence[Message], system: str | None) -> list
 async def _translate_chunks(chunks: AsyncIterator[Any]) -> AsyncIterator[StreamChunk]:
     stop_reason = StopReason.OTHER
     usage: dict[str, int] | None = None
-    saw_finish = False
     async for chunk in chunks:
         u = getattr(chunk, "usage", None)
         if u is not None:
@@ -104,12 +104,21 @@ async def _translate_chunks(chunks: AsyncIterator[Any]) -> AsyncIterator[StreamC
                 for k in ("prompt_tokens", "completion_tokens", "total_tokens")
                 if getattr(u, k, None) is not None
             }
+            # Prompt-cache hit count (OpenAI/qwen put it under prompt_tokens_details.cached_tokens) — lets the
+            # caller track cache hit-rate, which dominates cost for long sessions.
+            details = getattr(u, "prompt_tokens_details", None)
+            cached = getattr(details, "cached_tokens", None) if details is not None else None
+            if cached is not None:
+                usage["cached_tokens"] = cached
         choices = getattr(chunk, "choices", None) or []
         if not choices:
             continue
         choice = choices[0]
         delta = getattr(choice, "delta", None)
         if delta is not None:
+            reasoning = getattr(delta, "reasoning_content", None) or getattr(delta, "reasoning", None)
+            if reasoning:
+                yield ReasoningDelta(text=reasoning)
             if getattr(delta, "content", None):
                 yield TextDelta(text=delta.content)
             for tc in getattr(delta, "tool_calls", None) or []:
@@ -121,10 +130,10 @@ async def _translate_chunks(chunks: AsyncIterator[Any]) -> AsyncIterator[StreamC
                     arguments=(getattr(func, "arguments", None) or "") if func else "",
                 )
         if getattr(choice, "finish_reason", None) is not None:
+            # Record the stop reason but keep consuming: with stream_options include_usage, OpenAI sends a
+            # trailing usage-only chunk AFTER the finish_reason chunk, so stopping here would drop usage.
             stop_reason = _map_finish_reason(choice.finish_reason)
-            saw_finish = True
-    if saw_finish:
-        yield MessageStop(stop_reason=stop_reason, usage=usage)
+    yield MessageStop(stop_reason=stop_reason, usage=usage)
 
 
 class OpenAIBackend:

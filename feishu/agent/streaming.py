@@ -28,7 +28,7 @@ from typing import Any, AsyncIterator, Iterator
 
 from .adapters.anthropic import _translate_events as _anthropic_translate
 from .adapters.openai import _translate_chunks as _openai_translate
-from .llm import TextDelta
+from .llm import ReasoningDelta, TextDelta
 
 __all__ = ["stream_text"]
 
@@ -95,11 +95,11 @@ async def stream_text(provider_stream: Any) -> AsyncIterator[str]:
 
     - **Anthropic 上下文管理器**（``AsyncMessageStreamManager``，带 ``__aenter__``
       但无 ``__aiter__``）：进入上下文后迭代原始 SSE 事件，经
-      [feishu.agent.adapters.anthropic._translate_events][] 归一化。
+      `feishu.agent.adapters.anthropic._translate_events` 归一化。
 
     - **OpenAI 异步流**（``AsyncStream[ChatCompletionChunk]`` 或 chunk 带
       ``choices`` 属性）：直接异步迭代，经
-      [feishu.agent.adapters.openai._translate_chunks][] 归一化。
+      `feishu.agent.adapters.openai._translate_chunks` 归一化。
 
     - **OpenAI 同步流**（``Stream[ChatCompletionChunk]``，同步可迭代，首个元素有
       ``choices`` 属性）：通过 ``loop.run_in_executor`` 包装后同上处理。
@@ -130,7 +130,7 @@ async def stream_text(provider_stream: Any) -> AsyncIterator[str]:
         TypeError: 当 ``provider_stream`` 既非异步可迭代也非同步可迭代时抛出。
 
     飞书文档:
-        [CardKit 流式更新](https://open.feishu.cn/document/server-docs/im-v1/message-card/card-kit)
+        [CardKit 流式更新](https://open.feishu.cn/document/cardkit-v1/streaming-updates-openapi-overview)
 
     Examples:
         >>> import asyncio
@@ -205,7 +205,7 @@ async def _stream_text_async(async_iter: AsyncIterator[Any]) -> AsyncIterator[st
         # OpenAI ChatCompletionChunk: has a .choices list
         async for text in _yield_text_from_openai(_replay()):
             yield text
-    elif isinstance(head, TextDelta):
+    elif isinstance(head, (TextDelta, ReasoningDelta)):
         # Already-normalized StreamChunk iterator from LlmBackend.stream()
         async for item in _replay():
             if isinstance(item, TextDelta):

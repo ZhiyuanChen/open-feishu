@@ -165,6 +165,18 @@ class TextDelta:
 
 
 @dataclass(slots=True)
+class ReasoningDelta:
+    r"""
+    流式响应中的 reasoning / thinking 增量片段。
+
+    这用于兼容会在 OpenAI Chat Completions chunk 中返回
+    `delta.reasoning_content` 的模型。普通文本仍通过 [feishu.agent.llm.TextDelta][] 输出。
+    """
+
+    text: str
+
+
+@dataclass(slots=True)
 class ToolCallDelta:
     r"""
     流式响应中的一个工具调用增量片段。
@@ -202,7 +214,7 @@ class MessageStop:
     usage: dict[str, int] | None = None
 
 
-StreamChunk = Union[TextDelta, ToolCallDelta, MessageStop]
+StreamChunk = Union[TextDelta, ReasoningDelta, ToolCallDelta, MessageStop]
 
 
 @dataclass(slots=True)

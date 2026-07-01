@@ -22,10 +22,14 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
-from typing import Any, Protocol, runtime_checkable
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Protocol, TypeVar, runtime_checkable
 
 from .llm import Message
+
+T = TypeVar("T")
 
 
 @runtime_checkable
@@ -52,6 +56,10 @@ class SessionStore(Protocol):
 
     async def set(self, session_id: str, messages: list[Message]) -> None:
         r"""以给定的消息列表整体替换指定会话的历史。"""
+        ...
+
+    async def clear(self, session_id: str) -> None:
+        r"""清空指定会话的历史（彻底删除，而非隐藏）。"""
         ...
 
 
@@ -115,6 +123,11 @@ class InMemorySessionStore:
         async with self._lock:
             self._store[session_id] = list(messages)
 
+    async def clear(self, session_id: str) -> None:
+        r"""清空指定会话的历史（彻底删除该会话条目）。"""
+        async with self._lock:
+            self._store.pop(session_id, None)
+
 
 @dataclass
 class PendingApproval:
@@ -141,6 +154,42 @@ class PendingApproval:
     tool_call_id: str
     tool_name: str
     arguments: dict[str, Any]
+    # Optional integrity / idempotency / ownership metadata. All default so that
+    # a minimal PendingApproval(approval_id, session_id, tool_call_id, tool_name,
+    # arguments) keeps working; durable, tamper-checked stores populate the rest.
+    payload_sha256: str | None = None
+    idempotency_key: str | None = None
+    owner_user_keys: tuple[str, ...] = ()
+    tenant_key: str | None = None
+    chat_id: str | None = None
+    created_message_id: str | None = None
+    created_event_id: str | None = None
+    created_at: int | None = None
+    state: str = "awaiting_confirmation"
+    extra: dict[str, Any] = field(default_factory=dict)
+
+
+class ClaimResult(str, Enum):
+    r"""
+    一次审批认领（claim）的结果，是审批执行前的并发安全闸门。
+
+    [feishu.agent.approval.ApprovalEngine][] 在执行工具前先 `claim` 对应审批，依据返回值决定放行或拒绝：
+    仅 `CLAIMED` 允许继续执行，其余值各自对应一种不可执行的情形。由于继承自 `str`，枚举成员可直接与字符串
+    字面量比较。
+
+    Examples:
+        >>> ClaimResult.CLAIMED == "claimed"
+        True
+        >>> ClaimResult("tampered") is ClaimResult.TAMPERED
+        True
+    """
+
+    CLAIMED = "claimed"  # state flipped awaiting_confirmation -> executing; proceed
+    ALREADY_CLAIMED = "already_claimed"  # another confirm already claimed/executed it
+    SUPERSEDED = "superseded"  # a newer proposal for the same operation replaced it
+    TAMPERED = "tampered"  # expected_payload_sha256 != stored payload_sha256
+    EXPIRED = "expired"  # TTL elapsed before confirmation
+    MISSING = "missing"  # no such approval (unknown id or already resolved)
 
 
 @runtime_checkable
@@ -163,6 +212,27 @@ class PendingApprovalStore(Protocol):
 
     async def pop(self, approval_id: str) -> PendingApproval | None:
         r"""按 `approval_id` 取出并移除一次挂起的审批，不存在时返回 `None`。"""
+        ...
+
+    async def get(self, approval_id: str) -> PendingApproval | None:
+        r"""按 `approval_id` 读取挂起的审批而不移除，不存在时返回 `None`。"""
+        ...
+
+    async def claim(self, approval_id: str, *, expected_payload_sha256: str | None = None) -> ClaimResult:
+        r"""
+        原子地认领一次审批（`awaiting_confirmation` -> `executing`），返回 [feishu.agent.session.ClaimResult][]。
+
+        这是防重复执行与防篡改的并发闸门：提供 `expected_payload_sha256` 时须与存储的负载摘要一致，否则返回
+        `TAMPERED`；已被认领/执行返回 `ALREADY_CLAIMED`；不存在返回 `MISSING`。仅 `CLAIMED` 允许继续执行。
+        """
+        ...
+
+    async def complete(self, approval_id: str, *, outcome: str) -> None:
+        r"""标记一次审批的最终处置：成功/拒绝/取消即移除，结果未知则冻结以防重复执行。"""
+        ...
+
+    async def update(self, approval_id: str, mutator: Callable[[PendingApproval], tuple[T, PendingApproval]]) -> T:
+        r"""以 compare-and-swap 方式原子更新一次审批：`mutator(旧值)` 返回 `(返回值, 新值)`。"""
         ...
 
 
@@ -218,3 +288,109 @@ class InMemoryPendingApprovalStore:
         """
         async with self._lock:
             return self._store.pop(approval_id, None)
+
+    async def get(self, approval_id: str) -> PendingApproval | None:
+        r"""
+        按 `approval_id` 读取挂起的审批而不移除。
+
+        Args:
+            approval_id: 审批标识。
+
+        Returns:
+            对应的 [feishu.agent.session.PendingApproval][]；不存在时返回 `None`。
+        """
+        return self._store.get(approval_id)
+
+    async def claim(self, approval_id: str, *, expected_payload_sha256: str | None = None) -> ClaimResult:
+        r"""
+        原子地认领一次审批，返回 [feishu.agent.session.ClaimResult][]。
+
+        在锁内完成「存在性 + 篡改 + 状态」三项校验，并在通过时将状态翻转为 `executing`，从而保证同一审批不会
+        被并发确认重复执行。
+
+        Args:
+            approval_id: 审批标识。
+            expected_payload_sha256: 卡片回传携带的负载摘要；提供时须与存储值一致，否则返回 `TAMPERED`。
+
+        Returns:
+            认领结果；仅 `CLAIMED` 表示可继续执行。
+
+        Examples:
+            >>> import asyncio
+            >>> store = InMemoryPendingApprovalStore()
+            >>> approval = PendingApproval(
+            ...     approval_id="ap_1", session_id="oc_1", tool_call_id="c1",
+            ...     tool_name="deploy", arguments={"env": "prod"}, payload_sha256="abc",
+            ... )
+            >>> async def demo():
+            ...     await store.put(approval)
+            ...     bad = await store.claim("ap_1", expected_payload_sha256="zzz")
+            ...     ok = await store.claim("ap_1", expected_payload_sha256="abc")
+            ...     again = await store.claim("ap_1", expected_payload_sha256="abc")
+            ...     return bad.value, ok.value, again.value
+            >>> asyncio.run(demo())
+            ('tampered', 'claimed', 'already_claimed')
+        """
+        async with self._lock:
+            approval = self._store.get(approval_id)
+            if approval is None:
+                return ClaimResult.MISSING
+            # Fail closed on tampering: when EITHER side has a payload hash, both must match. A stored hash with a
+            # missing/None callback hash is a mismatch (so a callback that omits payload_sha256 can't skip the
+            # check); a callback hash with no stored hash is also a mismatch. Only when neither exists is there
+            # nothing to verify.
+            stored_sha = approval.payload_sha256 or ""
+            if (stored_sha or expected_payload_sha256 is not None) and expected_payload_sha256 != stored_sha:
+                return ClaimResult.TAMPERED
+            if approval.state != "awaiting_confirmation":
+                return ClaimResult.ALREADY_CLAIMED
+            approval.state = "executing"
+            return ClaimResult.CLAIMED
+
+    async def complete(self, approval_id: str, *, outcome: str) -> None:
+        r"""
+        标记一次审批的最终处置。
+
+        成功、拒绝或取消（`executed`/`replayed`/`rejected`/`cancelled`）即移除记录；`retry` 还原为
+        `awaiting_confirmation` 以便重试；执行结果未知（`unknown`/`frozen`）则冻结为 `execution_unknown`。
+
+        Args:
+            approval_id: 审批标识。
+            outcome: 最终处置标签。
+        """
+        async with self._lock:
+            if outcome == "retry":
+                approval = self._store.get(approval_id)
+                if approval is not None:
+                    approval.state = "awaiting_confirmation"
+                return
+            if outcome in ("unknown", "frozen"):
+                approval = self._store.get(approval_id)
+                if approval is not None:
+                    approval.state = "execution_unknown"
+                return
+            self._store.pop(approval_id, None)
+
+    async def update(self, approval_id: str, mutator: Callable[[PendingApproval], tuple[T, PendingApproval]]) -> T:
+        r"""
+        以 compare-and-swap 方式原子更新一次审批。
+
+        在锁内调用 `mutator(旧值)`，其须返回 `(返回值, 新值)`；新值写回存储，返回值回传调用方。
+
+        Args:
+            approval_id: 审批标识。
+            mutator: 接受旧审批、返回 `(返回值, 新审批)` 的纯函数。
+
+        Returns:
+            `mutator` 的返回值。
+
+        Raises:
+            KeyError: 审批不存在时抛出。
+        """
+        async with self._lock:
+            approval = self._store.get(approval_id)
+            if approval is None:
+                raise KeyError(approval_id)
+            value, updated = mutator(approval)
+            self._store[approval_id] = updated
+            return value
