@@ -29,6 +29,19 @@ project = "feishu"
 
 nav = mkdocs_gen_files.Nav()
 
+SHOW_UNDOCUMENTED_REFERENCES = {
+    "feishu.agent.llm",
+    "feishu.approval",
+    "feishu.cards.validation",
+    "feishu.consts",
+    "feishu.docx.documents",
+}
+
+PACKAGE_INDEX_SYMBOLS = {
+    "feishu": ("RetryPolicy",),
+    "feishu.approval": ("APPROVAL_API_UNSUPPORTED_WIDGET_TYPES",),
+}
+
 root = Path(__file__).parent.parent
 src = root / project
 
@@ -54,7 +67,8 @@ for path in sorted(src.rglob("*.py"), key=depth_and_name_key):
 
     parts = tuple(module_path.parts)
 
-    if parts[-1] == "__init__":
+    is_package_index = parts[-1] == "__init__"
+    if is_package_index:
         parts = parts[:-1]
         doc_path = doc_path.with_name("index.md")
         full_doc_path = full_doc_path.with_name("index.md")
@@ -66,12 +80,20 @@ for path in sorted(src.rglob("*.py"), key=depth_and_name_key):
         if readme_path.exists():
             with open(readme_path, encoding="utf8") as rd:
                 fd.write(rd.read())
+        ident = ".".join(parts)
         if len(parts) == 1:
             nav[parts] = doc_path.as_posix()
         else:
             nav[parts[1:]] = doc_path.as_posix()
-            ident = ".".join(parts)
-            fd.write(f"::: {ident}")
+        if is_package_index:
+            fd.write(f"\n::: {ident}\n    options:\n      members: []")
+            for symbol in PACKAGE_INDEX_SYMBOLS.get(ident, ()):
+                fd.write(f"\n\n::: {ident}.{symbol}")
+            mkdocs_gen_files.set_edit_path(full_doc_path, path.relative_to(root))
+            continue
+        fd.write(f"\n::: {ident}")
+        if ident in SHOW_UNDOCUMENTED_REFERENCES or len(parts) == 1:
+            fd.write("\n    options:\n      show_if_no_docstring: true")
 
         mkdocs_gen_files.set_edit_path(full_doc_path, path.relative_to(root))
 

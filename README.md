@@ -1,9 +1,3 @@
----
-authors:
-  - Zhiyuan Chen
-date: 2022-05-04
----
-
 # OpenFeishu
 
 OpenFeishu 是一个飞书开放平台的 Python SDK，提供了飞书开放平台的接口封装，方便开发者使用飞书开放平台的接口。
@@ -43,7 +37,7 @@ asyncio.run(main())
 | `client.approval.instances` | 审批：审批实例与任务 |
 | `client.drive.files` | 云空间：文件的上传、下载、复制与删除 |
 
-此外还有 `client.docx`（新版文档）、`client.sheets`（电子表格）、`client.wiki`（知识库）、`client.board`（画板）、`client.vc`（视频会议）、`client.task`（任务）、`client.oauth`（用户身份 OAuth）、`client.cards`（卡片构建器）等命名空间。
+此外还有 `client.docx`（新版文档）、`client.sheets`（电子表格）、`client.wiki`（知识库）、`client.board.whiteboards`（画板）、`client.vc`（视频会议）、`client.task`（任务）、`client.oauth`（用户身份 OAuth）、`client.cards`（卡片构建器）等命名空间。
 
 ```python
 async with FeishuClient("cli_xxx", "app_secret") as client:
@@ -94,6 +88,12 @@ asyncio.run(ws.start())
 
 ```shell
 pip install open-feishu
+```
+
+如果需要使用 `feishu-mcp` 命令，请安装 MCP 可选依赖：
+
+```shell
+pip install "open-feishu[mcp]"
 ```
 
 从源代码安装最新版本：
