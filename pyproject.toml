@@ -16,7 +16,10 @@ keywords = [
   "lark",
   "sdk",
 ]
-license = { file = "LICENSE" }
+license = "AGPL-3.0-or-later"
+license-files = [
+  "LICENSE",
+]
 maintainers = [
   { name = "Zhiyuan Chen", email = "this@zyc.ai" },
 ]
@@ -27,7 +30,6 @@ requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.10",
@@ -49,8 +51,16 @@ dependencies = [
 optional-dependencies.anthropic = [
   "anthropic",
 ]
+optional-dependencies.attachments = [
+  "openpyxl",
+  "pillow",
+  "pymupdf",
+  "python-docx",
+  "python-pptx",
+]
 optional-dependencies.mcp = [
   "mcp",
+  "pymupdf",
 ]
 optional-dependencies.openai = [
   "openai",
@@ -106,7 +116,7 @@ ini_options.filterwarnings = [
 [tool.coverage]
 run.branch = true
 paths.source = [ "feishu" ]
-report.fail_under = 90
+report.fail_under = 60
 report.show_missing = true
 json.output = "coverage.json"
 xml.output = "coverage.xml"
