@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from .builder import Card, ColumnSet
 from .callback import CardAction, parse_action
-from .elements import button, column_set, hr, img, md
+from .elements import button, column_set, divider, image, markdown
 from .factories import alert_card, table_card, text_card
 from .markdown import escape_markdown
 
@@ -34,9 +34,9 @@ __all__ = [
     "parse_action",
     "button",
     "column_set",
-    "hr",
-    "img",
-    "md",
+    "divider",
+    "image",
+    "markdown",
     "alert_card",
     "table_card",
     "text_card",

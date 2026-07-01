@@ -41,18 +41,18 @@ class CachedToken:
 
     Args:
         value: 访问凭证。
-        expire_at: 凭证的过期时刻，与 [feishu.auth.tokens.TokenManager][] 使用的时钟同源。
+        expires_at: 凭证的过期时刻，与 [feishu.auth.tokens.TokenManager][] 使用的时钟同源。
 
     Examples:
         >>> token = CachedToken("t-1", 5400.0)
         >>> token.value
         't-1'
-        >>> token.expire_at
+        >>> token.expires_at
         5400.0
     """
 
     value: str
-    expire_at: float
+    expires_at: float
 
 
 class TokenCache(Protocol):
@@ -229,16 +229,16 @@ class TokenManager:
         """
         key = self._credential.cache_key(token_type, self._transport.base_url)
         cached = await self._cache.get(key)
-        if cached is not None and cached.expire_at > self._now():
+        if cached is not None and cached.expires_at > self._now():
             return cached.value
         async with self._lock_for(key):
             cached = await self._cache.get(key)  # double-check after acquiring
-            if cached is not None and cached.expire_at > self._now():
+            if cached is not None and cached.expires_at > self._now():
                 return cached.value
             value, expire = await self._credential.fetch(self._transport, token_type)
             # Clamp the effective TTL: a short token (expire <= refresh_offset) would
-            # otherwise yield expire_at <= now and be re-fetched on the next read.
+            # otherwise yield expires_at <= now and be re-fetched on the next read.
             ttl = max(expire - self._refresh_offset, self._min_ttl)
-            expire_at = self._now() + ttl
-            await self._cache.set(key, CachedToken(value, expire_at))
+            expires_at = self._now() + ttl
+            await self._cache.set(key, CachedToken(value, expires_at))
             return value

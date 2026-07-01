@@ -40,9 +40,9 @@ from .errors import (
     error_from_envelope,
 )
 
-# HTTP 方法中可安全重试网络错误与 5xx 的幂等方法集合。重复发送这些请求不会产生额外副作用，
-# 因此对它们的 `httpx.RequestError` 与 5xx 失败进行重试是安全的；POST/PATCH 等非幂等方法
-# 不在其列，重复发送可能导致写入被提交多次（如重复创建资源）。
+# Idempotent HTTP methods whose network errors and 5xx responses can be safely retried. Repeating these
+# requests should not create extra side effects; non-idempotent POST/PATCH-style methods are excluded because
+# resending them may commit duplicate writes, such as creating the same resource twice.
 IDEMPOTENT_METHODS = frozenset({"GET", "HEAD", "PUT", "DELETE"})
 
 
@@ -89,7 +89,7 @@ class RetryPolicy:
         返回使用全部默认参数的重试策略。
 
         Returns:
-            默认配置的 [feishu._transport.RetryPolicy][] 实例。
+            默认配置的 [feishu.RetryPolicy][] 实例。
 
         Examples:
             >>> RetryPolicy.default().max_attempts
@@ -150,15 +150,16 @@ class Transport:
     r"""
     基于 httpx 的飞书 HTTP 传输层。
 
-    负责拼接 Open API 完整 URL、注入 Bearer 令牌、解析响应信封，并对 5xx 与 429
-    等可重试错误依据 [feishu._transport.RetryPolicy][] 自动退避重试。若 `client`
+    负责拼接 Open API 完整 URL、注入 Bearer 令牌、解析响应信封，并依据
+    [feishu.RetryPolicy][] 退避重试：429 / 限流码可重试所有方法，网络错误与 5xx
+    仅重试幂等方法。若 `client`
     由调用方传入，则其生命周期由调用方管理；否则由本传输层创建并在
     [feishu._transport.Transport.aclose][] 时关闭。
 
     Args:
         base_url: API 基础地址（不含 Open API 路径前缀）。
         timeout: 请求超时时间（秒）。
-        retry: 重试策略，缺省使用 [feishu._transport.RetryPolicy.default][]。
+        retry: 重试策略，缺省使用 [feishu.RetryPolicy.default][]。
         client: 自定义 `httpx.AsyncClient`；提供后其生命周期不归本传输层管理。
         logger: 自定义日志器，缺省使用名为 `feishu` 的日志器。
     """
@@ -189,6 +190,10 @@ class Transport:
             await self._client.aclose()
 
     def _url(self, path: str) -> str:
+        # Absolute URLs pass through unchanged: a few Feishu endpoints (e.g. approval file upload) live on a
+        # different host outside the /open-apis prefix. Relative paths get the standard Open API prefix.
+        if path.startswith(("http://", "https://")):
+            return path
         return f"{self.base_url}{API_PREFIX}/{path.lstrip('/')}"
 
     async def request(
@@ -207,8 +212,8 @@ class Transport:
 
         将 `path` 拼接到 Open API 前缀下组成完整 URL；若提供 `token` 则注入
         `Authorization: Bearer` 请求头；值为 `None` 的查询参数会被剔除。对返回
-        5xx 或 429 的可重试错误会按重试策略退避后重试，重试耗尽则抛出对应异常；
-        业务错误（如鉴权、权限、普通业务码）则立即抛出，不重试。
+        429 / 限流码会按重试策略退避后重试；网络错误与 5xx 仅对幂等方法重试。
+        重试耗尽则抛出对应异常；业务错误（如鉴权、权限、普通业务码）则立即抛出，不重试。
 
         Args:
             method: HTTP 方法。
@@ -357,7 +362,8 @@ class Transport:
         `Authorization: Bearer` 请求头。表单字段经 `data` 传入、文件经 `files` 传入，
         由 httpx 负责设置 multipart 边界，调用方不应自行指定 `Content-Type`。响应按
         标准 `{code, msg, data}` 信封判定成功，并复用与 request() 相同的错误分类逻辑：
-        对 5xx / 429 等可重试错误退避后重试，重试耗尽则抛出对应异常；业务错误立即抛出。
+        对 429 / 限流码退避后重试；网络错误与 5xx 仅对幂等方法重试。重试耗尽则抛出对应异常；
+        业务错误立即抛出。
 
         Args:
             path: 接口路径（相对于 Open API 前缀）。
@@ -416,7 +422,7 @@ class Transport:
     ) -> Any:
         r"""
         共享的请求-重试驱动：执行 `do_request` 发起一次请求，用 `classify` 将响应判定为成功值
-        或错误，并按 [feishu._transport.RetryPolicy][] 对可重试错误退避重试。
+        或错误，并按 [feishu.RetryPolicy][] 对可重试错误退避重试。
 
         `classify(resp)` 返回三元组 `(success_value, error, reset_after)`：成功时 `error` 为
         `None`、`success_value` 即该次调用的返回值；失败时 `error` 为待抛出/可重试的异常。

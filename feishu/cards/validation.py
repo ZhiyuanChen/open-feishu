@@ -98,7 +98,7 @@ def validate_template(template: str) -> str:
         ValueError: 当 `template` 不在已确认的枚举范围内时抛出。
 
     飞书文档:
-        [标题组件](https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/card-json-v2-components/containers/title)
+        [标题组件](https://open.feishu.cn/document/feishu-cards/card-json-v2-components/content-components/title)
 
     Examples:
         >>> validate_template("blue")

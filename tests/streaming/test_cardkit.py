@@ -91,7 +91,7 @@ class TestStreamCardLifecycle:
         send = fake.calls[1]
         assert send["params"]["receive_id_type"] == "open_id"
         assert send["json"]["receive_id"] == "ou_user"
-        assert send["json"]["msg_type"] == spec.SEND_MSG_TYPE
+        assert send["json"]["msg_type"] == spec.SEND_MESSAGE_TYPE
         content = _json.loads(send["json"]["content"])
         assert content == {"type": spec.SEND_CARD_CONTENT_TYPE, "data": {"card_id": "card_42"}}
 
@@ -145,7 +145,7 @@ class TestStreamCardReply:
         assert send["path"] == spec.reply_message_path("om_inbound")
         assert send["params"] is None
         assert "receive_id" not in send["json"]
-        assert send["json"]["msg_type"] == spec.SEND_MSG_TYPE
+        assert send["json"]["msg_type"] == spec.SEND_MESSAGE_TYPE
 
     async def test_receive_id_type_inferred_from_prefix(self, fake):
         # No receive_id_type given -> inferred from the oc_ prefix (parity with im.send).

@@ -49,7 +49,7 @@ def decrypt(encrypt_key: str, b64_ciphertext: str) -> bytes:
             或密钥错误导致去填充失败时抛出。
 
     飞书文档:
-        [订阅事件](https://open.feishu.cn/document/server-docs/event-subscription-guide/event-subscriptions/encrypt-key-encryption-configuration-case)
+        [订阅事件](https://open.feishu.cn/document/server-docs/event-subscription-guide/event-subscription-configure-/encrypt-key-encryption-configuration-case)
 
     Examples:
         >>> decrypt("test key", "P37w+VZImNgPEO1RBhJ6RtKl7n6zymIbEG1pReEzghk=")

@@ -46,7 +46,7 @@ def verify_signature(timestamp: str, nonce: str, encrypt_key: str, raw_body: byt
         签名匹配返回 `True`，否则返回 `False`。
 
     飞书文档:
-        [配置加密推送](https://open.feishu.cn/document/server-docs/event-subscription-guide/event-subscriptions/encrypt-key-encryption-configuration-case)
+        [配置加密推送](https://open.feishu.cn/document/server-docs/event-subscription-guide/event-subscription-configure-/encrypt-key-encryption-configuration-case)
 
     Examples:
         >>> import hashlib
@@ -80,7 +80,7 @@ class SignatureVerifier:
         ValueError: 当 `encrypt_key` 为空字符串时抛出。
 
     飞书文档:
-        [配置加密推送](https://open.feishu.cn/document/server-docs/event-subscription-guide/event-subscriptions/encrypt-key-encryption-configuration-case)
+        [配置加密推送](https://open.feishu.cn/document/server-docs/event-subscription-guide/event-subscription-configure-/encrypt-key-encryption-configuration-case)
 
     Examples:
         >>> import hashlib

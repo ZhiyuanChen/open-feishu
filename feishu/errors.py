@@ -21,6 +21,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 RATE_LIMIT_CODES = {99991400}
@@ -120,6 +121,59 @@ class FeishuPermissionError(FeishuAuthError):
         >>> isinstance(err, FeishuAuthError)
         True
     """
+
+
+def permission_subjects(error: Exception) -> tuple[str, ...]:
+    r"""
+    从飞书权限错误中提取缺失的权限主体。
+
+    飞书权限失败可能把 ``permission_violations`` 嵌在 ``message`` 或原始响应信封中。
+    本函数按发现顺序返回去重后的 ``subject`` 值。
+    """
+    subjects: list[str] = []
+    for value in (getattr(error, "message", None), getattr(error, "raw", None)):
+        _collect_permission_subjects(value, subjects)
+    return tuple(dict.fromkeys(subjects))
+
+
+def is_permission_error(error: Exception) -> bool:
+    r"""
+    判断异常是否表示飞书权限范围失败。
+
+    依次检查三种迹象：异常本身为 [feishu.errors.FeishuPermissionError][]；
+    [feishu.errors.permission_subjects][] 从中提取到缺失的权限主体；或其 `code`
+    属性命中 `PERMISSION_ERROR_CODES`。因此也能识别经鸭子类型携带上述字段的非飞书异常。
+
+    Args:
+        error: 待判定的异常；接受任意异常对象。
+
+    Returns:
+        表示飞书权限范围失败时返回 `True`：可通过异常类型、内嵌的 `permission_violations`
+            主体，或命中 `PERMISSION_ERROR_CODES` 的错误码任一方式匹配；否则返回 `False`。
+    """
+    if isinstance(error, FeishuPermissionError):
+        return True
+    if permission_subjects(error):
+        return True
+    code = getattr(error, "code", None)
+    return code in PERMISSION_ERROR_CODES
+
+
+def _collect_permission_subjects(value: Any, subjects: list[str]) -> None:
+    if isinstance(value, Mapping):
+        violations = value.get("permission_violations")
+        if isinstance(violations, list):
+            for violation in violations:
+                if isinstance(violation, Mapping):
+                    subject = violation.get("subject")
+                    if isinstance(subject, str) and subject:
+                        subjects.append(subject)
+        for item in value.values():
+            _collect_permission_subjects(item, subjects)
+        return
+    if isinstance(value, list | tuple):
+        for item in value:
+            _collect_permission_subjects(item, subjects)
 
 
 class FeishuApiError(FeishuError):

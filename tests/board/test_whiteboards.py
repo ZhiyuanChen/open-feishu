@@ -16,7 +16,7 @@ class TestGetTheme:
     @pytest.fixture
     async def board(self, client_factory, recorder):
         client = client_factory(recorder=recorder, responder=theme_responder)
-        yield client.board
+        yield client.board.whiteboards
         await client.aclose()
 
     async def test_get_theme(self, board, recorder):
@@ -31,7 +31,7 @@ class TestListNodes:
     @pytest.fixture
     async def board(self, client_factory, recorder):
         client = client_factory(recorder=recorder, responder=nodes_responder)
-        yield client.board
+        yield client.board.whiteboards
         await client.aclose()
 
     async def test_returns_nodes(self, board, recorder):
@@ -52,7 +52,7 @@ class TestListNodes:
 
     async def test_empty_when_nodes_absent(self, client_factory):
         client = client_factory(responder=lambda r: envelope({}))
-        assert await client.board.list_nodes("wb_abc") == []
+        assert await client.board.whiteboards.list_nodes("wb_abc") == []
         await client.aclose()
 
 
@@ -70,7 +70,7 @@ class TestDownloadAsImage:
             return httpx.Response(200, content=b"PNG_BYTES")
 
         client = make_client(handler=handler)
-        result = await client.board.download_as_image("wb_abc")
+        result = await client.board.whiteboards.download_as_image("wb_abc")
         assert seen["method"] == "GET"
         assert seen["path"].endswith("/board/v1/whiteboards/wb_abc/download_as_image")
         assert result == b"PNG_BYTES"

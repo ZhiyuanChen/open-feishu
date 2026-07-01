@@ -31,7 +31,7 @@ def _plain_text(content: str) -> dict[str, Any]:
     return {"tag": "plain_text", "content": content}
 
 
-def md(
+def markdown(
     content: str,
     *,
     text_align: str | None = None,
@@ -56,11 +56,11 @@ def md(
         [富文本组件](https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/card-json-v2-components/content-components/rich-text)
 
     Examples:
-        >>> md("hello")
+        >>> markdown("hello")
         {'tag': 'markdown', 'content': 'hello'}
-        >>> md("a*b", escape=True)["content"]
+        >>> markdown("a*b", escape=True)["content"]
         'a&#42;b'
-        >>> md("h", text_align="center", element_id="md")
+        >>> markdown("h", text_align="center", element_id="md")
         {'tag': 'markdown', 'content': 'h', 'text_align': 'center', 'element_id': 'md'}
     """
     if escape:
@@ -75,7 +75,7 @@ def md(
     return el
 
 
-def hr() -> dict[str, Any]:
+def divider() -> dict[str, Any]:
     r"""
     构造卡片 2.0 的分割线元素。
 
@@ -86,13 +86,13 @@ def hr() -> dict[str, Any]:
         [分割线组件](https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/card-json-v2-components/content-components/divider)
 
     Examples:
-        >>> hr()
+        >>> divider()
         {'tag': 'hr'}
     """
     return {"tag": "hr"}
 
 
-def img(img_key: str, alt: str, *, element_id: str | None = None, **opts: Any) -> dict[str, Any]:
+def image(img_key: str, alt: str, *, element_id: str | None = None, **opts: Any) -> dict[str, Any]:
     r"""
     构造卡片 2.0 的图片元素。
 
@@ -109,7 +109,7 @@ def img(img_key: str, alt: str, *, element_id: str | None = None, **opts: Any) -
         [图片组件](https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/card-json-v2-components/content-components/image)
 
     Examples:
-        >>> el = img("img_v2_abc", "a cat", scale_type="crop_center")
+        >>> el = image("img_v2_abc", "a cat", scale_type="crop_center")
         >>> el["tag"], el["img_key"], el["scale_type"]
         ('img', 'img_v2_abc', 'crop_center')
         >>> el["alt"]

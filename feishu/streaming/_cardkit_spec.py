@@ -24,13 +24,14 @@ from __future__ import annotations
 from .._url import quote_segment
 
 # --- CardKit v1 wire facts -------------------------------------------------
-# MEDIUM CONFIDENCE (see feishu-client-phase2-design.md "Verify-Before-Code").
-# Every value here is a single-point constant: confirm against a live self-built
-# app before freezing, then edit HERE only. Unit tests reference these symbols,
-# not hardcoded literals, so a correction does not break the test suite.
+# Keep every wire value as a single-point constant. Unit tests import these
+# symbols via ``spec`` rather than hardcoding the literals, so a future platform
+# correction stays local.
 
-# 1) Create card entity: POST /cardkit/v1/cards
-CREATE_CARD_PATH = "cardkit/v1/cards"
+# Base path for card entities, shared by creation and card_id-derived content/settings paths.
+CARDS_PATH = "cardkit/v1/cards"
+# 1) Create card entity: POST /cardkit/v1/cards. Keep a separate alias for intent.
+CREATE_CARD_PATH = CARDS_PATH
 CREATE_CARD_TYPE_FIELD = "type"
 CREATE_CARD_TYPE = "card_json"  # verified against the live CardKit API (smoke test), not "card"
 CREATE_CARD_DATA_FIELD = "data"  # body["data"] = json.dumps(card)
@@ -38,7 +39,7 @@ CREATE_CARD_DATA_FIELD = "data"  # body["data"] = json.dumps(card)
 # 2) Send interactive message: POST /im/v1/messages?receive_id_type=...
 #    or, in reply position: POST /im/v1/messages/{message_id}/reply (no receive_id).
 SEND_MESSAGE_PATH = "im/v1/messages"
-SEND_MSG_TYPE = "interactive"
+SEND_MESSAGE_TYPE = "interactive"
 SEND_CARD_CONTENT_TYPE = "card"  # inner content {"type": "card", "data": {"card_id": ...}}
 
 # 3) Stream cumulative text: PUT /cardkit/v1/cards/{card_id}/elements/{element_id}/content
@@ -50,16 +51,13 @@ UUID_FIELD = "uuid"
 SETTINGS_FIELD = "settings"
 STREAMING_MODE_KEY = "streaming_mode"
 
-# Per-card write cap documented by Feishu (10 ops/s/card).
-MAX_OPS_PER_SEC = 10
-
 
 def content_path(card_id: str, element_id: str) -> str:
-    return f"{CREATE_CARD_PATH}/{quote_segment(card_id)}/elements/{quote_segment(element_id)}/content"
+    return f"{CARDS_PATH}/{quote_segment(card_id)}/elements/{quote_segment(element_id)}/content"
 
 
 def settings_path(card_id: str) -> str:
-    return f"{CREATE_CARD_PATH}/{quote_segment(card_id)}/settings"
+    return f"{CARDS_PATH}/{quote_segment(card_id)}/settings"
 
 
 def reply_message_path(message_id: str) -> str:

@@ -48,7 +48,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-# Frame.method 取值：控制帧（心跳）与数据帧（事件/卡片）。
+# Frame.method values: control frames (heartbeat) and data frames (events/cards).
 FRAME_TYPE_CONTROL = 0
 FRAME_TYPE_DATA = 1
 

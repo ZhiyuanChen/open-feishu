@@ -39,15 +39,20 @@ from ..events.envelope import Event
 from ._frame import FRAME_TYPE_CONTROL, FRAME_TYPE_DATA, Frame, Header, decode_frame, encode_frame
 from .model import ClientConfig, client_config_from_dict
 
-# 握手端点位于站点根路径下，而非 Open API 前缀（/open-apis）之下。
+# The handshake endpoint lives at the site root, not under the Open API prefix (/open-apis).
 _ENDPOINT_PATH = "/callback/ws/endpoint"
 
-# 分片重组缓冲中同时在途（尚未集齐）的消息数上限：超出时丢弃最旧的未完成分片，
-# 避免上游漏发某个分片导致缓冲无界增长。
+# Card callbacks must encode their result (toast / updated card) in the ACK frame, so they run synchronously:
+# dispatch first, then ACK. Other events, especially `im.message.receive_v1`, ACK immediately and dispatch in
+# the background; otherwise slow handlers trigger Feishu's at-least-once redelivery and duplicate replies.
+_SYNC_ACK_EVENT_TYPES = frozenset({"card.action.trigger"})
+
+# Maximum number of incomplete messages held in the fragment reassembly buffer. Drop the oldest partial
+# message when exceeded so a missing upstream fragment cannot grow memory without bound.
 _MAX_PARTIAL_MESSAGES = 1024
 
-# 注入用的 websocket 连接器类型：给定 wss URL，返回一个异步上下文管理器，
-# 进入后得到一个具备 recv()/send() 协程的 websocket 对象。
+# Injectable websocket connector type: given a wss URL, return an async context manager whose value exposes
+# recv() and send() coroutines.
 Connect = Callable[[str], AbstractAsyncContextManager[Any]]
 
 
@@ -55,11 +60,11 @@ def _default_connect(url: str) -> AbstractAsyncContextManager[Any]:
     r"""默认 websocket 连接器：懒加载 `websockets`，缺失时给出明确的安装提示。"""
     try:
         import websockets
-    except ImportError as exc:  # pragma: no cover - 依赖缺失分支
+    except ImportError as exc:  # pragma: no cover - optional dependency missing branch
         raise ImportError(
             "WsClient 需要可选依赖 websockets；请执行 `pip install open-feishu[ws]` 后再使用长连接。"
         ) from exc
-    # max_size=None：事件载荷可能较大，关闭单帧大小上限以免握手后被动断开。
+    # max_size=None disables the single-frame size cap; event payloads can be large after the handshake.
     return websockets.connect(url, max_size=None)
 
 
@@ -93,7 +98,7 @@ class WsClient:
         ValueError: 当 `app_id` 或 `app_secret` 为空时抛出。
 
     飞书文档:
-        [长连接模式](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/events/long-connection-mode)
+        [事件概述](https://open.feishu.cn/document/server-docs/event-subscription-guide/overview)
 
     Examples:
         >>> from feishu.events.dispatcher import EventDispatcher
@@ -133,13 +138,13 @@ class WsClient:
         self._http_client = http_client
         self._connect: Connect = connect or _default_connect
 
-        # 握手后填充：service 帧字段取自 wss URL 的 service_id 查询参数。
+        # Populated after the handshake: service frame field comes from the wss URL's service_id query param.
         self._service_id = 0
         self._ping_interval = ClientConfig().ping_interval
-        # 分片重组缓冲：message_id -> {seq: chunk}。首版不做 TTL 淘汰；
-        # 若上游漏发某个分片，对应条目会一直驻留，后续可加超时清理。
+        # Fragment reassembly buffer: message_id -> {seq: chunk}. This first version has no TTL eviction;
+        # if the upstream misses a fragment, the entry stays until a later timeout cleanup is added.
         self._fragments: dict[str, dict[int, bytes]] = {}
-        # 运行控制。
+        # Runtime control.
         self._stopped = False
         self._websocket: Any = None
 
@@ -211,15 +216,14 @@ class WsClient:
     def _handle_control(self, frame: Frame) -> None:
         r"""处理控制帧（心跳回复）：若回复携带 ClientConfig 则刷新心跳间隔。"""
         if frame.payload:
-            # 心跳回复无有效 ClientConfig 时保持原间隔。
+            # Keep the existing interval when a heartbeat reply has no valid ClientConfig.
             with suppress(ValueError, KeyError):
                 self._ping_interval = client_config_from_dict(json.loads(frame.payload.decode("utf-8"))).ping_interval
 
-    async def _build_ack_for(self, frame: Frame, payload: bytes) -> Frame:
-        r"""解析完整载荷、交由分发器处理，并把分发结果编码进 ACK 帧返回。"""
-        event = Event.from_payload(json.loads(payload.decode("utf-8")))
-        result = await self._dispatcher.dispatch(event)
-        return _build_ack(frame, result)
+    async def _send_frame(self, websocket: Any, frame: Frame, send_lock: asyncio.Lock) -> None:
+        r"""在 `send_lock` 保护下回送一帧（ACK），保证并发任务间的发送不交错。"""
+        async with send_lock:
+            await websocket.send(encode_frame(frame))
 
     def _reassemble(self, frame: Frame) -> bytes | None:
         r"""
@@ -244,7 +248,7 @@ class WsClient:
         chunks = self._fragments.get(message_id)
         if chunks is None:
             if len(self._fragments) >= _MAX_PARTIAL_MESSAGES:
-                # 丢弃最旧的未完成分片（dict 按插入序），将无界增长收敛为有界。
+                # Drop the oldest unfinished message (dict insertion order) to keep growth bounded.
                 self._fragments.pop(next(iter(self._fragments)), None)
             chunks = self._fragments[message_id] = {}
         chunks[seq] = payload
@@ -287,32 +291,43 @@ class WsClient:
                     continue
                 if frame.method != FRAME_TYPE_DATA:
                     continue
-                # 分片重组在循环内同步完成（避免并发任务竞争分片缓冲）；只有完整消息的分发与
-                # ACK 回送会派生独立任务，确保慢处理函数不阻塞后续帧的接收。
+                # Reassemble fragments synchronously in this loop to avoid competing writes to the fragment
+                # buffer. Only complete-message dispatch and ACK sending run in separate tasks.
                 payload = self._reassemble(frame)
                 if payload is None:
                     continue
-                task = asyncio.ensure_future(self._send_ack(websocket, frame, payload, send_lock))
+                task = asyncio.ensure_future(self._handle_frame(websocket, frame, payload, send_lock))
                 pending.add(task)
                 task.add_done_callback(pending.discard)
         finally:
             ping_task.cancel()
-            # 连接关闭后等待在途分发任务收尾；其 ACK 可能因连接已关闭而发送失败，将被忽略。
+            # Wait for in-flight dispatch tasks after close; their ACKs may fail on the closed connection.
             if pending:
                 await asyncio.gather(*pending, return_exceptions=True)
             self._websocket = None
 
-    async def _send_ack(self, websocket: Any, frame: Frame, payload: bytes, send_lock: asyncio.Lock) -> None:
+    async def _handle_frame(self, websocket: Any, frame: Frame, payload: bytes, send_lock: asyncio.Lock) -> None:
         r"""
-        分发完整消息并在 `send_lock` 保护下回送 ACK（作为独立任务并发执行）。
+        处理一条完整入站消息：解析事件、回送 ACK、交由分发器处理（作为独立任务并发执行）。
+
+        卡片回调（[_SYNC_ACK_EVENT_TYPES][feishu.ws.client._SYNC_ACK_EVENT_TYPES]）须把处理结果
+        （toast / 更新后的卡片）编码进 ACK 帧，故「先分发、后 ACK」；其余事件（尤其是可能触发慢速
+        Agent 循环的 `im.message.receive_v1`）则「先即时 ACK、再后台分发」，避免慢处理函数迟迟不 ACK
+        被飞书按「至少一次」语义重投而重复处理同一条消息。
 
         作为脱离收发循环的独立任务运行，其异常不会冒泡到 `_serve`；因此在此捕获并记录
         （载荷解析失败、处理函数异常或连接已关闭导致的发送失败），避免在连接存活期间被静默吞掉。
         """
         try:
-            ack = await self._build_ack_for(frame, payload)
-            async with send_lock:
-                await websocket.send(encode_frame(ack))
+            event = Event.from_payload(json.loads(payload.decode("utf-8")))
+            if event.event_type in _SYNC_ACK_EVENT_TYPES:
+                # Card actions: the ACK carries the toast / updated card, so dispatch first.
+                result = await self._dispatcher.dispatch(event)
+                await self._send_frame(websocket, _build_ack(frame, result), send_lock)
+            else:
+                # ACK immediately so the broker can't redeliver while a slow handler runs, then dispatch.
+                await self._send_frame(websocket, _build_ack(frame, None), send_lock)
+                await self._dispatcher.dispatch(event)
         except Exception:  # noqa: BLE001 - a per-message task failure must be logged, not silently dropped
             self.logger.exception("ws ack/dispatch failed for frame seq_id=%s", frame.seq_id)
 

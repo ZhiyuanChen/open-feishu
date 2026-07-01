@@ -26,10 +26,9 @@ from typing import Any
 
 
 def _node_from(event: Any) -> Mapping[str, Any]:
-    """Resolve the action-bearing node from a dict / Event-like object.
+    """从字典或 Event-like 对象中解析承载卡片交互动作的节点。
 
-    Accepts: a full event payload (has top-level 'event'), a bare unwrapped
-    node, or an object exposing a mapping '.body'.
+    支持完整事件载荷（顶层含 `event`）、已解包的裸节点，或暴露映射型 `.body` 的对象。
     """
     if isinstance(event, Mapping):
         inner = event.get("event")
@@ -82,8 +81,8 @@ class CardAction:
     @property
     def value(self) -> dict[str, Any]:
         r"""按钮等组件回传的业务数据；缺失时返回空字典。"""
-        v = self._action.get("value")
-        return dict(v) if isinstance(v, Mapping) else {}
+        value = self._action.get("value")
+        return dict(value) if isinstance(value, Mapping) else {}
 
     @property
     def operator(self) -> dict[str, Any]:
@@ -115,7 +114,7 @@ class CardAction:
         更新卡片所需的凭证（有效期 30 分钟、最多更新 2 次），并非 Webhook 校验 token。
 
         飞书文档:
-            [延时更新卡片](https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/card-callback-communication/delay-update-card)
+            [卡片回传交互](https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/card-callback-communication)
         """
         return self._node.get("token")
 
@@ -142,8 +141,8 @@ class CardAction:
     @property
     def form_value(self) -> dict[str, Any]:
         r"""表单容器提交时回传的各字段取值；缺失时返回空字典。"""
-        fv = self._action.get("form_value")
-        return dict(fv) if isinstance(fv, Mapping) else {}
+        form_value = self._action.get("form_value")
+        return dict(form_value) if isinstance(form_value, Mapping) else {}
 
 
 def parse_action(event: Any) -> CardAction:
