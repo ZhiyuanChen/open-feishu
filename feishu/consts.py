@@ -69,9 +69,6 @@ def resolve_base_url(region: str | None, base_url: str | None) -> str:
 
 
 # Accounts hosts for the user-OAuth consent URL.
-# accounts.feishu.cn (domestic) is confirmed; the international host below is unverified
-# pending live confirmation — accounts.larksuite.com is a best guess and has NOT been
-# exercised against a live international (Lark) self-built app.
 FEISHU_ACCOUNTS_URL = "https://accounts.feishu.cn"
 LARK_ACCOUNTS_URL = "https://accounts.larksuite.com"
 REGION_ACCOUNTS_URLS = {"feishu": FEISHU_ACCOUNTS_URL, "lark": LARK_ACCOUNTS_URL}
@@ -100,7 +97,7 @@ def resolve_accounts_url(region: str | None, accounts_url: str | None = None) ->
         ValueError: 当未提供 `accounts_url` 且 `region` 不在内置区域列表中时抛出。
 
     飞书文档:
-        [获取登录预授权码](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/authen-v1/authorize/get)
+        [获取登录预授权码](https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/obtain-code)
 
     Examples:
         >>> resolve_accounts_url("feishu", None)
