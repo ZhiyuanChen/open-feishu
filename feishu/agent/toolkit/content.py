@@ -20,8 +20,16 @@
 # <https://multimolecule.danling.org/about/license-faq>.
 
 r"""
-内容工具工厂：创建文档（需审批）、向文档追加段落（需审批）、列出文档块、改写文档块（需审批）、删除文档（需审批）、
-追加表格行（需审批）、覆盖表格区域（需审批）、删除表格行（需审批）、读取表格区域。详见 [feishu.agent.toolkit][]。
+内容工具工厂：本模块有意汇聚两组「内容写入 / 读取」工具工厂——docx 文档工具与电子表格工具，二者共享同一套
+需审批写入语义，故并置于此。
+
+- docx 文档工具：`create_document`（需审批）、`append_to_document`（需审批）、`list_document_blocks`、
+  `update_document`（需审批）、`delete_document`（需审批）；辅助 `_block_text`。
+- 电子表格工具：`append_to_sheet`（需审批）、`update_sheet_range`（需审批）、`delete_sheet_rows`（需审批）、
+  `read_sheet_range`。
+
+（注意：读取「已有」文档正文的工具在 [feishu.agent.toolkit.documents][]，与此处的写入 / 结构工具区分。）
+详见 [feishu.agent.toolkit][]。
 """
 
 from __future__ import annotations
@@ -346,7 +354,7 @@ def append_to_sheet(
     r"""
     写类工厂：在电子表格指定区域之后追加行数据，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
-    处理函数调用 `client.sheets.append_rows(spreadsheet_token, range, values)`；`range` 形如
+    处理函数调用 `client.sheets.append_range(spreadsheet_token, range, values)`；`range` 形如
     `<sheetId>!<起始位置>:<结束位置>`，`values` 为二维数组（外层为行、内层为列）。飞书会在 `range`
     所在区域之后自动寻找空行并追加。`requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，
     用户批准后处理函数才执行写入。
@@ -387,7 +395,7 @@ def append_to_sheet(
         client = await resolve_client(as_user=as_user)
         if client is None:
             return needs_user_auth(auth_scopes)
-        result = await client.sheets.append_rows(
+        result = await client.sheets.append_range(
             arguments["spreadsheet_token"],
             arguments["range"],
             arguments["values"],

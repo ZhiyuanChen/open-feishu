@@ -45,6 +45,12 @@ class MeetingRoomNamespace(Namespace):
             fields: 返回字段，字符串或字符串序列；为空时使用接口默认字段。
             page_size: 每页数量。
             max_items: 最多返回数量。
+
+        Returns:
+            飞书原始建筑物对象列表，每项为一个建筑物数据字典。
+
+        Raises:
+            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
         """
         return await self._client.paginate_get(
             "meeting_room/building/list",
@@ -66,6 +72,12 @@ class MeetingRoomNamespace(Namespace):
         Args:
             building_ids: 建筑物 ID 列表。
             fields: 返回字段，字符串或字符串序列；为空时使用接口默认字段。
+
+        Returns:
+            飞书原始建筑物详情对象列表，每项为一个建筑物数据字典。
+
+        Raises:
+            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
         """
         data = await self._request_data(
             "GET",
@@ -121,6 +133,12 @@ class MeetingRoomNamespace(Namespace):
         Args:
             room_ids: 会议室 ID 列表。
             fields: 返回字段，字符串或字符串序列；为空时使用接口默认字段。
+
+        Returns:
+            飞书原始会议室详情对象列表，每项为一个会议室数据字典。
+
+        Raises:
+            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
         """
         params = {"room_ids": list(room_ids), "fields": _fields(fields)}
         data = await self._request_data("GET", "meeting_room/room/batch_get", params=params)
@@ -142,6 +160,12 @@ class MeetingRoomNamespace(Namespace):
             time_min: 查询开始时间，支持 ISO/RFC3339 字符串、Unix 秒等。
             time_max: 查询结束时间，支持 ISO/RFC3339 字符串、Unix 秒等。
             timezone: 当时间没有时区时使用的默认时区。
+
+        Returns:
+            忙闲查询结果数据，含 `freebusy`（每项含 `start_time`、`end_time`、`room_id`）。
+
+        Raises:
+            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
         """
         params = {
             "room_ids": list(room_ids),

@@ -269,7 +269,7 @@ class Agent:
     `max_iterations` 上限。需要审批的工具会先发送审批卡片并挂起本轮，待用户在卡片上批准或拒绝后由
     [feishu.agent.loop.Agent.handle_card_action][] 恢复。
 
-    经 [feishu.agent.dispatch.register_agent][] 注册到事件分发器后，即可自动处理消息与卡片回调事件。
+    经 [feishu.agent.registration.register_agent][] 注册到事件分发器后，即可自动处理消息与卡片回调事件。
 
     Args:
         backend: 大模型后端，须实现 [feishu.agent.llm.LlmBackend][]。
@@ -420,7 +420,7 @@ class Agent:
         r"""
         处理一条飞书消息事件：载入历史、追加用户消息并驱动主循环。
 
-        通常无需直接调用，而是经 [feishu.agent.dispatch.register_agent][] 注册为消息事件的处理函数。
+        通常无需直接调用，而是经 [feishu.agent.registration.register_agent][] 注册为消息事件的处理函数。
 
         Args:
             event: 飞书消息事件，须具备 `.body` 属性。
@@ -620,9 +620,13 @@ class Agent:
                 content=f"tool {call.name} failed with {type(exc).__name__}; see server logs for details",
                 is_error=True,
             )
-        content, is_error, tr = _coerce_tool_result(result)
+        content, is_error, tool_result = _coerce_tool_result(result)
         # Auth handoff: surface the authorize URL as an interactive card (button), not a raw link.
-        authorize_url = tr.authorize_url if tr is not None and tr.outcome == ToolOutcome.NEEDS_USER_AUTH else None
+        authorize_url = (
+            tool_result.authorize_url
+            if tool_result is not None and tool_result.outcome == ToolOutcome.NEEDS_USER_AUTH
+            else None
+        )
         if authorize_url and await self._try_send_auth_card(event, authorize_url):
             content = _AUTH_CARD_SENT_NOTE
         return ToolResultPart(tool_call_id=call.id, content=content, is_error=is_error)
@@ -856,7 +860,7 @@ class Agent:
         最小权限：审批在创建时绑定到发起人（`owner_user_keys`）；此处校验点击者即发起人，且后台以发起人身份执行，
         从而群聊中他人无法替发起人确认或令写操作以他人身份 / 句柄执行。
 
-        通常无需直接调用，而是经 [feishu.agent.dispatch.register_agent][] 注册为卡片回调事件的处理函数。
+        通常无需直接调用，而是经 [feishu.agent.registration.register_agent][] 注册为卡片回调事件的处理函数。
 
         Args:
             event: 飞书卡片回调事件，须具备 `.body` 属性。

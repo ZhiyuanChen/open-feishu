@@ -29,7 +29,7 @@ API_PREFIX = "/open-apis"
 DEFAULT_TIMEOUT = 30.0
 TOKEN_REFRESH_OFFSET = 1800
 # Floor for an effective token TTL after subtracting the refresh offset. A short-lived
-# token (expire <= refresh_offset) would otherwise cache with expire_at <= now and be
+# token (expire <= refresh_offset) would otherwise cache with expires_at <= now and be
 # re-fetched on the very next read (stampede); cache it briefly instead.
 MIN_TOKEN_TTL = 10
 MAX_PAGE_SIZE = 50

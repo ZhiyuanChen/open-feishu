@@ -112,6 +112,7 @@ class TokenRecord:
         return self.expires_at is not None and self.expires_at <= now
 
     def to_dict(self) -> dict[str, Any]:
+        r"""序列化为可 JSON 化字典（[feishu.auth.user_tokens.TokenRecord.from_dict][] 的逆操作）。"""
         data = {
             "user_access_token": self.user_access_token,
             "refresh_token": self.refresh_token,
@@ -124,6 +125,7 @@ class TokenRecord:
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> TokenRecord:
+        r"""从 [feishu.auth.user_tokens.TokenRecord.to_dict][] 产出的映射还原记录。"""
         return cls(
             user_access_token=str(data.get("user_access_token") or ""),
             refresh_token=data.get("refresh_token"),
@@ -170,7 +172,13 @@ class OAuthTokenStore(Protocol):
         user_info: Mapping[str, Any] | None = None,
         user_keys: tuple[str, ...] = (),
     ) -> tuple[str, ...]:
-        r"""保存一次凭证响应；用户身份取自 `user_info` 或显式 `user_keys`，返回写入的别名键。"""
+        r"""
+        保存一次凭证响应；用户身份取自 `user_info` 或显式 `user_keys`，返回写入的别名键。
+
+        Raises:
+            ValueError: 当 `user_info` 与 `user_keys` 均无法提供任何用户身份
+                （open_id/union_id/user_id）时抛出。
+        """
         ...
 
 
@@ -195,6 +203,7 @@ class InMemoryOAuthTokenStore:
         self._lock = asyncio.Lock()
 
     async def get(self, user: Mapping[str, Any]) -> TokenRecord | None:
+        r"""参见 [feishu.auth.user_tokens.OAuthTokenStore.get][]。"""
         keys = user_identity_keys(user)
         async with self._lock:
             for key in keys:
@@ -210,6 +219,7 @@ class InMemoryOAuthTokenStore:
         user_info: Mapping[str, Any] | None = None,
         user_keys: tuple[str, ...] = (),
     ) -> tuple[str, ...]:
+        r"""参见 [feishu.auth.user_tokens.OAuthTokenStore.save][]。"""
         keys = _keys_for_save(user_info, user_keys)
         record = TokenRecord.from_token_data(token_data, keys, now=_now())
         async with self._lock:
@@ -250,6 +260,7 @@ class SqliteOAuthTokenStore:
         self._lock = asyncio.Lock()
 
     async def get(self, user: Mapping[str, Any]) -> TokenRecord | None:
+        r"""参见 [feishu.auth.user_tokens.OAuthTokenStore.get][]。"""
         keys = user_identity_keys(user)
         async with self._lock:
             for key in keys:
@@ -265,6 +276,7 @@ class SqliteOAuthTokenStore:
         user_info: Mapping[str, Any] | None = None,
         user_keys: tuple[str, ...] = (),
     ) -> tuple[str, ...]:
+        r"""参见 [feishu.auth.user_tokens.OAuthTokenStore.save][]（无用户身份时抛出 `ValueError`）。"""
         keys = _keys_for_save(user_info, user_keys)
         record = TokenRecord.from_token_data(token_data, keys, now=_now())
         payload = json.dumps(record.to_dict(), ensure_ascii=False)

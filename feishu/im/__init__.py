@@ -25,7 +25,6 @@ from .chats import ChatsNamespace
 from .inbound import (
     card_text,
     card_title,
-    collect_card_text,
     interactive_card_text,
     is_mentioned,
     message_body_text,
@@ -47,7 +46,6 @@ __all__ = [
     "ReactionsNamespace",
     "card_text",
     "card_title",
-    "collect_card_text",
     "infer_msg_type",
     "infer_receive_id_type",
     "interactive_card_text",

@@ -164,7 +164,7 @@ class CommentsNamespace(Namespace):
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [删除评论](https://open.feishu.cn/document/task-v2/comment/delete)
+            [删除评论](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/task-v2/comment/delete)
 
         Examples:
             >>> await client.task.comments.delete("7654...")  # doctest:+SKIP

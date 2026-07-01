@@ -68,7 +68,7 @@ def _str_or_none(value: Any) -> str | None:
     return str(value) if value not in (None, "") else None
 
 
-def _coerce_int(value: Any) -> int | None:
+def _int_or_none(value: Any) -> int | None:
     if isinstance(value, bool):
         return None
     if isinstance(value, int):
@@ -128,6 +128,7 @@ class SharedFile:
         }
 
     def to_dict(self) -> dict[str, Any]:
+        r"""完整（含 `file_key` / `message_id`）序列化为可 JSON 化字典，用于持久化——非模型可见视图，勿与 `summary()` 混淆。"""
         return {
             "file_id": self.file_id,
             "user_keys": list(self.user_keys),
@@ -147,6 +148,7 @@ class SharedFile:
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> SharedFile:
+        r"""从 [feishu.agent.shared_files.SharedFile.to_dict][] 的产物还原 [feishu.agent.shared_files.SharedFile][]。"""
         return cls(
             file_id=str(data.get("file_id") or ""),
             user_keys=tuple(data.get("user_keys") or ()),
@@ -185,7 +187,7 @@ class SharedFile:
             kind=str(resource.get("kind") or resource.get("resource_type") or "file"),
             name=_str_or_none(resource.get("name")),
             media_type=_str_or_none(resource.get("mime_type")),
-            size=_coerce_int(resource.get("size")),
+            size=_int_or_none(resource.get("size")),
             source_chat_id=_str_or_none(message.get("chat_id")),
             created_at=now,
             expires_at=(now + ttl_seconds) if ttl_seconds else 0,

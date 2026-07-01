@@ -7,8 +7,8 @@ from feishu.approval import (
     approval_definition_summary,
     approval_field_key,
     approval_file_fields,
-    approval_form_payload,
     approval_form_problems,
+    approval_nonempty_form,
 )
 
 
@@ -57,10 +57,10 @@ def test_definition_summary_extracts_code_and_localized_name():
     assert approval_definition_code({"definitionCode": "XYZ"}) == "XYZ"
 
 
-def test_approval_form_payload_preserves_non_empty_shapes():
-    assert approval_form_payload({"amount": 10}).amount == 10
-    assert approval_form_payload([{"id": "amount", "value": 10}]) == [{"id": "amount", "value": 10}]
-    assert approval_form_payload({}) is None
+def test_approval_nonempty_form_preserves_non_empty_shapes():
+    assert approval_nonempty_form({"amount": 10}).amount == 10
+    assert approval_nonempty_form([{"id": "amount", "value": 10}]) == [{"id": "amount", "value": 10}]
+    assert approval_nonempty_form({}) is None
 
 
 def test_approval_file_fields_extracts_file_widget_keys():

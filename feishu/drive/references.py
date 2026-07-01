@@ -179,12 +179,23 @@ async def raw_document_content(client: Any, reference: DocumentReference, *, lan
     r"""
     读取受支持飞书文档引用的纯文本内容。
 
-    当前支持解析后的 `docx` 文档，并通过 [feishu.docx.documents.DocxNamespace.raw_content][] 读取。
+    当前支持解析后的 `docx` 文档，并通过 [feishu.docx.documents.DocxNamespace.get_raw_content][] 读取。
     函数会原样使用调用方传入的客户端；读取用户私有文档时应传入用户态客户端。
+
+    Args:
+        client: 飞书客户端；读取用户私有文档时应传入用户态客户端（如 `client.as_user(...)`）。
+        reference: 待读取的文档引用；会先经 [feishu.drive.references.resolve_document_reference][] 解析。
+        lang: 内容语言，`0` 默认语言、`1` 中文、`2` 英文；为空时使用接口默认值。
+
+    Returns:
+        文档的纯文本内容字符串。
+
+    Raises:
+        ValueError: 当解析后的文档类型不受支持时抛出。
     """
     resolved = await resolve_document_reference(client, reference)
     if resolved.doc_type == "docx":
-        return await client.docx.raw_content(resolved.token, lang=lang)
+        return await client.docx.get_raw_content(resolved.token, lang=lang)
     raise ValueError(f"raw content is not supported for document type {resolved.doc_type!r}")
 
 

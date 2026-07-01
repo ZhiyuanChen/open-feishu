@@ -47,7 +47,7 @@ class SheetsNamespace(Namespace):
         [电子表格概述](https://open.feishu.cn/document/server-docs/docs/sheets-v3/overview)
     """
 
-    async def append_rows(self, spreadsheet_token: str, range: str, values: list[list[Any]]) -> NestedDict:
+    async def append_range(self, spreadsheet_token: str, range: str, values: list[list[Any]]) -> NestedDict:
         r"""
         在指定区域之后追加行数据。
 
@@ -71,7 +71,7 @@ class SheetsNamespace(Namespace):
             [追加数据](https://open.feishu.cn/document/ukTMukTMukTM/uMjMzUjLzIzM14yMyMTN)
 
         Examples:
-            >>> await client.sheets.append_rows("shtcn_xxx", "Q7PlXT!A1:B2", [["e", "f"]])  # doctest:+SKIP
+            >>> await client.sheets.append_range("shtcn_xxx", "Q7PlXT!A1:B2", [["e", "f"]])  # doctest:+SKIP
             {'spreadsheetToken': 'shtcn_xxx', 'tableRange': 'Q7PlXT!A1:B3', 'updates': {'updatedRows': 1}}
         """
         body = {"valueRange": {"range": range, "values": values}}

@@ -19,7 +19,7 @@
 # For additional terms and clarifications, please refer to our License FAQ at:
 # <https://multimolecule.danling.org/about/license-faq>.
 
-r"""会议室工具工厂：搜索会议室、查询会议室忙闲、预订会议室（需审批）。详见 [feishu.agent.toolkit][]。"""
+r"""会议室工具工厂：列出会议室、查询会议室忙闲、预订会议室（需审批）。详见 [feishu.agent.toolkit][]。"""
 
 from __future__ import annotations
 
@@ -43,7 +43,17 @@ def list_meeting_room_buildings(
     r"""
     读类工厂：列出会议室所在的建筑 / 楼宇，返回一个 [feishu.agent.tools.Tool][]。
 
-    用于先发现 `building_id`，再用 [feishu.agent.toolkit.rooms.search_meeting_rooms][] 在该建筑内查会议室。
+    用于先发现 `building_id`，再用 [feishu.agent.toolkit.rooms.list_meeting_rooms][] 在该建筑内列会议室。
+
+    Args:
+        description: 工具描述（产品本地化文案）。
+        name: 工具名。默认为 `"list_meeting_room_buildings"`。
+        locale: 本地化标识。默认为 `"zh-CN"`。
+        as_user: 是否以请求用户身份读取。默认为 `True`（用户态读取，权限受该用户自身约束）。
+        auth_scopes: 缺少授权时申请的飞书权限范围。
+
+    Returns:
+        可注册到 [feishu.agent.tools.ToolRegistry][] 的 [feishu.agent.tools.Tool][]。
 
     Examples:
         >>> tool = list_meeting_room_buildings(description="列出建筑")
@@ -66,10 +76,10 @@ def list_meeting_room_buildings(
     return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
 
 
-def search_meeting_rooms(
+def list_meeting_rooms(
     *,
     description: str,
-    name: str = "search_meeting_rooms",
+    name: str = "list_meeting_rooms",
     locale: str = "zh-CN",
     # User scope (zero-trust): the meeting_room API accepts user_access_token (calendar:room:readonly,
     # user-granted), so read as the requesting user — bounded by their own permissions — not the tenant.
@@ -77,7 +87,7 @@ def search_meeting_rooms(
     auth_scopes: Sequence[str] = (),
 ) -> Tool:
     r"""
-    读类工厂：搜索会议室（按建筑过滤），返回一个 [feishu.agent.tools.Tool][]。
+    读类工厂：列出某建筑内的会议室，返回一个 [feishu.agent.tools.Tool][]。
 
     Reads the meeting-room directory for a building. When `building_id` is not supplied the model should first
     discover one (via list_meeting_room_buildings) — scanning every building and merging results is a
@@ -86,7 +96,7 @@ def search_meeting_rooms(
 
     Args:
         description: 工具描述（产品本地化文案）。
-        name: 工具名。默认为 `"search_meeting_rooms"`。
+        name: 工具名。默认为 `"list_meeting_rooms"`。
         locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`（用户态读取，权限受该用户自身约束）。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -95,9 +105,9 @@ def search_meeting_rooms(
         可注册到 [feishu.agent.tools.ToolRegistry][] 的 [feishu.agent.tools.Tool][]。
 
     Examples:
-        >>> tool = search_meeting_rooms(description="x")
+        >>> tool = list_meeting_rooms(description="x")
         >>> tool.name, tool.requires_approval
-        ('search_meeting_rooms', False)
+        ('list_meeting_rooms', False)
     """
     input_schema: dict[str, Any] = {
         "type": "object",

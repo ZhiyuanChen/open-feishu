@@ -68,6 +68,7 @@ def _require_identity(user: Mapping[str, Any]) -> ToolResult | None:
 
 
 def _requester_id(user: Mapping[str, Any]) -> tuple[str, str] | None:
+    r"""返回请求用户的 `(id_value, id_type)`——取 open_id / user_id 中先出现的一个；两者皆无时返回 `None`。"""
     for kind in ("open_id", "user_id"):
         value = user.get(kind)
         if value:

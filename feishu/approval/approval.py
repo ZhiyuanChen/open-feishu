@@ -37,7 +37,7 @@ class ApprovalNamespace(Namespace):
     r"""
     审批（Approval）接口命名空间。
 
-    通过 `client.approval` 访问，作为审批定义、实例、任务与评论四个子命名空间的入口：
+    通过 `client.approval` 访问，作为审批定义、实例、任务、评论与文件五个子命名空间的入口：
     [`ApprovalNamespace.definitions`][feishu.approval.approval.ApprovalNamespace.definitions]
     暴露审批定义（approval）的查询，
     [`ApprovalNamespace.instances`][feishu.approval.approval.ApprovalNamespace.instances]
@@ -45,7 +45,9 @@ class ApprovalNamespace(Namespace):
     [`ApprovalNamespace.tasks`][feishu.approval.approval.ApprovalNamespace.tasks]
     暴露审批任务（task）的同意、拒绝与转交，
     [`ApprovalNamespace.comments`][feishu.approval.approval.ApprovalNamespace.comments]
-    暴露审批评论（comment）的创建与列举。各子命名空间均在首次访问时惰性创建。
+    暴露审批评论（comment）的创建与列举，
+    [`ApprovalNamespace.files`][feishu.approval.approval.ApprovalNamespace.files]
+    暴露审批文件（file）的上传。各子命名空间均在首次访问时惰性创建。
     审批定义以 `approval_code` 标识，依据定义发起的实例以 `instance_id`（或 `instance_code`）
     标识，实例内含若干待办任务与评论。
 

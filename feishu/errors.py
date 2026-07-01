@@ -139,6 +139,17 @@ def permission_subjects(error: Exception) -> tuple[str, ...]:
 def is_permission_error(error: Exception) -> bool:
     r"""
     判断异常是否表示飞书权限范围失败。
+
+    依次检查三种迹象：异常本身为 [feishu.errors.FeishuPermissionError][]；
+    [feishu.errors.permission_subjects][] 从中提取到缺失的权限主体；或其 `code`
+    属性命中 `PERMISSION_ERROR_CODES`。因此也能识别经鸭子类型携带上述字段的非飞书异常。
+
+    Args:
+        error: 待判定的异常；接受任意异常对象。
+
+    Returns:
+        表示飞书权限范围失败时返回 `True`：可通过异常类型、内嵌的 `permission_violations`
+            主体，或命中 `PERMISSION_ERROR_CODES` 的错误码任一方式匹配；否则返回 `False`。
     """
     if isinstance(error, FeishuPermissionError):
         return True

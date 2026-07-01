@@ -56,14 +56,14 @@ class ClientConfig:
     ping_interval: float = 120.0
 
 
-def client_config_from_dict(d: dict[str, Any]) -> ClientConfig:
+def client_config_from_dict(data: dict[str, Any]) -> ClientConfig:
     r"""
     将握手响应中的 `ClientConfig`（PascalCase 键）映射为 [ClientConfig][feishu.ws.model.ClientConfig]。
 
     仅当对应键存在且值不为 `None` 时才覆盖默认值，因此服务端可只下发部分字段。
 
     Args:
-        d: 握手响应 `data.ClientConfig` 字典，可能为空。
+        data: 握手响应 `data.ClientConfig` 字典，可能为空。
 
     Returns:
         映射后的客户端配置。
@@ -78,12 +78,12 @@ def client_config_from_dict(d: dict[str, Any]) -> ClientConfig:
         120.0
     """
     cfg = ClientConfig()
-    if d.get("ReconnectCount") is not None:
-        cfg.reconnect_count = int(d["ReconnectCount"])
-    if d.get("ReconnectInterval") is not None:
-        cfg.reconnect_interval = float(d["ReconnectInterval"])
-    if d.get("ReconnectNonce") is not None:
-        cfg.reconnect_nonce = float(d["ReconnectNonce"])
-    if d.get("PingInterval") is not None:
-        cfg.ping_interval = float(d["PingInterval"])
+    if data.get("ReconnectCount") is not None:
+        cfg.reconnect_count = int(data["ReconnectCount"])
+    if data.get("ReconnectInterval") is not None:
+        cfg.reconnect_interval = float(data["ReconnectInterval"])
+    if data.get("ReconnectNonce") is not None:
+        cfg.reconnect_nonce = float(data["ReconnectNonce"])
+    if data.get("PingInterval") is not None:
+        cfg.ping_interval = float(data["PingInterval"])
     return cfg

@@ -262,7 +262,8 @@ class ToolRegistry:
             [ToolSpec(name='ping', description='心跳', input_schema={'type': 'object'})]
         """
         return [
-            ToolSpec(name=t.name, description=t.description, input_schema=t.input_schema) for t in self._tools.values()
+            ToolSpec(name=tool.name, description=tool.description, input_schema=tool.input_schema)
+            for tool in self._tools.values()
         ]
 
     def get(self, name: str) -> Tool:

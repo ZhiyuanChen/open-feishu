@@ -97,16 +97,16 @@ async def _translate_chunks(chunks: AsyncIterator[Any]) -> AsyncIterator[StreamC
     stop_reason = StopReason.OTHER
     usage: dict[str, int] | None = None
     async for chunk in chunks:
-        u = getattr(chunk, "usage", None)
-        if u is not None:
+        usage_obj = getattr(chunk, "usage", None)
+        if usage_obj is not None:
             usage = {
-                k: getattr(u, k)
+                k: getattr(usage_obj, k)
                 for k in ("prompt_tokens", "completion_tokens", "total_tokens")
-                if getattr(u, k, None) is not None
+                if getattr(usage_obj, k, None) is not None
             }
             # Prompt-cache hit count (OpenAI/qwen put it under prompt_tokens_details.cached_tokens) — lets the
             # caller track cache hit-rate, which dominates cost for long sessions.
-            details = getattr(u, "prompt_tokens_details", None)
+            details = getattr(usage_obj, "prompt_tokens_details", None)
             cached = getattr(details, "cached_tokens", None) if details is not None else None
             if cached is not None:
                 usage["cached_tokens"] = cached
@@ -121,13 +121,13 @@ async def _translate_chunks(chunks: AsyncIterator[Any]) -> AsyncIterator[StreamC
                 yield ReasoningDelta(text=reasoning)
             if getattr(delta, "content", None):
                 yield TextDelta(text=delta.content)
-            for tc in getattr(delta, "tool_calls", None) or []:
-                func = getattr(tc, "function", None)
+            for tool_call in getattr(delta, "tool_calls", None) or []:
+                function = getattr(tool_call, "function", None)
                 yield ToolCallDelta(
-                    index=tc.index,
-                    id=getattr(tc, "id", None),
-                    name=getattr(func, "name", None) if func else None,
-                    arguments=(getattr(func, "arguments", None) or "") if func else "",
+                    index=tool_call.index,
+                    id=getattr(tool_call, "id", None),
+                    name=getattr(function, "name", None) if function else None,
+                    arguments=(getattr(function, "arguments", None) or "") if function else "",
                 )
         if getattr(choice, "finish_reason", None) is not None:
             # Record the stop reason but keep consuming: with stream_options include_usage, OpenAI sends a
@@ -183,7 +183,7 @@ class OpenAIBackend:
         Returns:
             逐个产出归一化 [feishu.agent.llm.StreamChunk][] 的异步迭代器。
 
-        飞书文档:
+        参考文档:
             [OpenAI Chat Completions API](https://platform.openai.com/docs/api-reference/chat)
 
         Examples:

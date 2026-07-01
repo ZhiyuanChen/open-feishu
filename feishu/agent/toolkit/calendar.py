@@ -51,7 +51,6 @@ def list_calendar_events(
     *,
     description: str,
     name: str = "list_calendar_events",
-    locale: str = "zh-CN",
     timezone: str = "Asia/Shanghai",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -65,7 +64,6 @@ def list_calendar_events(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"list_calendar_events"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         timezone: ISO 时间换算所用时区。默认为 `"Asia/Shanghai"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -107,7 +105,6 @@ def create_calendar_event(
     *,
     description: str,
     name: str = "create_calendar_event",
-    locale: str = "zh-CN",
     timezone: str = "Asia/Shanghai",
     requires_approval: bool = True,
     as_user: bool = True,
@@ -119,6 +116,17 @@ def create_calendar_event(
     处理函数解析日历（缺省取主日历），用 [feishu.calendar.calendar_event][] 构造事件体，再调用
     `client.calendar.events.create(calendar_id, event)`。`requires_approval=True` 时由
     [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后才执行。
+
+    Args:
+        description: 工具描述（产品本地化文案）。
+        name: 工具名。默认为 `"create_calendar_event"`。
+        timezone: ISO 时间换算所用时区。默认为 `"Asia/Shanghai"`。
+        requires_approval: 是否需用户审批后执行。默认为 `True`。
+        as_user: 是否以请求用户身份写入。默认为 `True`。
+        auth_scopes: 缺少授权时申请的飞书权限范围。
+
+    Returns:
+        可注册到 [feishu.agent.tools.ToolRegistry][] 的需审批 [feishu.agent.tools.Tool][]。
 
     Examples:
         >>> tool = create_calendar_event(description="创建日程")
@@ -169,7 +177,6 @@ def query_calendar_freebusy(
     *,
     description: str,
     name: str = "query_calendar_freebusy",
-    locale: str = "zh-CN",
     timezone: str = "Asia/Shanghai",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -184,7 +191,6 @@ def query_calendar_freebusy(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"query_calendar_freebusy"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         timezone: 时间转换所用时区。默认为 `"Asia/Shanghai"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -230,7 +236,6 @@ def update_calendar_event(
     *,
     description: str,
     name: str = "update_calendar_event",
-    locale: str = "zh-CN",
     timezone: str = "Asia/Shanghai",
     requires_approval: bool = True,
     as_user: bool = True,
@@ -248,7 +253,6 @@ def update_calendar_event(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"update_calendar_event"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         timezone: ISO 时间换算所用时区。默认为 `"Asia/Shanghai"`。
         requires_approval: 是否需用户审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
@@ -308,7 +312,6 @@ def cancel_calendar_event(
     *,
     description: str,
     name: str = "cancel_calendar_event",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -322,7 +325,6 @@ def cancel_calendar_event(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"cancel_calendar_event"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需用户审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -364,7 +366,6 @@ def respond_to_invite(
     *,
     description: str,
     name: str = "respond_to_invite",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -375,6 +376,16 @@ def respond_to_invite(
     处理函数解析日历（缺省取主日历），调用 `client.calendar.events.reply(calendar_id, event_id, rsvp_status=...)`。
     `requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后才执行；回复的始终是请求
     用户本人的日历邀请（按用户身份与主日历解析）。
+
+    Args:
+        description: 工具描述（产品本地化文案）。
+        name: 工具名。默认为 `"respond_to_invite"`。
+        requires_approval: 是否需用户审批后执行。默认为 `True`。
+        as_user: 是否以请求用户身份写入。默认为 `True`。
+        auth_scopes: 缺少授权时申请的飞书权限范围。
+
+    Returns:
+        可注册到 [feishu.agent.tools.ToolRegistry][] 的需审批 [feishu.agent.tools.Tool][]。
 
     Examples:
         >>> tool = respond_to_invite(description="回复日程邀请")

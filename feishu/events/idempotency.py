@@ -43,7 +43,12 @@ class SeenStore(Protocol):
     通过 [InMemorySeenStore][feishu.events.idempotency.InMemorySeenStore] 即得到一个内置实现，
     生产环境可改用基于 Redis 等共享存储的实现。
 
-    本协议使用 `runtime_checkable`，可用 `isinstance` 进行结构化校验。
+    本协议使用 `runtime_checkable`，可用 `isinstance` 进行结构化校验；结构化校验仅要求实现
+    `seen` / `mark` 两个基础方法。
+
+    实现可以额外提供原子的 `claim`（见下）作为快路径。当存储支持时，
+    [claim][feishu.events.idempotency.claim] 会优先调用它，从而在并发重复投递下原子地完成
+    「检查并标记」；未提供时则回退到 `seen()` + `mark()` 两步。
 
     飞书文档:
         [接收事件](https://open.feishu.cn/document/server-docs/event-subscription-guide/event-subscription-configure-/request-url-configuration-case)
@@ -58,6 +63,21 @@ class SeenStore(Protocol):
     async def mark(self, event_id: str) -> None:
         r"""
         将 `event_id` 标记为已处理。
+        """
+        ...
+
+    async def claim(self, event_id: str) -> bool:
+        r"""
+        原子地认领 `event_id`：首次认领返回 `True`（应处理），重复返回 `False`（应跳过）。
+
+        可选的快路径方法：实现它即可让 [claim][feishu.events.idempotency.claim] 在并发重复投递下
+        原子地完成「检查并标记」。仅实现 `seen` / `mark` 的存储无需提供本方法，届时将回退到两步语义。
+
+        Args:
+            event_id: 待认领的事件标识。
+
+        Returns:
+            首次认领返回 `True`，重复返回 `False`。
         """
         ...
 
@@ -89,7 +109,7 @@ class InMemorySeenStore:
         self._store: dict[str, float] = {}
         self._lock = asyncio.Lock()
 
-    async def add(self, event_id: str) -> bool:
+    async def claim(self, event_id: str) -> bool:
         r"""
         原子地认领 `event_id`：此前未标记（或已过期）则标记并返回 `True`，否则返回 `False`。
 
@@ -163,7 +183,7 @@ class FileSeenStore:
         self._now = now
         self._lock = asyncio.Lock()
 
-    async def add(self, event_id: str) -> bool:
+    async def claim(self, event_id: str) -> bool:
         r"""
         原子地认领 `event_id`：此前未标记（或已过期）则标记并返回 `True`，否则返回 `False`。
         """
@@ -231,7 +251,7 @@ async def claim(store: SeenStore, event_id: str) -> bool:
     r"""
     向 `store` 认领 `event_id`，返回是否为首次见到（应处理）。
 
-    若 `store` 提供原子的 `add(event_id) -> bool`（如
+    若 `store` 提供原子的 `claim(event_id) -> bool`（如
     [InMemorySeenStore][feishu.events.idempotency.InMemorySeenStore]）则优先使用，从而在并发重复投递下
     也能保证「检查并标记」原子完成；否则回退到 `seen()` + `mark()` 两步（语义不变，其原子性由具体存储自行保证）。
 
@@ -242,9 +262,9 @@ async def claim(store: SeenStore, event_id: str) -> bool:
     Returns:
         首次见到返回 `True`（应处理该事件），重复返回 `False`（应跳过）。
     """
-    add = getattr(store, "add", None)
-    if callable(add):
-        return bool(await add(event_id))
+    store_claim = getattr(store, "claim", None)
+    if callable(store_claim):
+        return bool(await store_claim(event_id))
     if await store.seen(event_id):
         return False
     await store.mark(event_id)

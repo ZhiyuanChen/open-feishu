@@ -74,8 +74,8 @@ from .documents import get_document_content, get_meeting_record, get_message_thr
 from .rooms import (
     book_meeting_room,
     list_meeting_room_buildings,
+    list_meeting_rooms,
     query_meeting_room_freebusy,
-    search_meeting_rooms,
 )
 from .shared_files import describe_shared_file, list_shared_files, upload_shared_file_to_drive
 from .tasks import (
@@ -101,7 +101,7 @@ __all__ = [
     "respond_to_invite",
     # meeting rooms
     "list_meeting_room_buildings",
-    "search_meeting_rooms",
+    "list_meeting_rooms",
     "query_meeting_room_freebusy",
     "book_meeting_room",
     # documents (reads; the agent summarizes)

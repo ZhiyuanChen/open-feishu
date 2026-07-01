@@ -244,7 +244,7 @@ class Card:
         element_id: str | None = None,
     ) -> Card:
         r"""
-        追加一个 markdown 元素（委托给 [feishu.cards.elements.md][]），并返回自身。
+        追加一个 markdown 元素（委托给 [feishu.cards.elements.markdown][]），并返回自身。
 
         Args:
             content: markdown 文本内容。
@@ -261,7 +261,7 @@ class Card:
             {'tag': 'markdown', 'content': '**bold**', 'text_align': 'center'}
         """
         self._elements.append(
-            elements.md(
+            elements.markdown(
                 content,
                 text_align=text_align,
                 text_size=text_size,
@@ -289,7 +289,7 @@ class Card:
 
     def divider(self) -> Card:
         r"""
-        追加一条分割线元素（委托给 [feishu.cards.elements.hr][]），并返回自身。
+        追加一条分割线元素（委托给 [feishu.cards.elements.divider][]），并返回自身。
 
         Returns:
             当前 [feishu.cards.builder.Card][] 实例。
@@ -298,12 +298,12 @@ class Card:
             >>> Card().divider().to_dict()["body"]["elements"][0]
             {'tag': 'hr'}
         """
-        self._elements.append(elements.hr())
+        self._elements.append(elements.divider())
         return self
 
     def image(self, img_key: str, alt: str, **opts: Any) -> Card:
         r"""
-        追加一个图片元素（委托给 [feishu.cards.elements.img][]），并返回自身。
+        追加一个图片元素（委托给 [feishu.cards.elements.image][]），并返回自身。
 
         Args:
             img_key: 图片的 key，通过上传图片接口获取。
@@ -317,7 +317,7 @@ class Card:
             >>> Card().image("img_1", "alt").to_dict()["body"]["elements"][0]["tag"]
             'img'
         """
-        self._elements.append(elements.img(img_key, alt, **opts))
+        self._elements.append(elements.image(img_key, alt, **opts))
         return self
 
     def button(

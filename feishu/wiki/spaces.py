@@ -127,7 +127,8 @@ class WikiNamespace(Namespace):
             space_id: 知识空间 ID。
 
         Returns:
-            知识空间数据，包含 `space_id`、`name`、`description`、`space_type` 等字段。
+            包含 `space` 字段的数据，`space` 内含 `space_id`、`name`、`description`、`space_type`
+            等字段。
 
         Raises:
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。

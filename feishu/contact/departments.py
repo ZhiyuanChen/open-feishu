@@ -143,14 +143,14 @@ class DepartmentsNamespace(Namespace):
             ['od-a', 'od-mid', 'od-root', 'od-b']
         """
         result: builtins.list[str] = []
-        for did in department_ids:
-            result.append(did)
-            result.extend(await self.parent_ids(did, department_id_type=department_id_type))
+        for department_id in department_ids:
+            result.append(department_id)
+            result.extend(await self.parent_ids(department_id, department_id_type=department_id_type))
         seen, unique = set(), []
-        for d in result:
-            if d not in seen:
-                seen.add(d)
-                unique.append(d)
+        for expanded_id in result:
+            if expanded_id not in seen:
+                seen.add(expanded_id)
+                unique.append(expanded_id)
         return unique
 
     async def get(self, department_id: str, *, department_id_type: str = "open_department_id") -> NestedDict:

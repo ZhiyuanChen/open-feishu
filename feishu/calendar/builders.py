@@ -174,7 +174,25 @@ def freebusy_body(
     room_id: str | None = None,
     timezone: str = DEFAULT_TIMEZONE,
 ) -> NestedDict:
-    r"""构造飞书忙闲查询请求体，供 [feishu.calendar.freebusy.FreebusyNamespace.query][] 使用。"""
+    r"""
+    构造飞书忙闲查询请求体，供 [feishu.calendar.freebusy.FreebusyNamespace.query][] 使用。
+
+    `time_min` 与 `time_max` 会经 [rfc3339][feishu.calendar.builders.rfc3339] 转换为 RFC3339 字符串。
+    仅当对应可选参数为真值时才并入载荷；`user_id` 与 `room_id` 至少需提供其一。
+
+    Args:
+        time_min: 查询区间的起始时间，取值同 [rfc3339][feishu.calendar.builders.rfc3339]。
+        time_max: 查询区间的结束时间，取值同 [rfc3339][feishu.calendar.builders.rfc3339]。
+        user_id: 待查询忙闲的用户 ID；为空时省略该字段。
+        room_id: 待查询忙闲的会议室 ID；为空时省略该字段。
+        timezone: 用于解析无时区信息取值的时区，默认为 `Asia/Shanghai`。
+
+    Returns:
+        忙闲查询请求体 [chanfig.NestedDict][]，含 `time_min`、`time_max` 及按需并入的 `user_id`/`room_id`。
+
+    Raises:
+        ValueError: `user_id` 与 `room_id` 均未提供时抛出。
+    """
     body = NestedDict(time_min=rfc3339(time_min, timezone=timezone), time_max=rfc3339(time_max, timezone=timezone))
     if user_id:
         body.user_id = user_id
@@ -186,7 +204,24 @@ def freebusy_body(
 
 
 def unix_seconds(value: Any, *, timezone: str = DEFAULT_TIMEZONE) -> int:
-    r"""将常见时间取值转换为 Unix 秒级时间戳。"""
+    r"""
+    将常见时间取值转换为 Unix 秒级时间戳。
+
+    支持传入 [datetime.datetime][]、[datetime.date][]、`int`/`float` 时间戳、数字/日期/日期时间字符串，
+    或含 `timestamp`/`date`/`date_time` 键的映射。无时区信息的取值按 `timezone` 解释。
+
+    Args:
+        value: 待转换的时间取值，可为 [datetime.datetime][]、[datetime.date][]、`int`/`float`、
+            字符串，或含 `timestamp`/`date`/`date_time` 键的映射。
+        timezone: 用于解析无时区信息取值的时区，默认为 `Asia/Shanghai`。
+
+    Returns:
+        对应的 Unix 秒级时间戳。
+
+    Raises:
+        ValueError: 传入空字符串时抛出。
+        TypeError: 传入不受支持的取值类型时抛出。
+    """
     if isinstance(value, datetime):
         return int(_aware_datetime(value, timezone).timestamp())
     if isinstance(value, date):
@@ -212,7 +247,23 @@ def unix_seconds(value: Any, *, timezone: str = DEFAULT_TIMEZONE) -> int:
 
 
 def rfc3339(value: Any, *, timezone: str = DEFAULT_TIMEZONE) -> str:
-    r"""将常见时间取值转换为 RFC3339 日期时间字符串。"""
+    r"""
+    将常见时间取值转换为 RFC3339 日期时间字符串。
+
+    非纯数字、非纯日期的字符串按日期时间字符串解析；其余取值经
+    [unix_seconds][feishu.calendar.builders.unix_seconds] 转换为时间戳后再格式化。
+
+    Args:
+        value: 待转换的时间取值，取值同 [unix_seconds][feishu.calendar.builders.unix_seconds]。
+        timezone: 用于解析无时区信息取值的时区，默认为 `Asia/Shanghai`。
+
+    Returns:
+        RFC3339 日期时间字符串（含时区偏移），如 `2024-01-01T09:00:00+08:00`。
+
+    Raises:
+        ValueError: 传入空字符串时抛出（由 [unix_seconds][feishu.calendar.builders.unix_seconds] 传播）。
+        TypeError: 传入不受支持的取值类型时抛出（由 [unix_seconds][feishu.calendar.builders.unix_seconds] 传播）。
+    """
     if isinstance(value, str) and not value.strip().isdigit() and not _is_iso_date(value.strip()):
         return _parse_datetime(value.strip(), timezone).isoformat()
     dt = datetime.fromtimestamp(unix_seconds(value, timezone=timezone), tz=ZoneInfo(timezone))

@@ -30,7 +30,6 @@ from .approval import (
     ExecutionResultStore,
 )
 from .context import ToolContext, current_tool_context, use_tool_context
-from .dispatch import register_agent
 from .integrity import (
     derive_approval_id,
     derive_idempotency_key,
@@ -68,6 +67,7 @@ from .persistence import (
     SqlitePendingApprovalStore,
     SqliteSessionStore,
 )
+from .registration import register_agent
 from .result import ToolOutcome, ToolResult
 from .session import (
     ClaimResult,
@@ -117,6 +117,7 @@ from .toolkit import (
     list_calendar_events,
     list_document_blocks,
     list_meeting_room_buildings,
+    list_meeting_rooms,
     list_my_payment_accounts,
     list_my_pending_approvals,
     list_my_tasks,
@@ -130,7 +131,6 @@ from .toolkit import (
     reserve_meeting,
     respond_to_invite,
     search_documents,
-    search_meeting_rooms,
     update_bitable_record,
     update_calendar_event,
     update_document,
@@ -219,7 +219,7 @@ __all__ = [
     "cancel_calendar_event",
     "respond_to_invite",
     "list_meeting_room_buildings",
-    "search_meeting_rooms",
+    "list_meeting_rooms",
     "query_meeting_room_freebusy",
     "book_meeting_room",
     "search_documents",

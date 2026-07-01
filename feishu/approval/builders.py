@@ -450,6 +450,15 @@ def approval_definition_schema(definition: Mapping[str, Any]) -> NestedDict:
     从审批定义返回紧凑、适合模型读取的 schema。
 
     返回值保留高价值原始定义字段，并在能发现表单控件时增加归一化 `fields` 列表。
+
+    Args:
+        definition: 原始审批定义映射，通常来自
+            [feishu.approval.definitions.DefinitionsNamespace.get][]。
+
+    Returns:
+        含 `approval_name`、`status`、`node_list`、`form`、`form_widget_relation` 等原始字段的
+        [chanfig.NestedDict][]；发现表单控件时增加归一化 `fields` 列表，`form` 非合法 JSON 时增加
+        `form_parse_error`。
     """
     data = NestedDict(
         approval_name=definition.get("approval_name"),
@@ -473,6 +482,14 @@ def approval_definition_schema(definition: Mapping[str, Any]) -> NestedDict:
 def approval_cached_definition_summary(definition: Mapping[str, Any]) -> NestedDict:
     r"""
     返回适合缓存、日志和工具上下文的小型审批定义摘要。
+
+    Args:
+        definition: 原始或已归一化的审批定义映射（通常为
+            [feishu.approval.approval_definition_schema][] 的输出）。
+
+    Returns:
+        仅包含 `approval_name`、`status`、`fields` 中已存在（非空）键的
+        [chanfig.NestedDict][]。
     """
     summary = NestedDict()
     for key in ("approval_name", "status", "fields"):
@@ -485,6 +502,13 @@ def approval_cached_definition_summary(definition: Mapping[str, Any]) -> NestedD
 def approval_definition_code(item: Mapping[str, Any]) -> str | None:
     r"""
     从常见飞书响应结构中提取审批定义 Code。
+
+    Args:
+        item: 可能携带审批定义 Code 的映射（列表项或定义详情）。
+
+    Returns:
+        首个命中的非空 Code（依次尝试 `approval_code`、`approvalCode`、`code`、
+        `definition_code`、`definitionCode`）；均无则返回 `None`。
     """
     for key in ("approval_code", "approvalCode", "code", "definition_code", "definitionCode"):
         value = item.get(key)
@@ -496,6 +520,15 @@ def approval_definition_code(item: Mapping[str, Any]) -> str | None:
 def approval_definition_summary(item: Mapping[str, Any], access_method: str | None = None) -> NestedDict:
     r"""
     将一个审批定义列表项归一化为紧凑摘要。
+
+    Args:
+        item: 单个审批定义列表项映射。
+        access_method: 可选的访问方式标记（如 `"tenant_access_token"`），非空时写入返回值的
+            `access_method` 字段。
+
+    Returns:
+        含 `access_method`（若提供）、`approval_code`、`approval_name`，以及 `description`、
+        `group_name`、`status`、`form` 等已存在（非空）字段的 [chanfig.NestedDict][]。
     """
     summary = NestedDict()
     if access_method:
@@ -513,9 +546,19 @@ def approval_definition_summary(item: Mapping[str, Any], access_method: str | No
     return summary
 
 
-def approval_form_payload(form: Any) -> Mapping[str, Any] | list[Any] | None:
+def approval_nonempty_form(form: Any) -> Mapping[str, Any] | list[Any] | None:
     r"""
-    返回非空审批表单载荷，并保留映射 / 列表形状。
+    返回非空审批表单载荷，并保留原始的映射 / 列表形状。
+
+    与按定义把 `widget_id -> value` 序列化为控件载荷列表的
+    [feishu.approval.approval_form_payloads][] 不同，本函数不做任何序列化，仅在 `form`
+    为非空映射或非空列表时原样透传（映射会包装为 [chanfig.NestedDict][]），否则返回 `None`。
+
+    Args:
+        form: 待检查的原始表单，通常为映射或列表；其他类型或空值一律视为无表单。
+
+    Returns:
+        非空映射（包装为 `NestedDict`）或非空列表；当 `form` 为空或非映射 / 非列表时返回 `None`。
     """
     if isinstance(form, Mapping) and form:
         return NestedDict(form)
@@ -569,6 +612,13 @@ def approval_file_fields(definition: Mapping[str, Any] | None) -> set[str]:
 def approval_definition_may_contain_file_widget(definition: Mapping[str, Any]) -> bool:
     r"""
     判断原始审批定义字段是否提到文件类控件。
+
+    Args:
+        definition: 原始审批定义映射；检查其 `form` 与 `form_widget_relation` 字段的文本表示。
+
+    Returns:
+        当任一字段的文本看起来描述文件类控件（见
+        [feishu.approval.is_approval_file_widget_text][]）时返回 `True`，否则返回 `False`。
     """
     for key in ("form", "form_widget_relation"):
         value = definition.get(key)
@@ -582,6 +632,13 @@ def approval_definition_may_contain_file_widget(definition: Mapping[str, Any]) -
 def is_approval_file_widget_text(value: str) -> bool:
     r"""
     判断自由文本是否像是在描述审批文件类控件。
+
+    Args:
+        value: 待检查的自由文本（如序列化后的 `form` 字符串）。
+
+    Returns:
+        文本（不区分大小写）包含 `file`、`attachment`、`image`、`photo`、`upload` 或
+        `附件` / `图片` / `文件` 等标记时返回 `True`，否则返回 `False`。
     """
     lowered = value.lower()
     return any(
@@ -592,6 +649,13 @@ def is_approval_file_widget_text(value: str) -> bool:
 def approval_field_key(value: Mapping[str, Any]) -> str | None:
     r"""
     从表单 / 控件映射中提取最稳定的字段键。
+
+    Args:
+        value: 单个表单或控件映射。
+
+    Returns:
+        首个命中的非空字段键（依次尝试 `id`、`widget_id`、`widgetId`、`custom_id`、
+        `customId`、`name`）；均无则返回 `None`。
     """
     for key in ("id", "widget_id", "widgetId", "custom_id", "customId", "name"):
         item = value.get(key)
@@ -603,6 +667,13 @@ def approval_field_key(value: Mapping[str, Any]) -> str | None:
 def is_approval_file_widget(value: Mapping[str, Any]) -> bool:
     r"""
     判断表单 / 控件映射是否代表文件类控件。
+
+    Args:
+        value: 单个表单或控件映射；读取其 `type` / `widget_type` / `widgetType` 控件类型。
+
+    Returns:
+        控件类型（不区分大小写）包含 `file`、`attachment`、`image`、`photo` 或 `upload`
+        时返回 `True`；无法识别控件类型时返回 `False`。
     """
     widget_type = value.get("type") or value.get("widget_type") or value.get("widgetType")
     if not isinstance(widget_type, str):

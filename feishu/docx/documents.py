@@ -100,6 +100,10 @@ class DocxNamespace(Namespace):
         [feishu.docx.documents.DocxNamespace.patch_block][] 的 `update` 同构，并额外携带
         其作用的 `block_id`。
 
+        本方法与单块更新的 [feishu.docx.documents.DocxNamespace.patch_block][] 动作相同（均为更新块内容），
+        命名上刻意区分（`batch_update` 对 `patch`）以对齐各自的上游飞书接口
+        （`.../blocks/batch_update` 对 `.../blocks/{block_id}` 的 PATCH），此处的动词差异为有意为之。
+
         Args:
             document_id: 文档的唯一标识。
             requests: 更新操作列表，每个元素形如
@@ -171,7 +175,7 @@ class DocxNamespace(Namespace):
 
         飞书文档:
             [获取文档基本信息](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/get)
-            参见 [feishu.docx.documents.DocxNamespace.raw_content][]。
+            参见 [feishu.docx.documents.DocxNamespace.get_raw_content][]。
 
         Examples:
             >>> await client.docx.get("doxcabc")  # doctest:+SKIP
@@ -254,6 +258,10 @@ class DocxNamespace(Namespace):
         `update` 是描述更新操作的请求体，原样作为 JSON 发送，常见键包括
         `update_text_elements`、`update_text_style`、`update_table_property` 等。
 
+        本方法与批量更新的 [feishu.docx.documents.DocxNamespace.batch_update_blocks][] 动作相同（均为更新块内容），
+        命名上刻意区分（`patch` 对 `batch_update`）以对齐各自的上游飞书接口
+        （`.../blocks/{block_id}` 的 PATCH 对 `.../blocks/batch_update`），此处的动词差异为有意为之。
+
         Args:
             document_id: 文档的唯一标识。
             block_id: 待更新块的唯一标识。
@@ -278,7 +286,7 @@ class DocxNamespace(Namespace):
             "PATCH", f"docx/v1/documents/{quote_segment(document_id)}/blocks/{quote_segment(block_id)}", json=update
         )
 
-    async def raw_content(self, document_id: str, *, lang: int | None = None) -> str:
+    async def get_raw_content(self, document_id: str, *, lang: int | None = None) -> str:
         r"""
         获取文档纯文本内容。
 
@@ -300,7 +308,7 @@ class DocxNamespace(Namespace):
             参见 [feishu.docx.documents.DocxNamespace.list_blocks][]。
 
         Examples:
-            >>> await client.docx.raw_content("doxcabc")  # doctest:+SKIP
+            >>> await client.docx.get_raw_content("doxcabc")  # doctest:+SKIP
             'Hello world\n'
         """
         params = {"lang": lang}

@@ -84,7 +84,7 @@ class TestFetch:
 
     @pytest.mark.parametrize("garbage", [0, -100, "oops", None, True, 1.5])
     async def test_rejects_garbage_expire(self, garbage):
-        # A non-positive / non-int expire would compute a past or nonsensical expire_at and
+        # A non-positive / non-int expire would compute a past or nonsensical expires_at and
         # be cached as already-expired; reject it loudly instead of trusting int(envelope[...]).
         cred = InternalCredential("cli_a", "secret")
         with pytest.raises(FeishuError, match="invalid token expire"):

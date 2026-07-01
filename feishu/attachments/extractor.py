@@ -180,6 +180,18 @@ class SandboxedAttachmentExtractor:
     async def extract(
         self, data: bytes, *, file_metadata: Mapping[str, Any], media_type: str | None = None
     ) -> ExtractedContent:
+        r"""
+        在沙箱子进程中抽取附件内容；绝不抛出，失败一律降级为带 `note` 的 `unknown` 结果。
+
+        Args:
+            data: 附件的原始字节。
+            file_metadata: 飞书附件元信息（`name` / `mime_type` 等），用于推断媒体类型与文件名。
+            media_type: 媒体类型；省略时按魔数 / 元信息推断。默认为 `None`。
+
+        Returns:
+            [feishu.attachments.extractor.ExtractedContent][]。任何失败（超限 / 超时 / 解析异常）都返回
+            `kind="unknown"` 并在 `note` 中给出中性英文说明，而不会抛出异常。
+        """
         resolved = media_type or detect_media_type(data) or media_type_from_metadata(dict(file_metadata))
         if len(data) > self.max_bytes:
             return ExtractedContent(

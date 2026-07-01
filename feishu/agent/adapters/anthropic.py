@@ -82,24 +82,24 @@ def _to_anthropic_messages(messages: Sequence[Message]) -> list[dict]:
 async def _translate_events(events: AsyncIterator[Any]) -> AsyncIterator[StreamChunk]:
     stop_reason = StopReason.OTHER
     usage: dict[str, int] | None = None
-    async for ev in events:
-        kind = getattr(ev, "type", None)
+    async for event in events:
+        kind = getattr(event, "type", None)
         if kind == "content_block_start":
-            block = ev.content_block
+            block = event.content_block
             if getattr(block, "type", None) == "tool_use":
-                yield ToolCallDelta(index=ev.index, id=block.id, name=block.name, arguments="")
+                yield ToolCallDelta(index=event.index, id=block.id, name=block.name, arguments="")
         elif kind == "content_block_delta":
-            delta = ev.delta
+            delta = event.delta
             dtype = getattr(delta, "type", None)
             if dtype == "text_delta":
                 yield TextDelta(text=delta.text)
             elif dtype == "input_json_delta":
-                yield ToolCallDelta(index=ev.index, arguments=delta.partial_json)
+                yield ToolCallDelta(index=event.index, arguments=delta.partial_json)
         elif kind == "message_delta":
-            stop_reason = _map_stop_reason(getattr(ev.delta, "stop_reason", None))
-            u = getattr(ev, "usage", None)
-            if u is not None and getattr(u, "output_tokens", None) is not None:
-                usage = {"output_tokens": u.output_tokens}
+            stop_reason = _map_stop_reason(getattr(event.delta, "stop_reason", None))
+            usage_obj = getattr(event, "usage", None)
+            if usage_obj is not None and getattr(usage_obj, "output_tokens", None) is not None:
+                usage = {"output_tokens": usage_obj.output_tokens}
         elif kind == "message_stop":
             yield MessageStop(stop_reason=stop_reason, usage=usage)
 
@@ -150,7 +150,7 @@ class AnthropicBackend:
         Returns:
             逐个产出归一化 [feishu.agent.llm.StreamChunk][] 的异步迭代器。
 
-        飞书文档:
+        参考文档:
             [Anthropic Messages API](https://docs.anthropic.com/en/api/messages)
 
         Examples:

@@ -80,7 +80,7 @@ class TestTokenManager:
         ],
     )
     async def test_short_token_clamped_to_min_ttl(self, at, reused):
-        # expire (60) <= refresh_offset (1800): without the clamp, expire_at = now + 60 - 1800
+        # expire (60) <= refresh_offset (1800): without the clamp, expires_at = now + 60 - 1800
         # lands in the past, so the next read sees it expired and re-fetches (stampede). The
         # min_ttl clamp keeps it cached for a small positive window instead.
         counter, clock = {"n": 0}, {"t": 0.0}

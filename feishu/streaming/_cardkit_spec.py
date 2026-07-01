@@ -24,8 +24,9 @@ from __future__ import annotations
 from .._url import quote_segment
 
 # --- CardKit v1 wire facts -------------------------------------------------
-# Keep every wire value as a single-point constant. Unit tests reference these
-# symbols, not hardcoded literals, so a future platform correction stays local.
+# Keep every wire value as a single-point constant. Unit tests import these
+# symbols via ``spec`` rather than hardcoding the literals, so a future platform
+# correction stays local.
 
 # Base path for card entities, shared by creation and card_id-derived content/settings paths.
 CARDS_PATH = "cardkit/v1/cards"
@@ -49,9 +50,6 @@ UUID_FIELD = "uuid"
 # 4) Finalize: PATCH /cardkit/v1/cards/{card_id}/settings
 SETTINGS_FIELD = "settings"
 STREAMING_MODE_KEY = "streaming_mode"
-
-# Per-card write cap documented by Feishu (10 ops/s/card).
-MAX_OPS_PER_SEC = 10
 
 
 def content_path(card_id: str, element_id: str) -> str:

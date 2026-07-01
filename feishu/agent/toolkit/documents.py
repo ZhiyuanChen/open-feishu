@@ -120,7 +120,7 @@ def get_document_content(
     读类工厂：抓取一篇飞书文档的纯文本正文，返回一个 [feishu.agent.tools.Tool][]。
 
     从参数（文档 URL/token/类型）解析出文档引用，经 `resolve_document_reference` 解析（含 wiki 反查），
-    再用 `client.docx.raw_content` 读取 docx 纯文本并原样回传，由模型自行总结。`lang` 控制文档中
+    再用 `client.docx.get_raw_content` 读取 docx 纯文本并原样回传，由模型自行总结。`lang` 控制文档中
     @ 提及等内容的展示语言（`0` 默认、`1` 中文、`2` 英文）。
 
     Args:
@@ -129,7 +129,7 @@ def get_document_content(
         locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
-        lang: `docx.raw_content` 的内容语言；为空时使用接口默认值。
+        lang: `docx.get_raw_content` 的内容语言；为空时使用接口默认值。
 
     Returns:
         可注册到 [feishu.agent.tools.ToolRegistry][] 的 [feishu.agent.tools.Tool][]。
@@ -167,7 +167,7 @@ def get_document_content(
                 content=f"reading raw content is not supported for document type {resolved.doc_type!r}",
                 is_error=True,
             )
-        content = await client.docx.raw_content(resolved.token, lang=lang)
+        content = await client.docx.get_raw_content(resolved.token, lang=lang)
         return ToolResult(
             ToolOutcome.COMPLETED,
             content={"token": resolved.token, "doc_type": resolved.doc_type, "content": content},
@@ -249,7 +249,7 @@ def get_meeting_record(
 
     优先从参数里直接解析纪要文档引用（URL/token）；否则按 `meeting_id`（`client.vc.meetings.get`）或
     `meeting_no` + `start_time`/`end_time`（`client.vc.meetings.list_by_no`，时间经 `unix_seconds` 以
-    `timezone` 归一）解析出会议，再从会议对象里取纪要引用。最终以 `client.docx.raw_content` 读取纪要
+    `timezone` 归一）解析出会议，再从会议对象里取纪要引用。最终以 `client.docx.get_raw_content` 读取纪要
     docx 纯文本并回传，由模型自行总结。
 
     Args:
@@ -259,7 +259,7 @@ def get_meeting_record(
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
         timezone: 解析 `start_time`/`end_time` 时使用的时区。默认为 `"Asia/Shanghai"`。
-        lang: `docx.raw_content` 的内容语言；为空时使用接口默认值。
+        lang: `docx.get_raw_content` 的内容语言；为空时使用接口默认值。
 
     Returns:
         可注册到 [feishu.agent.tools.ToolRegistry][] 的 [feishu.agent.tools.Tool][]。
@@ -313,7 +313,7 @@ def get_meeting_record(
                 content=f"reading raw content is not supported for note type {resolved.doc_type!r}",
                 is_error=True,
             )
-        content = await client.docx.raw_content(resolved.token, lang=lang)
+        content = await client.docx.get_raw_content(resolved.token, lang=lang)
         return ToolResult(
             ToolOutcome.COMPLETED,
             content={"meeting": meeting or None, "note_token": resolved.token, "content": content},

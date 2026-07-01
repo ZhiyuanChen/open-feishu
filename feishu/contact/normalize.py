@@ -200,7 +200,7 @@ def normalize_user(user: Mapping[str, Any]) -> NestedDict:
     )
 
 
-def normalize_department(dept: Mapping[str, Any]) -> NestedDict:
+def normalize_department(department: Mapping[str, Any]) -> NestedDict:
     r"""
     将飞书原始部门数据规整为统一结构。
 
@@ -208,7 +208,7 @@ def normalize_department(dept: Mapping[str, Any]) -> NestedDict:
     保留完整的原始数据。
 
     Args:
-        dept: 飞书返回的原始部门对象。
+        department: 飞书返回的原始部门对象。
 
     Returns:
         规整后的部门对象，包含 `department_id`、`open_department_id`、`parent_department_id`、`name`、
@@ -218,7 +218,7 @@ def normalize_department(dept: Mapping[str, Any]) -> NestedDict:
         [获取单个部门信息](https://open.feishu.cn/document/server-docs/contact-v3/department/get)
 
     Examples:
-        >>> dept = normalize_department(
+        >>> department = normalize_department(
         ...     {
         ...         "department_id": "d1",
         ...         "open_department_id": "od-1",
@@ -226,18 +226,18 @@ def normalize_department(dept: Mapping[str, Any]) -> NestedDict:
         ...         "member_count": 42,
         ...     }
         ... )
-        >>> dept["name"], dept["member_count"], dept["parent_department_id"]
+        >>> department["name"], department["member_count"], department["parent_department_id"]
         ('Engineering', 42, None)
-        >>> dept["raw"]["department_id"]
+        >>> department["raw"]["department_id"]
         'd1'
     """
     return NestedDict(
         {
-            "department_id": dept.get("department_id"),
-            "open_department_id": dept.get("open_department_id"),
-            "parent_department_id": dept.get("parent_department_id"),
-            "name": dept.get("name"),
-            "member_count": dept.get("member_count"),
-            "raw": dept,
+            "department_id": department.get("department_id"),
+            "open_department_id": department.get("open_department_id"),
+            "parent_department_id": department.get("parent_department_id"),
+            "name": department.get("name"),
+            "member_count": department.get("member_count"),
+            "raw": department,
         }
     )

@@ -381,8 +381,8 @@ def card_text(card: Mapping[str, Any]) -> str:
     texts: list[str] = []
     body = card.get("body")
     if isinstance(body, Mapping):
-        collect_card_text(body.get("elements"), texts)
-    collect_card_text(card.get("elements"), texts)
+        _collect_card_text(body.get("elements"), texts)
+    _collect_card_text(card.get("elements"), texts)
     return "\n\n".join(text.strip() for text in texts if text.strip())
 
 
@@ -412,7 +412,7 @@ def card_title(card: Mapping[str, Any]) -> str:
     return title if isinstance(title, str) else ""
 
 
-def collect_card_text(value: Any, texts: list[str]) -> None:
+def _collect_card_text(value: Any, texts: list[str]) -> None:
     r"""
     递归收集嵌套卡片元素中承载文本的片段，就地追加到 `texts`。
 
@@ -425,13 +425,13 @@ def collect_card_text(value: Any, texts: list[str]) -> None:
 
     Examples:
         >>> texts: list[str] = []
-        >>> collect_card_text([{"tag": "markdown", "content": "a"}, {"text": "b"}], texts)
+        >>> _collect_card_text([{"tag": "markdown", "content": "a"}, {"text": "b"}], texts)
         >>> texts
         ['a', 'b']
     """
     if isinstance(value, list):
         for item in value:
-            collect_card_text(item, texts)
+            _collect_card_text(item, texts)
         return
     if not isinstance(value, Mapping):
         return
@@ -449,8 +449,8 @@ def collect_card_text(value: Any, texts: list[str]) -> None:
         texts.append(text)
 
     for key in ("elements", "columns", "fields"):
-        collect_card_text(value.get(key), texts)
-    collect_card_text(value.get("body"), texts)
+        _collect_card_text(value.get(key), texts)
+    _collect_card_text(value.get("body"), texts)
 
 
 def _content_text(content: dict[str, Any]) -> str:

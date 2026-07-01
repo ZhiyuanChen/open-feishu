@@ -21,8 +21,10 @@
 
 from __future__ import annotations
 
-# Official lark-markdown control-character -> HTML-entity table.
-# Numeric entities except '~' which uses the named &sim; entity (per Feishu docs).
+# Feishu (lark) markdown control-character -> HTML-entity escape table, per Feishu docs
+# (see the rich-text component doc URL in escape_markdown below). Hand-maintained to
+# mirror Feishu's rendering, not generated from an official source.
+# Numeric entities except '~' which uses the named &sim; entity.
 MARKDOWN_ENTITIES: dict[str, str] = {
     "*": "&#42;",
     "_": "&#95;",
@@ -51,7 +53,7 @@ _TRANSLATION = str.maketrans(MARKDOWN_ENTITIES)
 
 def escape_markdown(text: str) -> str:
     r"""
-    将 lark-markdown 控制字符转义为对应的 HTML 实体。
+    将飞书（lark）markdown 控制字符转义为对应的 HTML 实体（依据下方飞书文档，手工维护）。
 
     用于将任意用户或大模型生成的文本安全地嵌入卡片 2.0 的 `markdown` 元素中，
     使其中的控制字符不会破坏渲染效果。

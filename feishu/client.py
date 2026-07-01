@@ -692,7 +692,7 @@ class FeishuClient:
         r"""
         以流式方式逐步更新一张互动卡片（CardKit）。
 
-        先发送一张初始卡片，随后将 `tokens` 产出的文本片段按 `debounce_s` 防抖节流地
+        先发送一张初始卡片，随后将 `tokens` 产出的文本片段按 `debounce_s` 去抖节流地
         增量写入指定元素，常用于将大模型的流式输出实时渲染到飞书卡片中。可发送为新消息
         （`receive_id`），或以回复形式发送（`reply_to_message_id`，在原消息所在会话内成串显示）。
 
@@ -702,7 +702,7 @@ class FeishuClient:
             receive_id_type: 接收方 ID 类型；为空时按 `receive_id` 前缀自动推断（仅发新消息时适用）。
             reply_to_message_id: 以回复形式发送时的目标消息 `message_id`；提供时 `receive_id` 应留空。
             element_id: 待更新的卡片元素 ID，默认 `md`。
-            debounce_s: 流式更新的防抖间隔（秒），默认 0.25。
+            debounce_s: 流式更新的去抖间隔（秒），默认 0.25。
             header: 卡片标题配置。
             template: 卡片模板配置。
 
