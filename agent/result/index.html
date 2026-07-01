@@ -3517,7 +3517,7 @@
       &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
   &lt;/span&gt;" href="#feishu.agent.result.ToolResult">feishu.agent.result.ToolResult</a>
 以显式声明处置。<code>NEEDS_USER_AUTH</code> 要求先引导用户完成 OAuth 授权：<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Agent&lt;/span&gt;" href="../loop/#feishu.agent.loop.Agent">feishu.agent.loop.Agent</a> 据此发送一张
-授权卡片，并把一段提示回传给模型以继续本轮（并不挂起对话）。写操作的审批由工具的 <code>requires_approval</code> 在
+授权卡片并挂起本轮，待 OAuth callback 完成后恢复原工具调用。写操作的审批由工具的 <code>requires_approval</code> 在
 分发**之前**统一挂起（见 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Tool&lt;/span&gt;
 
 
@@ -3574,7 +3574,7 @@
 </span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a>
 </span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">    工具处理函数既可直接返回任意值（视同 `COMPLETED`），也可返回一个 [feishu.agent.result.ToolResult][]</span>
 </span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">    以显式声明处置。`NEEDS_USER_AUTH` 要求先引导用户完成 OAuth 授权：[feishu.agent.loop.Agent][] 据此发送一张</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    授权卡片，并把一段提示回传给模型以继续本轮（并不挂起对话）。写操作的审批由工具的 `requires_approval` 在</span>
+</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    授权卡片并挂起本轮，待 OAuth callback 完成后恢复原工具调用。写操作的审批由工具的 `requires_approval` 在</span>
 </span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">    分发**之前**统一挂起（见 [feishu.agent.tools.Tool][]），不经由此枚举。由于继承自 `str`，枚举成员可直接与</span>
 </span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">    字符串字面量比较。</span>
 </span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a>
@@ -3635,10 +3635,9 @@
 
 
         <p>工具处理函数的结构化返回值，向 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Agent&lt;/span&gt;" href="../loop/#feishu.agent.loop.Agent">feishu.agent.loop.Agent</a> 声明处置与回传内容。</p>
-<p>多数工具可直接返回原始值；需要声明处置时返回本类型：<code>NEEDS_USER_AUTH</code> 须随附 <code>authorize_url</code>
-（引导用户授权的链接，<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Agent&lt;/span&gt;" href="../loop/#feishu.agent.loop.Agent">feishu.agent.loop.Agent</a> 据此发卡并继续本轮）。<code>content</code> 是回传给模型的工具结果
-文本/对象，<code>is_error</code> 为 <code>True</code> 时模型据此调整后续行为。写操作的二次确认由工具的 <code>requires_approval</code> 在分发
-前统一处理，不经由本返回值。</p>
+<p>多数工具可直接返回原始值；需要声明处置时返回本类型：<code>NEEDS_USER_AUTH</code> 可随附 <code>auth_scopes</code> 与
+<code>authorize_url</code>（旧式回退链接）。<code>content</code> 是回传给模型的工具结果文本/对象，<code>is_error</code> 为 <code>True</code> 时模型
+据此调整后续行为。写操作的二次确认由工具的 <code>requires_approval</code> 在分发前统一处理，不经由本返回值。</p>
 
 
 <p><span class="doc-section-title">示例：</span></p>
@@ -3688,22 +3687,22 @@
 </span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">    工具处理函数的结构化返回值，向 [feishu.agent.loop.Agent][] 声明处置与回传内容。</span>
 </span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">    多数工具可直接返回原始值；需要声明处置时返回本类型：`NEEDS_USER_AUTH` 须随附 `authorize_url`</span>
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">    （引导用户授权的链接，[feishu.agent.loop.Agent][] 据此发卡并继续本轮）。`content` 是回传给模型的工具结果</span>
-</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">    文本/对象，`is_error` 为 `True` 时模型据此调整后续行为。写操作的二次确认由工具的 `requires_approval` 在分发</span>
-</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">    前统一处理，不经由本返回值。</span>
-</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a>
-</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">        &gt;&gt;&gt; ok = ToolResult(outcome=ToolOutcome.COMPLETED, content=&quot;已列出 3 个日程&quot;)</span>
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">        &gt;&gt;&gt; ok.outcome</span>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">        &lt;ToolOutcome.COMPLETED: &#39;completed&#39;&gt;</span>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">        &gt;&gt;&gt; ok.is_error</span>
-</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">        False</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>
-</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="n">outcome</span><span class="p">:</span> <span class="n">ToolOutcome</span>
-</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="n">content</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="n">authorize_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">    多数工具可直接返回原始值；需要声明处置时返回本类型：`NEEDS_USER_AUTH` 可随附 `auth_scopes` 与</span>
+</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">    `authorize_url`（旧式回退链接）。`content` 是回传给模型的工具结果文本/对象，`is_error` 为 `True` 时模型</span>
+</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">    据此调整后续行为。写操作的二次确认由工具的 `requires_approval` 在分发前统一处理，不经由本返回值。</span>
+</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a>
+</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">    Examples:</span>
+</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">        &gt;&gt;&gt; ok = ToolResult(outcome=ToolOutcome.COMPLETED, content=&quot;已列出 3 个日程&quot;)</span>
+</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">        &gt;&gt;&gt; ok.outcome</span>
+</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">        &lt;ToolOutcome.COMPLETED: &#39;completed&#39;&gt;</span>
+</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">        &gt;&gt;&gt; ok.is_error</span>
+</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">        False</span>
+</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a>
+</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="n">outcome</span><span class="p">:</span> <span class="n">ToolOutcome</span>
+</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="n">content</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="n">authorize_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="n">auth_scopes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
 </span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="n">is_error</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 </span></code></pre></div></td></tr></table></div>
               </details>
@@ -3757,7 +3756,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月1日 06:59:49 UTC">2026-07-01 06:59:49</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月1日 16:45:48 UTC">2026-07-01 16:45:48</span>
   </span>
 
     
