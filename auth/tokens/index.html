@@ -359,25 +359,6 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../types/" class="md-tabs__link">
-        
-  
-  
-    
-  
-  types
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
       <a href="../../agent/" class="md-tabs__link">
         
   
@@ -1013,33 +994,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../types/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    types
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
     
     
       
@@ -1284,7 +1238,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" checked>
         
           
           <div class="md-nav__link md-nav__container">
@@ -1306,14 +1260,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_11" id="__nav_11_label" tabindex="">
+              <label class="md-nav__link " for="__nav_10" id="__nav_10_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_11">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1505,10 +1459,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#feishu.auth.tokens.CachedToken(expire_at)" class="md-nav__link">
+  <a href="#feishu.auth.tokens.CachedToken(expires_at)" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;expire_at
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;expires_at
       
     </span>
   </a>
@@ -3023,10 +2977,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#feishu.auth.tokens.CachedToken(expire_at)" class="md-nav__link">
+  <a href="#feishu.auth.tokens.CachedToken(expires_at)" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;expire_at
+        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;expires_at
       
     </span>
   </a>
@@ -3437,8 +3391,8 @@
           </tr>
           <tr class="doc-section-item">
             <td>
-<h4 id="feishu.auth.tokens.CachedToken(expire_at)" class="doc doc-heading doc-heading-parameter">                  <code>expire_at</code>
-<a href="#feishu.auth.tokens.CachedToken(expire_at)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
+<h4 id="feishu.auth.tokens.CachedToken(expires_at)" class="doc doc-heading doc-heading-parameter">                  <code>expires_at</code>
+<a href="#feishu.auth.tokens.CachedToken(expires_at)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
             <td>
                   <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a></code>
             </td>
@@ -3463,7 +3417,7 @@
 <span class="normal"><a href="#__codelineno-0-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">token</span> <span class="o">=</span> <span class="n">CachedToken</span><span class="p">(</span><span class="s2">&quot;t-1&quot;</span><span class="p">,</span> <span class="mf">5400.0</span><span class="p">)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">token</span><span class="o">.</span><span class="n">value</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="go">&#39;t-1&#39;</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">token</span><span class="o">.</span><span class="n">expire_at</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">token</span><span class="o">.</span><span class="n">expires_at</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="go">5400.0</span>
 </span></code></pre></div></td></tr></table></div>
 
@@ -3501,18 +3455,18 @@
 </span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a>
 </span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">    Args:</span>
 </span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">        value: 访问凭证。</span>
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">        expire_at: 凭证的过期时刻，与 [feishu.auth.tokens.TokenManager][] 使用的时钟同源。</span>
+</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">        expires_at: 凭证的过期时刻，与 [feishu.auth.tokens.TokenManager][] 使用的时钟同源。</span>
 </span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a>
 </span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">    Examples:</span>
 </span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">        &gt;&gt;&gt; token = CachedToken(&quot;t-1&quot;, 5400.0)</span>
 </span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">        &gt;&gt;&gt; token.value</span>
 </span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">        &#39;t-1&#39;</span>
-</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">        &gt;&gt;&gt; token.expire_at</span>
+</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">        &gt;&gt;&gt; token.expires_at</span>
 </span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">        5400.0</span>
 </span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a>
 </span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="n">value</span><span class="p">:</span> <span class="nb">str</span>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="n">expire_at</span><span class="p">:</span> <span class="nb">float</span>
+</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="n">expires_at</span><span class="p">:</span> <span class="nb">float</span>
 </span></code></pre></div></td></tr></table></div>
               </details>
 
@@ -4607,18 +4561,18 @@
 </span><span id="__span-0-229"><a id="__codelineno-0-229" name="__codelineno-0-229"></a><span class="sd">        &quot;&quot;&quot;</span>
 </span><span id="__span-0-230"><a id="__codelineno-0-230" name="__codelineno-0-230"></a>        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_credential</span><span class="o">.</span><span class="n">cache_key</span><span class="p">(</span><span class="n">token_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transport</span><span class="o">.</span><span class="n">base_url</span><span class="p">)</span>
 </span><span id="__span-0-231"><a id="__codelineno-0-231" name="__codelineno-0-231"></a>        <span class="n">cached</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-</span><span id="__span-0-232"><a id="__codelineno-0-232" name="__codelineno-0-232"></a>        <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cached</span><span class="o">.</span><span class="n">expire_at</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_now</span><span class="p">():</span>
+</span><span id="__span-0-232"><a id="__codelineno-0-232" name="__codelineno-0-232"></a>        <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cached</span><span class="o">.</span><span class="n">expires_at</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_now</span><span class="p">():</span>
 </span><span id="__span-0-233"><a id="__codelineno-0-233" name="__codelineno-0-233"></a>            <span class="k">return</span> <span class="n">cached</span><span class="o">.</span><span class="n">value</span>
 </span><span id="__span-0-234"><a id="__codelineno-0-234" name="__codelineno-0-234"></a>        <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lock_for</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
 </span><span id="__span-0-235"><a id="__codelineno-0-235" name="__codelineno-0-235"></a>            <span class="n">cached</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>  <span class="c1"># double-check after acquiring</span>
-</span><span id="__span-0-236"><a id="__codelineno-0-236" name="__codelineno-0-236"></a>            <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cached</span><span class="o">.</span><span class="n">expire_at</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_now</span><span class="p">():</span>
+</span><span id="__span-0-236"><a id="__codelineno-0-236" name="__codelineno-0-236"></a>            <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cached</span><span class="o">.</span><span class="n">expires_at</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_now</span><span class="p">():</span>
 </span><span id="__span-0-237"><a id="__codelineno-0-237" name="__codelineno-0-237"></a>                <span class="k">return</span> <span class="n">cached</span><span class="o">.</span><span class="n">value</span>
 </span><span id="__span-0-238"><a id="__codelineno-0-238" name="__codelineno-0-238"></a>            <span class="n">value</span><span class="p">,</span> <span class="n">expire</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_credential</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transport</span><span class="p">,</span> <span class="n">token_type</span><span class="p">)</span>
 </span><span id="__span-0-239"><a id="__codelineno-0-239" name="__codelineno-0-239"></a>            <span class="c1"># Clamp the effective TTL: a short token (expire &lt;= refresh_offset) would</span>
-</span><span id="__span-0-240"><a id="__codelineno-0-240" name="__codelineno-0-240"></a>            <span class="c1"># otherwise yield expire_at &lt;= now and be re-fetched on the next read.</span>
+</span><span id="__span-0-240"><a id="__codelineno-0-240" name="__codelineno-0-240"></a>            <span class="c1"># otherwise yield expires_at &lt;= now and be re-fetched on the next read.</span>
 </span><span id="__span-0-241"><a id="__codelineno-0-241" name="__codelineno-0-241"></a>            <span class="n">ttl</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">expire</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_offset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_ttl</span><span class="p">)</span>
-</span><span id="__span-0-242"><a id="__codelineno-0-242" name="__codelineno-0-242"></a>            <span class="n">expire_at</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_now</span><span class="p">()</span> <span class="o">+</span> <span class="n">ttl</span>
-</span><span id="__span-0-243"><a id="__codelineno-0-243" name="__codelineno-0-243"></a>            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">CachedToken</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">expire_at</span><span class="p">))</span>
+</span><span id="__span-0-242"><a id="__codelineno-0-242" name="__codelineno-0-242"></a>            <span class="n">expires_at</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_now</span><span class="p">()</span> <span class="o">+</span> <span class="n">ttl</span>
+</span><span id="__span-0-243"><a id="__codelineno-0-243" name="__codelineno-0-243"></a>            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">CachedToken</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">expires_at</span><span class="p">))</span>
 </span><span id="__span-0-244"><a id="__codelineno-0-244" name="__codelineno-0-244"></a>            <span class="k">return</span> <span class="n">value</span>
 </span></code></pre></div></td></tr></table></div>
               </details>
@@ -4901,18 +4855,18 @@
 </span><span id="__span-0-229"><a id="__codelineno-0-229" name="__codelineno-0-229"></a><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="__span-0-230"><a id="__codelineno-0-230" name="__codelineno-0-230"></a>    <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_credential</span><span class="o">.</span><span class="n">cache_key</span><span class="p">(</span><span class="n">token_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transport</span><span class="o">.</span><span class="n">base_url</span><span class="p">)</span>
 </span><span id="__span-0-231"><a id="__codelineno-0-231" name="__codelineno-0-231"></a>    <span class="n">cached</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-</span><span id="__span-0-232"><a id="__codelineno-0-232" name="__codelineno-0-232"></a>    <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cached</span><span class="o">.</span><span class="n">expire_at</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_now</span><span class="p">():</span>
+</span><span id="__span-0-232"><a id="__codelineno-0-232" name="__codelineno-0-232"></a>    <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cached</span><span class="o">.</span><span class="n">expires_at</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_now</span><span class="p">():</span>
 </span><span id="__span-0-233"><a id="__codelineno-0-233" name="__codelineno-0-233"></a>        <span class="k">return</span> <span class="n">cached</span><span class="o">.</span><span class="n">value</span>
 </span><span id="__span-0-234"><a id="__codelineno-0-234" name="__codelineno-0-234"></a>    <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lock_for</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
 </span><span id="__span-0-235"><a id="__codelineno-0-235" name="__codelineno-0-235"></a>        <span class="n">cached</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>  <span class="c1"># double-check after acquiring</span>
-</span><span id="__span-0-236"><a id="__codelineno-0-236" name="__codelineno-0-236"></a>        <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cached</span><span class="o">.</span><span class="n">expire_at</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_now</span><span class="p">():</span>
+</span><span id="__span-0-236"><a id="__codelineno-0-236" name="__codelineno-0-236"></a>        <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cached</span><span class="o">.</span><span class="n">expires_at</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_now</span><span class="p">():</span>
 </span><span id="__span-0-237"><a id="__codelineno-0-237" name="__codelineno-0-237"></a>            <span class="k">return</span> <span class="n">cached</span><span class="o">.</span><span class="n">value</span>
 </span><span id="__span-0-238"><a id="__codelineno-0-238" name="__codelineno-0-238"></a>        <span class="n">value</span><span class="p">,</span> <span class="n">expire</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_credential</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transport</span><span class="p">,</span> <span class="n">token_type</span><span class="p">)</span>
 </span><span id="__span-0-239"><a id="__codelineno-0-239" name="__codelineno-0-239"></a>        <span class="c1"># Clamp the effective TTL: a short token (expire &lt;= refresh_offset) would</span>
-</span><span id="__span-0-240"><a id="__codelineno-0-240" name="__codelineno-0-240"></a>        <span class="c1"># otherwise yield expire_at &lt;= now and be re-fetched on the next read.</span>
+</span><span id="__span-0-240"><a id="__codelineno-0-240" name="__codelineno-0-240"></a>        <span class="c1"># otherwise yield expires_at &lt;= now and be re-fetched on the next read.</span>
 </span><span id="__span-0-241"><a id="__codelineno-0-241" name="__codelineno-0-241"></a>        <span class="n">ttl</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">expire</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_offset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_ttl</span><span class="p">)</span>
-</span><span id="__span-0-242"><a id="__codelineno-0-242" name="__codelineno-0-242"></a>        <span class="n">expire_at</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_now</span><span class="p">()</span> <span class="o">+</span> <span class="n">ttl</span>
-</span><span id="__span-0-243"><a id="__codelineno-0-243" name="__codelineno-0-243"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">CachedToken</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">expire_at</span><span class="p">))</span>
+</span><span id="__span-0-242"><a id="__codelineno-0-242" name="__codelineno-0-242"></a>        <span class="n">expires_at</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_now</span><span class="p">()</span> <span class="o">+</span> <span class="n">ttl</span>
+</span><span id="__span-0-243"><a id="__codelineno-0-243" name="__codelineno-0-243"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">CachedToken</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">expires_at</span><span class="p">))</span>
 </span><span id="__span-0-244"><a id="__codelineno-0-244" name="__codelineno-0-244"></a>        <span class="k">return</span> <span class="n">value</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
@@ -4956,7 +4910,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月1日 06:18:49 UTC">2026-07-01 06:18:49</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月1日 06:59:52 UTC">2026-07-01 06:59:52</span>
   </span>
 
     

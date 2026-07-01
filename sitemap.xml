@@ -29,10 +29,6 @@
          <lastmod>2026-07-01</lastmod>
     </url>
     <url>
-         <loc>https://feishu.danling.org/types/</loc>
-         <lastmod>2026-07-01</lastmod>
-    </url>
-    <url>
          <loc>https://feishu.danling.org/about/</loc>
          <lastmod>2026-07-01</lastmod>
     </url>
@@ -69,10 +65,6 @@
          <lastmod>2026-07-01</lastmod>
     </url>
     <url>
-         <loc>https://feishu.danling.org/agent/dispatch/</loc>
-         <lastmod>2026-07-01</lastmod>
-    </url>
-    <url>
          <loc>https://feishu.danling.org/agent/integrity/</loc>
          <lastmod>2026-07-01</lastmod>
     </url>
@@ -90,6 +82,10 @@
     </url>
     <url>
          <loc>https://feishu.danling.org/agent/persistence/</loc>
+         <lastmod>2026-07-01</lastmod>
+    </url>
+    <url>
+         <loc>https://feishu.danling.org/agent/registration/</loc>
          <lastmod>2026-07-01</lastmod>
     </url>
     <url>

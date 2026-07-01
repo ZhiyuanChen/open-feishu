@@ -361,25 +361,6 @@
   
   
     <li class="md-tabs__item">
-      <a href="../types/" class="md-tabs__link">
-        
-  
-  
-    
-  
-  types
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
       <a href="../agent/" class="md-tabs__link">
         
   
@@ -1878,33 +1859,6 @@
     
   
     signature
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    types
   
 
     
@@ -5906,7 +5860,7 @@
 </span><span id="__span-0-692"><a id="__codelineno-0-692" name="__codelineno-0-692"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="__span-0-693"><a id="__codelineno-0-693" name="__codelineno-0-693"></a><span class="sd">        以流式方式逐步更新一张互动卡片（CardKit）。</span>
 </span><span id="__span-0-694"><a id="__codelineno-0-694" name="__codelineno-0-694"></a>
-</span><span id="__span-0-695"><a id="__codelineno-0-695" name="__codelineno-0-695"></a><span class="sd">        先发送一张初始卡片，随后将 `tokens` 产出的文本片段按 `debounce_s` 防抖节流地</span>
+</span><span id="__span-0-695"><a id="__codelineno-0-695" name="__codelineno-0-695"></a><span class="sd">        先发送一张初始卡片，随后将 `tokens` 产出的文本片段按 `debounce_s` 去抖节流地</span>
 </span><span id="__span-0-696"><a id="__codelineno-0-696" name="__codelineno-0-696"></a><span class="sd">        增量写入指定元素，常用于将大模型的流式输出实时渲染到飞书卡片中。可发送为新消息</span>
 </span><span id="__span-0-697"><a id="__codelineno-0-697" name="__codelineno-0-697"></a><span class="sd">        （`receive_id`），或以回复形式发送（`reply_to_message_id`，在原消息所在会话内成串显示）。</span>
 </span><span id="__span-0-698"><a id="__codelineno-0-698" name="__codelineno-0-698"></a>
@@ -5916,7 +5870,7 @@
 </span><span id="__span-0-702"><a id="__codelineno-0-702" name="__codelineno-0-702"></a><span class="sd">            receive_id_type: 接收方 ID 类型；为空时按 `receive_id` 前缀自动推断（仅发新消息时适用）。</span>
 </span><span id="__span-0-703"><a id="__codelineno-0-703" name="__codelineno-0-703"></a><span class="sd">            reply_to_message_id: 以回复形式发送时的目标消息 `message_id`；提供时 `receive_id` 应留空。</span>
 </span><span id="__span-0-704"><a id="__codelineno-0-704" name="__codelineno-0-704"></a><span class="sd">            element_id: 待更新的卡片元素 ID，默认 `md`。</span>
-</span><span id="__span-0-705"><a id="__codelineno-0-705" name="__codelineno-0-705"></a><span class="sd">            debounce_s: 流式更新的防抖间隔（秒），默认 0.25。</span>
+</span><span id="__span-0-705"><a id="__codelineno-0-705" name="__codelineno-0-705"></a><span class="sd">            debounce_s: 流式更新的去抖间隔（秒），默认 0.25。</span>
 </span><span id="__span-0-706"><a id="__codelineno-0-706" name="__codelineno-0-706"></a><span class="sd">            header: 卡片标题配置。</span>
 </span><span id="__span-0-707"><a id="__codelineno-0-707" name="__codelineno-0-707"></a><span class="sd">            template: 卡片模板配置。</span>
 </span><span id="__span-0-708"><a id="__codelineno-0-708" name="__codelineno-0-708"></a>
@@ -8066,7 +8020,7 @@
     <div class="doc doc-contents ">
 
         <p>以流式方式逐步更新一张互动卡片（CardKit）。</p>
-<p>先发送一张初始卡片，随后将 <code>tokens</code> 产出的文本片段按 <code>debounce_s</code> 防抖节流地
+<p>先发送一张初始卡片，随后将 <code>tokens</code> 产出的文本片段按 <code>debounce_s</code> 去抖节流地
 增量写入指定元素，常用于将大模型的流式输出实时渲染到飞书卡片中。可发送为新消息
 （<code>receive_id</code>），或以回复形式发送（<code>reply_to_message_id</code>，在原消息所在会话内成串显示）。</p>
 
@@ -8171,7 +8125,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>流式更新的防抖间隔（秒），默认 0.25。</p>
+                <p>流式更新的去抖间隔（秒），默认 0.25。</p>
               </div>
             </td>
             <td>
@@ -8364,7 +8318,7 @@
 </span><span id="__span-0-692"><a id="__codelineno-0-692" name="__codelineno-0-692"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="__span-0-693"><a id="__codelineno-0-693" name="__codelineno-0-693"></a><span class="sd">    以流式方式逐步更新一张互动卡片（CardKit）。</span>
 </span><span id="__span-0-694"><a id="__codelineno-0-694" name="__codelineno-0-694"></a>
-</span><span id="__span-0-695"><a id="__codelineno-0-695" name="__codelineno-0-695"></a><span class="sd">    先发送一张初始卡片，随后将 `tokens` 产出的文本片段按 `debounce_s` 防抖节流地</span>
+</span><span id="__span-0-695"><a id="__codelineno-0-695" name="__codelineno-0-695"></a><span class="sd">    先发送一张初始卡片，随后将 `tokens` 产出的文本片段按 `debounce_s` 去抖节流地</span>
 </span><span id="__span-0-696"><a id="__codelineno-0-696" name="__codelineno-0-696"></a><span class="sd">    增量写入指定元素，常用于将大模型的流式输出实时渲染到飞书卡片中。可发送为新消息</span>
 </span><span id="__span-0-697"><a id="__codelineno-0-697" name="__codelineno-0-697"></a><span class="sd">    （`receive_id`），或以回复形式发送（`reply_to_message_id`，在原消息所在会话内成串显示）。</span>
 </span><span id="__span-0-698"><a id="__codelineno-0-698" name="__codelineno-0-698"></a>
@@ -8374,7 +8328,7 @@
 </span><span id="__span-0-702"><a id="__codelineno-0-702" name="__codelineno-0-702"></a><span class="sd">        receive_id_type: 接收方 ID 类型；为空时按 `receive_id` 前缀自动推断（仅发新消息时适用）。</span>
 </span><span id="__span-0-703"><a id="__codelineno-0-703" name="__codelineno-0-703"></a><span class="sd">        reply_to_message_id: 以回复形式发送时的目标消息 `message_id`；提供时 `receive_id` 应留空。</span>
 </span><span id="__span-0-704"><a id="__codelineno-0-704" name="__codelineno-0-704"></a><span class="sd">        element_id: 待更新的卡片元素 ID，默认 `md`。</span>
-</span><span id="__span-0-705"><a id="__codelineno-0-705" name="__codelineno-0-705"></a><span class="sd">        debounce_s: 流式更新的防抖间隔（秒），默认 0.25。</span>
+</span><span id="__span-0-705"><a id="__codelineno-0-705" name="__codelineno-0-705"></a><span class="sd">        debounce_s: 流式更新的去抖间隔（秒），默认 0.25。</span>
 </span><span id="__span-0-706"><a id="__codelineno-0-706" name="__codelineno-0-706"></a><span class="sd">        header: 卡片标题配置。</span>
 </span><span id="__span-0-707"><a id="__codelineno-0-707" name="__codelineno-0-707"></a><span class="sd">        template: 卡片模板配置。</span>
 </span><span id="__span-0-708"><a id="__codelineno-0-708" name="__codelineno-0-708"></a>
@@ -8826,7 +8780,7 @@ multipart 边界，调用方不应自行指定 Content-Type。</p>
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月1日 06:18:44 UTC">2026-07-01 06:18:44</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月1日 06:59:47 UTC">2026-07-01 06:59:47</span>
   </span>
 
     
