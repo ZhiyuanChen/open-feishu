@@ -2446,6 +2446,8 @@
       
         
       
+        
+      
     
     
     
@@ -2466,7 +2468,7 @@
   
   
   
-    <a href="../../../board/whiteboards/" class="md-nav__link">
+    <a href="../../../board/board/" class="md-nav__link">
       
   
   
@@ -3663,7 +3665,7 @@
   &lt;span class=&quot;doc doc-labels&quot;&gt;
       &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
   &lt;/span&gt;" href="../../tools/#feishu.agent.tools.Tool">feishu.agent.tools.Tool</a>。</p>
-<p>处理函数调用 <code>client.board.list_nodes(whiteboard_id, user_id_type="open_id")</code>（该接口不分页），
+<p>处理函数调用 <code>client.board.whiteboards.list_nodes(whiteboard_id, user_id_type="open_id")</code>（该接口不分页），
 节点以 <code>id</code>、<code>type</code>、<code>parent_id</code>、<code>children</code> 及对应类型的内容字段描述。</p>
 
 
@@ -3862,7 +3864,7 @@
 </span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">    读类工厂：一次性列出某画板内的全部节点，返回一个 [feishu.agent.tools.Tool][]。</span>
 </span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a>
-</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">    处理函数调用 `client.board.list_nodes(whiteboard_id, user_id_type=&quot;open_id&quot;)`（该接口不分页），</span>
+</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">    处理函数调用 `client.board.whiteboards.list_nodes(whiteboard_id, user_id_type=&quot;open_id&quot;)`（该接口不分页），</span>
 </span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">    节点以 `id`、`type`、`parent_id`、`children` 及对应类型的内容字段描述。</span>
 </span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a>
 </span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    Args:</span>
@@ -3893,7 +3895,7 @@
 </span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="n">client</span> <span class="o">=</span> <span class="k">await</span> <span class="n">resolve_client</span><span class="p">(</span><span class="n">as_user</span><span class="o">=</span><span class="n">as_user</span><span class="p">)</span>
 </span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="k">if</span> <span class="n">client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a>            <span class="k">return</span> <span class="n">needs_user_auth</span><span class="p">(</span><span class="n">auth_scopes</span><span class="p">)</span>
-</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="n">nodes</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">board</span><span class="o">.</span><span class="n">list_nodes</span><span class="p">(</span><span class="n">arguments</span><span class="p">[</span><span class="s2">&quot;whiteboard_id&quot;</span><span class="p">],</span> <span class="n">user_id_type</span><span class="o">=</span><span class="s2">&quot;open_id&quot;</span><span class="p">)</span>
+</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="n">nodes</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">board</span><span class="o">.</span><span class="n">whiteboards</span><span class="o">.</span><span class="n">list_nodes</span><span class="p">(</span><span class="n">arguments</span><span class="p">[</span><span class="s2">&quot;whiteboard_id&quot;</span><span class="p">],</span> <span class="n">user_id_type</span><span class="o">=</span><span class="s2">&quot;open_id&quot;</span><span class="p">)</span>
 </span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="k">return</span> <span class="n">ToolResult</span><span class="p">(</span><span class="n">ToolOutcome</span><span class="o">.</span><span class="n">COMPLETED</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">nodes</span><span class="p">)</span>
 </span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a>
 </span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="k">return</span> <span class="n">Tool</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span> <span class="n">input_schema</span><span class="o">=</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">handler</span><span class="o">=</span><span class="n">handler</span><span class="p">)</span>
@@ -3930,7 +3932,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月1日 05:46:41 UTC">2026-07-01 05:46:41</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月1日 05:51:03 UTC">2026-07-01 05:51:03</span>
   </span>
 
     
