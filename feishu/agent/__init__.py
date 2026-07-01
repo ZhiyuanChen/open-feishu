@@ -21,7 +21,7 @@
 
 from __future__ import annotations
 
-from .dispatch import register_agent
+from .registration import register_agent
 from .llm import (
     ContentPart,
     LlmBackend,

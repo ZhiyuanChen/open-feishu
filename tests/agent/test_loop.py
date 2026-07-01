@@ -28,6 +28,7 @@ approval flow, and adapter-driven loop integration + cross-adapter parity.
 
 from __future__ import annotations
 
+import asyncio
 import json
 from types import SimpleNamespace
 
@@ -35,6 +36,7 @@ import pytest
 
 from feishu.agent.adapters.anthropic import AnthropicBackend
 from feishu.agent.adapters.openai import OpenAIBackend
+from feishu.agent.approval import ApprovalStatus, DefaultApprovalEngine
 from feishu.agent.llm import (
     Message,
     MessageStop,
@@ -43,6 +45,8 @@ from feishu.agent.llm import (
     TextPart,
     ToolCall,
     ToolCallDelta,
+    ToolResultPart,
+    ToolUsePart,
 )
 from feishu.agent.loop import (
     Agent,
@@ -51,7 +55,8 @@ from feishu.agent.loop import (
     session_id_for,
     user_message_from_event,
 )
-from feishu.agent.session import InMemoryPendingApprovalStore, InMemorySessionStore
+from feishu.agent.result import ToolOutcome, ToolResult
+from feishu.agent.session import ClaimResult, InMemoryPendingApprovalStore, InMemorySessionStore, PendingApproval
 from feishu.agent.tools import ToolRegistry
 from tests._fakes import FakeLlmBackend, text_turn, tool_turn
 
@@ -63,14 +68,15 @@ def _ns(**kw):
     return SimpleNamespace(**kw)
 
 
-def _text_event(text="hi", *, message_id="om_in", chat_id="oc_1"):
+def _text_event(text="hi", *, message_id="om_in", chat_id="oc_1", open_id="ou_tester"):
     body = {
+        "sender": {"sender_id": {"open_id": open_id}},
         "message": {
             "chat_id": chat_id,
             "message_id": message_id,
             "message_type": "text",
             "content": json.dumps({"text": text}),
-        }
+        },
     }
     return SimpleNamespace(event_type="im.message.receive_v1", body=body)
 
@@ -322,11 +328,11 @@ class TestEventParsing:
         msg = user_message_from_event(ev)
         assert msg.content[0].text == "what is the weather"
 
-    def test_non_text_raw_content(self):
+    def test_non_text_uses_neutral_placeholder(self):
         raw = json.dumps({"image_key": "img_x"})
         ev = self._event({"message": {"message_type": "image", "content": raw}})
         msg = user_message_from_event(ev)
-        assert msg.content[0].text == raw
+        assert msg.content[0].text == "[image message]"
 
     def test_invalid_json(self):
         ev = self._event({"message": {"message_type": "text", "content": "not-json"}})
@@ -348,6 +354,7 @@ class _ApprovalRecordingClient:
     def __init__(self):
         self.replies = []
         self.cards = []
+        self.patches = []
         outer = self
 
         class _IM:
@@ -359,15 +366,58 @@ class _ApprovalRecordingClient:
                 outer.cards.append((content, receive_id))
                 return {"message_id": "om_card"}
 
+            async def patch(self, message_id, content):
+                outer.patches.append((message_id, content))
+                return {"message_id": message_id}
+
         self.im = _IM()
 
 
-def _action_event(approval_id, decision, chat_id="oc_1"):
+def _action_event(approval_id, decision, chat_id="oc_1", *, open_id="ou_tester", payload_sha256=None):
+    # A realistic card.action.trigger: the clicker is in `operator`, the card's message is in `context`
+    # (there is NO message{} node — the resumed loop must recover the conversation from the stored approval).
+    # A real card button also carries payload_sha256 for the tamper check; mirror that when supplied.
+    value = {"__approval__": approval_id, "decision": decision}
+    if payload_sha256 is not None:
+        value["payload_sha256"] = payload_sha256
     body = {
-        "action": {"value": {"__approval__": approval_id, "decision": decision}},
-        "message": {"chat_id": chat_id, "message_id": "om_in"},
+        "action": {"value": value},
+        "operator": {"open_id": open_id},
+        "context": {"open_message_id": "om_card", "open_chat_id": chat_id},
     }
     return SimpleNamespace(event_type="card.action.trigger", body=body)
+
+
+async def _drain(agent) -> None:
+    r"""Await the background tasks handle_card_action spawns (decide → execute → resume → patch)."""
+    while agent._bg_tasks:
+        await asyncio.gather(*list(agent._bg_tasks))
+
+
+class _MemoryExecutionStore:
+    def __init__(self):
+        self.rows = {}
+
+    def get(self, lookup_key):
+        return self.rows.get(lookup_key)
+
+    def put(
+        self,
+        idempotency_key,
+        *,
+        execution_status,
+        result,
+        alias_lookup_keys=(),
+        payload_sha256=None,
+    ):
+        row = {
+            "execution_status": execution_status,
+            "result": result,
+            "payload_sha256": payload_sha256,
+        }
+        self.rows[idempotency_key] = row
+        for key in alias_lookup_keys:
+            self.rows[key] = row
 
 
 def _agent_with_deploy(client, store, approvals, ran):
@@ -405,6 +455,24 @@ def _extract_approval_id(card: dict) -> str:
     return found[0]
 
 
+def _extract_payload_sha256(card: dict) -> str | None:
+    """Pull the payload_sha256 a real approval card embeds in its button value (for the tamper check)."""
+    found = []
+
+    def walk(node):
+        if isinstance(node, dict):
+            if "payload_sha256" in node:
+                found.append(node["payload_sha256"])
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    walk(card)
+    return found[0] if found else None
+
+
 def _has_buttons(card: dict) -> bool:
     flag = []
 
@@ -438,6 +506,130 @@ class TestApprovalFlow:
         history = await store.get("oc_1")
         assert any(m.role == "assistant" for m in history)
 
+    async def test_suspended_history_is_well_formed_and_placeholder_is_replaced(self):
+        """[self-review] A suspended turn must leave every tool_use with a tool_result placeholder (so abandoning
+        the card can't make the next turn send malformed history), and approving REPLACES that placeholder —
+        exactly one result for the tool_call_id, never a duplicate."""
+        client = _ApprovalRecordingClient()
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        ran = []
+        agent, _ = _agent_with_deploy(client, store, approvals, ran)
+        await agent.run(_text_event("deploy prod", chat_id="oc_1"))
+        history = await store.get("oc_1")
+        use_ids = [p.id for m in history if m.role == "assistant" for p in m.content if isinstance(p, ToolUsePart)]
+        results = [p for m in history if m.role == "tool" for p in m.content if isinstance(p, ToolResultPart)]
+        assert use_ids == ["c1"]  # the suspended tool call
+        assert [p.tool_call_id for p in results] == ["c1"]  # placeholder present -> well-formed
+        assert "deployed to prod" not in str(results[0].content)  # placeholder, not an executed result
+        # Approve: the placeholder is replaced in place, not appended alongside.
+        card, _ = client.cards[0]
+        approval_id = _extract_approval_id(card)
+        sha = _extract_payload_sha256(card)
+        await agent.handle_card_action(_action_event(approval_id, "approve", chat_id="oc_1", payload_sha256=sha))
+        await _drain(agent)
+        history = await store.get("oc_1")
+        results = [
+            p
+            for m in history
+            if m.role == "tool"
+            for p in m.content
+            if isinstance(p, ToolResultPart) and p.tool_call_id == "c1"
+        ]
+        assert len(results) == 1  # replaced, not duplicated
+        assert "deployed to prod" in str(results[0].content)
+        assert ran == ["prod"]
+
+    async def test_replayed_approval_replaces_placeholder_and_resumes(self):
+        client = _ApprovalRecordingClient()
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        executions = _MemoryExecutionStore()
+        ran = []
+        agent, backend = _agent_with_deploy(client, store, approvals, ran)
+        agent.approval_engine = DefaultApprovalEngine(approvals=approvals, executions=executions)
+
+        await agent.run(_text_event("deploy prod", chat_id="oc_1"))
+        pending = next(iter(approvals._store.values()))
+        executions.put(
+            pending.idempotency_key,
+            execution_status="executed",
+            result="cached deployment result",
+            payload_sha256=pending.payload_sha256,
+        )
+
+        card, _ = client.cards[0]
+        approval_id = _extract_approval_id(card)
+        sha = _extract_payload_sha256(card)
+        await agent.handle_card_action(_action_event(approval_id, "approve", chat_id="oc_1", payload_sha256=sha))
+        await _drain(agent)
+
+        assert ran == []
+        history = await store.get("oc_1")
+        results = [
+            part
+            for msg in history
+            if msg.role == "tool"
+            for part in msg.content
+            if isinstance(part, ToolResultPart) and part.tool_call_id == "c1"
+        ]
+        assert len(results) == 1
+        assert results[0].content == "cached deployment result"
+        assert "Awaiting your confirmation" not in str(results[0].content)
+        assert len(backend.calls) == 2
+        assert client.replies[-1][1] == "deployment complete"
+
+    async def test_approval_resume_executes_later_tool_calls_from_same_turn(self):
+        client = _ApprovalRecordingClient()
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        ran = []
+        reg = ToolRegistry()
+
+        async def deploy(env):
+            ran.append(("deploy", env))
+            return f"deployed to {env}"
+
+        async def weather(city):
+            ran.append(("weather", city))
+            return f"sunny in {city}"
+
+        reg.register("deploy", deploy, input_schema=DEPLOY_SCHEMA, description="deploy", requires_approval=True)
+        reg.register("weather", weather, input_schema=SCHEMA, description="weather")
+        backend = FakeLlmBackend(
+            [
+                [
+                    ToolCallDelta(index=0, id="c1", name="deploy", arguments='{"env":"prod"}'),
+                    ToolCallDelta(index=1, id="c2", name="weather", arguments='{"city":"sh"}'),
+                    MessageStop(stop_reason=StopReason.TOOL_USE),
+                ],
+                text_turn("all done"),
+            ]
+        )
+        agent = Agent(backend=backend, registry=reg, store=store, client=client, approvals=approvals)
+        await agent.run(_text_event("deploy prod then check weather", chat_id="oc_1"))
+        assert ran == []
+
+        card, _ = client.cards[0]
+        approval_id = _extract_approval_id(card)
+        sha = _extract_payload_sha256(card)
+        await agent.handle_card_action(_action_event(approval_id, "approve", chat_id="oc_1", payload_sha256=sha))
+        await _drain(agent)
+
+        assert ran == [("deploy", "prod"), ("weather", "sh")]
+        history = await store.get("oc_1")
+        results = {
+            part.tool_call_id: part.content
+            for msg in history
+            if msg.role == "tool"
+            for part in msg.content
+            if isinstance(part, ToolResultPart)
+        }
+        assert results["c1"] == "deployed to prod"
+        assert results["c2"] == "sunny in sh"
+        assert "Awaiting your confirmation" not in results["c2"]
+        assert client.replies[-1][1] == "all done"
+
     async def test_approve_runs_and_finalizes(self):
         client = _ApprovalRecordingClient()
         store = InMemorySessionStore()
@@ -448,12 +640,18 @@ class TestApprovalFlow:
         # grab the approval_id from the persisted approval via the card value
         card, _ = client.cards[0]
         approval_id = _extract_approval_id(card)
-        response = await agent.handle_card_action(_action_event(approval_id, "approve", chat_id="oc_1"))
+        sha = _extract_payload_sha256(card)
+        response = await agent.handle_card_action(
+            _action_event(approval_id, "approve", chat_id="oc_1", payload_sha256=sha)
+        )
+        # Immediate ACK: a processing toast, no card synchronously (the decided card is patched in the background).
+        assert "toast" in response and "card" not in response
+        assert ran == []  # not yet — execution runs in the background
+        await _drain(agent)
         assert ran == ["prod"]  # tool ran on approval
         assert client.replies[-1][1] == "deployment complete"  # loop resumed + finalized
-        assert "toast" in response and "card" in response  # synchronous response
-        # buttons removed on the returned card
-        assert not _has_buttons(response["card"])
+        # the clicked card was patched in place with the decided card (buttons removed)
+        assert client.patches and not _has_buttons(client.patches[-1][1])
 
     async def test_reject_skips_tool(self):
         client = _ApprovalRecordingClient()
@@ -464,11 +662,15 @@ class TestApprovalFlow:
         await agent.run(_text_event("deploy prod", chat_id="oc_1"))
         card, _ = client.cards[0]
         approval_id = _extract_approval_id(card)
-        response = await agent.handle_card_action(_action_event(approval_id, "reject", chat_id="oc_1"))
+        sha = _extract_payload_sha256(card)
+        response = await agent.handle_card_action(
+            _action_event(approval_id, "reject", chat_id="oc_1", payload_sha256=sha)
+        )
+        assert "toast" in response  # immediate ACK
+        await _drain(agent)
         assert ran == []  # tool did NOT run
         # the model still gets to react -> backend called a second time -> a reply emitted
         assert len(backend.calls) == 2
-        assert "toast" in response
 
     async def test_unknown_info_toast(self):
         client = _ApprovalRecordingClient()
@@ -476,8 +678,92 @@ class TestApprovalFlow:
         response = await agent.handle_card_action(_action_event("does-not-exist", "approve"))
         assert response["toast"]["type"] == "info"
 
+    async def test_callback_omitting_hash_does_not_bypass_tamper_check(self):
+        """[self-review] A callback that omits payload_sha256 while a hash was stored must NOT bypass the tamper
+        check — the claim fails closed (no match) and the approved tool never runs."""
+        client = _ApprovalRecordingClient()
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        ran = []
+        agent, _ = _agent_with_deploy(client, store, approvals, ran)
+        await agent.run(_text_event("deploy prod", chat_id="oc_1"))
+        approval_id = _extract_approval_id(client.cards[0][0])
+        # Deliberately omit payload_sha256 (malformed/forged callback) -> must be treated as a mismatch.
+        await agent.handle_card_action(_action_event(approval_id, "approve", chat_id="oc_1"))
+        await _drain(agent)
+        assert ran == []  # fail-closed: the write did not execute
+
+    async def test_default_approval_card_summarizes_arguments(self):
+        client = _ApprovalRecordingClient()
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        reg = ToolRegistry()
+
+        async def reimburse(form, accounts):
+            return "ok"
+
+        reg.register(
+            "reimburse",
+            reimburse,
+            input_schema={"type": "object"},
+            description="reimburse",
+            requires_approval=True,
+        )
+        backend = FakeLlmBackend(
+            [
+                tool_turn(
+                    index=0,
+                    id="c1",
+                    name="reimburse",
+                    arguments_json=json.dumps(
+                        {
+                            "form": {"amount": 123, "reason": "travel"},
+                            "accounts": {"bank": "pa_secret_handle"},
+                        }
+                    ),
+                )
+            ]
+        )
+        agent = Agent(backend=backend, registry=reg, store=store, client=client, approvals=approvals)
+
+        await agent.run(_text_event("submit reimbursement", chat_id="oc_1"))
+
+        body = json.dumps(client.cards[0][0], ensure_ascii=False)
+        assert "pa_secret_handle" not in body
+        assert "travel" not in body
+        assert "`accounts`: object with 1 field(s)" in body
+        assert "`form`: {`amount`: 123, `reason`: text (6 chars)}" in body
+
+    async def test_failed_approved_write_is_terminal(self):
+        """[self-review] When an approved tool reports failure, the pending is resolved TERMINALLY (removed) — not
+        left as a retryable awaiting record the (now button-less) card can never reach."""
+        client = _ApprovalRecordingClient()
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        reg = ToolRegistry()
+
+        async def deploy(env):
+            return ToolResult(ToolOutcome.FAILED, content="boom", is_error=True)
+
+        reg.register("deploy", deploy, input_schema=DEPLOY_SCHEMA, description="deploy", requires_approval=True)
+        backend = FakeLlmBackend(
+            [
+                tool_turn(index=0, id="c1", name="deploy", arguments_json='{"env":"prod"}'),
+                text_turn("sorry, the deploy failed"),
+            ]
+        )
+        agent = Agent(backend=backend, registry=reg, store=store, client=client, approvals=approvals)
+        await agent.run(_text_event("deploy prod", chat_id="oc_1"))
+        card, _ = client.cards[0]
+        approval_id = _extract_approval_id(card)
+        sha = _extract_payload_sha256(card)
+        await agent.handle_card_action(_action_event(approval_id, "approve", chat_id="oc_1", payload_sha256=sha))
+        await _drain(agent)
+        assert approvals._store == {}  # terminal: pending removed, not lingering as awaiting_confirmation
+        assert len(backend.calls) == 2  # model resumed and got the failure to explain
+
     async def test_resume_raises_still_responds(self):
-        """handle_card_action must return {toast, card} even if the resumed run raises."""
+        """handle_card_action must ACK immediately and the background resume must swallow its own errors."""
         client = _ApprovalRecordingClient()
         store = InMemorySessionStore()
         approvals = InMemoryPendingApprovalStore()
@@ -518,17 +804,19 @@ class TestApprovalFlow:
         await agent.run(_text_event("deploy prod", chat_id="oc_1"))
         card, _ = client.cards[0]
         approval_id = _extract_approval_id(card)
+        sha = _extract_payload_sha256(card)
 
-        # This must NOT raise — the exception should be caught internally
-        response = await agent.handle_card_action(_action_event(approval_id, "approve", chat_id="oc_1"))
+        # This must NOT raise — the immediate ACK is synchronous; the resume error is swallowed in the bg task.
+        response = await agent.handle_card_action(
+            _action_event(approval_id, "approve", chat_id="oc_1", payload_sha256=sha)
+        )
+        assert "toast" in response  # immediate ACK
+        await _drain(agent)  # background resume raises internally; _drain must not propagate it
 
-        # The tool itself ran (dispatch happened before _loop)
+        # The tool itself ran (dispatch happened before the resumed _loop raised)
         assert ran == ["prod"]
-        # The synchronous Feishu response must always be a {toast, card} dict
-        assert "toast" in response
-        assert "card" in response
-        # The card must have buttons removed (decided card, not approval card)
-        assert not _has_buttons(response["card"])
+        # The clicked card is still patched with the decided card (buttons removed), despite the resume error
+        assert client.patches and not _has_buttons(client.patches[-1][1])
 
     async def test_invalid_decision_info_toast(self):
         """FIX 1: a card action with an unrecognised decision value gets an info toast, no tool dispatch,
@@ -543,10 +831,11 @@ class TestApprovalFlow:
         await agent.run(_text_event("deploy prod", chat_id="oc_1"))
         card, _ = client.cards[0]
         approval_id = _extract_approval_id(card)
+        sha = _extract_payload_sha256(card)
 
         # Send a card action with a bogus decision value
         body = {
-            "action": {"value": {"__approval__": approval_id, "decision": "bogus"}},
+            "action": {"value": {"__approval__": approval_id, "decision": "bogus", "payload_sha256": sha}},
             "message": {"chat_id": "oc_1", "message_id": "om_in"},
         }
         event = SimpleNamespace(event_type="card.action.trigger", body=body)
@@ -562,9 +851,135 @@ class TestApprovalFlow:
 
         # KEY assertion: the PendingApproval must still be retrievable — bogus decision
         # must NOT have consumed (popped) it.  Prove this by successfully approving now.
-        response2 = await agent.handle_card_action(_action_event(approval_id, "approve", chat_id="oc_1"))
-        assert ran == ["prod"]  # tool ran on the retry-approve
-        assert response2["toast"]["type"] == "success"
+        response2 = await agent.handle_card_action(
+            _action_event(approval_id, "approve", chat_id="oc_1", payload_sha256=sha)
+        )
+        assert "toast" in response2  # immediate ACK
+        await _drain(agent)
+        assert ran == ["prod"]  # tool ran on the retry-approve (decided in the background)
+
+    async def test_clicker_must_be_initiator(self):
+        """High: in a group chat, a non-initiator cannot confirm someone else's write (least-privilege)."""
+        client = _ApprovalRecordingClient()
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        ran = []
+        agent, _ = _agent_with_deploy(client, store, approvals, ran)
+        await agent.run(_text_event("deploy prod", chat_id="oc_1", open_id="ou_alice"))
+        approval_id = _extract_approval_id(client.cards[0][0])
+        # Bob (a different operator) tries to confirm Alice's write
+        response = await agent.handle_card_action(
+            _action_event(approval_id, "approve", chat_id="oc_1", open_id="ou_bob")
+        )
+        await _drain(agent)
+        assert response["toast"]["type"] == "error"  # rejected: not Bob's to confirm
+        assert ran == []  # the write did NOT execute
+
+    async def test_fail_closed_without_identity(self):
+        """High: a write whose requester cannot be identified must NOT become a confirmable approval."""
+        client = _ApprovalRecordingClient()
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        ran = []
+        agent, backend = _agent_with_deploy(client, store, approvals, ran)
+        # An inbound event with NO sender → no identifiable initiator
+        evt = SimpleNamespace(
+            event_type="im.message.receive_v1",
+            body={
+                "message": {
+                    "chat_id": "oc_1",
+                    "message_id": "om_in",
+                    "message_type": "text",
+                    "content": json.dumps({"text": "deploy prod"}),
+                }
+            },
+        )
+        await agent.run(evt)
+        assert client.cards == []  # fail-closed: no confirmation card sent
+        assert ran == []
+        assert len(backend.calls) == 2  # model got a tool error and produced a follow-up turn
+
+    async def test_card_send_failure_leaves_no_dangling_pending(self):
+        """High: persist-then-send — if the card can't be delivered, the just-stored pending is explicitly
+        cancelled (no dangling pending the user could never confirm) and the model gets a tool error and recovers."""
+        client = _ApprovalRecordingClient()
+
+        async def _boom(*a, **k):
+            raise RuntimeError("send failed")
+
+        client.im.send = _boom  # type: ignore[method-assign]
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        ran = []
+        agent, backend = _agent_with_deploy(client, store, approvals, ran)
+        await agent.run(_text_event("deploy prod", chat_id="oc_1"))
+        assert client.cards == []  # nothing delivered
+        assert ran == []  # write not started
+        assert approvals._store == {}  # persisted-then-cancelled: no dangling pending left behind
+        assert len(backend.calls) == 2  # model recovered with a follow-up turn (no hang on a dangling pending)
+
+    async def test_pending_is_persisted_before_card_is_sent(self):
+        """High (ordering): the pending must be in the store BEFORE the card is delivered, so a click can never hit
+        an empty store ('no pending approval'). Snapshot the store at the instant send() is called."""
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        client = _ApprovalRecordingClient()
+        original_send = client.im.send
+        store_at_send: list[dict] = []
+
+        async def _snapshotting_send(*a, **k):
+            store_at_send.append(dict(approvals._store))  # state of the store at the moment of delivery
+            return await original_send(*a, **k)
+
+        client.im.send = _snapshotting_send  # type: ignore[method-assign]
+        ran = []
+        agent, backend = _agent_with_deploy(client, store, approvals, ran)
+        await agent.run(_text_event("deploy prod", chat_id="oc_1"))
+        assert len(client.cards) == 1  # card delivered, turn suspended awaiting confirmation
+        assert store_at_send and store_at_send[0]  # the pending was already persisted WHEN send was invoked
+        assert len(approvals._store) == 1  # still pending (awaiting the click)
+
+    async def test_reject_is_claim_gated(self):
+        """High: reject goes through the same atomic claim as approve, so a concurrent approve can't be
+        double-processed. Pre-claiming (simulating approve winning) makes a later reject a no-op, not a fresh
+        rejection."""
+        approvals = InMemoryPendingApprovalStore()
+        engine = DefaultApprovalEngine(approvals=approvals)
+        ap = PendingApproval(
+            approval_id="ap1", session_id="s", tool_call_id="c", tool_name="deploy", arguments={}, payload_sha256="ph"
+        )
+        await engine.on_request(ap)
+        won = await approvals.claim("ap1", expected_payload_sha256="ph")  # approve wins the claim first
+        assert won is ClaimResult.CLAIMED
+
+        async def _dispatch(name, args):
+            return ToolResult(ToolOutcome.COMPLETED, content="x")
+
+        outcome = await engine.on_decision("ap1", "reject", expected_payload_sha256="ph", dispatch=_dispatch)
+        assert outcome.status is not ApprovalStatus.REJECTED  # claim-gated: not a second, fresh decision
+
+    async def test_on_cancel_removes_pending_and_audits(self):
+        """on_cancel removes a not-yet-decided pending (no claim required) and records a 'cancel' audit event;
+        cancelling an unknown id is a no-op."""
+        events: list[tuple] = []
+
+        class _Audit:
+            def append(
+                self, event_type, *, key, approval=None, event_id=None, message_id=None, outcome="ok", error=None
+            ):
+                events.append((event_type, key, outcome))
+
+        approvals = InMemoryPendingApprovalStore()
+        engine = DefaultApprovalEngine(approvals=approvals, audit=_Audit())
+        ap = PendingApproval(
+            approval_id="ap1", session_id="s", tool_call_id="c", tool_name="deploy", arguments={}, payload_sha256="ph"
+        )
+        await engine.on_request(ap)
+        assert "ap1" in approvals._store
+        await engine.on_cancel("ap1")
+        assert approvals._store == {}  # removed, not frozen
+        assert ("cancel", "ap1", "ok") in events  # auditable rollback
+        await engine.on_cancel("nope")  # unknown id: no error, no audit
 
 
 # ===========================================================================
