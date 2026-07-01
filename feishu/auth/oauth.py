@@ -44,7 +44,7 @@ class OAuthNamespace(Namespace):
     否则相关方法会抛出 [ValueError][]。
 
     飞书文档:
-        [网页应用登录](https://open.feishu.cn/document/server-docs/authentication-management/login-state-management)
+        [获取登录预授权码](https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/obtain-code)
     """
 
     def authorize_url(
@@ -77,7 +77,7 @@ class OAuthNamespace(Namespace):
                 或区域无法解析出 accounts 域名时抛出。
 
         飞书文档:
-            [获取登录预授权码](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/authentication-management/login-state-management/obtain-oauth-code)
+            [获取登录预授权码](https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/obtain-code)
 
         Examples:
             >>> from feishu import FeishuClient
@@ -120,16 +120,16 @@ class OAuthNamespace(Namespace):
 
         授权回调拿到的 `code` 调用本方法换取用户访问凭证。应用凭据在请求体中传递，
         因此该请求不携带 Bearer（`token_type=None`），且响应为非信封格式
-        （`expect_envelope=False`），直接返回包含 `access_token`、`refresh_token`、
-        `expires_in` 等字段的结果。
+        （`expect_envelope=False`），直接返回包含 `access_token`、`expires_in` 等字段的结果；
+        仅当授权范围包含 `offline_access` 时，响应才包含 `refresh_token`。
 
         Args:
             code: 授权回调中获得的登录预授权码。
             redirect_uri: 回调地址，需与换取授权码时使用的一致。默认不传。
 
         Returns:
-            包含 `access_token`、`refresh_token`、`expires_in`、`refresh_token_expires_in`、
-            `scope` 等字段的结果。
+            包含 `access_token`、`expires_in`、`scope` 等字段的结果；若授权范围包含
+            `offline_access`，还会包含 `refresh_token` 与 `refresh_token_expires_in`。
 
         Raises:
             ValueError: 当客户端未配置 [feishu.auth.credentials.InternalCredential][] 时抛出。
@@ -138,12 +138,12 @@ class OAuthNamespace(Namespace):
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [获取用户访问凭证](https://open.feishu.cn/document/server-docs/authentication-management/access-token/get-user-access-token)
+            [获取用户访问凭证](https://open.feishu.cn/document/authentication-management/access-token/get-user-access-token)
 
         Examples:
             >>> redirect_uri = "https://app.example.com/cb"
             >>> resp = await client.oauth.exchange_code("the-code", redirect_uri=redirect_uri)  # doctest: +SKIP
-            >>> resp["access_token"], resp["refresh_token"], resp["expires_in"]  # doctest: +SKIP
+            >>> resp["access_token"], resp.get("refresh_token"), resp["expires_in"]  # doctest: +SKIP
             ('u-acc', 'u-ref', 7200)
         """
         credential = self._internal_credential()
@@ -180,7 +180,7 @@ class OAuthNamespace(Namespace):
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [刷新用户访问凭证](https://open.feishu.cn/document/server-docs/authentication-management/access-token/refresh-user-access-token)
+            [刷新用户访问凭证](https://open.feishu.cn/document/authentication-management/access-token/refresh-user-access-token)
 
         Examples:
             >>> resp = await client.oauth.refresh("u-ref-OLD")  # doctest: +SKIP
@@ -217,7 +217,7 @@ class OAuthNamespace(Namespace):
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [获取登录用户信息](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/authentication-management/login-state-management/get-user-info)
+            [获取登录用户信息](https://open.feishu.cn/document/server-docs/authentication-management/login-state-management/get)
 
         Examples:
             >>> data = await client.oauth.user_info("u-acc-token")  # doctest: +SKIP

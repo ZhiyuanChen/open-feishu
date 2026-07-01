@@ -23,7 +23,17 @@ from __future__ import annotations
 
 from .credentials import AppTicketStore, Credential, InMemoryAppTicketStore, InternalCredential, StoreCredential
 from .oauth import OAuthNamespace
+from .oauth_state import OAuthState, OAuthStateSigner
 from .tokens import CachedToken, InMemoryTokenCache, TokenCache, TokenManager
+from .user_tokens import (
+    InMemoryOAuthTokenStore,
+    OAuthTokenStore,
+    SqliteOAuthTokenStore,
+    TokenRecord,
+    UserTokenProvider,
+    user_from_identity_keys,
+    user_identity_keys,
+)
 
 __all__ = [
     "AppTicketStore",
@@ -36,4 +46,15 @@ __all__ = [
     "StoreCredential",
     "TokenCache",
     "TokenManager",
+    # User-scoped OAuth: per-user token persistence + refresh-aware execution.
+    "OAuthTokenStore",
+    "InMemoryOAuthTokenStore",
+    "SqliteOAuthTokenStore",
+    "TokenRecord",
+    "UserTokenProvider",
+    "user_from_identity_keys",
+    "user_identity_keys",
+    # OAuth redirect-flow CSRF protection.
+    "OAuthState",
+    "OAuthStateSigner",
 ]
