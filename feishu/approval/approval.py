@@ -28,6 +28,7 @@ from .._namespace import Namespace
 if TYPE_CHECKING:
     from .comments import CommentsNamespace
     from .definitions import DefinitionsNamespace
+    from .files import FilesNamespace
     from .instances import InstancesNamespace
     from .tasks import TasksNamespace
 
@@ -51,11 +52,12 @@ class ApprovalNamespace(Namespace):
     通常无需直接实例化，应通过 `client.approval` 访问。
 
     飞书文档:
-        [审批概述](https://open.feishu.cn/document/server-docs/approval-v4/overview)
+        [审批概述](https://open.feishu.cn/document/server-docs/approval-v4/approval-overview)
     """
 
     _comments: CommentsNamespace | None = None
     _definitions: DefinitionsNamespace | None = None
+    _files: FilesNamespace | None = None
     _instances: InstancesNamespace | None = None
     _tasks: TasksNamespace | None = None
 
@@ -104,6 +106,19 @@ class ApprovalNamespace(Namespace):
 
             self._definitions = DefinitionsNamespace(self._client)
         return self._definitions
+
+    @property
+    def files(self) -> FilesNamespace:
+        r"""
+        审批文件接口命名空间。
+
+        惰性创建并返回 [feishu.approval.files.FilesNamespace][]，用于上传审批图片或附件。
+        """
+        if self._files is None:
+            from .files import FilesNamespace
+
+            self._files = FilesNamespace(self._client)
+        return self._files
 
     @property
     def instances(self) -> InstancesNamespace:
