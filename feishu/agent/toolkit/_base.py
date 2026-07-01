@@ -48,6 +48,7 @@ def needs_user_auth(scopes: Sequence[str]) -> ToolResult:
         ToolOutcome.NEEDS_USER_AUTH,
         content="user authorization required",
         authorize_url=current_tool_context().authorize_url(scopes),
+        auth_scopes=tuple(scopes),
     )
 
 

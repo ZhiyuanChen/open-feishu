@@ -32,6 +32,7 @@ r"""
 from __future__ import annotations
 
 import contextvars
+import inspect
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -68,6 +69,23 @@ class ToolContext:
         if not user:
             return None
         return await self.user_tokens.as_user(user)
+
+    async def has_user_auth(self, scopes: Sequence[str]) -> bool:
+        r"""判断当前请求用户是否已有有效授权；提供方支持 scope 检查时要求覆盖 `scopes`。"""
+        if not scopes:
+            return True
+        if self.user_tokens is None:
+            return False
+        user = self.user or _user_from_event(self.event)
+        if not user:
+            return False
+        checker = getattr(self.user_tokens, "has_scopes", None)
+        if checker is not None:
+            result = checker(user, tuple(scopes))
+            if inspect.isawaitable(result):
+                result = await result
+            return bool(result)
+        return await self.as_user() is not None
 
     def requesting_user(self) -> dict[str, Any]:
         r"""

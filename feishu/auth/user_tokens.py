@@ -35,6 +35,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 import sqlite3
 import time
 from collections.abc import Iterable, Mapping
@@ -332,19 +333,37 @@ class UserTokenProvider:
 
     async def user_token(self, user: Mapping[str, Any]) -> str | None:
         r"""解析有效的用户态访问令牌；临近过期则刷新；无记录或已失效返回 `None`。"""
+        record = await self._valid_record(user)
+        return record.user_access_token if record is not None else None
+
+    async def _valid_record(self, user: Mapping[str, Any]) -> TokenRecord | None:
+        r"""读取一个有效用户 token 记录；临近过期时刷新，硬过期或无 token 时返回 `None`。"""
         record = await self.store.get(user)
         if record is None:
             return None
         if record.refresh_token and record.is_expiring(self.refresh_skew_seconds, _now()):
             try:
                 token_data = await self.client.oauth.refresh(record.refresh_token)
+                if "scope" not in token_data and record.scope:
+                    token_data = {**token_data, "scope": record.scope}
                 await self.store.save(token_data, user_keys=record.user_keys)
                 record = await self.store.get(user)
             except Exception:  # noqa: BLE001 — fall back to the stored token; drop only if hard-expired
                 self._log.warning("user_token: refresh failed; falling back to the stored token", exc_info=True)
         if record is None or record.is_expired(_now()) or not record.user_access_token:
             return None
-        return record.user_access_token
+        return record
+
+    async def has_scopes(self, user: Mapping[str, Any], scopes: Iterable[str]) -> bool:
+        r"""返回当前用户是否已有有效 token，且 token 的 `scope` 覆盖所需权限。"""
+        required = {scope for scope in scopes if scope}
+        if not required:
+            return True
+        record = await self._valid_record(user)
+        if record is None:
+            return False
+        granted = _scope_set(record.scope)
+        return required.issubset(granted)
 
     async def as_user(self, user: Mapping[str, Any]) -> Any | None:
         r"""产出当前用户的用户态飞书客户端；无有效凭证时返回 `None`。"""
@@ -372,3 +391,10 @@ def _connect(db_path: str | Path) -> sqlite3.Connection:
     from .._sqlite import connect
 
     return connect(db_path)
+
+
+def _scope_set(scope: str | None) -> set[str]:
+    r"""把 OAuth 返回的 scope 字符串归一为集合；兼容空格和逗号分隔。"""
+    if not scope:
+        return set()
+    return {item for item in re.split(r"[\s,]+", scope.strip()) if item}

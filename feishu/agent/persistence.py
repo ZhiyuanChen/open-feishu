@@ -45,13 +45,14 @@ from typing import Any, Callable, TypeVar
 
 from .integrity import payload_summary
 from .llm import Message, TextPart, ToolResultPart, ToolUsePart
-from .session import ClaimResult, PendingApproval
+from .session import ClaimResult, PendingApproval, PendingAuthorization
 
 T = TypeVar("T")
 
 # How long an awaiting confirmation stays valid, and how long a frozen
 # (execution_unknown) record is retained, by default.
 _DEFAULT_TTL_SECONDS = 15 * 60
+_DEFAULT_AUTHORIZATION_TTL_SECONDS = 60 * 60
 _DEFAULT_EXECUTION_UNKNOWN_TTL_SECONDS = 7 * 24 * 3600
 
 
@@ -147,6 +148,46 @@ def approval_from_dict(data: dict[str, Any]) -> PendingApproval:
         created_event_id=data.get("created_event_id"),
         created_at=data.get("created_at"),
         state=data.get("state", "awaiting_confirmation"),
+        extra=data.get("extra") or {},
+    )
+
+
+def authorization_to_dict(authorization: PendingAuthorization) -> dict[str, Any]:
+    r"""将 [feishu.agent.session.PendingAuthorization][] 序列化为可 JSON 化的字典。"""
+    return {
+        "authorization_id": authorization.authorization_id,
+        "session_id": authorization.session_id,
+        "tool_call_id": authorization.tool_call_id,
+        "tool_name": authorization.tool_name,
+        "arguments": authorization.arguments,
+        "scopes": list(authorization.scopes),
+        "owner_user_keys": list(authorization.owner_user_keys),
+        "tenant_key": authorization.tenant_key,
+        "chat_id": authorization.chat_id,
+        "created_message_id": authorization.created_message_id,
+        "created_event_id": authorization.created_event_id,
+        "created_at": authorization.created_at,
+        "state": authorization.state,
+        "extra": authorization.extra,
+    }
+
+
+def authorization_from_dict(data: dict[str, Any]) -> PendingAuthorization:
+    r"""从 [feishu.agent.persistence.authorization_to_dict][] 的产物还原挂起授权。"""
+    return PendingAuthorization(
+        authorization_id=data["authorization_id"],
+        session_id=data["session_id"],
+        tool_call_id=data["tool_call_id"],
+        tool_name=data["tool_name"],
+        arguments=data.get("arguments") or {},
+        scopes=tuple(data.get("scopes") or ()),
+        owner_user_keys=tuple(data.get("owner_user_keys") or ()),
+        tenant_key=data.get("tenant_key"),
+        chat_id=data.get("chat_id"),
+        created_message_id=data.get("created_message_id"),
+        created_event_id=data.get("created_event_id"),
+        created_at=data.get("created_at"),
+        state=data.get("state", "awaiting_authorization"),
         extra=data.get("extra") or {},
     )
 
@@ -385,6 +426,138 @@ class SqlitePendingApprovalStore:
             return False
         # `executing` (a process that died mid-side-effect) is retained for the long frozen TTL like
         # `execution_unknown`, so its unknown outcome is not silently dropped at the short pending TTL.
+        ttl = self._frozen_ttl if state in ("execution_unknown", "executing") else self._ttl
+        return _now() - created_at > ttl
+
+
+class SqlitePendingAuthorizationStore:
+    r"""
+    基于 SQLite 的 [feishu.agent.session.PendingAuthorizationStore][] 实现，挂起授权跨重启存活。
+
+    OAuth callback 可能晚于原消息数分钟到达，甚至跨进程重启；该 store 以 `authorization_id` 保存恢复所需的
+    tool call 上下文，并用 `claim` 保证重复 callback 至多恢复一次。
+
+    Args:
+        db_path: SQLite 数据库文件路径。
+        ttl_seconds: 等待授权的存活时长。默认为 `3600`（1 小时）。
+        execution_unknown_ttl_seconds: 冻结记录（`execution_unknown`）的保留时长。默认为 `604800`（7 天）。
+    """
+
+    def __init__(
+        self,
+        db_path: str | Path,
+        *,
+        ttl_seconds: int = _DEFAULT_AUTHORIZATION_TTL_SECONDS,
+        execution_unknown_ttl_seconds: int = _DEFAULT_EXECUTION_UNKNOWN_TTL_SECONDS,
+    ) -> None:
+        self._db = _connect(db_path)
+        self._db.execute(
+            "CREATE TABLE IF NOT EXISTS authorizations ("
+            "authorization_id TEXT PRIMARY KEY, state TEXT NOT NULL, created_at INTEGER, data TEXT NOT NULL)"
+        )
+        self._db.commit()
+        self._ttl = ttl_seconds
+        self._frozen_ttl = execution_unknown_ttl_seconds
+        self._lock = asyncio.Lock()
+
+    async def put(self, authorization: PendingAuthorization) -> None:
+        r"""保存一次挂起授权；未设置 `created_at` 时以当前时间戳记。"""
+        created_at = authorization.created_at if authorization.created_at is not None else _now()
+        async with self._lock:
+            self._db.execute(
+                "INSERT INTO authorizations (authorization_id, state, created_at, data) VALUES (?, ?, ?, ?) "
+                "ON CONFLICT(authorization_id) DO UPDATE SET state=excluded.state, "
+                "created_at=excluded.created_at, data=excluded.data",
+                (
+                    authorization.authorization_id,
+                    authorization.state,
+                    created_at,
+                    json.dumps(authorization_to_dict(authorization), ensure_ascii=False),
+                ),
+            )
+            self._db.commit()
+
+    async def get(self, authorization_id: str) -> PendingAuthorization | None:
+        r"""读取挂起授权而不移除；过期状态由 `claim` 判定，以便 callback 仍能回原会话提示用户。"""
+        async with self._lock:
+            return self._load_locked(authorization_id)
+
+    async def pop(self, authorization_id: str) -> PendingAuthorization | None:
+        r"""取出并移除一次挂起授权，不存在时返回 `None`。"""
+        async with self._lock:
+            authorization = self._load_locked(authorization_id)
+            if authorization is not None:
+                self._db.execute("DELETE FROM authorizations WHERE authorization_id = ?", (authorization_id,))
+                self._db.commit()
+            return authorization
+
+    async def claim(self, authorization_id: str) -> ClaimResult:
+        r"""原子认领一次授权，返回 [feishu.agent.session.ClaimResult][]；仅 `CLAIMED` 可恢复工具。"""
+        async with self._lock:
+            row = self._db.execute(
+                "SELECT state, created_at FROM authorizations WHERE authorization_id = ?", (authorization_id,)
+            ).fetchone()
+            if row is None:
+                return ClaimResult.MISSING
+            state, created_at = row
+            if self._is_expired(state, created_at):
+                self._db.execute("DELETE FROM authorizations WHERE authorization_id = ?", (authorization_id,))
+                self._db.commit()
+                return ClaimResult.EXPIRED
+            if state != "awaiting_authorization":
+                return ClaimResult.ALREADY_CLAIMED
+            cursor = self._db.execute(
+                "UPDATE authorizations SET state = 'executing' "
+                "WHERE authorization_id = ? AND state = 'awaiting_authorization'",
+                (authorization_id,),
+            )
+            self._db.commit()
+            return ClaimResult.CLAIMED if cursor.rowcount == 1 else ClaimResult.ALREADY_CLAIMED
+
+    async def complete(self, authorization_id: str, *, outcome: str) -> None:
+        r"""标记最终处置：`retry` 重开，`unknown`/`frozen` 冻结，其余终态移除。"""
+        async with self._lock:
+            if outcome == "retry":
+                self._db.execute(
+                    "UPDATE authorizations SET state = 'awaiting_authorization' WHERE authorization_id = ?",
+                    (authorization_id,),
+                )
+            elif outcome in ("unknown", "frozen"):
+                self._db.execute(
+                    "UPDATE authorizations SET state = 'execution_unknown' WHERE authorization_id = ?",
+                    (authorization_id,),
+                )
+            else:
+                self._db.execute("DELETE FROM authorizations WHERE authorization_id = ?", (authorization_id,))
+            self._db.commit()
+
+    async def purge_expired(self) -> int:
+        r"""删除所有已过期的授权记录，返回删除数量。"""
+        now = _now()
+        async with self._lock:
+            cursor = self._db.execute(
+                "DELETE FROM authorizations WHERE (state IN ('execution_unknown', 'executing') AND created_at < ?) "
+                "OR (state NOT IN ('execution_unknown', 'executing') AND created_at < ?)",
+                (now - self._frozen_ttl, now - self._ttl),
+            )
+            self._db.commit()
+            return cursor.rowcount
+
+    def _load_locked(self, authorization_id: str) -> PendingAuthorization | None:
+        row = self._db.execute(
+            "SELECT state, created_at, data FROM authorizations WHERE authorization_id = ?", (authorization_id,)
+        ).fetchone()
+        if row is None:
+            return None
+        state, created_at, data = row
+        authorization = authorization_from_dict(json.loads(data))
+        authorization.state = state
+        authorization.created_at = created_at
+        return authorization
+
+    def _is_expired(self, state: str, created_at: int | None) -> bool:
+        if created_at is None:
+            return False
         ttl = self._frozen_ttl if state in ("execution_unknown", "executing") else self._ttl
         return _now() - created_at > ttl
 

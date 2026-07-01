@@ -22,11 +22,12 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import json
 import logging
 import re
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, AsyncIterator, Literal
 from uuid import uuid4
@@ -52,16 +53,24 @@ from .llm import (
 )
 from .result import ToolOutcome, ToolResult
 from .session import (
+    ClaimResult,
     InMemoryPendingApprovalStore,
+    InMemoryPendingAuthorizationStore,
     InMemorySessionStore,
     PendingApproval,
     PendingApprovalStore,
+    PendingAuthorization,
+    PendingAuthorizationStore,
     SessionStore,
 )
-from .tools import ToolRegistry
+from .tools import Tool, ToolRegistry
 
 if TYPE_CHECKING:
     from ..client import FeishuClient
+
+
+AWAITING_APPROVAL_PROGRESS_TEXT = "Waiting for user confirmation."
+AWAITING_AUTHORIZATION_PROGRESS_TEXT = "Waiting for user authorization."
 
 
 @dataclass
@@ -93,6 +102,23 @@ class StreamResult:
     stop_reason: StopReason
     usage: dict[str, int] | None = None
     reasoning: str = ""
+
+
+@dataclass(frozen=True)
+class ProgressSnapshot:
+    r"""
+    供产品侧生成可见进度文案的短暂快照。
+
+    `reasoning` 可包含模型流式输出的原始近期 thinking/reasoning 片段。SDK 只在内存中传给
+    `progress_summarizer`，不落会话历史、审批审计或日志；产品侧应把它摘要为可展示的一句话。
+    """
+
+    phase: str
+    reasoning: str = ""
+    text: str = ""
+    tool_name: str | None = None
+    tool_description: str | None = None
+    elapsed_seconds: float = 0.0
 
 
 async def accumulate_stream(chunks: AsyncIterator[StreamChunk]) -> StreamResult:
@@ -277,6 +303,7 @@ class Agent:
         store: 会话历史存储。默认使用 [feishu.agent.session.InMemorySessionStore][]。
         client: 飞书客户端，用于回复消息与发送卡片；为 `None` 时跳过发送。
         approvals: 挂起审批存储。默认使用 [feishu.agent.session.InMemoryPendingApprovalStore][]。
+        authorizations: 挂起授权存储。默认使用 [feishu.agent.session.InMemoryPendingAuthorizationStore][]。
         approval_engine: 人在环审批引擎。默认使用 [feishu.agent.approval.DefaultApprovalEngine][]（基于
             `approvals`），提供负载防篡改校验、幂等重放、并发认领与审计。
         approval_card_builder: 审批卡片构造器，签名为 `(PendingApproval) -> dict`。默认内置卡片，按钮回传值
@@ -284,12 +311,15 @@ class Agent:
         decided_card_builder: 决策结果卡片构造器，签名为 `(PendingApproval, decision, ApprovalOutcome) -> dict`。
         auth_card_builder: 授权卡片构造器，签名为 `(authorize_url) -> dict`；缺少用户授权时以交互卡片（按钮）
             引导授权，未注入时回退为在工具结果中附上授权链接。
-        progress_card_builder: 进度卡片构造器，签名为 `(tool_names, done, result_text) -> dict`；调用工具时原地
-            展示 / 更新「处理进度」，完成后替换为最终答复，未注入时不展示进度。
+        progress_card_builder: 进度卡片构造器，签名为 `(tool_names, done, result_text) -> dict`；循环开始时
+            展示「处理中」，调用工具时原地更新步骤，完成后替换为最终答复，未注入时不展示进度。
+        progress_summarizer: 可选的进度文案生成器，签名为 `(ProgressSnapshot) -> str | None`（可异步）。
+            SDK 会把近期 reasoning 仅在内存中传入，返回值用于原地更新进度卡片。
         user_tokens: 用户态 token 提供方（[feishu.auth][]），供工具以用户身份执行；为 `None` 时
             [feishu.agent.context.ToolContext.as_user][] 返回 `None`。
-        authorize_url_builder: 产品注入的授权 URL 构造器，签名 `(user_mapping, scopes) -> str | None`，
-            供工具在缺少用户授权时生成授权链接，交由 [feishu.agent.context.ToolContext.authorize_url][] 使用。
+        authorize_url_builder: 产品注入的授权 URL 构造器，签名
+            `(user_mapping, scopes, pending_authorization=None) -> str | None`。SDK 工具缺少用户授权时会传入
+            `PendingAuthorization`，产品可把其 `authorization_id` 签入 OAuth state，以便 callback 自动恢复。
         shared_files: 用户分享文件的解析器 [feishu.agent.shared_files.SharedFileResolver][]，是 `file_id` 句柄到
             字节的唯一入口；为 `None` 时相关工具不可用。
         shared_files_store: 入站文件句柄存储 [feishu.agent.shared_files.SharedFileStore][]，用于捕获用户分享的
@@ -312,7 +342,8 @@ class Agent:
         summary_prefix: 摘要消息的前缀标记。
         max_iterations: 单轮对话中模型与工具往返的最大次数。默认为 `8`。
         system: 系统提示词。
-        stream: 是否以流式卡片回复。为 `True` 时经 `client.stream_card` 输出，否则调用 `client.im.reply`。
+        stream: 未使用进度卡片时是否以流式卡片回复。为 `True` 时经 `client.stream_card` 输出，否则调用
+            `client.im.reply`。
         **backend_kwargs: 透传给 [feishu.agent.llm.LlmBackend.stream][] 的额外参数。
 
     Raises:
@@ -343,11 +374,16 @@ class Agent:
         store: SessionStore | None = None,
         client: FeishuClient | None = None,
         approvals: PendingApprovalStore | None = None,
+        authorizations: PendingAuthorizationStore | None = None,
         approval_engine: ApprovalEngine | None = None,
         approval_card_builder: Callable[[PendingApproval], dict[str, Any]] | None = None,
         decided_card_builder: Callable[[PendingApproval, str, ApprovalOutcome], dict[str, Any]] | None = None,
         auth_card_builder: Callable[[str], dict[str, Any]] | None = None,
         progress_card_builder: Callable[[list[str], bool, str], dict[str, Any]] | None = None,
+        progress_summarizer: Callable[[ProgressSnapshot], Any] | None = None,
+        progress_summary_delay_seconds: float = 1.0,
+        progress_summary_interval_seconds: float = 2.0,
+        progress_reasoning_max_chars: int = 4000,
         user_tokens: Any = None,
         authorize_url_builder: Any = None,
         shared_files: Any = None,
@@ -379,11 +415,16 @@ class Agent:
         self.store: SessionStore = store or InMemorySessionStore()
         self.client = client
         self.approvals: PendingApprovalStore = approvals or InMemoryPendingApprovalStore()
+        self.authorizations: PendingAuthorizationStore = authorizations or InMemoryPendingAuthorizationStore()
         self.approval_engine: ApprovalEngine = approval_engine or DefaultApprovalEngine(approvals=self.approvals)
         self._approval_card_builder = approval_card_builder or self._default_approval_card
         self._decided_card_builder = decided_card_builder or self._default_decided_card
         self._auth_card_builder = auth_card_builder
         self._progress_card_builder = progress_card_builder
+        self._progress_summarizer = progress_summarizer
+        self._progress_summary_delay_seconds = max(0.0, progress_summary_delay_seconds)
+        self._progress_summary_interval_seconds = max(0.0, progress_summary_interval_seconds)
+        self._progress_reasoning_max_chars = max(0, progress_reasoning_max_chars)
         self.user_tokens = user_tokens
         self.authorize_url_builder = authorize_url_builder
         self.shared_files = shared_files  # a SharedFileResolver (file_id -> bytes chokepoint), or None
@@ -469,14 +510,16 @@ class Agent:
         # Compact the history at a token threshold (collapse old turns into one summary message) BEFORE the
         # model call, so a long session keeps a stable, cacheable prefix instead of paying a growing prompt.
         history = await self._maybe_summarize(session_id, history)
+        await progress.start()
         for _ in range(self.max_iterations):
-            result = await accumulate_stream(
+            result = await self._accumulate_stream_with_progress(
                 self.backend.stream(
                     messages=history,
                     tools=self.registry.specs(),
                     system=self.system,
                     **self.backend_kwargs,
-                )
+                ),
+                progress,
             )
             if result.usage:
                 cached = result.usage.get("cached_tokens")
@@ -493,9 +536,10 @@ class Agent:
                 assistant = self._assistant_tool_message(result)
                 history.append(assistant)
                 await self.store.append(session_id, assistant)
-                suspended = await self._dispatch_tool_calls(event, session_id, history, result.tool_calls, progress)
-                if suspended:
-                    return  # approval seam ended the turn
+                suspension = await self._dispatch_tool_calls(event, session_id, history, result.tool_calls, progress)
+                if suspension:
+                    await progress.finalize(_suspension_progress_note(suspension))
+                    return  # authorization / approval suspended the turn
                 continue
             assistant = Message(role="assistant", content=[TextPart(text=result.text)])
             history.append(assistant)
@@ -516,6 +560,44 @@ class Agent:
         )
         if not await progress.finalize(fallback):
             await self._finalize(event, fallback)
+
+    async def _accumulate_stream_with_progress(
+        self, chunks: AsyncIterator[StreamChunk], progress: _ProgressCard
+    ) -> StreamResult:
+        r"""归并一轮模型流；若配置了进度摘要器，则用近期 reasoning 原地更新进度卡片。"""
+        text = ""
+        reasoning = ""
+        by_index: dict[int, _Accum] = {}
+        stop_reason = StopReason.OTHER
+        usage: dict[str, int] | None = None
+        async for chunk in chunks:
+            if isinstance(chunk, TextDelta):
+                text += chunk.text
+            elif isinstance(chunk, ReasoningDelta):
+                reasoning += chunk.text
+                await progress.thinking(reasoning=reasoning, text=text)
+            elif isinstance(chunk, ToolCallDelta):
+                acc = by_index.setdefault(chunk.index, _Accum())
+                if acc.id is None and chunk.id is not None:
+                    acc.id = chunk.id
+                if acc.name is None and chunk.name is not None:
+                    acc.name = chunk.name
+                acc.arguments += chunk.arguments
+            elif isinstance(chunk, MessageStop):
+                stop_reason = chunk.stop_reason
+                usage = chunk.usage
+        tool_calls = [
+            ToolCall(id=acc.id or "", name=acc.name, arguments=acc.arguments)
+            for _, acc in sorted(by_index.items())
+            if acc.name
+        ]
+        return StreamResult(
+            text=text,
+            tool_calls=tool_calls,
+            stop_reason=stop_reason,
+            usage=usage,
+            reasoning=reasoning,
+        )
 
     async def _maybe_summarize(self, session_id: str, history: list[Message]) -> list[Message]:
         r"""
@@ -576,7 +658,7 @@ class Agent:
 
     async def _dispatch_tool_calls(
         self, event: Event, session_id: str, history: list[Message], tool_calls: list[ToolCall], progress: _ProgressCard
-    ) -> bool:
+    ) -> str | None:
         for call in tool_calls:
             try:
                 tool = self.registry.get(call.name)
@@ -592,21 +674,63 @@ class Agent:
                     ToolResultPart(tool_call_id=call.id, content=f"error: unknown tool {call.name!r}", is_error=True),
                 )
                 continue
+            auth_status = await self._preflight_authorization(event, session_id, history, call, tool)
+            if auth_status == "suspended":
+                await self._mark_awaiting_authorization(session_id, history, tool_calls)
+                return "authorization"
+            if auth_status == "blocked":
+                continue
             if tool.requires_approval:
                 if await self._request_approval(event, session_id, history, call):
                     # Keep history well-formed while suspended: every tool_use in this assistant turn needs a
                     # tool_result, else a later turn (if the user abandons the card) sends malformed history to
                     # the model. The real result replaces this placeholder on resume (_decide_and_resume).
                     await self._mark_awaiting_confirmation(session_id, history, tool_calls)
-                    return True  # suspend the turn awaiting confirmation
+                    return "approval"  # suspend the turn awaiting confirmation
                 continue  # fail-closed: no identifiable requester — error recorded, keep processing
-            await self._record_tool_result_part(
-                session_id, history, await self._execute_tool_call(event, call, progress)
-            )
-        return False
+            result_part, suspended = await self._execute_tool_call(event, session_id, history, call, tool, progress)
+            await self._record_tool_result_part(session_id, history, result_part)
+            if suspended:
+                await self._mark_awaiting_authorization(session_id, history, tool_calls)
+                return "authorization"
+        return None
 
-    async def _execute_tool_call(self, event: Event, call: ToolCall, progress: _ProgressCard) -> ToolResultPart:
-        await progress.step(call.name)  # show the in-progress step for tools that actually run
+    async def _preflight_authorization(
+        self, event: Event, session_id: str, history: list[Message], call: ToolCall, tool: Tool
+    ) -> Literal["suspended", "blocked"] | None:
+        r"""工具执行 / 审批前检查用户授权；缺授权时先发授权卡片并挂起本轮。"""
+        scopes = tuple(tool.auth_scopes)
+        if not scopes or await current_tool_context().has_user_auth(scopes):
+            return None
+        missing_auth = ToolResult(
+            ToolOutcome.NEEDS_USER_AUTH,
+            content="user authorization required",
+            auth_scopes=scopes,
+            is_error=True,
+        )
+        if await self._request_authorization(event, session_id, history, call, missing_auth):
+            return "suspended"
+        await self._record_tool_result_part(
+            session_id,
+            history,
+            ToolResultPart(
+                tool_call_id=call.id,
+                content="user authorization required, but I could not send an authorization card",
+                is_error=True,
+            ),
+        )
+        return "blocked"
+
+    async def _execute_tool_call(
+        self,
+        event: Event,
+        session_id: str,
+        history: list[Message],
+        call: ToolCall,
+        tool: Tool,
+        progress: _ProgressCard,
+    ) -> tuple[ToolResultPart, bool]:
+        await progress.step(tool.name, description=tool.description)  # show the in-progress step for tools that run
         try:
             result = await self.registry.dispatch(call.name, _loads(call.arguments))
         except Exception as exc:  # noqa: BLE001 - a tool error must never crash the turn; report it back
@@ -621,15 +745,13 @@ class Agent:
                 is_error=True,
             )
         content, is_error, tool_result = _coerce_tool_result(result)
-        # Auth handoff: surface the authorize URL as an interactive card (button), not a raw link.
-        authorize_url = (
-            tool_result.authorize_url
-            if tool_result is not None and tool_result.outcome == ToolOutcome.NEEDS_USER_AUTH
-            else None
-        )
-        if authorize_url and await self._try_send_auth_card(event, authorize_url):
-            content = _AUTH_CARD_SENT_NOTE
-        return ToolResultPart(tool_call_id=call.id, content=content, is_error=is_error)
+        if tool_result is not None and tool_result.outcome == ToolOutcome.NEEDS_USER_AUTH:
+            if await self._request_authorization(event, session_id, history, call, tool_result):
+                return ToolResultPart(tool_call_id=call.id, content=_AWAITING_AUTHORIZATION_NOTE, is_error=False), True
+            authorize_url = tool_result.authorize_url
+            if authorize_url and await self._try_send_auth_card(event, authorize_url):
+                content = _AUTH_CARD_SENT_NOTE
+        return ToolResultPart(tool_call_id=call.id, content=content, is_error=is_error), False
 
     async def _record_tool_result_part(
         self, session_id: str, history: list[Message], result_part: ToolResultPart
@@ -648,10 +770,10 @@ class Agent:
         history: list[Message],
         tool_call_id: str,
         progress: _ProgressCard,
-    ) -> bool:
+    ) -> str | None:
         remaining = _tool_calls_after(history, tool_call_id)
         if not remaining:
-            return False
+            return None
         return await self._dispatch_tool_calls(event, session_id, history, remaining, progress)
 
     def _tool_context(self, event: Event) -> ToolContext:
@@ -782,6 +904,75 @@ class Agent:
         await self._pin_referenced_files(arguments)
         return True
 
+    async def _request_authorization(
+        self, event: Event, session_id: str, history: list[Message], call: ToolCall, result: ToolResult
+    ) -> bool:
+        r"""
+        为缺少用户授权的工具创建挂起授权并发送授权卡片；返回是否已挂起本轮。
+
+        与审批一致，挂起记录先于卡片送达落库；OAuth callback 成功后，产品调用
+        [feishu.agent.loop.Agent.resume_authorization][] 恢复原工具调用。
+        """
+        initiator = current_tool_context().requesting_user()
+        owner_user_keys = user_identity_keys(initiator)
+        message = event.body.get("message") or {}
+        chat_id = message.get("chat_id")
+        if not owner_user_keys or self.client is None or not chat_id or self._auth_card_builder is None:
+            return False
+        authorization = PendingAuthorization(
+            authorization_id=uuid4().hex,
+            session_id=session_id,
+            tool_call_id=call.id,
+            tool_name=call.name,
+            arguments=_loads(call.arguments),
+            scopes=tuple(result.auth_scopes),
+            owner_user_keys=owner_user_keys,
+            tenant_key=getattr(event, "tenant_key", None),
+            chat_id=chat_id,
+            created_message_id=message.get("message_id"),
+            created_event_id=getattr(event, "event_id", None) or None,
+            created_at=int(time.time()),
+        )
+        authorize_url = self._build_authorize_url(initiator, authorization.scopes, authorization)
+        if not authorize_url:
+            return False
+        try:
+            card = self._auth_card_builder(authorize_url)
+        except Exception:  # noqa: BLE001 - a product card builder error should fall back to the old auth path
+            logging.getLogger("feishu").warning("failed to build auth card", exc_info=True)
+            return False
+        try:
+            await self.authorizations.put(authorization)
+        except Exception:  # noqa: BLE001 - no persisted pending means callback cannot resume safely
+            logging.getLogger("feishu").warning("failed to persist pending authorization", exc_info=True)
+            return False
+        try:
+            await self.client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
+        except Exception:  # noqa: BLE001 - undeliverable card -> cancel the pending, then fall back
+            logging.getLogger("feishu").warning(
+                "failed to send auth card; cancelling pending %s", authorization.authorization_id, exc_info=True
+            )
+            try:
+                await self.authorizations.complete(authorization.authorization_id, outcome="cancelled")
+            except Exception:  # noqa: BLE001 - best-effort cleanup; an uncancelled pending will TTL-expire
+                logging.getLogger("feishu").warning(
+                    "failed to cancel pending authorization %s after card send failure",
+                    authorization.authorization_id,
+                    exc_info=True,
+                )
+            return False
+        return True
+
+    def _build_authorize_url(
+        self, user: Mapping[str, Any], scopes: tuple[str, ...], authorization: PendingAuthorization
+    ) -> str | None:
+        builder = self.authorize_url_builder
+        if builder is None:
+            return None
+        if _accepts_positional_arguments(builder, 3):
+            return builder(user, scopes, authorization)
+        return builder(user, scopes)
+
     async def _pin_referenced_files(self, arguments: Any) -> None:
         r"""把审批参数中引用到的分享文件（`sf_…` 句柄）逐个 pin 缓存；失败只记录，绝不影响审批流程。"""
         resolver = self.shared_files
@@ -830,6 +1021,18 @@ class Agent:
         若用户始终不点确认卡，下一轮会把历史重新发给模型——缺了 tool_result 的 tool_use 会违反工具调用协议。
         占位结果在恢复时由 `feishu.agent.loop.Agent._decide_and_resume` 用真实结果原地替换。
         """
+        await self._mark_awaiting_tool_results(session_id, history, tool_calls, _AWAITING_APPROVAL_NOTE)
+
+    async def _mark_awaiting_authorization(
+        self, session_id: str, history: list[Message], tool_calls: list[ToolCall]
+    ) -> None:
+        r"""为本轮挂起授权 / 未及运行的工具调用补占位工具结果。"""
+        await self._mark_awaiting_tool_results(session_id, history, tool_calls, _AWAITING_AUTHORIZATION_NOTE)
+
+    async def _mark_awaiting_tool_results(
+        self, session_id: str, history: list[Message], tool_calls: list[ToolCall], note: str
+    ) -> None:
+        r"""为尚未写入 tool_result 的 tool_use 追加占位结果，保持历史符合工具调用协议。"""
         answered = {
             part.tool_call_id
             for msg in history
@@ -838,7 +1041,7 @@ class Agent:
             if isinstance(part, ToolResultPart)
         }
         placeholders: list[TextPart | ToolUsePart | ToolResultPart] = [
-            ToolResultPart(tool_call_id=call.id, content=_AWAITING_APPROVAL_NOTE, is_error=False)
+            ToolResultPart(tool_call_id=call.id, content=note, is_error=False)
             for call in tool_calls
             if call.id not in answered
         ]
@@ -905,6 +1108,136 @@ class Agent:
         self._spawn_background(self._decide_and_resume(event, approval, decision, value, card_message_id))
         return {"toast": {"type": "info", "content": "processing…"}}
 
+    async def resume_authorization(self, authorization_id: str, *, user: Mapping[str, Any] | None = None) -> str:
+        r"""
+        OAuth callback 成功保存用户 token 后，恢复一次挂起授权对应的原工具调用。
+
+        产品侧应从已签名校验的 OAuth state 中取出 `authorization_id`，传入完成授权的 `user`，在保存 token 后
+        调用本方法。返回值是机器可读状态：`"resumed"`、`"missing"`、`"forbidden"`、`"already_claimed"`
+        等；面向用户的最终结果会发回原飞书会话，而不是依赖浏览器页面承载。
+        """
+        authorization = await self.authorizations.get(authorization_id)
+        if authorization is None:
+            return "missing"
+        if user is None:
+            await self._notify_authorization_resume_problem(
+                authorization,
+                "Authorization succeeded, but I could not verify who completed it. Please try again.",
+            )
+            return "forbidden"
+        callback_keys = set(user_identity_keys(user))
+        if not authorization.owner_user_keys or not (callback_keys & set(authorization.owner_user_keys)):
+            return "forbidden"
+        claim = await self.authorizations.claim(authorization_id)
+        if claim is not ClaimResult.CLAIMED:
+            if claim in (ClaimResult.EXPIRED, ClaimResult.MISSING):
+                await self._notify_authorization_resume_problem(
+                    authorization,
+                    "Authorization succeeded, but the original request has expired. Please ask me again.",
+                )
+            return claim.value
+
+        resume_event = self._event_from_pending_authorization(authorization)
+        context = self._tool_context(resume_event)
+        if authorization.owner_user_keys:
+            context.user = user_from_identity_keys(authorization.owner_user_keys)
+        with use_tool_context(context):
+            try:
+                progress = _ProgressCard(self, resume_event)
+                await progress.step(
+                    authorization.tool_name,
+                    description=self._tool_description(authorization.tool_name),
+                )
+                try:
+                    result = await self.registry.dispatch(authorization.tool_name, authorization.arguments)
+                except Exception as exc:  # noqa: BLE001 - report tool failure to the model, not the browser
+                    logging.getLogger("feishu").warning(
+                        "authorization %s: tool %s raised %s during resume",
+                        authorization.authorization_id,
+                        authorization.tool_name,
+                        type(exc).__name__,
+                    )
+                    result = ToolResult(
+                        ToolOutcome.FAILED,
+                        content=(
+                            f"tool {authorization.tool_name} failed with {type(exc).__name__}; "
+                            "see server logs for details"
+                        ),
+                        is_error=True,
+                    )
+                content, is_error, _ = _coerce_tool_result(result)
+                result_part = ToolResultPart(
+                    tool_call_id=authorization.tool_call_id,
+                    content=content,
+                    is_error=is_error,
+                )
+                async with self._session_lock(authorization.session_id):
+                    history = await self.store.get(authorization.session_id)
+                    if _replace_tool_result(history, authorization.tool_call_id, result_part):
+                        await self.store.set(authorization.session_id, history)
+                    else:
+                        tool_msg = Message(role="tool", content=[result_part])
+                        history.append(tool_msg)
+                        await self.store.append(authorization.session_id, tool_msg)
+                    suspension = await self._continue_tool_calls_after(
+                        resume_event,
+                        authorization.session_id,
+                        history,
+                        authorization.tool_call_id,
+                        progress,
+                    )
+                    if suspension:
+                        await progress.finalize(_suspension_progress_note(suspension))
+                    else:
+                        await self._loop(resume_event, authorization.session_id, history, progress=progress)
+                await self.authorizations.complete(authorization_id, outcome="failed" if is_error else "executed")
+                return "resumed"
+            except Exception:  # noqa: BLE001 - callback background failures should be reported in chat and logged
+                await self.authorizations.complete(authorization_id, outcome="frozen")
+                logging.getLogger("feishu").exception(
+                    "authorization %s: error resuming tool %s",
+                    authorization.authorization_id,
+                    authorization.tool_name,
+                )
+                try:
+                    await self._finalize(
+                        resume_event,
+                        "Authorization succeeded, but I could not continue the original request. Please try again.",
+                    )
+                except Exception:  # noqa: BLE001 - nothing more to do; logs already have the underlying failure
+                    logging.getLogger("feishu").debug("could not send authorization resume failure", exc_info=True)
+                return "failed"
+
+    async def _notify_authorization_resume_problem(self, authorization: PendingAuthorization, text: str) -> None:
+        r"""Best-effort chat feedback for an OAuth callback that cannot resume a known pending authorization."""
+        try:
+            await self._finalize(self._event_from_pending_authorization(authorization), text)
+        except Exception:  # noqa: BLE001 - callback path should not fail because chat feedback failed
+            logging.getLogger("feishu").debug(
+                "could not send authorization resume status for %s",
+                authorization.authorization_id,
+                exc_info=True,
+            )
+
+    def _event_from_pending_authorization(self, authorization: PendingAuthorization) -> Event:
+        return Event.from_payload(
+            {
+                "header": {"event_type": "im.message.receive_v1"},
+                "event": {
+                    "message": {
+                        "message_id": authorization.created_message_id,
+                        "chat_id": authorization.chat_id,
+                    }
+                },
+            }
+        )
+
+    def _tool_description(self, tool_name: str) -> str | None:
+        try:
+            return self.registry.get(tool_name).description
+        except KeyError:
+            return None
+
     def _spawn_background(self, coro: Any) -> None:
         r"""把协程作为后台任务运行（保留引用以防被 GC）；其异常已在任务内部自行捕获。"""
         task = asyncio.ensure_future(coro)
@@ -943,6 +1276,9 @@ class Agent:
         with use_tool_context(context):
             outcome = None
             try:
+                progress = _ProgressCard(self, resume_event)
+                if decision == "approve":
+                    await progress.step(approval.tool_name, description=self._tool_description(approval.tool_name))
                 outcome = await self.approval_engine.on_decision(
                     approval.approval_id,
                     decision,
@@ -950,8 +1286,37 @@ class Agent:
                     dispatch=self.registry.dispatch,
                 )
                 if _should_resume(outcome.status):
+                    if outcome.auth_scopes:
+                        call = ToolCall(
+                            id=approval.tool_call_id,
+                            name=approval.tool_name,
+                            arguments=json.dumps(approval.arguments, ensure_ascii=False),
+                        )
+                        auth_result = ToolResult(
+                            ToolOutcome.NEEDS_USER_AUTH,
+                            content=outcome.content,
+                            authorize_url=outcome.authorize_url,
+                            auth_scopes=tuple(outcome.auth_scopes),
+                            is_error=True,
+                        )
+                        if await self._request_authorization(resume_event, approval.session_id, [], call, auth_result):
+                            result_part = ToolResultPart(
+                                tool_call_id=approval.tool_call_id,
+                                content=_AWAITING_AUTHORIZATION_NOTE,
+                                is_error=False,
+                            )
+                            async with self._session_lock(approval.session_id):
+                                history = await self.store.get(approval.session_id)
+                                if _replace_tool_result(history, approval.tool_call_id, result_part):
+                                    await self.store.set(approval.session_id, history)
+                                else:
+                                    tool_msg = Message(role="tool", content=[result_part])
+                                    history.append(tool_msg)
+                                    await self.store.append(approval.session_id, tool_msg)
+                            await progress.finalize(_suspension_progress_note("authorization"))
+                            return
                     content, tr_is_error, _ = _coerce_tool_result(outcome.content)
-                    if outcome.authorize_url:
+                    if outcome.authorize_url and not outcome.auth_scopes:
                         if await self._try_send_auth_card(resume_event, outcome.authorize_url):
                             content = _AUTH_CARD_SENT_NOTE
                         else:
@@ -961,7 +1326,6 @@ class Agent:
                         content=content,
                         is_error=outcome.is_error or tr_is_error,
                     )
-                    progress = _ProgressCard(self, resume_event)
                     # Serialize the history read-modify-write against a concurrent message for the same session
                     # (same lock as run()), so the resumed turn can't be lost to / clobber a parallel turn.
                     async with self._session_lock(approval.session_id):
@@ -975,9 +1339,12 @@ class Agent:
                             tool_msg = Message(role="tool", content=[result_part])
                             history.append(tool_msg)
                             await self.store.append(approval.session_id, tool_msg)
-                        if not await self._continue_tool_calls_after(
+                        suspension = await self._continue_tool_calls_after(
                             resume_event, approval.session_id, history, approval.tool_call_id, progress
-                        ):
+                        )
+                        if suspension:
+                            await progress.finalize(_suspension_progress_note(suspension))
+                        else:
                             await self._loop(resume_event, approval.session_id, history, progress=progress)
             except (
                 Exception
@@ -1073,6 +1440,21 @@ def _loads(arguments: str) -> dict[str, Any]:
         return {}
 
 
+def _accepts_positional_arguments(callback: Callable[..., Any], count: int) -> bool:
+    r"""Return whether ``callback`` can be called with ``count`` positional arguments."""
+    try:
+        signature = inspect.signature(callback)
+    except (TypeError, ValueError):
+        return True
+    positional = 0
+    for parameter in signature.parameters.values():
+        if parameter.kind is inspect.Parameter.VAR_POSITIONAL:
+            return True
+        if parameter.kind in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD):
+            positional += 1
+    return positional >= count
+
+
 def _stringify(value: Any) -> str:
     return value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, default=str)
 
@@ -1083,6 +1465,13 @@ _AUTH_CARD_SENT_NOTE = (
 )
 
 _AWAITING_APPROVAL_NOTE = "[Awaiting your confirmation — this action has not been performed yet.]"
+_AWAITING_APPROVAL_PROGRESS_NOTE = AWAITING_APPROVAL_PROGRESS_TEXT
+_AWAITING_AUTHORIZATION_NOTE = "[Awaiting user authorization — this tool has not been performed yet.]"
+_AWAITING_AUTHORIZATION_PROGRESS_NOTE = AWAITING_AUTHORIZATION_PROGRESS_TEXT
+
+
+def _suspension_progress_note(suspension: str) -> str:
+    return _AWAITING_AUTHORIZATION_PROGRESS_NOTE if suspension == "authorization" else _AWAITING_APPROVAL_PROGRESS_NOTE
 
 
 def _tool_calls_after(history: list[Message], tool_call_id: str) -> list[ToolCall]:
@@ -1124,7 +1513,7 @@ def _replace_tool_result(history: list[Message], tool_call_id: str, new_part: To
 
 class _ProgressCard:
     r"""
-    按轮进度卡片：首个工具执行时发送进度卡片，之后每步原地更新（`im.patch`），让用户看到「中间过程」。
+    按轮进度卡片：循环开始时发送进度卡片，之后每步原地更新（`im.patch`），让用户看到「中间过程」。
 
     卡片样式由产品注入的 `progress_card_builder`（签名 `(tool_names, done, result_text) -> dict`）决定；未注入
     构造器、无客户端或事件缺少 `chat_id` 时全程空操作。进度 UI 出错绝不应影响主流程，故各处更新均吞掉异常。
@@ -1136,6 +1525,10 @@ class _ProgressCard:
         self._chat_id = message.get("chat_id")
         self._message_id: str | None = None
         self._steps: list[str] = []
+        self._started_at = time.monotonic()
+        self._last_summary_at = 0.0
+        self._last_status_text = ""
+        self._done = False
 
     def _ready(self) -> tuple[Callable[[list[str], bool, str], dict[str, Any]], FeishuClient, str] | None:
         r"""返回 `(builder, client, chat_id)`（均非空）表示本轮可渲染进度卡片；缺构造器 / 客户端 / chat_id 时返回 `None`。"""
@@ -1146,7 +1539,88 @@ class _ProgressCard:
             return None
         return builder, client, chat_id
 
-    async def step(self, tool_name: str) -> None:
+    async def start(self) -> None:
+        r"""发送初始进度卡片，让普通文本回复也能即时给用户一个可见状态。"""
+        ready = self._ready()
+        if ready is None or self._message_id is not None:
+            return
+        builder, client, chat_id = ready
+        card = builder([], False, "")
+        try:
+            resp = await client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
+            self._message_id = _message_id_from_response(resp)
+        except Exception:  # noqa: BLE001 - the progress UI must never break the turn
+            logging.getLogger("feishu").debug("progress card start failed", exc_info=True)
+
+    async def thinking(self, *, reasoning: str, text: str = "") -> None:
+        r"""把近期模型 reasoning 交给产品侧摘要器，产出一句可见进度并原地更新卡片。"""
+        summarizer = self._agent._progress_summarizer
+        if summarizer is None:
+            return
+        now = time.monotonic()
+        if now - self._started_at < self._agent._progress_summary_delay_seconds:
+            return
+        interval = self._agent._progress_summary_interval_seconds
+        if self._last_summary_at and now - self._last_summary_at < interval:
+            return
+        max_chars = self._agent._progress_reasoning_max_chars
+        snapshot = ProgressSnapshot(
+            phase="thinking",
+            reasoning=reasoning[-max_chars:] if max_chars else "",
+            text=text[-1000:],
+            tool_name=self._steps[-1] if self._steps else None,
+            elapsed_seconds=now - self._started_at,
+        )
+        self._last_summary_at = now
+        try:
+            status = await self._summarize(snapshot)
+        except Exception:  # noqa: BLE001 - progress summaries must never break the main turn
+            logging.getLogger("feishu").debug("progress summarizer failed", exc_info=True)
+            return
+        if isinstance(status, str):
+            await self.update_status(status)
+
+    async def _summarize(self, snapshot: ProgressSnapshot) -> str | None:
+        summarizer = self._agent._progress_summarizer
+        if summarizer is None:
+            return None
+        status = summarizer(snapshot)
+        if inspect.isawaitable(status):
+            status = await status
+        return status if isinstance(status, str) else None
+
+    async def _summarize_and_update(self, snapshot: ProgressSnapshot) -> None:
+        try:
+            status = await self._summarize(snapshot)
+        except Exception:  # noqa: BLE001 - progress summaries must never break the main turn
+            logging.getLogger("feishu").debug("progress summarizer failed", exc_info=True)
+            return
+        if status:
+            await self.update_status(status)
+
+    async def update_status(self, status_text: str) -> bool:
+        r"""用一条短状态文案原地更新进度卡；无卡片时尝试发送首张。"""
+        status_text = status_text.strip()
+        if self._done or not status_text or status_text == self._last_status_text:
+            return False
+        ready = self._ready()
+        if ready is None:
+            return False
+        builder, client, chat_id = ready
+        card = builder(list(self._steps), False, status_text)
+        try:
+            if self._message_id is None:
+                resp = await client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
+                self._message_id = _message_id_from_response(resp)
+            else:
+                await client.im.patch(self._message_id, card)
+            self._last_status_text = status_text
+            return True
+        except Exception:  # noqa: BLE001 - progress UI must never break the turn
+            logging.getLogger("feishu").debug("progress status update failed", exc_info=True)
+            return False
+
+    async def step(self, tool_name: str, *, description: str | None = None) -> None:
         r"""记录一步并发送 / 更新进度卡片（首步发送，后续 patch）。"""
         ready = self._ready()
         if ready is None:
@@ -1157,11 +1631,22 @@ class _ProgressCard:
         try:
             if self._message_id is None:
                 resp = await client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
-                self._message_id = resp.get("message_id") if hasattr(resp, "get") else None
+                self._message_id = _message_id_from_response(resp)
             else:
                 await client.im.patch(self._message_id, card)
         except Exception:  # noqa: BLE001 - the progress UI must never break the turn
             logging.getLogger("feishu").debug("progress card update failed", exc_info=True)
+        if self._agent._progress_summarizer is not None:
+            self._agent._spawn_background(
+                self._summarize_and_update(
+                    ProgressSnapshot(
+                        phase="tool",
+                        tool_name=tool_name,
+                        tool_description=description,
+                        elapsed_seconds=time.monotonic() - self._started_at,
+                    )
+                )
+            )
 
     async def finalize(self, result_text: str) -> bool:
         r"""
@@ -1173,6 +1658,7 @@ class _ProgressCard:
         if ready is None or self._message_id is None:
             return False
         builder, client, _ = ready
+        self._done = True
         try:
             card = builder(list(self._steps), True, result_text)
             await client.im.patch(self._message_id, card)
@@ -1180,6 +1666,19 @@ class _ProgressCard:
         except Exception:  # noqa: BLE001 - on failure, fall back to a normal reply
             logging.getLogger("feishu").debug("progress card finalize failed", exc_info=True)
             return False
+
+
+def _message_id_from_response(response: Any) -> str | None:
+    r"""从飞书 send/patch 响应里兼容抽取消息 ID。"""
+    if not hasattr(response, "get"):
+        return None
+    message_id = response.get("message_id")
+    if message_id:
+        return str(message_id)
+    data = response.get("data")
+    if hasattr(data, "get") and data.get("message_id"):
+        return str(data.get("message_id"))
+    return None
 
 
 def _collect_shared_file_ids(value: Any) -> list[str]:

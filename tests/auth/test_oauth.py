@@ -15,6 +15,7 @@ import httpx
 import pytest
 
 from feishu import FeishuClient
+from feishu.auth import OAuthStateSigner, build_oauth_redirect_uri, normalize_oauth_callback_path
 from feishu.auth.credentials import Credential
 from feishu.errors import FeishuApiError, FeishuAuthError
 
@@ -42,6 +43,50 @@ def _recording_handler(seen, response):
         return response
 
     return handler
+
+
+class TestRedirectUriHelpers:
+    @pytest.mark.parametrize(
+        "path, expected",
+        [
+            ("oauth/callback", "/oauth/callback"),
+            ("/oauth/callback", "/oauth/callback"),
+            ("///oauth/callback", "/oauth/callback"),
+        ],
+    )
+    def test_normalize_oauth_callback_path(self, path, expected):
+        assert normalize_oauth_callback_path(path) == expected
+
+    @pytest.mark.parametrize(
+        "public_url, callback_path, expected",
+        [
+            ("https://app.example.com", "oauth/callback", "https://app.example.com/oauth/callback"),
+            ("https://app.example.com/", "/oauth/callback", "https://app.example.com/oauth/callback"),
+            (" https://app.example.com/ ", "oauth/callback", "https://app.example.com/oauth/callback"),
+        ],
+    )
+    def test_build_oauth_redirect_uri(self, public_url, callback_path, expected):
+        assert build_oauth_redirect_uri(public_url, callback_path) == expected
+
+    def test_build_oauth_redirect_uri_returns_none_without_public_url(self):
+        assert build_oauth_redirect_uri(None, "/oauth/callback") is None
+        assert build_oauth_redirect_uri("", "/oauth/callback") is None
+
+
+class TestOAuthStateSigner:
+    def test_extra_round_trips_under_signature(self):
+        signer = OAuthStateSigner("secret")
+        raw = signer.issue(
+            user_keys=("ou_1",),
+            scopes=("calendar:calendar",),
+            extra={"authorization_id": "az_1"},
+        )
+
+        state = signer.consume(raw)
+
+        assert state is not None
+        assert state.extra == {"authorization_id": "az_1"}
+        assert OAuthStateSigner("other").consume(raw) is None
 
 
 @pytest.fixture

@@ -103,7 +103,8 @@ class ApprovalOutcome:
     审批决策的结构化结果，告知 [feishu.agent.loop.Agent][] 如何回传模型与更新卡片。
 
     `content` 是回传给模型的工具结果：`EXECUTED`/`REPLAYED` 时为真实执行结果，其余情形为一段状态说明文本。
-    `is_error` 为 `True` 时模型据此调整后续行为；`status` 供产品侧映射卡片样式与展示措辞。
+    `is_error` 为 `True` 时模型据此调整后续行为；`status` 供产品侧映射卡片样式与展示措辞。若审批通过后工具发现
+    缺少用户授权，`auth_scopes` 会携带原始工具结果声明的授权范围，供 Agent 创建可恢复的授权挂起记录。
 
     Examples:
         >>> outcome = ApprovalOutcome(status=ApprovalStatus.EXECUTED, content={"id": "task_1"})
@@ -117,6 +118,7 @@ class ApprovalOutcome:
     content: Any = None
     is_error: bool = False
     authorize_url: str | None = None
+    auth_scopes: tuple[str, ...] = ()
 
 
 @runtime_checkable
@@ -340,7 +342,11 @@ class DefaultApprovalEngine:
             await self.approvals.complete(approval_id, outcome="failed")
             await self._record("execute_failed", approval, error=str(result.outcome.value))
             return ApprovalOutcome(
-                ApprovalStatus.FAILED, content=result.content, is_error=True, authorize_url=result.authorize_url
+                ApprovalStatus.FAILED,
+                content=result.content,
+                is_error=True,
+                authorize_url=result.authorize_url,
+                auth_scopes=tuple(result.auth_scopes),
             )
 
         # Cache and return the UNWRAPPED content so EXECUTED and a later REPLAYED are identical.

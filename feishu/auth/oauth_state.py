@@ -59,13 +59,14 @@ def _b64decode(text: str) -> bytes:
 
 @dataclass(frozen=True)
 class OAuthState:
-    r"""一个已校验的 OAuth `state`：发起授权的用户别名、申请的 scopes、租户、nonce 与签发时间。"""
+    r"""一个已校验的 OAuth `state`：发起授权的用户别名、申请的 scopes、租户、nonce、签发时间与扩展负载。"""
 
     user_keys: tuple[str, ...]
     scopes: tuple[str, ...]
     tenant_key: str | None
     nonce: str
     issued_at: int
+    extra: dict[str, Any]
 
 
 class OAuthStateSigner:
@@ -106,6 +107,7 @@ class OAuthStateSigner:
         scopes: tuple[str, ...] = (),
         tenant_key: str | None = None,
         nonce: str | None = None,
+        extra: Mapping[str, Any] | None = None,
     ) -> str:
         r"""签发一个签名的 `state` 字符串，可绑定发起用户、scopes 与租户。"""
         payload: dict[str, Any] = {
@@ -115,6 +117,7 @@ class OAuthStateSigner:
             "tk": tenant_key,
             "n": nonce or uuid.uuid4().hex,
             "iat": _now(),
+            "ex": dict(extra or {}),
         }
         raw = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
         body = _b64encode(raw)
@@ -142,6 +145,7 @@ class OAuthStateSigner:
             tenant_key=payload.get("tk"),
             nonce=str(payload.get("n") or ""),
             issued_at=issued_at,
+            extra=dict(payload.get("ex") or {}),
         )
 
     def user_matches(self, state: OAuthState, callback_user: Mapping[str, Any]) -> bool:

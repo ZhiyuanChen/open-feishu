@@ -54,7 +54,16 @@ from .llm import (
     ToolSpec,
     ToolUsePart,
 )
-from .loop import Agent, StreamResult, accumulate_stream, session_id_for, user_message_from_event
+from .loop import (
+    AWAITING_APPROVAL_PROGRESS_TEXT,
+    AWAITING_AUTHORIZATION_PROGRESS_TEXT,
+    Agent,
+    ProgressSnapshot,
+    StreamResult,
+    accumulate_stream,
+    session_id_for,
+    user_message_from_event,
+)
 from .payment_accounts import (
     PaymentAccount,
     PaymentAccountResolver,
@@ -65,6 +74,7 @@ from .persistence import (
     JsonlAuditLog,
     SqliteExecutionResultStore,
     SqlitePendingApprovalStore,
+    SqlitePendingAuthorizationStore,
     SqliteSessionStore,
 )
 from .registration import register_agent
@@ -72,9 +82,12 @@ from .result import ToolOutcome, ToolResult
 from .session import (
     ClaimResult,
     InMemoryPendingApprovalStore,
+    InMemoryPendingAuthorizationStore,
     InMemorySessionStore,
     PendingApproval,
     PendingApprovalStore,
+    PendingAuthorization,
+    PendingAuthorizationStore,
     SessionStore,
 )
 from .shared_files import (
@@ -166,9 +179,15 @@ __all__ = [
     "PendingApproval",
     "PendingApprovalStore",
     "InMemoryPendingApprovalStore",
+    "PendingAuthorization",
+    "PendingAuthorizationStore",
+    "InMemoryPendingAuthorizationStore",
     "ClaimResult",
     "Agent",
+    "ProgressSnapshot",
     "StreamResult",
+    "AWAITING_APPROVAL_PROGRESS_TEXT",
+    "AWAITING_AUTHORIZATION_PROGRESS_TEXT",
     "accumulate_stream",
     "session_id_for",
     "user_message_from_event",
@@ -187,6 +206,7 @@ __all__ = [
     # Durable default stores (SQLite / JSONL)
     "SqliteSessionStore",
     "SqlitePendingApprovalStore",
+    "SqlitePendingAuthorizationStore",
     "SqliteExecutionResultStore",
     "JsonlAuditLog",
     # Shared user files (opaque handles; bytes never at rest by default)

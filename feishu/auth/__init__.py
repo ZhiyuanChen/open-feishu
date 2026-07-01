@@ -22,7 +22,7 @@
 from __future__ import annotations
 
 from .credentials import AppTicketStore, Credential, InMemoryAppTicketStore, InternalCredential, StoreCredential
-from .oauth import OAuthNamespace
+from .oauth import OAuthNamespace, build_oauth_redirect_uri, normalize_oauth_callback_path
 from .oauth_state import OAuthState, OAuthStateSigner
 from .tokens import CachedToken, InMemoryTokenCache, TokenCache, TokenManager
 from .user_tokens import (
@@ -43,6 +43,8 @@ __all__ = [
     "InMemoryTokenCache",
     "InternalCredential",
     "OAuthNamespace",
+    "build_oauth_redirect_uri",
+    "normalize_oauth_callback_path",
     "StoreCredential",
     "TokenCache",
     "TokenManager",

@@ -32,6 +32,39 @@ from .credentials import InternalCredential
 _CREDENTIAL_ERROR = "user OAuth requires an InternalCredential (app_id/app_secret)"
 
 
+def normalize_oauth_callback_path(callback_path: str = "/oauth/callback") -> str:
+    r"""Normalize an OAuth callback route path so it can be mounted and joined to a public URL.
+
+    Examples:
+        >>> normalize_oauth_callback_path("oauth/callback")
+        '/oauth/callback'
+        >>> normalize_oauth_callback_path("/oauth/callback")
+        '/oauth/callback'
+    """
+    return "/" + str(callback_path or "").strip().lstrip("/")
+
+
+def build_oauth_redirect_uri(public_url: str | None, callback_path: str = "/oauth/callback") -> str | None:
+    r"""Build a full OAuth redirect URI from a public origin and callback path.
+
+    Product applications should usually expose a public origin (for example
+    ``https://app.example.com``) plus a local callback route, then derive the full
+    redirect URI for [OAuthNamespace.authorize_url][] and [OAuthNamespace.exchange_code][].
+
+    Examples:
+        >>> build_oauth_redirect_uri("https://app.example.com", "oauth/callback")
+        'https://app.example.com/oauth/callback'
+        >>> build_oauth_redirect_uri("https://app.example.com/", "/oauth/callback")
+        'https://app.example.com/oauth/callback'
+        >>> build_oauth_redirect_uri(None, "/oauth/callback") is None
+        True
+    """
+    origin = str(public_url or "").strip().rstrip("/")
+    if not origin:
+        return None
+    return f"{origin}{normalize_oauth_callback_path(callback_path)}"
+
+
 class OAuthNamespace(Namespace):
     r"""
     用户身份授权（登录）能力，挂载于 `client.oauth`。
