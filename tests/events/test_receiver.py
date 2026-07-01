@@ -71,13 +71,20 @@ class TestEventRoute:
         )
         assert resp.status_code == 401
 
-    def test_encrypted_handshake_lenient(self):
-        # Handshake arrives encrypted but WITHOUT X-Lark-Signature; must still succeed.
+    def test_signed_encrypted_handshake_succeeds(self):
         body = {"encrypt": encrypt({"type": "url_verification", "challenge": "c9", "token": VTOKEN})}
+        raw, headers = signed_event(body, encrypt_key=ENCRYPT_KEY)
         client = event_client(EventDispatcher(), encrypt_key=ENCRYPT_KEY, verification_token=VTOKEN)
-        resp = client.post("/feishu/event", json=body)  # no signature headers
+        resp = client.post("/feishu/event", content=raw, headers=headers)
         assert resp.status_code == 200
         assert resp.json() == {"challenge": "c9"}
+
+    def test_unsigned_encrypted_handshake_rejected_before_decrypt(self):
+        body = {"encrypt": encrypt({"type": "url_verification", "challenge": "c9", "token": "wrong"})}
+        client = event_client(EventDispatcher(), encrypt_key=ENCRYPT_KEY, verification_token=VTOKEN)
+        resp = client.post("/feishu/event", json=body)
+        assert resp.status_code == 401
+        assert resp.json() == {"msg": "signature required"}
 
     def test_signature_mismatch_returns_401(self):
         body = {"encrypt": encrypt({"type": "url_verification", "challenge": "c", "token": VTOKEN})}
@@ -97,7 +104,7 @@ class TestEventRoute:
 
     def test_valid_signature_dispatches(self):
         d, received = recording_dispatcher("im.message.receive_v1")
-        raw, headers = signed_event({"encrypt": encrypt(event_payload("e1"))}, encrypt_key=ENCRYPT_KEY)
+        raw, headers = signed_event({"encrypt": encrypt(event_payload("e1", token=VTOKEN))}, encrypt_key=ENCRYPT_KEY)
         client = event_client(d, encrypt_key=ENCRYPT_KEY, verification_token=VTOKEN)
         resp = client.post("/feishu/event", content=raw, headers=headers)
         assert resp.status_code == 200
@@ -110,6 +117,18 @@ class TestEventRoute:
         client = event_client(d, seen_store=None)
         assert client.post("/feishu/event", json=event_payload("plain1")).status_code == 200
         assert calls == ["plain1"]
+
+    def test_normal_event_requires_matching_verification_token_when_configured(self):
+        d, calls = recording_dispatcher("im.message.receive_v1")
+        client = event_client(d, verification_token=VTOKEN, seen_store=None)
+
+        bad = client.post("/feishu/event", json=event_payload("plain_bad", token="wrong"))
+        assert bad.status_code == 401
+        assert calls == []
+
+        good = client.post("/feishu/event", json=event_payload("plain_good", token=VTOKEN))
+        assert good.status_code == 200
+        assert calls == ["plain_good"]
 
     def test_rejects_unsigned_event(self):
         # Security: when encrypt_key is set, a normal event that omits X-Lark-Signature
@@ -139,15 +158,12 @@ class TestEventRoute:
         assert client.post("/feishu/event", json=payload).status_code == 200
         assert calls == expected_calls
 
-    def test_dedups_empty_string_event_id(self):
-        # Receiver must dedup even when event_id is "" (a 2.0 payload missing the
-        # event_id header field resolves to "", which is still a valid dedup key).
+    def test_missing_event_id_is_rejected_before_dispatch(self):
         d, calls = recording_dispatcher("im.message.receive_v1")
         client = event_client(d, seen_store=InMemorySeenStore())
         payload = event_payload(event_id=None)  # no event_id field -> ""
-        assert client.post("/feishu/event", json=payload).status_code == 200
-        assert client.post("/feishu/event", json=payload).status_code == 200
-        assert calls == [""]  # handler ran only once
+        assert client.post("/feishu/event", json=payload).status_code == 400
+        assert calls == []
 
     @pytest.mark.parametrize(
         "route_kwargs, clock_offset, expected_status, expected_calls",
@@ -185,10 +201,36 @@ class TestEventRoute:
         assert resp.status_code == 400
         assert "msg" in resp.json()
 
+    @pytest.mark.parametrize("body", [[], "not an object", 42])
+    def test_non_object_json_body_returns_400(self, body):
+        client = TestClient(
+            Starlette(routes=[create_event_route(EventDispatcher())]),
+            raise_server_exceptions=False,
+        )
+        resp = client.post("/feishu/event", json=body)
+        assert resp.status_code == 400
+        assert resp.json() == {"msg": "invalid event payload"}
+
     def test_encrypted_without_key_400(self):
         # Body contains an "encrypt" field but no encrypt_key is configured on the route.
         client = event_client(EventDispatcher())
         resp = client.post("/feishu/event", json={"encrypt": "somebase64blob"})
+        assert resp.status_code == 400
+        assert "msg" in resp.json()
+
+    def test_bad_encrypted_body_returns_400(self):
+        app = Starlette(routes=[create_event_route(EventDispatcher(), encrypt_key=ENCRYPT_KEY)])
+        client = TestClient(app, raise_server_exceptions=False)
+        raw, headers = signed_event({"encrypt": "not-valid-ciphertext"}, encrypt_key=ENCRYPT_KEY)
+        resp = client.post("/feishu/event", content=raw, headers=headers)
+        assert resp.status_code == 400
+        assert "msg" in resp.json()
+
+    def test_encrypt_null_is_controlled_response(self):
+        app = Starlette(routes=[create_event_route(EventDispatcher(), encrypt_key=ENCRYPT_KEY)])
+        client = TestClient(app, raise_server_exceptions=False)
+        raw, headers = signed_event({"encrypt": None}, encrypt_key=ENCRYPT_KEY)
+        resp = client.post("/feishu/event", content=raw, headers=headers)
         assert resp.status_code == 400
         assert "msg" in resp.json()
 
@@ -242,15 +284,38 @@ class TestCardRoute:
         if expected_status == 200:
             assert resp.json() == {"challenge": "z"}
 
-    def test_handshake_lenient(self):
-        # Handshake via card route: no signature needed even when encrypt_key is set.
+    def test_normal_card_requires_matching_verification_token_when_configured(self):
+        d, calls = recording_dispatcher("card.action.trigger", returns={"toast": {"type": "info", "content": "ok"}})
+        client = card_client(d, verification_token=self.CARD_VTOKEN, seen_store=None)
+
+        bad_payload = self.card_payload("card_bad")
+        bad_payload["header"]["token"] = "wrong"
+        bad = client.post("/feishu/card", json=bad_payload)
+        assert bad.status_code == 401
+        assert calls == []
+
+        good_payload = self.card_payload("card_good")
+        good_payload["header"]["token"] = self.CARD_VTOKEN
+        good = client.post("/feishu/card", json=good_payload)
+        assert good.status_code == 200
+        assert calls == ["card_good"]
+
+    def test_signed_encrypted_handshake_succeeds(self):
         body = {
             "encrypt": self._encrypt({"type": "url_verification", "challenge": "card_chal", "token": self.CARD_VTOKEN})
         }
+        raw, headers = signed_event(body, encrypt_key=self.CARD_KEY)
         client = card_client(EventDispatcher(), encrypt_key=self.CARD_KEY, verification_token=self.CARD_VTOKEN)
-        resp = client.post("/feishu/card", json=body)  # no signature headers
+        resp = client.post("/feishu/card", content=raw, headers=headers)
         assert resp.status_code == 200
         assert resp.json() == {"challenge": "card_chal"}
+
+    def test_unsigned_encrypted_handshake_rejected_before_decrypt(self):
+        body = {"encrypt": self._encrypt({"type": "url_verification", "challenge": "card_chal", "token": "wrong"})}
+        client = card_client(EventDispatcher(), encrypt_key=self.CARD_KEY, verification_token=self.CARD_VTOKEN)
+        resp = client.post("/feishu/card", json=body)
+        assert resp.status_code == 401
+        assert resp.json() == {"msg": "signature required"}
 
     def test_rejects_unsigned(self):
         # Security: card.action.trigger with encrypt_key set but no signature -> 401, no dispatch.
@@ -293,8 +358,10 @@ class TestCardRoute:
         returns = {"toast": {"type": "info", "content": "ok"}}
         d, dispatched = recording_dispatcher("card.action.trigger", returns=returns)
         signed_at = 1700000000
+        payload = self.card_payload("card_sig")
+        payload["header"]["token"] = self.CARD_VTOKEN
         raw, headers = signed_event(
-            {"encrypt": self._encrypt(self.card_payload("card_sig"))},
+            {"encrypt": self._encrypt(payload)},
             encrypt_key=self.CARD_KEY,
             timestamp=str(signed_at),
         )
@@ -313,6 +380,32 @@ class TestCardRoute:
     def test_get_rejected(self):
         client = card_client(EventDispatcher())
         assert client.get("/feishu/card").status_code == 405
+
+    @pytest.mark.parametrize("body", [[], "not an object", 42])
+    def test_non_object_json_body_returns_400(self, body):
+        client = TestClient(
+            Starlette(routes=[create_card_route(EventDispatcher())]),
+            raise_server_exceptions=False,
+        )
+        resp = client.post("/feishu/card", json=body)
+        assert resp.status_code == 400
+        assert resp.json() == {"msg": "invalid event payload"}
+
+    def test_missing_event_id_is_rejected_before_dispatch(self):
+        d, calls = recording_dispatcher("card.action.trigger", returns={"toast": {"type": "info", "content": "ok"}})
+        payload = self.card_payload(event_id=None)
+        client = card_client(d, seen_store=InMemorySeenStore())
+        resp = client.post("/feishu/card", json=payload)
+        assert resp.status_code == 400
+        assert calls == []
+
+    def test_encrypt_null_is_controlled_response(self):
+        app = Starlette(routes=[create_card_route(EventDispatcher(), encrypt_key=self.CARD_KEY)])
+        client = TestClient(app, raise_server_exceptions=False)
+        raw, headers = signed_event({"encrypt": None}, encrypt_key=self.CARD_KEY)
+        resp = client.post("/feishu/card", content=raw, headers=headers)
+        assert resp.status_code == 400
+        assert "msg" in resp.json()
 
     @pytest.mark.parametrize(
         "store_kwargs, expect_dedup",
@@ -356,7 +449,7 @@ class TestEventApp:
         assert r1.json() == {"challenge": "a"}
 
         # card route synchronous return
-        r2 = client.post("/feishu/card", json=event_payload("c1", event_type="card.action.trigger"))
+        r2 = client.post("/feishu/card", json=event_payload("c1", event_type="card.action.trigger", token="vt"))
         assert r2.json() == {"toast": {"type": "success", "content": "ok"}}
 
     def test_card_seen_store_dedup(self):

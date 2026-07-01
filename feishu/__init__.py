@@ -22,6 +22,7 @@
 from __future__ import annotations
 
 from ._logging import install_redaction
+from ._transport import RetryPolicy
 from .client import FeishuClient
 from .errors import (
     FeishuApiError,
@@ -33,6 +34,8 @@ from .errors import (
     FeishuServerError,
     FeishuSignatureError,
     FeishuTransportError,
+    is_permission_error,
+    permission_subjects,
 )
 from .signature import SignatureVerifier, verify_signature
 
@@ -40,6 +43,7 @@ install_redaction()
 
 __all__ = [
     "FeishuClient",
+    "RetryPolicy",
     "FeishuError",
     "FeishuAuthError",
     "FeishuPermissionError",
@@ -49,6 +53,8 @@ __all__ = [
     "FeishuTransportError",
     "FeishuSignatureError",
     "FeishuCryptoError",
+    "is_permission_error",
+    "permission_subjects",
     "SignatureVerifier",
     "install_redaction",
     "verify_signature",

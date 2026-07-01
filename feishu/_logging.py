@@ -31,7 +31,7 @@ _REDACTED = "***REDACTED***"
 # Static secret patterns. Each substitutes the secret value with _REDACTED while
 # keeping the surrounding key/prefix so log lines stay readable.
 def _value_sub(m: re.Match) -> str:
-    """Replacement helper for ``_PATTERNS`` subs: keep the captured prefix, redact the value."""
+    """供 ``_PATTERNS`` 替换使用：保留捕获到的前缀，只脱敏取值。"""
     return m.group(1) + _REDACTED
 
 
@@ -77,9 +77,19 @@ class RedactingFilter(logging.Filter):
 
     def __init__(self, *, secrets: Iterable[str] = ()) -> None:
         super().__init__()
+        self._literal_values: set[str] = set()
+        self._literals: tuple[re.Pattern[str], ...] = ()
+        self.add_secrets(secrets)
+
+    def add_secrets(self, secrets: Iterable[str]) -> None:
+        r"""把调用方新增的字面量密钥并入该过滤器。"""
+        values = {s for s in secrets if s}
+        if not values:
+            return
+        self._literal_values.update(values)
         # Exact-literal secrets the app knows about (e.g. card-update tokens or a
         # configured encrypt_key). re.escape so regex metacharacters are literal.
-        self._literals: tuple[re.Pattern[str], ...] = tuple(re.compile(re.escape(s)) for s in secrets if s)
+        self._literals = tuple(re.compile(re.escape(s)) for s in sorted(self._literal_values, key=len, reverse=True))
 
     def _scrub(self, text: str) -> str:
         for pattern in _PATTERNS:
@@ -103,15 +113,15 @@ def install_redaction(logger_name: str = "feishu", *, secrets: Iterable[str] = (
     r"""
     幂等地为指定日志器安装脱敏过滤器并返回该过滤器。
 
-    若目标日志器上已存在 [feishu._logging.RedactingFilter][]，则直接返回已有实例，
-    不会重复添加，因此可安全地多次调用。
+    若目标日志器上已存在 `RedactingFilter`，则复用已有实例并把本次传入的
+    `secrets` 合并进去，不会重复添加过滤器，因此可安全地多次调用。
 
     Args:
         logger_name: 目标日志器名称，默认 `feishu`。
         secrets: 需要按字面量脱敏的额外密钥字符串集合。
 
     Returns:
-        已安装（或复用的）[feishu._logging.RedactingFilter][] 实例。
+        已安装（或复用的）`RedactingFilter` 实例。
 
     Examples:
         >>> first = install_redaction("feishu.demo")
@@ -122,6 +132,7 @@ def install_redaction(logger_name: str = "feishu", *, secrets: Iterable[str] = (
     logger = logging.getLogger(logger_name)
     for existing in logger.filters:
         if isinstance(existing, RedactingFilter):
+            existing.add_secrets(secrets)
             return existing
     redactor = RedactingFilter(secrets=secrets)
     logger.addFilter(redactor)

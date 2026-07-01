@@ -56,7 +56,7 @@ async def iterate(
         分页结果中的每一条目，按页内顺序依次产出。
 
     飞书文档:
-        [分页查询](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/paging)
+        [调用流程](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/overview)
 
     Examples:
         >>> import asyncio
@@ -121,7 +121,7 @@ async def paginate(
         包含全部（或受 `max_items` / `early_stop` 限制后的）条目的列表。
 
     飞书文档:
-        [分页查询](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/paging)
+        [调用流程](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/overview)
 
     Examples:
         >>> import asyncio

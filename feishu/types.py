@@ -25,6 +25,21 @@ from typing import Any, TypedDict
 
 
 class NormalizedUser(TypedDict):
+    r"""
+    归一化后的飞书用户信息。
+
+    字段:
+        user_id: 飞书用户 ID。
+        open_id: 飞书 Open ID。
+        union_id: 飞书 Union ID。
+        name: 用户展示名。
+        email: 用户邮箱；接口未返回时为 `None`。
+        department_ids: 用户所属部门 ID 列表。
+        status: 飞书返回的用户状态对象。
+        active: 用户是否处于启用状态。
+        raw: 原始用户对象，便于调用方读取 SDK 未归一化的字段。
+    """
+
     user_id: str
     open_id: str
     union_id: str
@@ -37,6 +52,18 @@ class NormalizedUser(TypedDict):
 
 
 class NormalizedDepartment(TypedDict):
+    r"""
+    归一化后的飞书部门信息。
+
+    字段:
+        department_id: 部门 ID。
+        open_department_id: 部门 Open ID。
+        parent_department_id: 父部门 ID。
+        name: 部门名称。
+        member_count: 部门成员数量。
+        raw: 原始部门对象，便于调用方读取 SDK 未归一化的字段。
+    """
+
     department_id: str
     open_department_id: str
     parent_department_id: str

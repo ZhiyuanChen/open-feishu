@@ -188,7 +188,7 @@ class Card:
             当前 [feishu.cards.builder.Card][] 实例。
 
         飞书文档:
-            [标题组件](https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/card-json-v2-components/containers/title)
+            [标题组件](https://open.feishu.cn/document/feishu-cards/card-json-v2-components/content-components/title)
 
         Examples:
             >>> hdr = Card().header("Title", subtitle="sub", template="green").to_dict()["header"]

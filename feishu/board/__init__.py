@@ -21,8 +21,10 @@
 
 from __future__ import annotations
 
-from .whiteboards import BoardNamespace
+from .board import BoardNamespace
+from .whiteboards import WhiteboardsNamespace
 
 __all__ = [
     "BoardNamespace",
+    "WhiteboardsNamespace",
 ]

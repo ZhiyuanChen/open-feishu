@@ -28,17 +28,18 @@ from .._namespace import Namespace
 from .._url import quote_segment
 
 
-class BoardNamespace(Namespace):
+class WhiteboardsNamespace(Namespace):
     r"""
-    画板（Board）接口命名空间。
+    画板资源接口命名空间。
 
-    封装飞书画板（Board）相关的服务端接口，包括获取画板主题、列举画板内的全部节点，
-    以及将整块画板导出为图片等能力。画板由若干节点（node）组成，节点是画板内容的最小结构单元。
+    封装飞书开放平台 `board/v1/whiteboards` 资源下的服务端接口，包括获取画板主题、
+    列举画板内的全部节点，以及将整块画板导出为图片等能力。画板由若干节点（node）组成，
+    节点是画板内容的最小结构单元。
 
-    通常无需直接实例化，应通过客户端的 `client.board` 访问。
+    通常无需直接实例化，应通过客户端的 `client.board.whiteboards` 访问。
 
     飞书文档:
-        [画板概述](https://open.feishu.cn/document/server-docs/docs/board-v1/overview)
+        [画板概述](https://open.feishu.cn/document/docs/board-v1/overview)
     """
 
     async def download_as_image(self, whiteboard_id: str) -> bytes:
@@ -58,13 +59,13 @@ class BoardNamespace(Namespace):
 
         飞书文档:
             [下载为图片](https://open.feishu.cn/document/docs/board-v1/whiteboard/download_as_image)
-            参见 [feishu.board.whiteboards.BoardNamespace.list_nodes][]。
+            参见 [feishu.board.whiteboards.WhiteboardsNamespace.list_nodes][]。
 
         Examples:
             >>> import asyncio
             >>> async def main():
             ...     async with FeishuClient("cli_xxx", "secret") as client:
-            ...         return await client.board.download_as_image("wb_abc")
+            ...         return await client.board.whiteboards.download_as_image("wb_abc")
             >>> asyncio.run(main())  # doctest: +SKIP
             b'\\x89PNG...'
         """
@@ -87,11 +88,11 @@ class BoardNamespace(Namespace):
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [获取画板主题](https://open.feishu.cn/document/docs/board-v1/whiteboard/theme)
-            参见 [feishu.board.whiteboards.BoardNamespace.list_nodes][]。
+            [获取画板主题](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard/theme)
+            参见 [feishu.board.whiteboards.WhiteboardsNamespace.list_nodes][]。
 
         Examples:
-            >>> await client.board.get_theme("wb_abc")  # doctest:+SKIP
+            >>> await client.board.whiteboards.get_theme("wb_abc")  # doctest:+SKIP
             {'theme': 'classic'}
         """
         return await self._request_data("GET", f"board/v1/whiteboards/{quote_segment(whiteboard_id)}/theme")
@@ -116,10 +117,10 @@ class BoardNamespace(Namespace):
 
         飞书文档:
             [获取所有节点](https://open.feishu.cn/document/docs/board-v1/whiteboard-node/list)
-            参见 [feishu.board.whiteboards.BoardNamespace.get_theme][]。
+            参见 [feishu.board.whiteboards.WhiteboardsNamespace.get_theme][]。
 
         Examples:
-            >>> await client.board.list_nodes("wb_abc")  # doctest:+SKIP
+            >>> await client.board.whiteboards.list_nodes("wb_abc")  # doctest:+SKIP
             [{'id': 'n1', 'type': 'composite_shape', ...}, {'id': 'n2', 'type': 'text', ...}]
         """
         params = {"user_id_type": user_id_type}

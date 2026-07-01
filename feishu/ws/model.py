@@ -41,7 +41,7 @@ class ClientConfig:
         ping_interval: 发送心跳（ping）控制帧的间隔秒数。
 
     飞书文档:
-        [长连接模式](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/events/long-connection-mode)
+        [事件概述](https://open.feishu.cn/document/server-docs/event-subscription-guide/overview)
 
     Examples:
         >>> ClientConfig().reconnect_count

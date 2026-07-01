@@ -33,7 +33,7 @@ r"""CardKit v1 流式卡片助手：将增量生成的 LLM 文本持续推送到
    未收尾的流会白白浪费卡片实体。
 
 限流约定：内容写入与收尾补丁共享同一个单调递增的 ``sequence``
-（由 [feishu.streaming.cardkit._SequenceCounter][] 通过 asyncio 锁保证原子性）。
+（由 `feishu.streaming.cardkit._SequenceCounter` 通过 asyncio 锁保证原子性）。
 写入带去抖（debounce，默认 0.25 秒，约 4 次/秒，远低于飞书 10 次/秒/卡片的上限）：
 只有在去抖间隔已过且缓冲区内容发生变化时才会真正发出写入，并在收尾前强制刷新一次。
 
@@ -42,7 +42,7 @@ r"""CardKit v1 流式卡片助手：将增量生成的 LLM 文本持续推送到
 使去抖行为完全确定且不产生任何真实等待。
 
 飞书文档:
-    [流式更新文本](https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/streaming-updates-overview)
+    [流式更新卡片](https://open.feishu.cn/document/cardkit-v1/streaming-updates-openapi-overview)
 """
 
 from __future__ import annotations
@@ -218,9 +218,9 @@ async def stream_card(
         创建出的卡片实体 ``card_id``。
 
     飞书文档:
-        [创建卡片实体](https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/cardkit-v1/card/create)
+        [创建卡片实体](https://open.feishu.cn/document/cardkit-v1/card/create)
 
-        [流式更新文本](https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/streaming-updates-overview)
+        [流式更新文本](https://open.feishu.cn/document/cardkit-v1/card-element/content)
 
         [发送消息](https://open.feishu.cn/document/server-docs/im-v1/message/create)
 
@@ -253,7 +253,7 @@ async def stream_card(
         await client.request(
             "POST",
             spec.reply_message_path(reply_to_message_id),
-            json={"msg_type": spec.SEND_MSG_TYPE, "content": content},
+            json={"msg_type": spec.SEND_MESSAGE_TYPE, "content": content},
         )
     else:
         assert receive_id is not None  # guaranteed by the receive_id / reply_to_message_id XOR check above
@@ -262,7 +262,7 @@ async def stream_card(
             "POST",
             spec.SEND_MESSAGE_PATH,
             params={"receive_id_type": rid_type},
-            json={"receive_id": receive_id, "msg_type": spec.SEND_MSG_TYPE, "content": content},
+            json={"receive_id": receive_id, "msg_type": spec.SEND_MESSAGE_TYPE, "content": content},
         )
 
     # 3) Stream cumulative text. Finalize is mandatory -> try/finally.

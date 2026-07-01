@@ -136,3 +136,19 @@ class TestIdempotency:
             idem_logger.removeHandler(cap)
         assert "s3cret-value" not in cap.last
         assert cap.last.count(_REDACTED) == 1  # one marker, no double-artifact
+
+    def test_double_install_merges_literal_secrets(self, make_logger):
+        name = "feishu.test.idempotent.merge"
+        first = install_redaction(name)
+        second = install_redaction(name, secrets=["card-token-xyz"])
+        assert first is second
+        logger, cap = make_logger()
+        idem_logger = logging.getLogger(name)
+        idem_logger.setLevel(logging.DEBUG)
+        idem_logger.addHandler(cap)
+        try:
+            idem_logger.info("token=card-token-xyz")
+        finally:
+            idem_logger.removeHandler(cap)
+        assert "card-token-xyz" not in cap.last
+        assert _REDACTED in cap.last

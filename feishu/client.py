@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     from .approval.approval import ApprovalNamespace
     from .auth.oauth import OAuthNamespace
     from .bitable.bitable import BitableNamespace
-    from .board.whiteboards import BoardNamespace
+    from .board.board import BoardNamespace
     from .calendar.calendar import CalendarNamespace
     from .cards import Card as _Card
     from .cards import CardAction as _CardAction
@@ -104,13 +104,13 @@ class FeishuClient:
     r"""
     飞书开放平台异步客户端。
 
-    统一管理凭证、令牌的自动获取与缓存、HTTP 传输（含 5xx/429 自动重试），并提供
+    统一管理凭证、令牌的自动获取与缓存、HTTP 传输（429 自动重试；网络错误与 5xx 仅对幂等请求重试），并提供
     各业务能力的命名空间入口（[feishu.client.FeishuClient.im][]、
     [feishu.client.FeishuClient.contact][]、[feishu.client.FeishuClient.oauth][]
     等）。推荐通过 `async with` 使用以自动释放底层连接。
 
-    各命名空间方法返回的 [chanfig.NestedDict][] 均附带 `raw_envelope` 属性，可据此读取
-    顶层的 `code` / `msg` 与分页游标等原始信封字段。
+    单次请求返回的 [chanfig.NestedDict][] 会附带 `raw_envelope` 属性，可据此读取
+    顶层的 `code` / `msg` 等原始信封字段；分页 helper 可能返回普通列表。
 
     应用凭证可直接传入 `app_id` / `app_secret`，也可通过环境变量 `FEISHU_APP_ID` /
     `FEISHU_APP_SECRET` 提供，或传入自定义 `credential`。
@@ -123,7 +123,7 @@ class FeishuClient:
         accounts_url: 自定义 OAuth 授权（accounts）域名，优先于 `region`；可用于覆盖 `lark`
             区域下尚未经线上确认的默认主机，与 `base_url`（API 域名）相互独立。
         timeout: 请求超时时间（秒）。
-        retry: 重试策略 [feishu._transport.RetryPolicy][]，缺省使用默认策略。
+        retry: 重试策略 [feishu.RetryPolicy][]，缺省使用默认策略。
         credential: 自定义凭证对象；提供后将忽略 `app_id` / `app_secret`。
         token_cache: 自定义令牌缓存。
         transport: 自定义 `httpx.AsyncClient`；由调用方提供时其生命周期不归本客户端管理。
@@ -133,7 +133,7 @@ class FeishuClient:
         ValueError: 当既未提供凭证，也无法从环境变量解析出 `app_id` / `app_secret` 时抛出。
 
     飞书文档:
-        [服务端 API 调用指南](https://open.feishu.cn/document/server-docs/api-call-guide/server-api-list)
+        [服务端 API 调用流程](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/overview)
 
     Examples:
         >>> import asyncio
@@ -206,7 +206,7 @@ class FeishuClient:
             绑定到本客户端的 Approval 命名空间对象（首次访问时惰性创建）。
 
         飞书文档:
-            [审批概述](https://open.feishu.cn/document/server-docs/approval-v4/overview)
+            [审批概述](https://open.feishu.cn/document/server-docs/approval-v4/approval-overview)
         """
         if self._approval is None:
             from .approval.approval import ApprovalNamespace
@@ -234,16 +234,16 @@ class FeishuClient:
     @property
     def board(self) -> BoardNamespace:
         r"""
-        画板（Board）命名空间，提供画板元信息、节点列举与导出为图片等能力。
+        画板（Board）命名空间，通过 `client.board.whiteboards` 提供画板主题、节点列举与导出为图片等能力。
 
         Returns:
             绑定到本客户端的 Board 命名空间对象（首次访问时惰性创建）。
 
         飞书文档:
-            [画板概述](https://open.feishu.cn/document/server-docs/docs/board-v1/overview)
+            [画板概述](https://open.feishu.cn/document/docs/board-v1/overview)
         """
         if self._board is None:
-            from .board.whiteboards import BoardNamespace
+            from .board.board import BoardNamespace
 
             self._board = BoardNamespace(self)
         return self._board
@@ -301,7 +301,7 @@ class FeishuClient:
             绑定到本客户端的通讯录命名空间对象（首次访问时惰性创建）。
 
         飞书文档:
-            [通讯录](https://open.feishu.cn/document/server-docs/contact-v3/contact-overview)
+            [通讯录](https://open.feishu.cn/document/server-docs/contact-v3/resources)
         """
         if self._contact is None:
             from .contact.contact import ContactNamespace
@@ -318,7 +318,7 @@ class FeishuClient:
             绑定到本客户端的 Docx 命名空间对象（首次访问时惰性创建）。
 
         飞书文档:
-            [文档概述](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document/intro)
+            [文档概述](https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/docx-overview)
         """
         if self._docx is None:
             from .docx.documents import DocxNamespace
@@ -403,7 +403,7 @@ class FeishuClient:
             绑定到本客户端的 Sheets 命名空间对象（首次访问时惰性创建）。
 
         飞书文档:
-            [电子表格概述](https://open.feishu.cn/document/server-docs/docs/sheets/sheets-overview)
+            [电子表格概述](https://open.feishu.cn/document/server-docs/docs/sheets-v3/overview)
         """
         if self._sheets is None:
             from .sheets.spreadsheets import SheetsNamespace
@@ -447,7 +447,7 @@ class FeishuClient:
             绑定到本客户端的 VC 命名空间对象（首次访问时惰性创建）。
 
         飞书文档:
-            [视频会议概述](https://open.feishu.cn/document/server-docs/vc-v1/vc-overview)
+            [视频会议概述](https://open.feishu.cn/document/server-docs/vc-v1/video-conferencing-overview)
         """
         if self._vc is None:
             from .vc.vc import VCNamespace
@@ -602,7 +602,7 @@ class FeishuClient:
             汇总后的条目列表。
 
         飞书文档:
-            [分页查询](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/paging)
+            [调用流程](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/overview)
         """
 
         async def fetch(page_token: str | None) -> NestedDict:
@@ -659,7 +659,7 @@ class FeishuClient:
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
 
         飞书文档:
-            [服务端 API 调用指南](https://open.feishu.cn/document/server-docs/api-call-guide/server-api-list)
+            [服务端 API 调用流程](https://open.feishu.cn/document/server-docs/api-call-guide/calling-process/overview)
 
         Examples:
             >>> import asyncio
@@ -713,7 +713,7 @@ class FeishuClient:
             ValueError: 当 `receive_id` 与 `reply_to_message_id` 未恰好提供其一时抛出。
 
         飞书文档:
-            [流式更新文本](https://open.feishu.cn/document/cardkit-v1/card/streaming-updates-openplatform)
+            [流式更新文本](https://open.feishu.cn/document/cardkit-v1/card-element/content)
 
         Examples:
             >>> import asyncio
