@@ -503,3 +503,16 @@ class InMemoryPendingAuthorizationStore:
                     authorization.state = "awaiting_authorization"
                 return
             self._store.pop(authorization_id, None)
+
+
+__all__ = [
+    "ClaimResult",
+    "InMemoryPendingApprovalStore",
+    "InMemoryPendingAuthorizationStore",
+    "InMemorySessionStore",
+    "PendingApproval",
+    "PendingApprovalStore",
+    "PendingAuthorization",
+    "PendingAuthorizationStore",
+    "SessionStore",
+]

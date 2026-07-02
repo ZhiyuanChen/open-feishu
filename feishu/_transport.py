@@ -172,6 +172,7 @@ class Transport:
         retry: RetryPolicy | None = None,
         client: httpx.AsyncClient | None = None,
         logger: logging.Logger | None = None,
+        sleep: Callable[[float], Awaitable[Any]] | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
@@ -179,6 +180,7 @@ class Transport:
         self._client = client or httpx.AsyncClient(timeout=timeout)
         self._owns_client = client is None
         self.logger = logger or logging.getLogger("feishu")
+        self._sleep = sleep or asyncio.sleep
 
     async def aclose(self) -> None:
         r"""
@@ -489,7 +491,7 @@ class Transport:
         预算判定与真实退避一致——避免对退避时长做两次独立的随机采样。
         """
         if delay > 0:
-            await asyncio.sleep(delay)
+            await self._sleep(delay)
 
 
 def _reset_after(headers: Mapping[str, str]) -> float | None:

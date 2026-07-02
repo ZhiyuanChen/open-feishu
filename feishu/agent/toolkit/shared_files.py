@@ -36,7 +36,7 @@ from ..tools import Tool
 from ._base import list_recent_shared_files, needs_user_auth, resolve_client, resolve_shared_file_bytes
 
 
-def list_shared_files(*, description: str, name: str = "list_shared_files", locale: str = "zh-CN") -> Tool:
+def list_shared_files(*, description: str, name: str = "list_shared_files") -> Tool:
     r"""
     读类工厂：列出请求用户最近分享给机器人的文件，返回一个 [feishu.agent.tools.Tool][]。
 
@@ -68,7 +68,6 @@ def describe_shared_file(
     description: str,
     analyzer: Callable[..., Awaitable[str]],
     name: str = "describe_shared_file",
-    locale: str = "zh-CN",
 ) -> Tool:
     r"""
     读类工厂：对某个分享文件做（多模态）内容描述 / 提取，返回文本摘要，返回一个 [feishu.agent.tools.Tool][]。
@@ -81,7 +80,6 @@ def describe_shared_file(
         description: 工具描述（产品本地化文案）。
         analyzer: 产品注入的内容分析器，输入字节、输出描述文本。
         name: 工具名。默认为 `"describe_shared_file"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
 
     Examples:
         >>> tool = describe_shared_file(description="描述文件", analyzer=None)
@@ -125,7 +123,6 @@ def upload_shared_file_to_drive(
     *,
     description: str,
     name: str = "upload_shared_file_to_drive",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),

@@ -42,14 +42,13 @@ from feishu.im.inbound import message_transcript
 
 from ..result import ToolOutcome, ToolResult
 from ..tools import Tool
-from ._base import needs_user_auth, resolve_client
+from ._base import needs_user_auth, resolve_client, resolve_timezone
 
 
 def search_documents(
     *,
     description: str,
     name: str = "search_documents",
-    locale: str = "zh-CN",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
 ) -> Tool:
@@ -62,7 +61,6 @@ def search_documents(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"search_documents"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
 
@@ -111,7 +109,6 @@ def get_document_content(
     *,
     description: str,
     name: str = "get_document_content",
-    locale: str = "zh-CN",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
     lang: int | None = None,
@@ -126,7 +123,6 @@ def get_document_content(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"get_document_content"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
         lang: `docx.get_raw_content` 的内容语言；为空时使用接口默认值。
@@ -180,7 +176,6 @@ def get_message_thread(
     *,
     description: str,
     name: str = "get_message_thread",
-    locale: str = "zh-CN",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
 ) -> Tool:
@@ -193,7 +188,6 @@ def get_message_thread(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"get_message_thread"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
 
@@ -238,7 +232,6 @@ def get_meeting_record(
     *,
     description: str,
     name: str = "get_meeting_record",
-    locale: str = "zh-CN",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
     timezone: str = "Asia/Shanghai",
@@ -255,7 +248,6 @@ def get_meeting_record(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"get_meeting_record"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
         timezone: 解析 `start_time`/`end_time` 时使用的时区。默认为 `"Asia/Shanghai"`。
@@ -291,7 +283,7 @@ def get_meeting_record(
         meeting: dict[str, Any] = {}
         note_reference = meeting_note_reference_from_mapping(arguments)
         if note_reference is None:
-            meeting = await _resolve_meeting(client, arguments, timezone=timezone)
+            meeting = await _resolve_meeting(client, arguments, timezone=await resolve_timezone(timezone))
             if not meeting:
                 return ToolResult(
                     ToolOutcome.BLOCKED,
@@ -346,3 +338,11 @@ async def _resolve_meeting(client: Any, arguments: dict[str, Any], *, timezone: 
     with_note = [item for item in meetings if meeting_note_reference_from_meeting(item)]
     chosen = with_note[0] if with_note else meetings[0]
     return dict(chosen) if isinstance(chosen, dict) else {}
+
+
+__all__ = [
+    "get_document_content",
+    "get_meeting_record",
+    "get_message_thread",
+    "search_documents",
+]

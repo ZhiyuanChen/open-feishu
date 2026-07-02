@@ -21,10 +21,12 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..events.dispatcher import EventDispatcher
+    from ..events.idempotency import SeenStore
     from .loop import Agent
 
 
@@ -58,3 +60,40 @@ def register_agent(
     """
     dispatcher.on(message_event)(agent.run)
     dispatcher.on(card_event)(agent.handle_card_action)
+
+
+def create_agent_dispatcher(
+    agent: Agent,
+    *,
+    seen_store: SeenStore | None = None,
+    seen_path: str | Path | None = None,
+    message_event: str = "im.message.receive_v1",
+    card_event: str = "card.action.trigger",
+) -> EventDispatcher:
+    r"""
+    创建 [feishu.events.dispatcher.EventDispatcher][] 并把 agent 绑定到消息与卡片事件上。
+
+    Args:
+        agent: 接收消息与卡片事件的 [feishu.agent.loop.Agent][]。
+        seen_store: 事件幂等存储；为空时不去重，除非提供 `seen_path`。
+        seen_path: 可选 JSON 文件路径，用于构造 [feishu.events.idempotency.FileSeenStore][]；
+            适合单进程机器人在重启后继续去重。
+        message_event: 路由到 [feishu.agent.loop.Agent.run][] 的消息事件类型。
+        card_event: 路由到 [feishu.agent.loop.Agent.handle_card_action][] 的卡片回调事件类型。
+
+    Returns:
+        已完成 agent 事件绑定的 dispatcher。
+    """
+    from ..events.dispatcher import EventDispatcher
+    from ..events.idempotency import FileSeenStore
+
+    resolved_seen_store = FileSeenStore(seen_path) if seen_store is None and seen_path is not None else seen_store
+    dispatcher = EventDispatcher(seen_store=resolved_seen_store)
+    register_agent(dispatcher, agent, message_event=message_event, card_event=card_event)
+    return dispatcher
+
+
+__all__ = [
+    "create_agent_dispatcher",
+    "register_agent",
+]

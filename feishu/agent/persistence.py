@@ -676,3 +676,18 @@ class JsonlAuditLog:
             fd = os.open(self._path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
             with os.fdopen(fd, "a", encoding="utf-8") as handle:
                 handle.write(line + "\n")
+
+
+__all__ = [
+    "JsonlAuditLog",
+    "SqliteExecutionResultStore",
+    "SqlitePendingApprovalStore",
+    "SqlitePendingAuthorizationStore",
+    "SqliteSessionStore",
+    "approval_from_dict",
+    "approval_to_dict",
+    "authorization_from_dict",
+    "authorization_to_dict",
+    "message_from_dict",
+    "message_to_dict",
+]

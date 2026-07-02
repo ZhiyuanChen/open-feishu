@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from feishu.agent.loop import Agent
-from feishu.agent.registration import register_agent
+from feishu.agent.registration import create_agent_dispatcher, register_agent
 from feishu.agent.session import InMemoryPendingApprovalStore, InMemorySessionStore
 from feishu.agent.tools import ToolRegistry
 from tests._fakes import FakeLlmBackend, text_turn
@@ -91,7 +91,7 @@ class TestRegisterAgent:
 
         result = await dispatcher.dispatch(card_event())
 
-        assert result == {"toast": {"type": "info", "content": "no pending approval"}}
+        assert result == {"toast": {"type": "info", "content": "没有待处理的确认请求"}}
 
     async def test_honors_custom_event_types(self, client):
         agent = make_agent(client, [text_turn("hello")])
@@ -101,5 +101,14 @@ class TestRegisterAgent:
         assert await dispatcher.dispatch(text_event("msg.custom")) is None
         assert client.replies == [("om_in", "hello")]
         assert await dispatcher.dispatch(card_event("card.custom")) == {
-            "toast": {"type": "info", "content": "no pending approval"}
+            "toast": {"type": "info", "content": "没有待处理的确认请求"}
         }
+
+    async def test_create_agent_dispatcher_wires_default_events(self, client):
+        agent = make_agent(client, [text_turn("hello")])
+        dispatcher = create_agent_dispatcher(agent)
+
+        result = await dispatcher.dispatch(text_event())
+
+        assert result is None
+        assert client.replies == [("om_in", "hello")]

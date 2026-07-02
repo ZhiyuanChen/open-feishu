@@ -43,7 +43,7 @@ async def make():
     """
     created = []
 
-    def _build(handler, *, retry=None, http_client=None):
+    def _build(handler, *, retry=None, http_client=None, retry_sleep=None):
         def _handler(request):
             return token_handler(request) or handler(request)
 
@@ -53,6 +53,7 @@ async def make():
             "secret",
             retry=retry or RetryPolicy(max_attempts=3, base_delay=0.0, jitter=False),
             transport=transport,
+            retry_sleep=retry_sleep,
         )
         created.append(client)
         return client
@@ -62,26 +63,18 @@ async def make():
         await client.aclose()
 
 
-@pytest.fixture
-def no_real_sleep(monkeypatch):
-    """Collapse backoff sleeps to no-ops so retry-exhaustion tests stay fast."""
+class SleepRecorder:
+    """Record retry backoff durations without actually sleeping."""
 
-    async def fake_sleep(_):
-        return None
+    def __init__(self) -> None:
+        self.durations: list[float] = []
 
-    monkeypatch.setattr("feishu._transport.asyncio.sleep", fake_sleep)
+    async def __call__(self, delay: float) -> None:
+        self.durations.append(delay)
 
 
-@pytest.fixture
-def slept(monkeypatch):
-    """Record backoff sleep durations (instead of actually sleeping); returns the list."""
-    durations = []
-
-    async def fake_sleep(d):
-        durations.append(d)
-
-    monkeypatch.setattr("feishu._transport.asyncio.sleep", fake_sleep)
-    return durations
+async def no_sleep(_delay: float) -> None:
+    return None
 
 
 def counting(responses):
@@ -158,7 +151,8 @@ class TestTransparentRecovery:
         assert resp["data"]["x"] == 1
         assert handler.calls > 1  # evidence a retry occurred
 
-    async def test_rate_limit_honors_reset_header(self, make, slept):
+    async def test_rate_limit_honors_reset_header(self, make):
+        sleeps = SleepRecorder()
         handler = counting(
             [
                 lambda: httpx.Response(
@@ -167,14 +161,14 @@ class TestTransparentRecovery:
                 lambda: ok({"x": 1}),
             ]
         )
-        resp = await make(handler).request("GET", "x")
+        resp = await make(handler, retry_sleep=sleeps).request("GET", "x")
         # Ultimately succeeds after backing off; the wait respects the server's reset hint.
         assert resp["data"]["x"] == 1
-        assert slept and slept[-1] >= 7.0
+        assert sleeps.durations and sleeps.durations[-1] >= 7.0
 
 
 class TestTransientRecovery:
-    async def test_network_error_recovers(self, make, no_real_sleep):
+    async def test_network_error_recovers(self, make):
         handler = counting([boom, lambda: ok({"x": 1})])
         resp = await make(handler).request("GET", "x")
         # The caller gets data back; the dropped connection is invisible.
@@ -183,13 +177,13 @@ class TestTransientRecovery:
 
 
 class TestExhaustion:
-    async def test_network_error_wraps_cause(self, make, no_real_sleep):
+    async def test_network_error_wraps_cause(self, make):
         with pytest.raises(FeishuTransportError) as excinfo:
             await make(lambda r: boom()).request("GET", "x")
         # The underlying httpx error is preserved on ``.original`` for callers to inspect.
         assert isinstance(excinfo.value.original, httpx.RequestError)
 
-    async def test_persistent_5xx_raises(self, make, no_real_sleep):
+    async def test_persistent_5xx_raises(self, make):
         client = make(
             lambda r: httpx.Response(503, json={"code": 0, "msg": "unavailable"}),
             retry=RetryPolicy(max_attempts=2, base_delay=0.0, jitter=False),
@@ -197,7 +191,7 @@ class TestExhaustion:
         with pytest.raises(FeishuServerError):
             await client.request("GET", "x")
 
-    async def test_non_json_body_raises_with_raw_text(self, make, no_real_sleep):
+    async def test_non_json_body_raises_with_raw_text(self, make):
         client = make(lambda r: httpx.Response(200, text="not json", headers={"content-type": "text/plain"}))
         with pytest.raises(FeishuError) as excinfo:
             await client.request("GET", "x")
@@ -313,7 +307,7 @@ class TestUpload:
 
 
 class TestNonEnvelopeRecovery:
-    async def test_post_5xx_not_retried(self, make, no_real_sleep):
+    async def test_post_5xx_not_retried(self, make):
         # The OAuth token endpoint is a POST (non-idempotent): a 5xx must NOT be retried,
         # since the request may already have been committed server-side.
         handler = counting([lambda: httpx.Response(503, json={"error": "server", "error_description": "down"})])
@@ -321,16 +315,17 @@ class TestNonEnvelopeRecovery:
             await oauth_request(make(handler))
         assert handler.calls == 1  # terminal on the first attempt: no duplicate POST
 
-    async def test_rate_limit_honors_reset_header(self, make, slept):
+    async def test_rate_limit_honors_reset_header(self, make):
+        sleeps = SleepRecorder()
         handler = counting(
             [
                 lambda: httpx.Response(429, json={"error": "rate"}, headers={"x-ogw-ratelimit-reset": "5"}),
                 lambda: httpx.Response(200, json={"access_token": "u-1", "expires_in": 7200}),
             ]
         )
-        resp = await oauth_request(make(handler))
+        resp = await oauth_request(make(handler, retry_sleep=sleeps))
         assert resp["access_token"] == "u-1"
-        assert slept and slept[-1] >= 5.0
+        assert sleeps.durations and sleeps.durations[-1] >= 5.0
 
 
 class TestRetryIdempotencyGating:
@@ -345,7 +340,7 @@ class TestRetryIdempotencyGating:
             ("PATCH", 1),  # non-idempotent
         ],
     )
-    async def test_5xx_retry_by_idempotency(self, make, no_real_sleep, method, expected_calls):
+    async def test_5xx_retry_by_idempotency(self, make, method, expected_calls):
         handler = counting([lambda: httpx.Response(503, json={"code": 0, "msg": "down"})])
         client = make(handler, retry=RetryPolicy(max_attempts=3, base_delay=0.0, jitter=False))
         with pytest.raises(FeishuServerError):
@@ -353,7 +348,7 @@ class TestRetryIdempotencyGating:
         assert handler.calls == expected_calls
 
     @pytest.mark.parametrize("method, expected_calls", [("PUT", 2), ("POST", 1)], ids=["put-retries", "post-terminal"])
-    async def test_network_retry_by_idempotency(self, make, no_real_sleep, method, expected_calls):
+    async def test_network_retry_by_idempotency(self, make, method, expected_calls):
         # A dropped connection on a POST may have committed: do not resend. PUT is idempotent.
         handler = counting([boom, lambda: ok({"x": 1})])
         client = make(handler, retry=RetryPolicy(max_attempts=3, base_delay=0.0, jitter=False))
@@ -365,14 +360,14 @@ class TestRetryIdempotencyGating:
             assert resp["data"]["x"] == 1
         assert handler.calls == expected_calls
 
-    async def test_post_429_is_retried(self, make, slept):
+    async def test_post_429_is_retried(self, make):
         # 429 means the request was rejected (not processed), so retrying a POST is safe.
         handler = counting([lambda: httpx.Response(429, json={"code": 99991400, "msg": "slow"}), lambda: ok({"x": 1})])
         resp = await make(handler).request("POST", "x", json={"a": 1})
         assert resp["data"]["x"] == 1
         assert handler.calls == 2
 
-    async def test_upload_5xx_is_not_retried(self, make, no_real_sleep):
+    async def test_upload_5xx_is_not_retried(self, make):
         # upload() is multipart POST -> non-idempotent: a 5xx must not be resent.
         handler = counting([lambda: httpx.Response(503, json={"code": 0, "msg": "down"})])
         client = make(handler, retry=RetryPolicy(max_attempts=3, base_delay=0.0, jitter=False))
@@ -380,7 +375,7 @@ class TestRetryIdempotencyGating:
             await client.upload("drive/v1/files/upload_all", data={"file_name": "a"}, files={"file": b"x"})
         assert handler.calls == 1
 
-    async def test_upload_429_is_retried(self, make, slept):
+    async def test_upload_429_is_retried(self, make):
         handler = counting(
             [lambda: httpx.Response(429, json={"code": 99991400, "msg": "slow"}), lambda: ok({"file_token": "fk"})]
         )
@@ -388,7 +383,7 @@ class TestRetryIdempotencyGating:
         assert resp["data"]["file_token"] == "fk"
         assert handler.calls == 2
 
-    async def test_download_5xx_is_retried(self, make, no_real_sleep):
+    async def test_download_5xx_is_retried(self, make):
         # download() is a GET -> idempotent: a transient 5xx is retried.
         handler = counting(
             [
@@ -415,7 +410,8 @@ class TestResetAfterCap:
     def test_delay_clamps_reset(self, max_delay, reset_after, expected):
         assert RetryPolicy(max_delay=max_delay, jitter=False).delay(1, reset_after=reset_after) == expected
 
-    async def test_rate_limit_wait_capped(self, make, slept):
+    async def test_rate_limit_wait_capped(self, make):
+        sleeps = SleepRecorder()
         handler = counting(
             [
                 lambda: httpx.Response(
@@ -424,11 +420,15 @@ class TestResetAfterCap:
                 lambda: ok({"x": 1}),
             ]
         )
-        client = make(handler, retry=RetryPolicy(max_attempts=3, max_delay=5.0, jitter=False))
+        client = make(
+            handler,
+            retry=RetryPolicy(max_attempts=3, max_delay=5.0, jitter=False),
+            retry_sleep=sleeps,
+        )
         resp = await client.request("GET", "x")
         assert resp["data"]["x"] == 1
         # The 999s server hint was clamped to max_delay rather than honored verbatim.
-        assert slept == [5.0]
+        assert sleeps.durations == [5.0]
 
 
 class TestRetryDeadline:
@@ -444,7 +444,7 @@ class TestRetryDeadline:
     def test_elapsed_budget(self, policy, expected_budget):
         assert policy.elapsed_budget == expected_budget
 
-    async def test_deadline_stops_retries(self, make, no_real_sleep):
+    async def test_deadline_stops_retries(self, make):
         # Each backoff would be 10s but the total budget is only 1s, so after the first
         # attempt the projected wait already overruns the budget: no further retries.
         handler = counting([lambda: httpx.Response(503, json={"code": 0, "msg": "down"})])
@@ -457,7 +457,7 @@ class TestRetryDeadline:
         # Would otherwise have taken up to 10 attempts; the deadline caps it at 1.
         assert handler.calls == 1
 
-    async def test_deadline_allows_retries_within_budget(self, make, no_real_sleep):
+    async def test_deadline_allows_retries_within_budget(self, make):
         # Budget comfortably exceeds the planned backoffs, so retries proceed normally.
         handler = counting(
             [
@@ -469,6 +469,7 @@ class TestRetryDeadline:
         client = make(
             handler,
             retry=RetryPolicy(max_attempts=5, base_delay=0.1, max_delay=0.1, jitter=False, max_elapsed=100.0),
+            retry_sleep=no_sleep,
         )
         resp = await client.request("GET", "x")
         assert resp["data"]["x"] == 1

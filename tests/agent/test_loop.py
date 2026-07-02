@@ -37,6 +37,7 @@ import pytest
 from feishu.agent.adapters.anthropic import AnthropicBackend
 from feishu.agent.adapters.openai import OpenAIBackend
 from feishu.agent.approval import ApprovalStatus, DefaultApprovalEngine
+from feishu.agent.context import ToolContext
 from feishu.agent.llm import (
     Message,
     MessageStop,
@@ -107,6 +108,7 @@ class _LoopRecordingClient:
         self.replies = []
         self.sent_cards = []
         self.patched_cards = []
+        self.recalled_messages = []
         self.stream_card_calls = []
 
         class _IM:
@@ -122,6 +124,10 @@ class _LoopRecordingClient:
             async def patch(_self, message_id, content, **_kw):
                 self.patched_cards.append((message_id, content))
                 return {"message_id": message_id}
+
+            async def recall(_self, message_id):
+                self.recalled_messages.append(message_id)
+                return {}
 
         self.im = _IM()
 
@@ -190,6 +196,21 @@ class TestAgentLoop:
         # user message + assistant message persisted
         assert history[0].role == "user"
         assert history[-1].role == "assistant"
+
+    async def test_system_callback_receives_resolved_timezone(self):
+        backend = FakeLlmBackend([text_turn("hello there")])
+        agent = Agent(
+            backend=backend,
+            registry=ToolRegistry(),
+            store=InMemorySessionStore(),
+            client=_LoopRecordingClient(),
+            system=lambda _event, timezone: f"timezone={timezone}",
+            timezone=lambda _event: "Europe/Berlin",
+        )
+
+        await agent.run(_text_event("hi", message_id="om_in", chat_id="oc_1"))
+
+        assert backend.calls[0]["system"] == "timezone=Europe/Berlin"
 
     async def test_progress_card_starts_for_plain_reply_and_finalizes_in_place(self):
         client = _LoopRecordingClient()
@@ -309,6 +330,122 @@ class TestAgentLoop:
         assert tool_snapshots[0].tool_description == "查询指定城市的天气。"
         assert ("om_card_1", {"tools": ["weather"], "done": False, "result": "正在查询天气…"}) in client.patched_cards
 
+    async def test_new_message_interrupts_active_model_turn_for_same_session(self):
+        class BlockingFirstTurnBackend:
+            def __init__(self):
+                self.calls = []
+                self.first_started = asyncio.Event()
+                self.first_cancelled = asyncio.Event()
+                self._never = asyncio.Event()
+
+            def stream(self, *, messages, tools=(), system=None, **kwargs):
+                self.calls.append(
+                    {"messages": list(messages), "tools": list(tools), "system": system, "kwargs": kwargs}
+                )
+
+                async def first():
+                    self.first_started.set()
+                    try:
+                        await self._never.wait()
+                    except asyncio.CancelledError:
+                        self.first_cancelled.set()
+                        raise
+                    yield MessageStop(stop_reason=StopReason.END_TURN)
+
+                if len(self.calls) == 1:
+                    return first()
+                return _agen(text_turn("new answer"))
+
+        client = _LoopRecordingClient()
+        store = InMemorySessionStore()
+        backend = BlockingFirstTurnBackend()
+
+        def builder(tool_names, done, result):
+            return {"tools": tool_names, "done": done, "result": result}
+
+        agent = Agent(
+            backend=backend,
+            registry=ToolRegistry(),
+            store=store,
+            client=client,
+            progress_card_builder=builder,
+            interrupted_progress_text="Interrupted by a newer message.",
+        )
+
+        first = asyncio.create_task(agent.run(_text_event("old", message_id="om_old", chat_id="oc_1")))
+        await asyncio.wait_for(backend.first_started.wait(), timeout=1)
+        second = asyncio.create_task(agent.run(_text_event("new", message_id="om_new", chat_id="oc_1")))
+
+        await asyncio.wait_for(second, timeout=1)
+        await asyncio.wait_for(backend.first_cancelled.wait(), timeout=1)
+        await asyncio.wait_for(first, timeout=1)
+
+        patched = dict(client.patched_cards)
+        assert patched["om_card_1"] == {"tools": [], "done": True, "result": "Interrupted by a newer message."}
+        assert patched["om_card_2"] == {"tools": [], "done": True, "result": "new answer"}
+
+    async def test_new_message_interrupts_active_tool_and_records_interrupted_result(self):
+        client = _LoopRecordingClient()
+        store = InMemorySessionStore()
+        reg = ToolRegistry()
+        tool_started = asyncio.Event()
+        tool_cancelled = asyncio.Event()
+        never = asyncio.Event()
+
+        async def slow_tool():
+            tool_started.set()
+            try:
+                await never.wait()
+            except asyncio.CancelledError:
+                tool_cancelled.set()
+                raise
+
+        reg.register("slow_tool", slow_tool, input_schema={"type": "object", "properties": {}}, description="slow")
+
+        def builder(tool_names, done, result):
+            return {"tools": tool_names, "done": done, "result": result}
+
+        agent = Agent(
+            backend=FakeLlmBackend(
+                [
+                    tool_turn(index=0, id="c1", name="slow_tool", arguments_json="{}"),
+                    text_turn("new answer"),
+                ]
+            ),
+            registry=reg,
+            store=store,
+            client=client,
+            progress_card_builder=builder,
+            interrupted_progress_text="Interrupted by a newer message.",
+        )
+
+        first = asyncio.create_task(agent.run(_text_event("old", message_id="om_old", chat_id="oc_1")))
+        await asyncio.wait_for(tool_started.wait(), timeout=1)
+        second = asyncio.create_task(agent.run(_text_event("new", message_id="om_new", chat_id="oc_1")))
+
+        await asyncio.wait_for(second, timeout=1)
+        await asyncio.wait_for(tool_cancelled.wait(), timeout=1)
+        await asyncio.wait_for(first, timeout=1)
+
+        history = await store.get("oc_1")
+        interrupted_results = [
+            part
+            for msg in history
+            if msg.role == "tool"
+            for part in msg.content
+            if isinstance(part, ToolResultPart) and part.tool_call_id == "c1"
+        ]
+        assert len(interrupted_results) == 1
+        assert interrupted_results[0].is_error is True
+        assert "Interrupted by a newer user message" in str(interrupted_results[0].content)
+        patched = dict(client.patched_cards)
+        assert patched["om_card_1"] == {
+            "tools": ["slow_tool"],
+            "done": True,
+            "result": "Interrupted by a newer message.",
+        }
+        assert patched["om_card_2"] == {"tools": [], "done": True, "result": "new answer"}
+
     async def test_dispatches_and_reinvokes(self):
         client = _LoopRecordingClient()
         reg = ToolRegistry()
@@ -403,6 +540,7 @@ class TestAgentLoop:
         assert len(client.sent_cards) == 1
         pending = next(iter(authorizations._store.values()))
         assert seen_authorizations == [({"open_id": "ou_tester"}, ("calendar:calendar",), pending.authorization_id)]
+        assert pending.extra["auth_card_message_id"] == "om_card_1"
         history = await store.get("oc_1")
         results = [p for m in history if m.role == "tool" for p in m.content if isinstance(p, ToolResultPart)]
         assert [p.tool_call_id for p in results] == ["c1"]
@@ -414,6 +552,7 @@ class TestAgentLoop:
         assert calls == ["events", "events"]
         assert len(backend.calls) == 2
         assert client.replies[-1][1] == "Here are your events"
+        assert client.recalled_messages == ["om_card_1"]
         assert authorizations._store == {}
         history = await store.get("oc_1")
         results = [p for m in history if m.role == "tool" for p in m.content if isinstance(p, ToolResultPart)]
@@ -498,7 +637,7 @@ class TestAgentLoop:
 
         assert status == "forbidden"
         assert calls == ["events"]
-        assert client.replies[-1][1].startswith("Authorization succeeded, but I could not verify")
+        assert client.replies[-1][1].startswith("授权已完成，但无法确认完成授权的用户身份")
         assert pending.authorization_id in authorizations._store
 
     async def test_authorization_resume_expired_pending_reports_to_chat(self, tmp_path):
@@ -528,7 +667,7 @@ class TestAgentLoop:
 
         assert status == "expired"
         assert client.replies[-1][0] == "om_in"
-        assert "original request has expired" in client.replies[-1][1]
+        assert "原请求已过期" in client.replies[-1][1]
 
     def test_authorize_url_builder_type_error_is_not_treated_as_legacy_signature(self):
         def builder(_user, _scopes, _authorization):
@@ -741,6 +880,7 @@ class _ApprovalRecordingClient:
         self.replies = []
         self.cards = []
         self.patches = []
+        self.recalls = []
         outer = self
 
         class _IM:
@@ -755,6 +895,10 @@ class _ApprovalRecordingClient:
             async def patch(self, message_id, content):
                 outer.patches.append((message_id, content))
                 return {"message_id": message_id}
+
+            async def recall(self, message_id):
+                outer.recalls.append(message_id)
+                return {}
 
         self.im = _IM()
 
@@ -772,6 +916,15 @@ def _action_event(approval_id, decision, chat_id="oc_1", *, open_id="ou_tester",
         "context": {"open_message_id": "om_card", "open_chat_id": chat_id},
     }
     return SimpleNamespace(event_type="card.action.trigger", body=body)
+
+
+async def test_tool_context_prefers_card_callback_timezone():
+    event = _action_event("ap_1", "approve")
+    event.body["context"]["timezone"] = "America/New_York"
+
+    timezone = await ToolContext(event=event, timezone="Asia/Shanghai").current_timezone("Asia/Shanghai")
+
+    assert timezone == "America/New_York"
 
 
 async def _drain(agent) -> None:
@@ -806,7 +959,7 @@ class _MemoryExecutionStore:
             self.rows[key] = row
 
 
-def _agent_with_deploy(client, store, approvals, ran):
+def _agent_with_deploy(client, store, approvals, ran, *, progress_card_builder=None, system=None, timezone=None):
     reg = ToolRegistry()
 
     async def deploy(env):
@@ -820,7 +973,19 @@ def _agent_with_deploy(client, store, approvals, ran):
             text_turn("deployment complete"),
         ]
     )
-    return Agent(backend=backend, registry=reg, store=store, client=client, approvals=approvals), backend
+    return (
+        Agent(
+            backend=backend,
+            registry=reg,
+            store=store,
+            client=client,
+            approvals=approvals,
+            progress_card_builder=progress_card_builder,
+            system=system,
+            timezone=timezone,
+        ),
+        backend,
+    )
 
 
 def _extract_approval_id(card: dict) -> str:
@@ -891,6 +1056,38 @@ class TestApprovalFlow:
         # a PendingApproval was persisted -> there is exactly one to pop
         history = await store.get("oc_1")
         assert any(m.role == "assistant" for m in history)
+
+    async def test_approval_resume_reuses_suspended_progress_card(self):
+        client = _LoopRecordingClient()
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        ran = []
+
+        def builder(tool_names, done, result):
+            return {"tools": tool_names, "done": done, "result": result}
+
+        agent, _ = _agent_with_deploy(client, store, approvals, ran, progress_card_builder=builder)
+
+        await agent.run(_text_event("deploy prod", chat_id="oc_1"))
+
+        assert len(client.sent_cards) == 2
+        progress_message_id = "om_card_1"
+        approval_message_id = "om_card_2"
+        approval_card = client.sent_cards[1][1]
+        approval_id = _extract_approval_id(approval_card)
+        sha = _extract_payload_sha256(approval_card)
+
+        event = _action_event(approval_id, "approve", chat_id="oc_1", payload_sha256=sha)
+        event.body["context"]["open_message_id"] = approval_message_id
+        await agent.handle_card_action(event)
+        await _drain(agent)
+
+        assert ran == ["prod"]
+        assert len(client.sent_cards) == 2  # no extra progress card on resume
+        patched_ids = [message_id for message_id, _ in client.patched_cards]
+        assert progress_message_id in patched_ids
+        assert approval_message_id in patched_ids
+        assert client.patched_cards[-1][0] == approval_message_id
 
     async def test_suspended_history_is_well_formed_and_placeholder_is_replaced(self):
         """[self-review] A suspended turn must leave every tool_use with a tool_result placeholder (so abandoning
@@ -1117,8 +1314,11 @@ class TestApprovalFlow:
         body = json.dumps(client.cards[0][0], ensure_ascii=False)
         assert "pa_secret_handle" not in body
         assert "travel" not in body
-        assert "`accounts`: object with 1 field(s)" in body
-        assert "`form`: {`amount`: 123, `reason`: text (6 chars)}" in body
+        assert "确认执行 reimburse？" in body
+        assert "确认执行" in body
+        assert "拒绝" in body
+        assert "`accounts`: 对象（1 个字段）" in body
+        assert "`form`: {`amount`: 123, `reason`: 文本（6 字符）}" in body
 
     async def test_failed_approved_write_is_terminal(self):
         """[self-review] When an approved tool reports failure, the pending is resolved TERMINALLY (removed) — not
@@ -1199,6 +1399,7 @@ class TestApprovalFlow:
         pending = next(iter(authorizations._store.values()))
         assert seen_authorizations == [({"open_id": "ou_tester"}, ("calendar:calendar",), pending.authorization_id)]
         assert client.cards[-1][0]["auth"].endswith(pending.authorization_id)
+        assert client.patches and not _has_buttons(client.patches[-1][1])
         assert len(backend.calls) == 1
         history = await store.get("oc_1")
         results = [p for m in history if m.role == "tool" for p in m.content if isinstance(p, ToolResultPart)]
@@ -1284,7 +1485,7 @@ class TestApprovalFlow:
         response = await agent.handle_card_action(event)
 
         # Must return the invalid-decision info toast
-        assert response == {"toast": {"type": "info", "content": "invalid decision"}}
+        assert response == {"toast": {"type": "info", "content": "无效的确认操作"}}
         # Tool must NOT have run
         assert ran == []
         # The pending approval must still be in the store (not consumed into execution)
@@ -1362,7 +1563,7 @@ class TestApprovalFlow:
 
     async def test_pending_is_persisted_before_card_is_sent(self):
         """High (ordering): the pending must be in the store BEFORE the card is delivered, so a click can never hit
-        an empty store ('no pending approval'). Snapshot the store at the instant send() is called."""
+        an empty store ("没有待处理的确认请求"). Snapshot the store at the instant send() is called."""
         store = InMemorySessionStore()
         approvals = InMemoryPendingApprovalStore()
         client = _ApprovalRecordingClient()
@@ -1771,38 +1972,19 @@ class TestAdapterParity:
         assert a.stop_reason == o.stop_reason, "Providers returned different stop_reason"
 
     async def test_public_exports_present(self):
-        """All names listed in the brief's __all__ must be importable from feishu.agent."""
+        """Only agent core primitives are re-exported from feishu.agent."""
         import feishu.agent as agent
 
         required = [
-            "LlmBackend",
-            "Message",
-            "TextPart",
-            "ToolUsePart",
-            "ToolResultPart",
-            "ContentPart",
-            "ToolSpec",
-            "Role",
-            "StopReason",
-            "TextDelta",
-            "ToolCallDelta",
-            "MessageStop",
-            "StreamChunk",
-            "ToolCall",
+            "Agent",
             "Tool",
             "ToolRegistry",
             "ToolValidationError",
-            "SessionStore",
-            "InMemorySessionStore",
-            "PendingApproval",
-            "PendingApprovalStore",
-            "InMemoryPendingApprovalStore",
-            "Agent",
-            "StreamResult",
-            "accumulate_stream",
-            "session_id_for",
-            "user_message_from_event",
-            "register_agent",
+            "ToolOutcome",
+            "ToolResult",
         ]
         for name in required:
             assert hasattr(agent, name), f"feishu.agent is missing public export: {name!r}"
+
+        assert not hasattr(agent, "create_calendar_event")
+        assert not hasattr(agent, "SqliteSessionStore")

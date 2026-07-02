@@ -30,14 +30,13 @@ from feishu.calendar import unix_seconds
 
 from ..result import ToolOutcome, ToolResult
 from ..tools import Tool
-from ._base import needs_user_auth, requesting_user_id, resolve_client
+from ._base import needs_user_auth, requesting_user_id, resolve_client, resolve_timezone
 
 
 def reserve_meeting(
     *,
     description: str,
     name: str = "reserve_meeting",
-    locale: str = "zh-CN",
     timezone: str = "Asia/Shanghai",
     requires_approval: bool = True,
     as_user: bool = True,
@@ -57,7 +56,6 @@ def reserve_meeting(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"reserve_meeting"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         timezone: ISO 时间换算所用时区。默认为 `"Asia/Shanghai"`。
         requires_approval: 是否需用户审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份预约。默认为 `True`。
@@ -89,9 +87,10 @@ def reserve_meeting(
             return ToolResult(
                 ToolOutcome.BLOCKED, content="cannot resolve the requesting user's identity", is_error=True
             )
+        tz = await resolve_timezone(timezone)
         result = await client.vc.reserves.apply(
             {"topic": arguments["topic"]},
-            end_time=str(unix_seconds(arguments["end_time"], timezone=timezone)),
+            end_time=str(unix_seconds(arguments["end_time"], timezone=tz)),
             owner_id=owner,
             user_id_type="open_id",
         )
@@ -106,11 +105,17 @@ def reserve_meeting(
     )
 
 
+__all__ = [
+    "cancel_reservation",
+    "reserve_meeting",
+    "update_reservation",
+]
+
+
 def update_reservation(
     *,
     description: str,
     name: str = "update_reservation",
-    locale: str = "zh-CN",
     timezone: str = "Asia/Shanghai",
     requires_approval: bool = True,
     as_user: bool = True,
@@ -127,7 +132,6 @@ def update_reservation(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"update_reservation"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         timezone: ISO 时间换算所用时区。默认为 `"Asia/Shanghai"`。
         requires_approval: 是否需用户审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份更新。默认为 `True`。
@@ -154,9 +158,10 @@ def update_reservation(
         client = await resolve_client(as_user=as_user)
         if client is None:
             return needs_user_auth(auth_scopes)
+        tz = await resolve_timezone(timezone)
         kwargs: dict[str, Any] = {"user_id_type": "open_id"}
         if "end_time" in arguments:
-            kwargs["end_time"] = str(unix_seconds(arguments["end_time"], timezone=timezone))
+            kwargs["end_time"] = str(unix_seconds(arguments["end_time"], timezone=tz))
         if "topic" in arguments:
             kwargs["meeting_settings"] = {"topic": arguments["topic"]}
         result = await client.vc.reserves.update(arguments["reserve_id"], **kwargs)
@@ -175,7 +180,6 @@ def cancel_reservation(
     *,
     description: str,
     name: str = "cancel_reservation",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -189,7 +193,6 @@ def cancel_reservation(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"cancel_reservation"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需用户审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份取消。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。

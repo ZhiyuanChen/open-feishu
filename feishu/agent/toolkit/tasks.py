@@ -37,7 +37,6 @@ def create_task(
     *,
     description: str,
     name: str = "create_task",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -51,7 +50,6 @@ def create_task(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"create_task"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否在执行前要求审批。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -110,7 +108,6 @@ def comment_on_task(
     *,
     description: str,
     name: str = "comment_on_task",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -126,7 +123,6 @@ def comment_on_task(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"comment_on_task"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否在执行前要求审批。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -174,7 +170,6 @@ def update_task(
     *,
     description: str,
     name: str = "update_task",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -190,7 +185,6 @@ def update_task(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"update_task"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否在执行前要求审批。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -244,7 +238,6 @@ def delete_task(
     *,
     description: str,
     name: str = "delete_task",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -258,7 +251,6 @@ def delete_task(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"delete_task"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否在执行前要求审批。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -301,7 +293,6 @@ def update_task_comment(
     *,
     description: str,
     name: str = "update_task_comment",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -315,7 +306,6 @@ def update_task_comment(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"update_task_comment"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否在执行前要求审批。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -359,7 +349,6 @@ def delete_task_comment(
     *,
     description: str,
     name: str = "delete_task_comment",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -373,7 +362,6 @@ def delete_task_comment(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"delete_task_comment"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否在执行前要求审批。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -416,7 +404,6 @@ def list_my_tasks(
     *,
     description: str,
     name: str = "list_my_tasks",
-    locale: str = "zh-CN",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
 ) -> Tool:
@@ -431,7 +418,6 @@ def list_my_tasks(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"list_my_tasks"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
 
@@ -469,7 +455,6 @@ def list_task_comments(
     *,
     description: str,
     name: str = "list_task_comments",
-    locale: str = "zh-CN",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
 ) -> Tool:
@@ -482,7 +467,6 @@ def list_task_comments(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"list_task_comments"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
 
@@ -511,3 +495,15 @@ def list_task_comments(
         return ToolResult(ToolOutcome.COMPLETED, content=result)
 
     return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+
+
+__all__ = [
+    "comment_on_task",
+    "create_task",
+    "delete_task",
+    "delete_task_comment",
+    "list_my_tasks",
+    "list_task_comments",
+    "update_task",
+    "update_task_comment",
+]

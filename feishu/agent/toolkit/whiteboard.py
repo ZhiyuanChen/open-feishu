@@ -35,7 +35,6 @@ def list_whiteboard_nodes(
     *,
     description: str,
     name: str = "list_whiteboard_nodes",
-    locale: str = "zh-CN",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
 ) -> Tool:
@@ -48,7 +47,6 @@ def list_whiteboard_nodes(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"list_whiteboard_nodes"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
 
@@ -77,3 +75,8 @@ def list_whiteboard_nodes(
         return ToolResult(ToolOutcome.COMPLETED, content=nodes)
 
     return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+
+
+__all__ = [
+    "list_whiteboard_nodes",
+]

@@ -32,14 +32,57 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
+from ...errors import is_permission_error, permission_subjects
 from ..context import current_tool_context
 from ..result import ToolOutcome, ToolResult
+from ..tools import Tool
 
 
 async def resolve_client(*, as_user: bool) -> Any | None:
     r"""按 `as_user` 解析当前这轮的（用户态或租户）飞书客户端；无有效用户授权时返回 `None`。"""
     context = current_tool_context()
     return (await context.as_user()) if as_user else context.client
+
+
+def reauth_on_permission_error(tool: Tool, scopes: Sequence[str]) -> Tool:
+    r"""把飞书缺失权限错误转换为授权交接，而不是直接暴露成不透明失败。"""
+    if not scopes:
+        return tool
+
+    async def handler(**arguments: Any) -> Any:
+        try:
+            result = tool.handler(**arguments)
+            if hasattr(result, "__await__"):
+                return await result
+            return result
+        except Exception as exc:
+            if not is_permission_error(exc):
+                raise
+            missing = ", ".join(permission_subjects(exc))
+            content = "飞书权限不足，需要重新授权后再试。"
+            if missing:
+                content = f"{content}缺少权限：{missing}"
+            return ToolResult(
+                ToolOutcome.NEEDS_USER_AUTH,
+                content=content,
+                authorize_url=current_tool_context().authorize_url(scopes),
+                auth_scopes=tuple(scopes),
+                is_error=True,
+            )
+
+    return Tool(
+        name=tool.name,
+        description=tool.description,
+        input_schema=tool.input_schema,
+        handler=handler,
+        requires_approval=tool.requires_approval,
+        auth_scopes=tuple(scopes),
+    )
+
+
+async def resolve_timezone(default: str = "Asia/Shanghai") -> str:
+    r"""解析当前工具调用的时区；取不到事件时区时回退到产品默认值。"""
+    return await current_tool_context().current_timezone(default) or default
 
 
 def needs_user_auth(scopes: Sequence[str]) -> ToolResult:
@@ -127,3 +170,17 @@ async def resolve_payment_account(account_id: str) -> dict[str, Any] | ToolResul
     if not value:
         return ToolResult(ToolOutcome.BLOCKED, content=f"payment account is not available: {account_id}", is_error=True)
     return value
+
+
+__all__ = [
+    "list_recent_payment_accounts",
+    "list_recent_shared_files",
+    "needs_user_auth",
+    "reauth_on_permission_error",
+    "requesting_user",
+    "requesting_user_id",
+    "resolve_client",
+    "resolve_payment_account",
+    "resolve_shared_file_bytes",
+    "resolve_timezone",
+]

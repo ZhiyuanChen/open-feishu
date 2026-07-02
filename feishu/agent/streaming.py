@@ -19,7 +19,7 @@
 # For additional terms and clarifications, please refer to our License FAQ at:
 # <https://multimolecule.danling.org/about/license-faq>.
 
-"""LLM 流式响应到文本增量的通用适配器。"""
+"""将 LLM 流式响应转换为文本增量的通用适配器。"""
 
 from __future__ import annotations
 

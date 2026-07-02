@@ -58,6 +58,34 @@ def shared_file_keys(user: Mapping[str, Any]) -> tuple[str, ...]:
     return user_identity_keys(user)
 
 
+def collect_shared_file_ids(value: Any) -> list[str]:
+    r"""递归收集任意工具参数中的 shared-file 句柄。"""
+    out: list[str] = []
+
+    def walk(node: Any) -> None:
+        if isinstance(node, str):
+            if node.startswith("sf_"):
+                out.append(node)
+        elif isinstance(node, dict):
+            for item in node.values():
+                walk(item)
+        elif isinstance(node, (list, tuple)):
+            for item in node:
+                walk(item)
+
+    walk(value)
+    return out
+
+
+def shared_files_note(shared: list[Any]) -> str:
+    r"""生成模型可读的共享文件句柄说明；只暴露句柄与元数据，不暴露文件字节。"""
+    items = "; ".join(f"{sf.file_id} (name={sf.name!r}, type={sf.kind})" for sf in shared)
+    return (
+        f"[The user shared {len(shared)} file(s), referenceable by file_id: {items}. "
+        f"To act on a file, call a tool that accepts a file_id; you cannot see the raw bytes.]"
+    )
+
+
 def _new_file_id() -> str:
     # Random, unguessable, NOT derived from file_key and NOT content-addressed: a jailbroken agent can
     # neither forge a key nor probe whether another user uploaded identical bytes.
@@ -588,5 +616,7 @@ __all__ = [
     "InMemorySharedFileStore",
     "SqliteSharedFileStore",
     "SharedFileResolver",
+    "collect_shared_file_ids",
     "shared_file_keys",
+    "shared_files_note",
 ]

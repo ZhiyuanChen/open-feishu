@@ -21,6 +21,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
@@ -73,3 +74,27 @@ class ToolResult:
     authorize_url: str | None = None
     auth_scopes: tuple[str, ...] = ()
     is_error: bool = False
+
+
+def coerce_tool_result(result: Any) -> tuple[str, bool, ToolResult | None]:
+    r"""归一化工具返回值为 `(content_text, is_error, structured_result)`。"""
+    if isinstance(result, ToolResult):
+        is_error = result.is_error or result.outcome not in (ToolOutcome.COMPLETED, ToolOutcome.INFORMATIONAL)
+        text = _stringify(result.content) if result.content is not None else ""
+        if result.authorize_url:
+            text = f"{text}\nAuthorization URL: {result.authorize_url}".strip()
+        return text, is_error, result
+    if result is None:
+        return "", False, None
+    return _stringify(result), False, None
+
+
+def _stringify(value: Any) -> str:
+    return value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, default=str)
+
+
+__all__ = [
+    "ToolOutcome",
+    "ToolResult",
+    "coerce_tool_result",
+]

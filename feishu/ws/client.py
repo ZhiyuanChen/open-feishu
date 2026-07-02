@@ -26,6 +26,7 @@ import base64
 import json
 import logging
 import random
+from collections.abc import Awaitable
 from contextlib import AbstractAsyncContextManager, suppress
 from typing import Any, Callable
 from urllib.parse import parse_qs, urlparse
@@ -93,6 +94,8 @@ class WsClient:
         logger: 自定义日志器，缺省使用名为 `feishu` 的日志器。
         http_client: 注入的 `httpx.AsyncClient`，用于握手；为 `None` 时每次握手临时创建并关闭。
         connect: 注入的 websocket 连接器；为 `None` 时懒加载 `websockets`。
+        sleep: 注入的休眠函数，缺省使用 [asyncio.sleep][]。
+        max_partial_messages: 分片重组缓冲区可保留的未完成消息数量。
 
     Raises:
         ValueError: 当 `app_id` 或 `app_secret` 为空时抛出。
@@ -124,11 +127,15 @@ class WsClient:
         logger: logging.Logger | None = None,
         http_client: httpx.AsyncClient | None = None,
         connect: Connect | None = None,
+        sleep: Callable[[float], Awaitable[Any]] | None = None,
+        max_partial_messages: int = _MAX_PARTIAL_MESSAGES,
     ) -> None:
         if not app_id:
             raise ValueError("app_id must not be empty")
         if not app_secret:
             raise ValueError("app_secret must not be empty")
+        if max_partial_messages < 1:
+            raise ValueError("max_partial_messages must be positive")
         self._app_id = app_id
         self._app_secret = app_secret
         self._dispatcher = dispatcher
@@ -137,6 +144,8 @@ class WsClient:
         self.logger = logger or logging.getLogger("feishu")
         self._http_client = http_client
         self._connect: Connect = connect or _default_connect
+        self._sleep = sleep or asyncio.sleep
+        self._max_partial_messages = max_partial_messages
 
         # Populated after the handshake: service frame field comes from the wss URL's service_id query param.
         self._service_id = 0
@@ -207,7 +216,7 @@ class WsClient:
         """
         try:
             while True:
-                await asyncio.sleep(self._ping_interval)
+                await self._sleep(self._ping_interval)
                 async with send_lock:
                     await websocket.send(encode_frame(self._ping_frame()))
         except Exception:  # noqa: BLE001 - a drop mid-ping is expected; exit quietly, don't leak the task exc
@@ -247,7 +256,7 @@ class WsClient:
         seq = int(frame.header("seq") or "0")
         chunks = self._fragments.get(message_id)
         if chunks is None:
-            if len(self._fragments) >= _MAX_PARTIAL_MESSAGES:
+            if len(self._fragments) >= self._max_partial_messages:
                 # Drop the oldest unfinished message (dict insertion order) to keep growth bounded.
                 self._fragments.pop(next(iter(self._fragments)), None)
             chunks = self._fragments[message_id] = {}
@@ -371,7 +380,7 @@ class WsClient:
                     raise
                 attempts += 1
                 self.logger.warning("ws handshake failed (%s); retrying", exc)
-                await asyncio.sleep(self._reconnect_delay(config))
+                await self._sleep(self._reconnect_delay(config))
                 continue
             try:
                 async with self._connect(url) as websocket:
@@ -390,7 +399,7 @@ class WsClient:
                 self.logger.warning("ws reconnect attempts exhausted (%d)", config.reconnect_count)
                 return
             attempts += 1
-            await asyncio.sleep(self._reconnect_delay(config))
+            await self._sleep(self._reconnect_delay(config))
 
     def _reconnect_delay(self, config: ClientConfig) -> float:
         r"""重连等待时长：在 `reconnect_interval` 之上叠加 `[0, reconnect_nonce)` 的随机抖动，避免雪崩式重连。"""

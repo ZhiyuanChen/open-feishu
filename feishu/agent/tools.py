@@ -213,6 +213,8 @@ class ToolRegistry:
             tool_name = name or getattr(fn, "__name__", None)
             if not tool_name:
                 raise ValueError("tool name is required")
+            if tool_name in self._tools:
+                raise ValueError(f"tool {tool_name!r} is already registered")
             self._tools[tool_name] = Tool(
                 name=tool_name,
                 description=description,
@@ -247,6 +249,8 @@ class ToolRegistry:
             >>> reg.add(tool).name
             'ping'
         """
+        if tool.name in self._tools:
+            raise ValueError(f"tool {tool.name!r} is already registered")
         self._tools[tool.name] = tool
         return tool
 
@@ -325,3 +329,10 @@ class ToolRegistry:
         # Normalize every handler's return into a ToolResult so callers get one uniform shape; a raw value
         # becomes a COMPLETED result carrying it verbatim.
         return result if isinstance(result, ToolResult) else ToolResult(ToolOutcome.COMPLETED, content=result)
+
+
+__all__ = [
+    "Tool",
+    "ToolRegistry",
+    "ToolValidationError",
+]

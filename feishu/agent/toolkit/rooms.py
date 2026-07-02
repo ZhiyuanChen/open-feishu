@@ -29,14 +29,13 @@ from typing import Any
 from ...calendar import calendar_event
 from ..result import ToolOutcome, ToolResult
 from ..tools import Tool
-from ._base import needs_user_auth, resolve_client
+from ._base import needs_user_auth, resolve_client, resolve_timezone
 
 
 def list_meeting_room_buildings(
     *,
     description: str,
     name: str = "list_meeting_room_buildings",
-    locale: str = "zh-CN",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
 ) -> Tool:
@@ -48,7 +47,6 @@ def list_meeting_room_buildings(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"list_meeting_room_buildings"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`（用户态读取，权限受该用户自身约束）。
         auth_scopes: 缺少授权时申请的飞书权限范围。
 
@@ -73,14 +71,19 @@ def list_meeting_room_buildings(
         buildings = await client.meeting_room.list_buildings(max_items=arguments.get("max_items"))
         return ToolResult(ToolOutcome.COMPLETED, content=buildings)
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(
+        name=name,
+        description=description,
+        input_schema=input_schema,
+        handler=handler,
+        auth_scopes=tuple(auth_scopes),
+    )
 
 
 def list_meeting_rooms(
     *,
     description: str,
     name: str = "list_meeting_rooms",
-    locale: str = "zh-CN",
     # User scope (zero-trust): the meeting_room API accepts user_access_token (calendar:room:readonly,
     # user-granted), so read as the requesting user — bounded by their own permissions — not the tenant.
     as_user: bool = True,
@@ -89,15 +92,13 @@ def list_meeting_rooms(
     r"""
     读类工厂：列出某建筑内的会议室，返回一个 [feishu.agent.tools.Tool][]。
 
-    Reads the meeting-room directory for a building. When `building_id` is not supplied the model should first
-    discover one (via list_meeting_room_buildings) — scanning every building and merging results is a
-    product concern intentionally left out here. (Room-level filtering needs the newer vc/v1/rooms
-    endpoint, which this legacy room-list tool does not call, so it is not offered.)
+    读取指定建筑下的会议室目录。未提供 `building_id` 时，模型应先通过
+    [feishu.agent.toolkit.rooms.list_meeting_room_buildings][] 发现建筑；遍历所有建筑并合并结果属于产品层策略，
+    本工厂不内置。按会议室能力筛选需要更新的 `vc/v1/rooms` 接口，当前旧版会议室列表接口不提供该能力。
 
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"list_meeting_rooms"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`（用户态读取，权限受该用户自身约束）。
         auth_scopes: 缺少授权时申请的飞书权限范围。
 
@@ -130,14 +131,19 @@ def list_meeting_rooms(
         )
         return ToolResult(ToolOutcome.COMPLETED, content=rooms)
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(
+        name=name,
+        description=description,
+        input_schema=input_schema,
+        handler=handler,
+        auth_scopes=tuple(auth_scopes),
+    )
 
 
 def query_meeting_room_freebusy(
     *,
     description: str,
     name: str = "query_meeting_room_freebusy",
-    locale: str = "zh-CN",
     # User scope (zero-trust): meeting_room API accepts user_access_token (calendar:room:readonly).
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -148,7 +154,6 @@ def query_meeting_room_freebusy(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"query_meeting_room_freebusy"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
 
@@ -186,14 +191,20 @@ def query_meeting_room_freebusy(
         )
         return ToolResult(ToolOutcome.COMPLETED, content=freebusy)
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(
+        name=name,
+        description=description,
+        input_schema=input_schema,
+        handler=handler,
+        auth_scopes=tuple(auth_scopes),
+    )
 
 
 def book_meeting_room(
     *,
     description: str,
     name: str = "book_meeting_room",
-    locale: str = "zh-CN",
+    timezone: str = "Asia/Shanghai",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -208,7 +219,7 @@ def book_meeting_room(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"book_meeting_room"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
+        timezone: ISO 时间换算所用时区。默认为 `"Asia/Shanghai"`。
         requires_approval: 执行前是否要求用户审批。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -240,11 +251,13 @@ def book_meeting_room(
         client = await resolve_client(as_user=as_user)
         if client is None:
             return needs_user_auth(auth_scopes)
+        tz = await resolve_timezone(timezone)
         calendar_id = await _primary_calendar_id(client)
         event_payload = calendar_event(
             summary=arguments["summary"],
             start_time=arguments["start_time"],
             end_time=arguments["end_time"],
+            timezone=tz,
             description=arguments.get("description"),
             location=arguments.get("location"),
         )
@@ -266,6 +279,7 @@ def book_meeting_room(
         input_schema=input_schema,
         handler=handler,
         requires_approval=requires_approval,
+        auth_scopes=tuple(auth_scopes),
     )
 
 
@@ -279,3 +293,11 @@ async def _primary_calendar_id(client: Any) -> str:
         if isinstance(calendar, dict) and calendar.get("calendar_id"):
             return str(calendar["calendar_id"])
     raise ValueError("没有找到主日历")
+
+
+__all__ = [
+    "book_meeting_room",
+    "list_meeting_room_buildings",
+    "list_meeting_rooms",
+    "query_meeting_room_freebusy",
+]

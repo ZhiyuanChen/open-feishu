@@ -30,7 +30,7 @@ from feishu.calendar import calendar_event, calendar_time, freebusy_body, unix_s
 
 from ..result import ToolOutcome, ToolResult
 from ..tools import Tool
-from ._base import needs_user_auth, requesting_user_id, resolve_client
+from ._base import needs_user_auth, requesting_user_id, resolve_client, resolve_timezone
 
 
 async def _resolve_calendar_id(client: Any, calendar_id: str | None) -> str:
@@ -89,16 +89,23 @@ def list_calendar_events(
         client = await resolve_client(as_user=as_user)
         if client is None:
             return needs_user_auth(auth_scopes)
+        tz = await resolve_timezone(timezone)
         calendar_id = await _resolve_calendar_id(client, arguments.get("calendar_id"))
         events = await client.calendar.events.list(
             calendar_id,
-            start_time=str(unix_seconds(arguments["time_min"], timezone=timezone)),
-            end_time=str(unix_seconds(arguments["time_max"], timezone=timezone)),
+            start_time=str(unix_seconds(arguments["time_min"], timezone=tz)),
+            end_time=str(unix_seconds(arguments["time_max"], timezone=tz)),
             max_items=int(arguments.get("max_items") or 20),
         )
         return ToolResult(ToolOutcome.COMPLETED, content=events)
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(
+        name=name,
+        description=description,
+        input_schema=input_schema,
+        handler=handler,
+        auth_scopes=tuple(auth_scopes),
+    )
 
 
 def create_calendar_event(
@@ -152,12 +159,13 @@ def create_calendar_event(
         client = await resolve_client(as_user=as_user)
         if client is None:
             return needs_user_auth(auth_scopes)
+        tz = await resolve_timezone(timezone)
         calendar_id = await _resolve_calendar_id(client, arguments.get("calendar_id"))
         event = calendar_event(
             summary=arguments["summary"],
             start_time=arguments["start"],
             end_time=arguments["end"],
-            timezone=timezone,
+            timezone=tz,
             description=arguments.get("description"),
             location=arguments.get("location"),
         )
@@ -170,7 +178,18 @@ def create_calendar_event(
         input_schema=input_schema,
         handler=handler,
         requires_approval=requires_approval,
+        auth_scopes=tuple(auth_scopes),
     )
+
+
+__all__ = [
+    "cancel_calendar_event",
+    "create_calendar_event",
+    "list_calendar_events",
+    "query_calendar_freebusy",
+    "respond_to_invite",
+    "update_calendar_event",
+]
 
 
 def query_calendar_freebusy(
@@ -220,16 +239,23 @@ def query_calendar_freebusy(
             return ToolResult(
                 ToolOutcome.BLOCKED, content="cannot resolve the requesting user's identity", is_error=True
             )
+        tz = await resolve_timezone(timezone)
         body = freebusy_body(
             time_min=arguments["time_min"],
             time_max=arguments["time_max"],
             user_id=subject,
-            timezone=timezone,
+            timezone=tz,
         )
         freebusy = await client.calendar.freebusy.query(body)
         return ToolResult(ToolOutcome.COMPLETED, content=freebusy)
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(
+        name=name,
+        description=description,
+        input_schema=input_schema,
+        handler=handler,
+        auth_scopes=tuple(auth_scopes),
+    )
 
 
 def update_calendar_event(
@@ -283,15 +309,16 @@ def update_calendar_event(
         client = await resolve_client(as_user=as_user)
         if client is None:
             return needs_user_auth(auth_scopes)
+        tz = await resolve_timezone(timezone)
         calendar_id = await _resolve_calendar_id(client, arguments.get("calendar_id"))
         # Incremental patch: include only fields the model explicitly supplied; omit the rest.
         event: dict[str, Any] = {}
         if arguments.get("summary") is not None:
             event["summary"] = arguments["summary"]
         if arguments.get("start") is not None:
-            event["start_time"] = calendar_time(arguments["start"], timezone=timezone)
+            event["start_time"] = calendar_time(arguments["start"], timezone=tz)
         if arguments.get("end") is not None:
-            event["end_time"] = calendar_time(arguments["end"], timezone=timezone)
+            event["end_time"] = calendar_time(arguments["end"], timezone=tz)
         if arguments.get("description") is not None:
             event["description"] = arguments["description"]
         if arguments.get("location") is not None:
@@ -305,6 +332,7 @@ def update_calendar_event(
         input_schema=input_schema,
         handler=handler,
         requires_approval=requires_approval,
+        auth_scopes=tuple(auth_scopes),
     )
 
 
@@ -359,6 +387,7 @@ def cancel_calendar_event(
         input_schema=input_schema,
         handler=handler,
         requires_approval=requires_approval,
+        auth_scopes=tuple(auth_scopes),
     )
 
 
@@ -424,4 +453,5 @@ def respond_to_invite(
         input_schema=input_schema,
         handler=handler,
         requires_approval=requires_approval,
+        auth_scopes=tuple(auth_scopes),
     )

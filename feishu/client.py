@@ -24,7 +24,7 @@ from __future__ import annotations
 import copy
 import logging
 import os
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from typing import TYPE_CHECKING, Any, cast
 
 import httpx
@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from .docx.documents import DocxNamespace
     from .drive.drive import DriveNamespace
     from .im.messages import IMNamespace
+    from .mail.mail import MailNamespace
     from .meeting_room.rooms import MeetingRoomNamespace
     from .sheets.spreadsheets import SheetsNamespace
     from .task.task import TaskNamespace
@@ -91,6 +92,7 @@ _NAMESPACE_SLOTS = (
     "_docx",
     "_drive",
     "_im",
+    "_mail",
     "_meeting_room",
     "_oauth",
     "_sheets",
@@ -128,6 +130,8 @@ class FeishuClient:
         token_cache: 自定义令牌缓存。
         transport: 自定义 `httpx.AsyncClient`；由调用方提供时其生命周期不归本客户端管理。
         logger: 自定义日志器，缺省使用名为 `feishu` 的日志器。
+        retry_sleep: 自定义重试退避休眠函数，主要用于测试或运行时接管等待策略；缺省使用
+            [asyncio.sleep][]。
 
     Raises:
         ValueError: 当既未提供凭证，也无法从环境变量解析出 `app_id` / `app_secret` 时抛出。
@@ -158,6 +162,7 @@ class FeishuClient:
         token_cache: TokenCache | None = None,
         transport: httpx.AsyncClient | None = None,
         logger: logging.Logger | None = None,
+        retry_sleep: Callable[[float], Awaitable[Any]] | None = None,
     ) -> None:
         self.base_url = resolve_base_url(region, base_url)
         self.region = region or "feishu"
@@ -169,6 +174,7 @@ class FeishuClient:
             retry=retry or RetryPolicy.default(),
             client=transport,
             logger=self.logger,
+            sleep=retry_sleep,
         )
         if credential is None:
             app_id = app_id or os.getenv("FEISHU_APP_ID")
@@ -188,6 +194,7 @@ class FeishuClient:
         self._docx: DocxNamespace | None = None
         self._drive: DriveNamespace | None = None
         self._im: IMNamespace | None = None
+        self._mail: MailNamespace | None = None
         self._meeting_room: MeetingRoomNamespace | None = None
         self._oauth: OAuthNamespace | None = None
         self._sheets: SheetsNamespace | None = None
@@ -359,6 +366,23 @@ class FeishuClient:
 
             self._im = IMNamespace(self)
         return self._im
+
+    @property
+    def mail(self) -> MailNamespace:
+        r"""
+        邮箱（Mail）命名空间，提供邮箱地址状态、邮件收发、文件夹与事件订阅能力。
+
+        Returns:
+            绑定到本客户端的 Mail 命名空间对象（首次访问时惰性创建）。
+
+        飞书文档:
+            [邮箱 / Mail v1](https://open.feishu.cn/document/mail-v1)
+        """
+        if self._mail is None:
+            from .mail.mail import MailNamespace
+
+            self._mail = MailNamespace(self)
+        return self._mail
 
     @property
     def meeting_room(self) -> MeetingRoomNamespace:
