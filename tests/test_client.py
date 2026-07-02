@@ -125,7 +125,7 @@ class TestAsUser:
         # fmt: off
         lazy = [
             "approval", "bitable", "board", "calendar", "contact", "docx",
-            "drive", "im", "oauth", "sheets", "task", "vc", "wiki",
+            "drive", "im", "mail", "oauth", "sheets", "task", "vc", "wiki",
         ]
         # fmt: on
         warmed = {ns: getattr(client, ns) for ns in lazy}  # warm the base caches

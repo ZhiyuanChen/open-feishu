@@ -151,9 +151,10 @@ class TestStart:
         await client.start()
         assert calls["n"] == expected
 
-    async def test_transient_5xx_is_retried(self, monkeypatch):
-        real_sleep = asyncio.sleep
-        monkeypatch.setattr(asyncio, "sleep", lambda *a, **k: real_sleep(0))  # skip backoff wait
+    async def test_transient_5xx_is_retried(self):
+        async def no_sleep(_delay: float) -> None:
+            await asyncio.sleep(0)
+
         calls = {"handshake": 0, "connect": 0}
         success = _handshake_handler(ReconnectCount=0, ReconnectInterval=0, ReconnectNonce=0)
 
@@ -167,7 +168,7 @@ class TestStart:
             calls["connect"] += 1
             return _FakeConn(FakeWebSocket([]))
 
-        client = _make_client(handler, connect=connect, auto_reconnect=True)
+        client = _make_client(handler, connect=connect, auto_reconnect=True, sleep=no_sleep)
         await client.start()
         assert calls["handshake"] == 2  # first 503 retried, second succeeded
         assert calls["connect"] == 1  # connected only after the successful handshake
@@ -206,16 +207,18 @@ class TestStart:
 
 
 class TestFragmentBuffer:
-    async def test_incomplete_fragments_are_bounded(self, monkeypatch):
+    async def test_incomplete_fragments_are_bounded(self):
         # Memory guard: incomplete fragments whose later parts never arrive must not accumulate
         # without bound. Drive the public start()/serve loop; only the assertion inspects the buffer.
-        import feishu.ws.client as wsc
-
-        monkeypatch.setattr(wsc, "_MAX_PARTIAL_MESSAGES", 3)
         # 5 distinct messages, each delivering only the FIRST of 2 fragments (never completes).
         frames = [encode_frame(_data_frame(b'{"x":1}', message_id=f"m{i}", sum_=2, seq=0)) for i in range(5)]
         ws = FakeWebSocket(frames)
-        client = _make_client(_endpoint_handler, connect=lambda url: _FakeConn(ws), auto_reconnect=False)
+        client = _make_client(
+            _endpoint_handler,
+            connect=lambda url: _FakeConn(ws),
+            auto_reconnect=False,
+            max_partial_messages=3,
+        )
         await client.start()
         assert len(client._fragments) == 3  # oldest two incomplete messages evicted
 
@@ -352,20 +355,17 @@ class TestServe:
         assert ping.header("type") == "ping"
         assert ping.service == 7
 
-    async def test_pong_updates_ping_cadence(self, monkeypatch):
+    async def test_pong_updates_ping_cadence(self):
         # The pong refreshes the ping interval; observe the delay the ping loop schedules
         # for its NEXT heartbeat (the public-observable cadence). The handshake sets 60s initially.
         recorded: list[float] = []
         saw_new_interval = asyncio.Event()
-        real_sleep = asyncio.sleep
 
-        async def recording_sleep(delay, *args, **kwargs):
+        async def recording_sleep(delay: float) -> None:
             recorded.append(delay)
             if delay == 90.0:
                 saw_new_interval.set()
-            await real_sleep(0)  # yield without waiting so the ping loop keeps iterating
-
-        monkeypatch.setattr(asyncio, "sleep", recording_sleep)
+            await asyncio.sleep(0)  # yield without waiting so the ping loop keeps iterating
 
         pong = Frame(
             method=FRAME_TYPE_CONTROL,
@@ -395,7 +395,12 @@ class TestServe:
                 pass
 
         ws = _PongThenWaitWebSocket()
-        client = _make_client(_endpoint_handler, connect=lambda url: _FakeConn(ws), auto_reconnect=False)
+        client = _make_client(
+            _endpoint_handler,
+            connect=lambda url: _FakeConn(ws),
+            auto_reconnect=False,
+            sleep=recording_sleep,
+        )
         await client.start()
 
         # The heartbeat cadence after the pong is the observable 90s the loop scheduled, and it sticks.
