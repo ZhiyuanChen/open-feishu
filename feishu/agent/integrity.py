@@ -168,3 +168,12 @@ def derive_idempotency_key(*, message_id: str, payload_sha256: str, namespace: s
     """
     seed = f"{namespace}:idempotency:{message_id}:{payload_sha256}"
     return str(uuid.uuid5(_ID_NAMESPACE, seed))
+
+
+__all__ = [
+    "derive_approval_id",
+    "derive_idempotency_key",
+    "payload_sha256",
+    "payload_summary",
+    "stable_hash",
+]

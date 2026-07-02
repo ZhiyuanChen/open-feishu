@@ -283,12 +283,12 @@ class TestErrorCases:
 
 
 # ---------------------------------------------------------------------------
-# Public export check
+# Public surface check
 # ---------------------------------------------------------------------------
 
 
-def test_exported_from_feishu_agent():
+def test_stream_text_stays_in_streaming_module():
     import feishu.agent as agent
 
-    assert hasattr(agent, "stream_text"), "stream_text must be exported from feishu.agent"
-    assert agent.stream_text is stream_text
+    assert not hasattr(agent, "stream_text")
+    assert stream_text.__module__ == "feishu.agent.streaming"

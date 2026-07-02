@@ -169,6 +169,31 @@ class PendingApproval:
     extra: dict[str, Any] = field(default_factory=dict)
 
 
+@dataclass
+class PendingAuthorization:
+    r"""
+    一次挂起的用户授权，记录 OAuth callback 后恢复原工具调用所需的上下文。
+
+    当工具返回 `NEEDS_USER_AUTH` 时，[feishu.agent.loop.Agent][] 会创建该记录、发送授权卡片并挂起本轮；
+    OAuth callback 完成并保存用户 token 后，产品调用 `Agent.resume_authorization`，依据其中保存的工具调用恢复对话。
+    """
+
+    authorization_id: str
+    session_id: str
+    tool_call_id: str
+    tool_name: str
+    arguments: dict[str, Any]
+    scopes: tuple[str, ...] = ()
+    owner_user_keys: tuple[str, ...] = ()
+    tenant_key: str | None = None
+    chat_id: str | None = None
+    created_message_id: str | None = None
+    created_event_id: str | None = None
+    created_at: int | None = None
+    state: str = "awaiting_authorization"
+    extra: dict[str, Any] = field(default_factory=dict)
+
+
 class ClaimResult(str, Enum):
     r"""
     一次审批认领（claim）的结果，是审批执行前的并发安全闸门。
@@ -394,3 +419,100 @@ class InMemoryPendingApprovalStore:
             value, updated = mutator(approval)
             self._store[approval_id] = updated
             return value
+
+
+@runtime_checkable
+class PendingAuthorizationStore(Protocol):
+    r"""
+    挂起授权存储协议，是 OAuth 授权后自动恢复工具调用的扩展契约。
+
+    [feishu.agent.loop.Agent][] 通过该协议保存与取回挂起的 [feishu.agent.session.PendingAuthorization][]；
+    内置实现为 [feishu.agent.session.InMemoryPendingAuthorizationStore][]。
+    """
+
+    async def put(self, authorization: PendingAuthorization) -> None:
+        r"""保存一次挂起授权。"""
+        ...
+
+    async def get(self, authorization_id: str) -> PendingAuthorization | None:
+        r"""按 `authorization_id` 读取挂起授权而不移除，不存在时返回 `None`。"""
+        ...
+
+    async def pop(self, authorization_id: str) -> PendingAuthorization | None:
+        r"""按 `authorization_id` 取出并移除一次挂起授权，不存在时返回 `None`。"""
+        ...
+
+    async def claim(self, authorization_id: str) -> ClaimResult:
+        r"""原子地认领一次授权（`awaiting_authorization` -> `executing`），仅 `CLAIMED` 允许恢复工具。"""
+        ...
+
+    async def complete(self, authorization_id: str, *, outcome: str) -> None:
+        r"""
+        标记一次授权恢复的最终处置。
+
+        `retry` 还原为 `awaiting_authorization`；`unknown`/`frozen` 冻结为 `execution_unknown`；其余终态
+        （如 `executed`/`failed`/`cancelled`/`expired`）移除记录。
+        """
+        ...
+
+
+class InMemoryPendingAuthorizationStore:
+    r"""基于内存的 [feishu.agent.session.PendingAuthorizationStore][] 实现。"""
+
+    def __init__(self) -> None:
+        self._store: dict[str, PendingAuthorization] = {}
+        self._lock = asyncio.Lock()
+
+    async def put(self, authorization: PendingAuthorization) -> None:
+        r"""保存一次挂起授权。"""
+        async with self._lock:
+            self._store[authorization.authorization_id] = authorization
+
+    async def get(self, authorization_id: str) -> PendingAuthorization | None:
+        r"""按 `authorization_id` 读取挂起授权而不移除。"""
+        async with self._lock:
+            return self._store.get(authorization_id)
+
+    async def pop(self, authorization_id: str) -> PendingAuthorization | None:
+        r"""按 `authorization_id` 取出并移除一次挂起授权。"""
+        async with self._lock:
+            return self._store.pop(authorization_id, None)
+
+    async def claim(self, authorization_id: str) -> ClaimResult:
+        r"""原子地认领一次授权，返回 [feishu.agent.session.ClaimResult][]。"""
+        async with self._lock:
+            authorization = self._store.get(authorization_id)
+            if authorization is None:
+                return ClaimResult.MISSING
+            if authorization.state != "awaiting_authorization":
+                return ClaimResult.ALREADY_CLAIMED
+            authorization.state = "executing"
+            return ClaimResult.CLAIMED
+
+    async def complete(self, authorization_id: str, *, outcome: str) -> None:
+        r"""标记授权恢复的最终处置；`retry` 重开，`unknown`/`frozen` 冻结，其余终态移除。"""
+        async with self._lock:
+            if outcome in ("unknown", "frozen"):
+                authorization = self._store.get(authorization_id)
+                if authorization is not None:
+                    authorization.state = "execution_unknown"
+                return
+            if outcome == "retry":
+                authorization = self._store.get(authorization_id)
+                if authorization is not None:
+                    authorization.state = "awaiting_authorization"
+                return
+            self._store.pop(authorization_id, None)
+
+
+__all__ = [
+    "ClaimResult",
+    "InMemoryPendingApprovalStore",
+    "InMemoryPendingAuthorizationStore",
+    "InMemorySessionStore",
+    "PendingApproval",
+    "PendingApprovalStore",
+    "PendingAuthorization",
+    "PendingAuthorizationStore",
+    "SessionStore",
+]

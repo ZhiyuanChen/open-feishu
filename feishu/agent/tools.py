@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -49,7 +49,7 @@ class ToolValidationError(ValueError):
 @dataclass
 class Tool:
     r"""
-    一个已注册的工具：名称、描述、参数 Schema、处理函数及是否需要审批。
+    一个已注册的工具：名称、描述、参数 Schema、处理函数、是否需要审批，以及可预检的用户授权范围。
 
     `handler` 既可为同步函数也可为协程函数；同步函数在分发时会被放到工作线程中执行，避免阻塞事件循环。
     当 `requires_approval` 为 `True` 时，[feishu.agent.loop.Agent][] 会先发送审批卡片并挂起本轮对话，
@@ -73,6 +73,7 @@ class Tool:
     input_schema: dict[str, Any]
     handler: Callable[..., Awaitable[Any] | Any]
     requires_approval: bool = False
+    auth_scopes: tuple[str, ...] = ()
 
 
 def _validate(name: str, input_schema: dict[str, Any], arguments: Any) -> None:
@@ -176,6 +177,7 @@ class ToolRegistry:
         input_schema: dict[str, Any],
         description: str,
         requires_approval: bool = False,
+        auth_scopes: Sequence[str] = (),
     ) -> Callable[..., Any] | None:
         r"""
         注册一个工具，支持装饰器与直接调用两种形式。
@@ -189,6 +191,7 @@ class ToolRegistry:
             input_schema: 描述工具参数的 JSON Schema。
             description: 工具描述，供模型理解其用途。
             requires_approval: 是否在执行前要求用户审批。默认为 `False`。
+            auth_scopes: 工具执行前可预检的用户授权范围。默认为空。
 
         Returns:
             直接调用形式下原样返回 `handler`；装饰器形式下返回用于装饰处理函数的装饰器。
@@ -210,12 +213,15 @@ class ToolRegistry:
             tool_name = name or getattr(fn, "__name__", None)
             if not tool_name:
                 raise ValueError("tool name is required")
+            if tool_name in self._tools:
+                raise ValueError(f"tool {tool_name!r} is already registered")
             self._tools[tool_name] = Tool(
                 name=tool_name,
                 description=description,
                 input_schema=input_schema,
                 handler=fn,
                 requires_approval=requires_approval,
+                auth_scopes=tuple(auth_scopes),
             )
             return fn
 
@@ -243,6 +249,8 @@ class ToolRegistry:
             >>> reg.add(tool).name
             'ping'
         """
+        if tool.name in self._tools:
+            raise ValueError(f"tool {tool.name!r} is already registered")
         self._tools[tool.name] = tool
         return tool
 
@@ -321,3 +329,10 @@ class ToolRegistry:
         # Normalize every handler's return into a ToolResult so callers get one uniform shape; a raw value
         # becomes a COMPLETED result carrying it verbatim.
         return result if isinstance(result, ToolResult) else ToolResult(ToolOutcome.COMPLETED, content=result)
+
+
+__all__ = [
+    "Tool",
+    "ToolRegistry",
+    "ToolValidationError",
+]

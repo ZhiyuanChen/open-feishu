@@ -32,10 +32,16 @@ r"""
 from __future__ import annotations
 
 import contextvars
-from collections.abc import Iterator, Sequence
+import inspect
+import logging
+from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Any
+
+from ._callbacks import accepts_positional_arguments as _accepts_positional_arguments
+
+logger = logging.getLogger("feishu")
 
 
 @dataclass
@@ -59,6 +65,7 @@ class ToolContext:
     authorize_url_builder: Any | None = None
     shared_files: Any | None = None  # a SharedFileResolver: the only path from a file_id to bytes
     payment_accounts: Any | None = None  # a PaymentAccountResolver: account_id handle -> account value
+    timezone: str | Callable[..., Any] | None = None
 
     async def as_user(self) -> Any | None:
         r"""解析当前请求用户的用户态飞书客户端；无提供方 / 无授权时返回 `None`。"""
@@ -68,6 +75,23 @@ class ToolContext:
         if not user:
             return None
         return await self.user_tokens.as_user(user)
+
+    async def has_user_auth(self, scopes: Sequence[str]) -> bool:
+        r"""判断当前请求用户是否已有有效授权；提供方支持 scope 检查时要求覆盖 `scopes`。"""
+        if not scopes:
+            return True
+        if self.user_tokens is None:
+            return False
+        user = self.user or _user_from_event(self.event)
+        if not user:
+            return False
+        checker = getattr(self.user_tokens, "has_scopes", None)
+        if checker is not None:
+            result = checker(user, tuple(scopes))
+            if inspect.isawaitable(result):
+                result = await result
+            return bool(result)
+        return await self.as_user() is not None
 
     def requesting_user(self) -> dict[str, Any]:
         r"""
@@ -97,6 +121,24 @@ class ToolContext:
         if not user:
             return None
         return self.authorize_url_builder(user, tuple(scopes))
+
+    async def current_timezone(self, default: str | None = None) -> str | None:
+        r"""返回当前轮次的时区，优先使用飞书事件上下文，其次使用产品默认值。"""
+        event_timezone = _timezone_from_event(self.event)
+        if event_timezone:
+            return event_timezone
+        timezone = self.timezone
+        if callable(timezone):
+            try:
+                timezone = timezone(self.event) if _accepts_positional_arguments(timezone, 1) else timezone()
+                if inspect.isawaitable(timezone):
+                    timezone = await timezone
+            except Exception:
+                logger.debug("tool context timezone resolver failed", exc_info=True)
+                return default
+        if timezone:
+            return str(timezone)
+        return default
 
 
 _CURRENT: contextvars.ContextVar[ToolContext | None] = contextvars.ContextVar("feishu_tool_context", default=None)
@@ -147,3 +189,28 @@ def _user_from_event(event: Any) -> dict[str, Any]:
         return {key: sender[key] for key in ("open_id", "union_id", "user_id") if sender.get(key)}
     operator = body.get("operator") or {}
     return {key: operator[key] for key in ("open_id", "union_id", "user_id") if operator.get(key)}
+
+
+def _timezone_from_event(event: Any) -> str | None:
+    body = getattr(event, "body", None) or {}
+    nodes = [
+        body,
+        body.get("context") or {},
+        body.get("action") or {},
+        (body.get("action") or {}).get("option") or {},
+    ]
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        for key in ("timezone", "time_zone", "timeZone"):
+            value = node.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    return None
+
+
+__all__ = [
+    "ToolContext",
+    "current_tool_context",
+    "use_tool_context",
+]

@@ -177,3 +177,8 @@ class AnthropicBackend:
                     yield chunk
 
         return _gen()
+
+
+__all__ = [
+    "AnthropicBackend",
+]

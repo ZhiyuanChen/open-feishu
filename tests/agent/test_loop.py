@@ -37,9 +37,11 @@ import pytest
 from feishu.agent.adapters.anthropic import AnthropicBackend
 from feishu.agent.adapters.openai import OpenAIBackend
 from feishu.agent.approval import ApprovalStatus, DefaultApprovalEngine
+from feishu.agent.context import ToolContext
 from feishu.agent.llm import (
     Message,
     MessageStop,
+    ReasoningDelta,
     StopReason,
     TextDelta,
     TextPart,
@@ -55,8 +57,16 @@ from feishu.agent.loop import (
     session_id_for,
     user_message_from_event,
 )
+from feishu.agent.persistence import SqlitePendingAuthorizationStore
 from feishu.agent.result import ToolOutcome, ToolResult
-from feishu.agent.session import ClaimResult, InMemoryPendingApprovalStore, InMemorySessionStore, PendingApproval
+from feishu.agent.session import (
+    ClaimResult,
+    InMemoryPendingApprovalStore,
+    InMemoryPendingAuthorizationStore,
+    InMemorySessionStore,
+    PendingApproval,
+    PendingAuthorization,
+)
 from feishu.agent.tools import ToolRegistry
 from tests._fakes import FakeLlmBackend, text_turn, tool_turn
 
@@ -92,16 +102,32 @@ async def _agen(items):
 
 
 class _LoopRecordingClient:
-    """Minimal stand-in for FeishuClient exposing .im.reply and .stream_card."""
+    """Minimal stand-in for FeishuClient exposing reply/card surfaces used by the loop."""
 
     def __init__(self):
         self.replies = []
+        self.sent_cards = []
+        self.patched_cards = []
+        self.recalled_messages = []
         self.stream_card_calls = []
 
         class _IM:
             async def reply(_self, message_id, content, *, msg_type="text", reply_in_thread=None, uuid=None):
                 self.replies.append((message_id, content, msg_type))
                 return {"message_id": "om_reply"}
+
+            async def send(_self, receive_id, content, *, msg_type="interactive", receive_id_type="chat_id", **_kw):
+                message_id = f"om_card_{len(self.sent_cards) + 1}"
+                self.sent_cards.append((receive_id, content, msg_type, receive_id_type))
+                return {"message_id": message_id}
+
+            async def patch(_self, message_id, content, **_kw):
+                self.patched_cards.append((message_id, content))
+                return {"message_id": message_id}
+
+            async def recall(_self, message_id):
+                self.recalled_messages.append(message_id)
+                return {}
 
         self.im = _IM()
 
@@ -122,6 +148,41 @@ class _LoopRecordingClient:
         )
 
 
+class _NestedMessageIdClient(_LoopRecordingClient):
+    """Recording client whose send response mirrors nested Feishu envelopes."""
+
+    def __init__(self):
+        super().__init__()
+
+        class _IM:
+            async def reply(_self, message_id, content, *, msg_type="text", reply_in_thread=None, uuid=None):
+                self.replies.append((message_id, content, msg_type))
+                return {"data": {"message_id": "om_reply"}}
+
+            async def send(_self, receive_id, content, *, msg_type="interactive", receive_id_type="chat_id", **_kw):
+                message_id = f"om_card_{len(self.sent_cards) + 1}"
+                self.sent_cards.append((receive_id, content, msg_type, receive_id_type))
+                return {"data": {"message_id": message_id}}
+
+            async def patch(_self, message_id, content, **_kw):
+                self.patched_cards.append((message_id, content))
+                return {"data": {"message_id": message_id}}
+
+        self.im = _IM()
+
+
+class _DenyingScopeProvider:
+    def __init__(self):
+        self.checked = []
+
+    async def has_scopes(self, user, scopes):
+        self.checked.append((dict(user), tuple(scopes)))
+        return False
+
+    async def as_user(self, user):
+        raise AssertionError("preflight should not fall through to tool execution")
+
+
 class TestAgentLoop:
     async def test_replies_and_persists(self):
         client = _LoopRecordingClient()
@@ -135,6 +196,255 @@ class TestAgentLoop:
         # user message + assistant message persisted
         assert history[0].role == "user"
         assert history[-1].role == "assistant"
+
+    async def test_system_callback_receives_resolved_timezone(self):
+        backend = FakeLlmBackend([text_turn("hello there")])
+        agent = Agent(
+            backend=backend,
+            registry=ToolRegistry(),
+            store=InMemorySessionStore(),
+            client=_LoopRecordingClient(),
+            system=lambda _event, timezone: f"timezone={timezone}",
+            timezone=lambda _event: "Europe/Berlin",
+        )
+
+        await agent.run(_text_event("hi", message_id="om_in", chat_id="oc_1"))
+
+        assert backend.calls[0]["system"] == "timezone=Europe/Berlin"
+
+    async def test_progress_card_starts_for_plain_reply_and_finalizes_in_place(self):
+        client = _LoopRecordingClient()
+        store = InMemorySessionStore()
+
+        def builder(tool_names, done, result):
+            return {"tools": tool_names, "done": done, "result": result}
+
+        agent = Agent(
+            backend=FakeLlmBackend([text_turn("hello there")]),
+            registry=ToolRegistry(),
+            store=store,
+            client=client,
+            progress_card_builder=builder,
+        )
+        await agent.run(_text_event("hi", message_id="om_in", chat_id="oc_1"))
+        assert client.sent_cards == [("oc_1", {"tools": [], "done": False, "result": ""}, "interactive", "chat_id")]
+        assert client.patched_cards == [("om_card_1", {"tools": [], "done": True, "result": "hello there"})]
+        assert client.replies == []
+
+    async def test_progress_card_uses_nested_message_id_for_in_place_updates(self):
+        client = _NestedMessageIdClient()
+        store = InMemorySessionStore()
+
+        def builder(tool_names, done, result):
+            return {"tools": tool_names, "done": done, "result": result}
+
+        agent = Agent(
+            backend=FakeLlmBackend([text_turn("hello there")]),
+            registry=ToolRegistry(),
+            store=store,
+            client=client,
+            progress_card_builder=builder,
+        )
+        await agent.run(_text_event("hi", message_id="om_in", chat_id="oc_1"))
+        assert len(client.sent_cards) == 1
+        assert client.patched_cards == [("om_card_1", {"tools": [], "done": True, "result": "hello there"})]
+        assert client.replies == []
+
+    async def test_progress_summarizer_patches_reasoning_status(self):
+        client = _LoopRecordingClient()
+        store = InMemorySessionStore()
+        snapshots = []
+
+        def builder(tool_names, done, result):
+            return {"tools": tool_names, "done": done, "result": result}
+
+        async def summarizer(snapshot):
+            snapshots.append(snapshot)
+            return "正在检查授权并整理日程…"
+
+        agent = Agent(
+            backend=FakeLlmBackend(
+                [
+                    [
+                        ReasoningDelta("checking calendar authorization"),
+                        TextDelta("done"),
+                        MessageStop(stop_reason=StopReason.END_TURN),
+                    ]
+                ]
+            ),
+            registry=ToolRegistry(),
+            store=store,
+            client=client,
+            progress_card_builder=builder,
+            progress_summarizer=summarizer,
+            progress_summary_delay_seconds=0,
+            progress_summary_interval_seconds=0,
+        )
+
+        await agent.run(_text_event("hi", message_id="om_in", chat_id="oc_1"))
+
+        assert snapshots and snapshots[0].reasoning == "checking calendar authorization"
+        assert ("om_card_1", {"tools": [], "done": False, "result": "正在检查授权并整理日程…"}) in client.patched_cards
+        assert client.patched_cards[-1] == ("om_card_1", {"tools": [], "done": True, "result": "done"})
+
+    async def test_progress_summarizer_patches_tool_status_from_description(self):
+        client = _LoopRecordingClient()
+        store = InMemorySessionStore()
+        reg = ToolRegistry()
+        snapshots = []
+
+        async def weather(city):
+            await asyncio.sleep(0.02)
+            return f"sunny in {city}"
+
+        reg.register("weather", weather, input_schema=SCHEMA, description="查询指定城市的天气。")
+
+        def builder(tool_names, done, result):
+            return {"tools": tool_names, "done": done, "result": result}
+
+        async def summarizer(snapshot):
+            snapshots.append(snapshot)
+            if snapshot.phase == "tool":
+                return "正在查询天气…"
+            return None
+
+        agent = Agent(
+            backend=FakeLlmBackend(
+                [
+                    tool_turn(index=0, id="c1", name="weather", arguments_json='{"city":"sh"}'),
+                    text_turn("done"),
+                ]
+            ),
+            registry=reg,
+            store=store,
+            client=client,
+            progress_card_builder=builder,
+            progress_summarizer=summarizer,
+        )
+
+        await agent.run(_text_event("weather", message_id="om_in", chat_id="oc_1"))
+
+        tool_snapshots = [snapshot for snapshot in snapshots if snapshot.phase == "tool"]
+        assert tool_snapshots
+        assert tool_snapshots[0].tool_name == "weather"
+        assert tool_snapshots[0].tool_description == "查询指定城市的天气。"
+        assert ("om_card_1", {"tools": ["weather"], "done": False, "result": "正在查询天气…"}) in client.patched_cards
+
+    async def test_new_message_interrupts_active_model_turn_for_same_session(self):
+        class BlockingFirstTurnBackend:
+            def __init__(self):
+                self.calls = []
+                self.first_started = asyncio.Event()
+                self.first_cancelled = asyncio.Event()
+                self._never = asyncio.Event()
+
+            def stream(self, *, messages, tools=(), system=None, **kwargs):
+                self.calls.append(
+                    {"messages": list(messages), "tools": list(tools), "system": system, "kwargs": kwargs}
+                )
+
+                async def first():
+                    self.first_started.set()
+                    try:
+                        await self._never.wait()
+                    except asyncio.CancelledError:
+                        self.first_cancelled.set()
+                        raise
+                    yield MessageStop(stop_reason=StopReason.END_TURN)
+
+                if len(self.calls) == 1:
+                    return first()
+                return _agen(text_turn("new answer"))
+
+        client = _LoopRecordingClient()
+        store = InMemorySessionStore()
+        backend = BlockingFirstTurnBackend()
+
+        def builder(tool_names, done, result):
+            return {"tools": tool_names, "done": done, "result": result}
+
+        agent = Agent(
+            backend=backend,
+            registry=ToolRegistry(),
+            store=store,
+            client=client,
+            progress_card_builder=builder,
+            interrupted_progress_text="Interrupted by a newer message.",
+        )
+
+        first = asyncio.create_task(agent.run(_text_event("old", message_id="om_old", chat_id="oc_1")))
+        await asyncio.wait_for(backend.first_started.wait(), timeout=1)
+        second = asyncio.create_task(agent.run(_text_event("new", message_id="om_new", chat_id="oc_1")))
+
+        await asyncio.wait_for(second, timeout=1)
+        await asyncio.wait_for(backend.first_cancelled.wait(), timeout=1)
+        await asyncio.wait_for(first, timeout=1)
+
+        patched = dict(client.patched_cards)
+        assert patched["om_card_1"] == {"tools": [], "done": True, "result": "Interrupted by a newer message."}
+        assert patched["om_card_2"] == {"tools": [], "done": True, "result": "new answer"}
+
+    async def test_new_message_interrupts_active_tool_and_records_interrupted_result(self):
+        client = _LoopRecordingClient()
+        store = InMemorySessionStore()
+        reg = ToolRegistry()
+        tool_started = asyncio.Event()
+        tool_cancelled = asyncio.Event()
+        never = asyncio.Event()
+
+        async def slow_tool():
+            tool_started.set()
+            try:
+                await never.wait()
+            except asyncio.CancelledError:
+                tool_cancelled.set()
+                raise
+
+        reg.register("slow_tool", slow_tool, input_schema={"type": "object", "properties": {}}, description="slow")
+
+        def builder(tool_names, done, result):
+            return {"tools": tool_names, "done": done, "result": result}
+
+        agent = Agent(
+            backend=FakeLlmBackend(
+                [
+                    tool_turn(index=0, id="c1", name="slow_tool", arguments_json="{}"),
+                    text_turn("new answer"),
+                ]
+            ),
+            registry=reg,
+            store=store,
+            client=client,
+            progress_card_builder=builder,
+            interrupted_progress_text="Interrupted by a newer message.",
+        )
+
+        first = asyncio.create_task(agent.run(_text_event("old", message_id="om_old", chat_id="oc_1")))
+        await asyncio.wait_for(tool_started.wait(), timeout=1)
+        second = asyncio.create_task(agent.run(_text_event("new", message_id="om_new", chat_id="oc_1")))
+
+        await asyncio.wait_for(second, timeout=1)
+        await asyncio.wait_for(tool_cancelled.wait(), timeout=1)
+        await asyncio.wait_for(first, timeout=1)
+
+        history = await store.get("oc_1")
+        interrupted_results = [
+            part
+            for msg in history
+            if msg.role == "tool"
+            for part in msg.content
+            if isinstance(part, ToolResultPart) and part.tool_call_id == "c1"
+        ]
+        assert len(interrupted_results) == 1
+        assert interrupted_results[0].is_error is True
+        assert "Interrupted by a newer user message" in str(interrupted_results[0].content)
+        patched = dict(client.patched_cards)
+        assert patched["om_card_1"] == {
+            "tools": ["slow_tool"],
+            "done": True,
+            "result": "Interrupted by a newer message.",
+        }
+        assert patched["om_card_2"] == {"tools": [], "done": True, "result": "new answer"}
 
     async def test_dispatches_and_reinvokes(self):
         client = _LoopRecordingClient()
@@ -181,6 +491,221 @@ class TestAgentLoop:
         history = await store.get("oc_z")
         tool_msgs = [m for m in history if m.role == "tool"]
         assert tool_msgs and tool_msgs[0].content[0].tool_call_id == "call_42"
+
+    async def test_authorization_resume_replays_original_tool_call_and_finalizes(self):
+        client = _LoopRecordingClient()
+        reg = ToolRegistry()
+        store = InMemorySessionStore()
+        authorizations = InMemoryPendingAuthorizationStore()
+        calls = []
+
+        async def events():
+            calls.append("events")
+            if len(calls) == 1:
+                return ToolResult(
+                    ToolOutcome.NEEDS_USER_AUTH,
+                    content="user authorization required",
+                    auth_scopes=("calendar:calendar",),
+                    is_error=True,
+                )
+            return "events result"
+
+        reg.register("events", events, input_schema={"type": "object"}, description="events")
+        backend = FakeLlmBackend(
+            [
+                tool_turn(index=0, id="c1", name="events", arguments_json="{}"),
+                text_turn("Here are your events"),
+            ]
+        )
+        seen_authorizations = []
+
+        def authorize_url_builder(user, scopes, authorization=None):
+            seen_authorizations.append((dict(user), tuple(scopes), authorization.authorization_id))
+            return f"https://auth.example/authorize?state={authorization.authorization_id}"
+
+        agent = Agent(
+            backend=backend,
+            registry=reg,
+            store=store,
+            client=client,
+            authorizations=authorizations,
+            auth_card_builder=lambda url: {"url": url},
+            authorize_url_builder=authorize_url_builder,
+        )
+
+        await agent.run(_text_event("calendar?", chat_id="oc_1", open_id="ou_tester"))
+
+        assert calls == ["events"]
+        assert len(backend.calls) == 1
+        assert len(client.sent_cards) == 1
+        pending = next(iter(authorizations._store.values()))
+        assert seen_authorizations == [({"open_id": "ou_tester"}, ("calendar:calendar",), pending.authorization_id)]
+        assert pending.extra["auth_card_message_id"] == "om_card_1"
+        history = await store.get("oc_1")
+        results = [p for m in history if m.role == "tool" for p in m.content if isinstance(p, ToolResultPart)]
+        assert [p.tool_call_id for p in results] == ["c1"]
+        assert "Awaiting user authorization" in results[0].content
+
+        status = await agent.resume_authorization(pending.authorization_id, user={"open_id": "ou_tester"})
+
+        assert status == "resumed"
+        assert calls == ["events", "events"]
+        assert len(backend.calls) == 2
+        assert client.replies[-1][1] == "Here are your events"
+        assert client.recalled_messages == ["om_card_1"]
+        assert authorizations._store == {}
+        history = await store.get("oc_1")
+        results = [p for m in history if m.role == "tool" for p in m.content if isinstance(p, ToolResultPart)]
+        assert len(results) == 1
+        assert results[0].content == "events result"
+
+    async def test_auth_preflight_runs_before_approval_card(self):
+        client = _LoopRecordingClient()
+        reg = ToolRegistry()
+        user_tokens = _DenyingScopeProvider()
+        store = InMemorySessionStore()
+        authorizations = InMemoryPendingAuthorizationStore()
+        calls = []
+
+        async def create_event():
+            calls.append("create_event")
+            return "created"
+
+        reg.register(
+            "create_event",
+            create_event,
+            input_schema={"type": "object"},
+            description="create event",
+            requires_approval=True,
+            auth_scopes=("calendar:calendar",),
+        )
+        backend = FakeLlmBackend([tool_turn(index=0, id="c1", name="create_event", arguments_json="{}")])
+        seen_authorizations = []
+
+        def authorize_url_builder(user, scopes, authorization=None):
+            seen_authorizations.append((dict(user), tuple(scopes), authorization.authorization_id))
+            return f"https://auth.example/authorize?state={authorization.authorization_id}"
+
+        agent = Agent(
+            backend=backend,
+            registry=reg,
+            store=store,
+            client=client,
+            authorizations=authorizations,
+            approval_card_builder=lambda _approval: {"approval": True},
+            auth_card_builder=lambda url: {"auth": url},
+            authorize_url_builder=authorize_url_builder,
+            user_tokens=user_tokens,
+        )
+
+        await agent.run(_text_event("calendar?", chat_id="oc_1", open_id="ou_tester"))
+
+        assert calls == []
+        assert user_tokens.checked == [({"open_id": "ou_tester"}, ("calendar:calendar",))]
+        assert len(client.sent_cards) == 1
+        assert "auth" in client.sent_cards[0][1]
+        assert "approval" not in client.sent_cards[0][1]
+        pending = next(iter(authorizations._store.values()))
+        assert seen_authorizations == [({"open_id": "ou_tester"}, ("calendar:calendar",), pending.authorization_id)]
+
+    async def test_authorization_resume_requires_callback_user(self):
+        client = _LoopRecordingClient()
+        reg = ToolRegistry()
+        store = InMemorySessionStore()
+        authorizations = InMemoryPendingAuthorizationStore()
+        calls = []
+
+        async def events():
+            calls.append("events")
+            return ToolResult(ToolOutcome.NEEDS_USER_AUTH, content="auth", auth_scopes=("calendar:calendar",))
+
+        reg.register("events", events, input_schema={"type": "object"}, description="events")
+        backend = FakeLlmBackend([tool_turn(index=0, id="c1", name="events", arguments_json="{}")])
+        agent = Agent(
+            backend=backend,
+            registry=reg,
+            store=store,
+            client=client,
+            authorizations=authorizations,
+            auth_card_builder=lambda url: {"url": url},
+            authorize_url_builder=lambda user, scopes, authorization: "https://auth.example",
+        )
+        await agent.run(_text_event("calendar?", chat_id="oc_1", open_id="ou_tester"))
+        pending = next(iter(authorizations._store.values()))
+
+        status = await agent.resume_authorization(pending.authorization_id)
+
+        assert status == "forbidden"
+        assert calls == ["events"]
+        assert client.replies[-1][1].startswith("授权已完成，但无法确认完成授权的用户身份")
+        assert pending.authorization_id in authorizations._store
+
+    async def test_authorization_resume_expired_pending_reports_to_chat(self, tmp_path):
+        client = _LoopRecordingClient()
+        authorizations = SqlitePendingAuthorizationStore(tmp_path / "auth.db", ttl_seconds=1)
+        pending = PendingAuthorization(
+            authorization_id="az_expired",
+            session_id="oc_1",
+            tool_call_id="c1",
+            tool_name="events",
+            arguments={},
+            owner_user_keys=("open_id:ou_tester",),
+            chat_id="oc_1",
+            created_message_id="om_in",
+            created_at=0,
+        )
+        await authorizations.put(pending)
+        agent = Agent(
+            backend=FakeLlmBackend([]),
+            registry=ToolRegistry(),
+            store=InMemorySessionStore(),
+            client=client,
+            authorizations=authorizations,
+        )
+
+        status = await agent.resume_authorization("az_expired", user={"open_id": "ou_tester"})
+
+        assert status == "expired"
+        assert client.replies[-1][0] == "om_in"
+        assert "原请求已过期" in client.replies[-1][1]
+
+    def test_authorize_url_builder_type_error_is_not_treated_as_legacy_signature(self):
+        def builder(_user, _scopes, _authorization):
+            raise TypeError("inner builder bug")
+
+        agent = Agent(
+            backend=FakeLlmBackend([]),
+            registry=ToolRegistry(),
+            store=InMemorySessionStore(),
+            authorize_url_builder=builder,
+        )
+        pending = PendingAuthorization(
+            authorization_id="az_1",
+            session_id="s",
+            tool_call_id="c1",
+            tool_name="events",
+            arguments={},
+        )
+
+        with pytest.raises(TypeError, match="inner builder bug"):
+            agent._build_authorize_url({"open_id": "ou_1"}, (), pending)
+
+    def test_legacy_two_argument_authorize_url_builder_still_works(self):
+        agent = Agent(
+            backend=FakeLlmBackend([]),
+            registry=ToolRegistry(),
+            store=InMemorySessionStore(),
+            authorize_url_builder=lambda _user, _scopes: "https://auth.example",
+        )
+        pending = PendingAuthorization(
+            authorization_id="az_1",
+            session_id="s",
+            tool_call_id="c1",
+            tool_name="events",
+            arguments={},
+        )
+
+        assert agent._build_authorize_url({"open_id": "ou_1"}, (), pending) == "https://auth.example"
 
     async def test_stream_via_stream_card(self):
         """stream=True routes the final reply through client.stream_card in reply position (in-thread)."""
@@ -355,6 +880,7 @@ class _ApprovalRecordingClient:
         self.replies = []
         self.cards = []
         self.patches = []
+        self.recalls = []
         outer = self
 
         class _IM:
@@ -369,6 +895,10 @@ class _ApprovalRecordingClient:
             async def patch(self, message_id, content):
                 outer.patches.append((message_id, content))
                 return {"message_id": message_id}
+
+            async def recall(self, message_id):
+                outer.recalls.append(message_id)
+                return {}
 
         self.im = _IM()
 
@@ -386,6 +916,15 @@ def _action_event(approval_id, decision, chat_id="oc_1", *, open_id="ou_tester",
         "context": {"open_message_id": "om_card", "open_chat_id": chat_id},
     }
     return SimpleNamespace(event_type="card.action.trigger", body=body)
+
+
+async def test_tool_context_prefers_card_callback_timezone():
+    event = _action_event("ap_1", "approve")
+    event.body["context"]["timezone"] = "America/New_York"
+
+    timezone = await ToolContext(event=event, timezone="Asia/Shanghai").current_timezone("Asia/Shanghai")
+
+    assert timezone == "America/New_York"
 
 
 async def _drain(agent) -> None:
@@ -420,7 +959,7 @@ class _MemoryExecutionStore:
             self.rows[key] = row
 
 
-def _agent_with_deploy(client, store, approvals, ran):
+def _agent_with_deploy(client, store, approvals, ran, *, progress_card_builder=None, system=None, timezone=None):
     reg = ToolRegistry()
 
     async def deploy(env):
@@ -434,7 +973,19 @@ def _agent_with_deploy(client, store, approvals, ran):
             text_turn("deployment complete"),
         ]
     )
-    return Agent(backend=backend, registry=reg, store=store, client=client, approvals=approvals), backend
+    return (
+        Agent(
+            backend=backend,
+            registry=reg,
+            store=store,
+            client=client,
+            approvals=approvals,
+            progress_card_builder=progress_card_builder,
+            system=system,
+            timezone=timezone,
+        ),
+        backend,
+    )
 
 
 def _extract_approval_id(card: dict) -> str:
@@ -505,6 +1056,38 @@ class TestApprovalFlow:
         # a PendingApproval was persisted -> there is exactly one to pop
         history = await store.get("oc_1")
         assert any(m.role == "assistant" for m in history)
+
+    async def test_approval_resume_reuses_suspended_progress_card(self):
+        client = _LoopRecordingClient()
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        ran = []
+
+        def builder(tool_names, done, result):
+            return {"tools": tool_names, "done": done, "result": result}
+
+        agent, _ = _agent_with_deploy(client, store, approvals, ran, progress_card_builder=builder)
+
+        await agent.run(_text_event("deploy prod", chat_id="oc_1"))
+
+        assert len(client.sent_cards) == 2
+        progress_message_id = "om_card_1"
+        approval_message_id = "om_card_2"
+        approval_card = client.sent_cards[1][1]
+        approval_id = _extract_approval_id(approval_card)
+        sha = _extract_payload_sha256(approval_card)
+
+        event = _action_event(approval_id, "approve", chat_id="oc_1", payload_sha256=sha)
+        event.body["context"]["open_message_id"] = approval_message_id
+        await agent.handle_card_action(event)
+        await _drain(agent)
+
+        assert ran == ["prod"]
+        assert len(client.sent_cards) == 2  # no extra progress card on resume
+        patched_ids = [message_id for message_id, _ in client.patched_cards]
+        assert progress_message_id in patched_ids
+        assert approval_message_id in patched_ids
+        assert client.patched_cards[-1][0] == approval_message_id
 
     async def test_suspended_history_is_well_formed_and_placeholder_is_replaced(self):
         """[self-review] A suspended turn must leave every tool_use with a tool_result placeholder (so abandoning
@@ -731,8 +1314,11 @@ class TestApprovalFlow:
         body = json.dumps(client.cards[0][0], ensure_ascii=False)
         assert "pa_secret_handle" not in body
         assert "travel" not in body
-        assert "`accounts`: object with 1 field(s)" in body
-        assert "`form`: {`amount`: 123, `reason`: text (6 chars)}" in body
+        assert "确认执行 reimburse？" in body
+        assert "确认执行" in body
+        assert "拒绝" in body
+        assert "`accounts`: 对象（1 个字段）" in body
+        assert "`form`: {`amount`: 123, `reason`: 文本（6 字符）}" in body
 
     async def test_failed_approved_write_is_terminal(self):
         """[self-review] When an approved tool reports failure, the pending is resolved TERMINALLY (removed) — not
@@ -761,6 +1347,63 @@ class TestApprovalFlow:
         await _drain(agent)
         assert approvals._store == {}  # terminal: pending removed, not lingering as awaiting_confirmation
         assert len(backend.calls) == 2  # model resumed and got the failure to explain
+
+    async def test_approved_write_needing_auth_creates_pending_authorization(self):
+        client = _ApprovalRecordingClient()
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        authorizations = InMemoryPendingAuthorizationStore()
+        reg = ToolRegistry()
+
+        async def deploy(env):
+            return ToolResult(
+                ToolOutcome.NEEDS_USER_AUTH,
+                content="auth required",
+                auth_scopes=("calendar:calendar",),
+                is_error=True,
+            )
+
+        reg.register("deploy", deploy, input_schema=DEPLOY_SCHEMA, description="deploy", requires_approval=True)
+        backend = FakeLlmBackend(
+            [
+                tool_turn(index=0, id="c1", name="deploy", arguments_json='{"env":"prod"}'),
+                text_turn("this should not be generated before auth"),
+            ]
+        )
+        seen_authorizations = []
+
+        def authorize_url_builder(user, scopes, authorization=None):
+            seen_authorizations.append((dict(user), tuple(scopes), authorization.authorization_id))
+            return f"https://auth.example/authorize?state={authorization.authorization_id}"
+
+        agent = Agent(
+            backend=backend,
+            registry=reg,
+            store=store,
+            client=client,
+            approvals=approvals,
+            authorizations=authorizations,
+            auth_card_builder=lambda url: {"auth": url},
+            authorize_url_builder=authorize_url_builder,
+        )
+        await agent.run(_text_event("deploy prod", chat_id="oc_1"))
+        card, _ = client.cards[0]
+        approval_id = _extract_approval_id(card)
+        sha = _extract_payload_sha256(card)
+
+        await agent.handle_card_action(_action_event(approval_id, "approve", chat_id="oc_1", payload_sha256=sha))
+        await _drain(agent)
+
+        assert approvals._store == {}
+        assert len(authorizations._store) == 1
+        pending = next(iter(authorizations._store.values()))
+        assert seen_authorizations == [({"open_id": "ou_tester"}, ("calendar:calendar",), pending.authorization_id)]
+        assert client.cards[-1][0]["auth"].endswith(pending.authorization_id)
+        assert client.patches and not _has_buttons(client.patches[-1][1])
+        assert len(backend.calls) == 1
+        history = await store.get("oc_1")
+        results = [p for m in history if m.role == "tool" for p in m.content if isinstance(p, ToolResultPart)]
+        assert any("Awaiting user authorization" in p.content for p in results)
 
     async def test_resume_raises_still_responds(self):
         """handle_card_action must ACK immediately and the background resume must swallow its own errors."""
@@ -842,7 +1485,7 @@ class TestApprovalFlow:
         response = await agent.handle_card_action(event)
 
         # Must return the invalid-decision info toast
-        assert response == {"toast": {"type": "info", "content": "invalid decision"}}
+        assert response == {"toast": {"type": "info", "content": "无效的确认操作"}}
         # Tool must NOT have run
         assert ran == []
         # The pending approval must still be in the store (not consumed into execution)
@@ -920,7 +1563,7 @@ class TestApprovalFlow:
 
     async def test_pending_is_persisted_before_card_is_sent(self):
         """High (ordering): the pending must be in the store BEFORE the card is delivered, so a click can never hit
-        an empty store ('no pending approval'). Snapshot the store at the instant send() is called."""
+        an empty store ("没有待处理的确认请求"). Snapshot the store at the instant send() is called."""
         store = InMemorySessionStore()
         approvals = InMemoryPendingApprovalStore()
         client = _ApprovalRecordingClient()
@@ -1329,38 +1972,19 @@ class TestAdapterParity:
         assert a.stop_reason == o.stop_reason, "Providers returned different stop_reason"
 
     async def test_public_exports_present(self):
-        """All names listed in the brief's __all__ must be importable from feishu.agent."""
+        """Only agent core primitives are re-exported from feishu.agent."""
         import feishu.agent as agent
 
         required = [
-            "LlmBackend",
-            "Message",
-            "TextPart",
-            "ToolUsePart",
-            "ToolResultPart",
-            "ContentPart",
-            "ToolSpec",
-            "Role",
-            "StopReason",
-            "TextDelta",
-            "ToolCallDelta",
-            "MessageStop",
-            "StreamChunk",
-            "ToolCall",
+            "Agent",
             "Tool",
             "ToolRegistry",
             "ToolValidationError",
-            "SessionStore",
-            "InMemorySessionStore",
-            "PendingApproval",
-            "PendingApprovalStore",
-            "InMemoryPendingApprovalStore",
-            "Agent",
-            "StreamResult",
-            "accumulate_stream",
-            "session_id_for",
-            "user_message_from_event",
-            "register_agent",
+            "ToolOutcome",
+            "ToolResult",
         ]
         for name in required:
             assert hasattr(agent, name), f"feishu.agent is missing public export: {name!r}"
+
+        assert not hasattr(agent, "create_calendar_event")
+        assert not hasattr(agent, "SqliteSessionStore")

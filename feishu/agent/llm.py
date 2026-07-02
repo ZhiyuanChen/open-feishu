@@ -21,6 +21,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, AsyncIterator, Literal, Protocol, Sequence, Union, runtime_checkable
@@ -223,7 +224,7 @@ class ToolCall:
     由流式片段归并而成的完整工具调用。
 
     与 [feishu.agent.llm.ToolUsePart][] 不同，此处的 `arguments` 为完整的 JSON 字符串，由
-    [feishu.agent.loop.Agent][] 在分发前 `json.loads()` 解析。
+    [feishu.agent.llm.parse_tool_arguments][] 在分发前解析。
 
     Examples:
         >>> call = ToolCall(id="c1", name="weather", arguments='{"city":"上海"}')
@@ -233,7 +234,17 @@ class ToolCall:
 
     id: str
     name: str
-    arguments: str  # complete JSON string; the loop json.loads() it
+    arguments: str  # complete JSON string; parse_tool_arguments() decodes it
+
+
+def parse_tool_arguments(arguments: str) -> dict[str, Any]:
+    r"""解析 [feishu.agent.llm.ToolCall.arguments][]；模型输出畸形时回退为空对象。"""
+    if not arguments:
+        return {}
+    try:
+        return json.loads(arguments)
+    except (ValueError, TypeError):
+        return {}
 
 
 @runtime_checkable
@@ -276,3 +287,23 @@ class LlmBackend(Protocol):
             逐个产出 [feishu.agent.llm.StreamChunk][] 的异步迭代器。
         """
         ...
+
+
+__all__ = [
+    "ContentPart",
+    "LlmBackend",
+    "Message",
+    "MessageStop",
+    "ReasoningDelta",
+    "Role",
+    "StopReason",
+    "StreamChunk",
+    "TextDelta",
+    "TextPart",
+    "ToolCall",
+    "ToolCallDelta",
+    "ToolResultPart",
+    "ToolSpec",
+    "ToolUsePart",
+    "parse_tool_arguments",
+]

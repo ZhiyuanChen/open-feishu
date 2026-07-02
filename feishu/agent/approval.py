@@ -41,18 +41,33 @@ r"""
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import time
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Literal, Protocol, runtime_checkable
+from uuid import uuid4
 
-from .integrity import derive_idempotency_key
-from .result import ToolOutcome, ToolResult
+from ..auth import user_from_identity_keys, user_identity_keys
+from ..events.envelope import Event
+from ._flow import (
+    AUTH_CARD_SENT_NOTE,
+    AWAITING_AUTHORIZATION_NOTE,
+    suspension_progress_note,
+)
+from .context import current_tool_context, use_tool_context
+from .integrity import derive_idempotency_key, payload_sha256
+from .llm import Message, ToolCall, ToolResultPart, parse_tool_arguments
+from .progress import _pending_progress_extra, _progress_message_id, _ProgressCard
+from .result import ToolOutcome, ToolResult, coerce_tool_result
 from .session import ClaimResult, PendingApproval, PendingApprovalStore
+from .shared_files import collect_shared_file_ids
 from .tools import ToolValidationError
 
 Decision = Literal["approve", "reject"]
+AWAITING_APPROVAL_PROGRESS_TEXT = "等待用户确认。"
 
 # Dispatch a tool by (name, arguments) and await its result; the Agent passes
 # ToolRegistry.dispatch here so the engine stays decoupled from the registry.
@@ -103,7 +118,8 @@ class ApprovalOutcome:
     审批决策的结构化结果，告知 [feishu.agent.loop.Agent][] 如何回传模型与更新卡片。
 
     `content` 是回传给模型的工具结果：`EXECUTED`/`REPLAYED` 时为真实执行结果，其余情形为一段状态说明文本。
-    `is_error` 为 `True` 时模型据此调整后续行为；`status` 供产品侧映射卡片样式与展示措辞。
+    `is_error` 为 `True` 时模型据此调整后续行为；`status` 供产品侧映射卡片样式与展示措辞。若审批通过后工具发现
+    缺少用户授权，`auth_scopes` 会携带原始工具结果声明的授权范围，供 Agent 创建可恢复的授权挂起记录。
 
     Examples:
         >>> outcome = ApprovalOutcome(status=ApprovalStatus.EXECUTED, content={"id": "task_1"})
@@ -117,6 +133,7 @@ class ApprovalOutcome:
     content: Any = None
     is_error: bool = False
     authorize_url: str | None = None
+    auth_scopes: tuple[str, ...] = ()
 
 
 @runtime_checkable
@@ -340,7 +357,11 @@ class DefaultApprovalEngine:
             await self.approvals.complete(approval_id, outcome="failed")
             await self._record("execute_failed", approval, error=str(result.outcome.value))
             return ApprovalOutcome(
-                ApprovalStatus.FAILED, content=result.content, is_error=True, authorize_url=result.authorize_url
+                ApprovalStatus.FAILED,
+                content=result.content,
+                is_error=True,
+                authorize_url=result.authorize_url,
+                auth_scopes=tuple(result.auth_scopes),
             )
 
         # Cache and return the UNWRAPPED content so EXECUTED and a later REPLAYED are identical.
@@ -393,3 +414,374 @@ class DefaultApprovalEngine:
             )
         except Exception:  # noqa: BLE001 — auditing must never break the decision path
             self._log.exception("approval audit append failed for %s", approval.approval_id)
+
+
+def action_value(event: Event) -> dict[str, Any]:
+    r"""从飞书卡片回调事件中提取 action value，兼容 SDK 与测试里的简化事件。"""
+    try:
+        from ..cards.callback import parse_action
+
+        return parse_action(event).value or {}
+    except (TypeError, AttributeError, KeyError):
+        action = event.body.get("action") or {}
+        return action.get("value") or {}
+
+
+async def request_approval(
+    agent: Any, event: Event, session_id: str, history: list[Message], call: ToolCall, progress: _ProgressCard
+) -> bool:
+    r"""
+    为需审批的工具创建挂起审批并发送确认卡片；返回是否已挂起本轮。
+
+    审批记录先落库再发卡，发卡失败会取消刚创建的 pending，避免用户点不到或无法恢复的悬挂状态。
+    """
+    arguments = parse_tool_arguments(call.arguments)
+    initiator = current_tool_context().requesting_user()
+    owner_user_keys = user_identity_keys(initiator)
+    message = event.body.get("message") or {}
+    chat_id = message.get("chat_id")
+    if not owner_user_keys:
+        await agent._record_tool_error(
+            history,
+            session_id,
+            call.id,
+            "cannot create a confirmable write: the requesting user could not be identified",
+        )
+        return False
+    if agent.client is None or not chat_id:
+        await agent._record_tool_error(
+            history,
+            session_id,
+            call.id,
+            "cannot create a confirmable write: no chat is available for the confirmation card",
+        )
+        return False
+    approval = PendingApproval(
+        approval_id=uuid4().hex,
+        session_id=session_id,
+        tool_call_id=call.id,
+        tool_name=call.name,
+        arguments=arguments,
+        payload_sha256=payload_sha256(arguments),
+        owner_user_keys=owner_user_keys,
+        tenant_key=getattr(event, "tenant_key", None),
+        chat_id=chat_id,
+        created_message_id=message.get("message_id"),
+        created_event_id=getattr(event, "event_id", None) or None,
+        created_at=int(time.time()),
+        extra=_pending_progress_extra(progress),
+    )
+    card = agent._approval_card_builder(approval)
+    try:
+        await agent.approval_engine.on_request(approval)
+    except Exception:  # noqa: BLE001 — could not record the pending → no confirmable write
+        logging.getLogger("feishu").warning("failed to persist pending approval; write not started", exc_info=True)
+        await agent._record_tool_error(
+            history, session_id, call.id, "could not record the confirmation request; the write was not started"
+        )
+        return False
+    try:
+        await agent.client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
+    except Exception:  # noqa: BLE001 — undeliverable card → cancel the pending, then let the model respond
+        logging.getLogger("feishu").warning(
+            "failed to send approval card; cancelling pending %s", approval.approval_id, exc_info=True
+        )
+        try:
+            await agent.approval_engine.on_cancel(approval.approval_id)
+        except Exception:  # noqa: BLE001 — best-effort cleanup; an uncancelled pending will TTL-expire
+            logging.getLogger("feishu").warning(
+                "failed to cancel pending %s after card send failure", approval.approval_id, exc_info=True
+            )
+        await agent._record_tool_error(
+            history, session_id, call.id, "failed to send the confirmation card; the write was not started"
+        )
+        return False
+    await pin_referenced_files(agent, arguments)
+    return True
+
+
+async def pin_referenced_files(agent: Any, arguments: Any) -> None:
+    r"""把审批参数中引用到的分享文件句柄逐个 pin 缓存；失败只记录，绝不影响审批流程。"""
+    resolver = agent.shared_files
+    if resolver is None:
+        return
+    user = current_tool_context().requesting_user()
+    if not user:
+        return
+    for file_id in collect_shared_file_ids(arguments):
+        try:
+            await resolver.pin(user, file_id)
+        except Exception:  # noqa: BLE001 — pinning is best-effort durability, never fatal
+            logging.getLogger("feishu").debug("pin-on-approval failed for %s", file_id, exc_info=True)
+
+
+async def handle_card_action(agent: Any, event: Event) -> dict[str, Any]:
+    r"""处理审批卡片回传：同步 ACK，后台完成决策、工具执行、历史续跑与卡片更新。"""
+    value = action_value(event)
+    approval_id = value.get("__approval__")
+    if not approval_id:
+        return {"toast": {"type": "info", "content": "没有待处理的确认请求"}}
+    decision = value.get("decision")
+    if decision not in ("approve", "reject"):
+        return {"toast": {"type": "info", "content": "无效的确认操作"}}
+    approval = await agent.approvals.get(approval_id)
+    if approval is None:
+        return {"toast": {"type": "info", "content": "没有待处理的确认请求"}}
+    clicker_keys = set(user_identity_keys(agent._tool_context(event).requesting_user()))
+    if not approval.owner_user_keys or not (clicker_keys & set(approval.owner_user_keys)):
+        return {"toast": {"type": "error", "content": "这不是你的确认请求"}}
+
+    from ..cards.callback import parse_action
+
+    card_message_id = parse_action(event).message_id
+    agent._spawn_background(decide_and_resume(agent, event, approval, decision, value, card_message_id))
+    return {"toast": {"type": "info", "content": "处理中…"}}
+
+
+async def decide_and_resume(
+    agent: Any,
+    event: Event,
+    approval: PendingApproval,
+    decision: Literal["approve", "reject"],
+    value: dict[str, Any],
+    card_message_id: str | None,
+) -> None:
+    r"""
+    后台执行审批决定，并在需要时恢复原模型轮次。
+
+    执行身份固定为审批发起人，点击事件只用于 ACK 与定位被点击卡片；续跑事件从原消息重建。
+    """
+    resume_event = Event.from_payload(
+        {
+            "header": {"event_type": "im.message.receive_v1"},
+            "event": {"message": {"message_id": approval.created_message_id, "chat_id": approval.chat_id}},
+        }
+    )
+    context = agent._tool_context(resume_event)
+    if approval.owner_user_keys:
+        context.user = user_from_identity_keys(approval.owner_user_keys)
+    with use_tool_context(context):
+        outcome = None
+        try:
+            progress = _ProgressCard(agent, resume_event)
+            progress.reuse(_progress_message_id(approval.extra))
+            if decision == "approve":
+                await progress.step(approval.tool_name, description=agent._tool_description(approval.tool_name))
+            outcome = await agent.approval_engine.on_decision(
+                approval.approval_id,
+                decision,
+                expected_payload_sha256=value.get("payload_sha256"),
+                dispatch=agent.registry.dispatch,
+            )
+            if _should_resume(outcome.status):
+                if outcome.auth_scopes:
+                    call = ToolCall(
+                        id=approval.tool_call_id,
+                        name=approval.tool_name,
+                        arguments=json.dumps(approval.arguments, ensure_ascii=False),
+                    )
+                    auth_result = ToolResult(
+                        ToolOutcome.NEEDS_USER_AUTH,
+                        content=outcome.content,
+                        authorize_url=outcome.authorize_url,
+                        auth_scopes=tuple(outcome.auth_scopes),
+                        is_error=True,
+                    )
+                    if await agent._request_authorization(
+                        resume_event, approval.session_id, [], call, auth_result, progress
+                    ):
+                        result_part = ToolResultPart(
+                            tool_call_id=approval.tool_call_id,
+                            content=AWAITING_AUTHORIZATION_NOTE,
+                            is_error=False,
+                        )
+                        async with agent._session_lock(approval.session_id):
+                            history = await agent.store.get(approval.session_id)
+                            await agent._record_tool_result_part(approval.session_id, history, result_part)
+                        await progress.finalize(suspension_progress_note("authorization"))
+                        return
+                content, tr_is_error, _ = coerce_tool_result(outcome.content)
+                if outcome.authorize_url and not outcome.auth_scopes:
+                    if await agent._try_send_auth_card(resume_event, outcome.authorize_url):
+                        content = AUTH_CARD_SENT_NOTE
+                    else:
+                        content = f"{content}\n授权链接：{outcome.authorize_url}".strip()
+                result_part = ToolResultPart(
+                    tool_call_id=approval.tool_call_id,
+                    content=content,
+                    is_error=outcome.is_error or tr_is_error,
+                )
+                async with agent._session_lock(approval.session_id):
+                    history = await agent.store.get(approval.session_id)
+                    await agent._record_tool_result_part(approval.session_id, history, result_part)
+                    suspension = await agent._continue_tool_calls_after(
+                        resume_event, approval.session_id, history, approval.tool_call_id, progress
+                    )
+                    if suspension:
+                        await progress.finalize(suspension_progress_note(suspension))
+                    else:
+                        await agent._loop(resume_event, approval.session_id, history, progress=progress)
+        except Exception:  # noqa: BLE001 - background failure must not surface as an unhandled task error
+            logging.getLogger("feishu").exception(
+                "handle_card_action: error deciding/resuming %s of %s (approval=%s)",
+                decision,
+                approval.tool_name,
+                approval.approval_id,
+            )
+        finally:
+            if card_message_id and agent.client is not None and outcome is not None:
+                try:
+                    await agent.client.im.patch(
+                        card_message_id,
+                        agent._decided_card_builder(approval, decision, outcome),
+                    )
+                except Exception:  # noqa: BLE001
+                    logging.getLogger("feishu").debug("could not patch the decided card", exc_info=True)
+
+
+def default_approval_card(approval: PendingApproval) -> dict[str, Any]:
+    r"""构造 SDK 默认确认卡片，参数摘要只展示类型/长度/句柄，不暴露敏感原值。"""
+    from ..cards.builder import Card
+
+    summary = approval_arguments_summary(approval.arguments)
+    return (
+        Card()
+        .header(f"确认执行 {approval.tool_name}？", template="orange")
+        .markdown(f"请确认是否执行 **{approval.tool_name}**。\n\n{summary}")
+        .button(
+            "确认执行",
+            value={
+                "__approval__": approval.approval_id,
+                "decision": "approve",
+                "payload_sha256": approval.payload_sha256,
+            },
+            type="primary",
+        )
+        .button(
+            "拒绝",
+            value={
+                "__approval__": approval.approval_id,
+                "decision": "reject",
+                "payload_sha256": approval.payload_sha256,
+            },
+            type="danger",
+        )
+        .to_dict()
+    )
+
+
+def default_decided_card(approval: PendingApproval, decision: str, outcome: ApprovalOutcome) -> dict[str, Any]:
+    r"""构造 SDK 默认审批结果卡片。"""
+    from ..cards.builder import Card
+
+    if outcome.status is ApprovalStatus.EXECUTED:
+        template, status_label = "green", "已执行"
+    elif outcome.status is ApprovalStatus.REJECTED:
+        template, status_label = "grey", "已拒绝"
+    else:
+        template, status_label = "red", _approval_status_label(outcome.status)
+    return (
+        Card()
+        .header(f"{approval.tool_name} {status_label}", template=template)
+        .markdown(f"操作 **{approval.tool_name}** {status_label}。")
+        .to_dict()
+    )
+
+
+def _approval_status_label(status: ApprovalStatus) -> str:
+    return {
+        ApprovalStatus.REPLAYED: "已执行",
+        ApprovalStatus.TAMPERED: "校验失败",
+        ApprovalStatus.ALREADY_DECIDED: "已处理",
+        ApprovalStatus.SUPERSEDED: "已被新请求替代",
+        ApprovalStatus.FROZEN: "结果未知",
+        ApprovalStatus.EXPIRED: "已过期",
+        ApprovalStatus.MISSING: "不存在或已过期",
+        ApprovalStatus.FAILED: "执行失败",
+    }.get(status, status.value)
+
+
+def approval_arguments_summary(arguments: dict[str, Any]) -> str:
+    r"""把工具参数渲染成确认卡可展示的脱敏摘要。"""
+    if not arguments:
+        return "无参数。"
+    lines = []
+    for key in sorted(arguments):
+        lines.append(f"- `{key}`: {_approval_argument_label(key, arguments[key])}")
+    return "\n".join(lines)
+
+
+def _approval_argument_label(key: str, value: Any, *, depth: int = 0, sensitive: bool = False) -> str:
+    sensitive = sensitive or _approval_argument_key_is_sensitive(key)
+    if isinstance(value, dict):
+        if sensitive or depth >= 2:
+            return f"对象（{len(value)} 个字段）"
+        parts = []
+        for child_key in sorted(value)[:5]:
+            child = _approval_argument_label(str(child_key), value[child_key], depth=depth + 1, sensitive=sensitive)
+            parts.append(f"`{child_key}`: {child}")
+        suffix = ", ..." if len(value) > 5 else ""
+        return "{" + ", ".join(parts) + suffix + "}"
+    if isinstance(value, list):
+        if sensitive or depth >= 1:
+            return f"列表（{len(value)} 项）"
+        parts = [_approval_argument_label(key, item, depth=depth + 1, sensitive=sensitive) for item in value[:3]]
+        suffix = ", ..." if len(value) > 3 else ""
+        return "[" + ", ".join(parts) + suffix + "]"
+    if isinstance(value, str):
+        if sensitive or value.startswith(("sf_", "pa_")):
+            return "句柄" if value else "空文本"
+        return f"文本（{len(value)} 字符）"
+    if value is None:
+        return "空值"
+    if isinstance(value, bool):
+        return str(value).lower()
+    if isinstance(value, int | float):
+        return str(value)
+    return type(value).__name__
+
+
+def _approval_argument_key_is_sensitive(key: str) -> bool:
+    lowered = key.lower()
+    return any(
+        part in lowered
+        for part in (
+            "account",
+            "attachment",
+            "bank",
+            "email",
+            "file",
+            "image",
+            "key",
+            "message_id",
+            "mobile",
+            "open_id",
+            "password",
+            "phone",
+            "secret",
+            "token",
+            "union_id",
+            "user_id",
+        )
+    )
+
+
+def _should_resume(status: ApprovalStatus) -> bool:
+    return status in (
+        ApprovalStatus.EXECUTED,
+        ApprovalStatus.REPLAYED,
+        ApprovalStatus.REJECTED,
+        ApprovalStatus.FAILED,
+        ApprovalStatus.FROZEN,
+    )
+
+
+__all__ = [
+    "ApprovalEngine",
+    "ApprovalOutcome",
+    "ApprovalStatus",
+    "AuditLog",
+    "AWAITING_APPROVAL_PROGRESS_TEXT",
+    "DefaultApprovalEngine",
+    "ExecutionResultStore",
+]

@@ -9,6 +9,7 @@ Consolidates the export-surface coverage for the top-level ``feishu`` package
 from __future__ import annotations
 
 import importlib
+import pkgutil
 
 import pytest
 
@@ -30,6 +31,17 @@ EXPECTED_EXPORTS = {
     "permission_subjects",
     "install_redaction",
 }
+
+
+def _agent_public_modules() -> list[str]:
+    agent = importlib.import_module("feishu.agent")
+    modules = []
+    for module in pkgutil.walk_packages(agent.__path__, prefix=f"{agent.__name__}."):
+        parts = module.name.split(".")
+        if any(part.startswith("_") for part in parts):
+            continue
+        modules.append(module.name)
+    return sorted(modules)
 
 
 class TestPackageSurface:
@@ -65,18 +77,34 @@ class TestStreamingSurface:
 
 
 class TestAgentSurface:
+    CORE_EXPORTS = {"Agent", "Tool", "ToolRegistry", "ToolValidationError", "ToolOutcome", "ToolResult"}
+
     def test_all_names_are_importable(self):
         agent = importlib.import_module("feishu.agent")
+        assert set(agent.__all__) == self.CORE_EXPORTS
         for name in agent.__all__:
             assert hasattr(agent, name), name
 
-    @pytest.mark.parametrize("name", ["Agent", "LlmBackend", "ToolRegistry", "register_agent"])
+    @pytest.mark.parametrize("name", sorted(CORE_EXPORTS))
     def test_core_name_exported(self, name):
         agent = importlib.import_module("feishu.agent")
         assert name in agent.__all__
 
-    @pytest.mark.parametrize("name", ["PaymentAccount", "PaymentAccountResolver", "list_my_payment_accounts"])
-    def test_payment_account_shortcut_exported(self, name):
+    @pytest.mark.parametrize(
+        "name",
+        ["LlmBackend", "register_agent", "PaymentAccount", "PaymentAccountResolver", "list_my_payment_accounts"],
+    )
+    def test_non_core_agent_names_are_not_reexported(self, name):
         agent = importlib.import_module("feishu.agent")
-        assert name in agent.__all__
-        assert hasattr(agent, name)
+        assert name not in agent.__all__
+        assert not hasattr(agent, name)
+
+    @pytest.mark.parametrize("module_name", _agent_public_modules())
+    def test_public_agent_submodules_declare_all(self, module_name):
+        module = importlib.import_module(module_name)
+
+        assert hasattr(module, "__all__"), module_name
+        assert module.__all__, module_name
+        for name in module.__all__:
+            assert not name.startswith("_"), f"{module_name} exports private name {name!r}"
+            assert hasattr(module, name), f"{module_name}.__all__ contains missing name {name!r}"

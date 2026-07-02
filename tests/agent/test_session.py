@@ -5,9 +5,12 @@ import pytest
 from feishu.agent.llm import Message, TextPart
 from feishu.agent.session import (
     InMemoryPendingApprovalStore,
+    InMemoryPendingAuthorizationStore,
     InMemorySessionStore,
     PendingApproval,
     PendingApprovalStore,
+    PendingAuthorization,
+    PendingAuthorizationStore,
     SessionStore,
 )
 
@@ -21,6 +24,7 @@ def msg(text, role="user"):
     [
         (InMemorySessionStore, SessionStore),
         (InMemoryPendingApprovalStore, PendingApprovalStore),
+        (InMemoryPendingAuthorizationStore, PendingAuthorizationStore),
     ],
 )
 def test_satisfies_protocol(impl, proto):
@@ -82,3 +86,34 @@ class TestPendingApprovalStore:
 
     async def test_pop_unknown_is_none(self, store):
         assert await store.pop("nope") is None
+
+
+class TestPendingAuthorizationStore:
+    @pytest.fixture
+    def store(self):
+        return InMemoryPendingAuthorizationStore()
+
+    async def test_put_pop_consumes_once(self, store):
+        pa = PendingAuthorization(
+            authorization_id="az_1",
+            session_id="s",
+            tool_call_id="c1",
+            tool_name="list_calendar_events",
+            arguments={},
+            scopes=("calendar:calendar",),
+        )
+        await store.put(pa)
+        assert await store.pop("az_1") == pa
+        assert await store.pop("az_1") is None
+
+    async def test_claim_consumes_once(self, store):
+        pa = PendingAuthorization(
+            authorization_id="az_1",
+            session_id="s",
+            tool_call_id="c1",
+            tool_name="list_calendar_events",
+            arguments={},
+        )
+        await store.put(pa)
+        assert (await store.claim("az_1")).value == "claimed"
+        assert (await store.claim("az_1")).value == "already_claimed"
