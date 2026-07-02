@@ -413,7 +413,6 @@ def cancel_approval_instance(
     *,
     description: str,
     name: str = "cancel_approval_instance",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = False,  # approval instance/task API is tenant-token-only; canceller forced below
     auth_scopes: Sequence[str] = (),
@@ -429,7 +428,6 @@ def cancel_approval_instance(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"cancel_approval_instance"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需用户二次确认。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `False`——审批实例 / 任务接口仅接受租户令牌（用户令牌会返回
             99991668）；操作主体仍强制为请求用户本人，零信任不受影响。
@@ -493,7 +491,6 @@ def get_approval_status(
     *,
     description: str,
     name: str = "get_approval_status",
-    locale: str = "zh-CN",
     as_user: bool = False,  # GET approval instance is tenant-token-only (user token → 99991668)
     auth_scopes: Sequence[str] = (),
 ) -> Tool:
@@ -512,7 +509,6 @@ def get_approval_status(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"get_approval_status"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `False`——查询审批实例接口仅接受租户令牌（用户令牌会返回
             99991668）；返回前按参与者校验，仅发起人 / 审批人本人可见，零信任不受影响。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -567,7 +563,6 @@ def approve_approval_task(
     *,
     description: str,
     name: str = "approve_approval_task",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = False,  # tasks/approve is tenant-token-only; approver forced to requesting user below
     auth_scopes: Sequence[str] = (),
@@ -583,7 +578,6 @@ def approve_approval_task(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"approve_approval_task"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需用户二次确认。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `False`——审批实例 / 任务接口仅接受租户令牌（用户令牌会返回
             99991668）；操作主体仍强制为请求用户本人，零信任不受影响。
@@ -647,7 +641,6 @@ def reject_approval_task(
     *,
     description: str,
     name: str = "reject_approval_task",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = False,  # tasks/reject is tenant-token-only; rejecter forced to requesting user below
     auth_scopes: Sequence[str] = (),
@@ -663,7 +656,6 @@ def reject_approval_task(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"reject_approval_task"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需用户二次确认。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `False`——审批实例 / 任务接口仅接受租户令牌（用户令牌会返回
             99991668）；操作主体仍强制为请求用户本人，零信任不受影响。
@@ -727,7 +719,6 @@ def list_my_pending_approvals(
     *,
     description: str,
     name: str = "list_my_pending_approvals",
-    locale: str = "zh-CN",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
 ) -> Tool:
@@ -772,7 +763,6 @@ def list_my_payment_accounts(
     *,
     description: str,
     name: str = "list_my_payment_accounts",
-    locale: str = "zh-CN",
 ) -> Tool:
     r"""
     读类工厂：列出请求用户本人的收款账户（脱敏标签 + 不可逆句柄），返回一个 [feishu.agent.tools.Tool][]。
@@ -785,7 +775,6 @@ def list_my_payment_accounts(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"list_my_payment_accounts"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
 
     Returns:
         可注册到 [feishu.agent.tools.ToolRegistry][] 的 [feishu.agent.tools.Tool][]。
@@ -814,3 +803,16 @@ def list_my_payment_accounts(
         return ToolResult(ToolOutcome.COMPLETED, content=[account.summary() for account in accounts])
 
     return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+
+
+__all__ = [
+    "approve_approval_task",
+    "cancel_approval_instance",
+    "create_approval_instance",
+    "get_approval_definition",
+    "get_approval_status",
+    "list_approval_definitions",
+    "list_my_payment_accounts",
+    "list_my_pending_approvals",
+    "reject_approval_task",
+]

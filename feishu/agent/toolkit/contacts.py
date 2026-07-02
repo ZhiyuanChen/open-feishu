@@ -38,7 +38,6 @@ def find_user(
     *,
     description: str,
     name: str = "find_user",
-    locale: str = "zh-CN",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
 ) -> Tool:
@@ -55,7 +54,6 @@ def find_user(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"find_user"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
 
@@ -98,3 +96,8 @@ def find_user(
         return ToolResult(ToolOutcome.COMPLETED, content=matches)
 
     return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+
+
+__all__ = [
+    "find_user",
+]

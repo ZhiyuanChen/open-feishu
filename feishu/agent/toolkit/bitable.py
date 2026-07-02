@@ -35,7 +35,6 @@ def create_bitable_record(
     *,
     description: str,
     name: str = "create_bitable_record",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -49,7 +48,6 @@ def create_bitable_record(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"create_bitable_record"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需要审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -101,7 +99,6 @@ def update_bitable_record(
     *,
     description: str,
     name: str = "update_bitable_record",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -115,7 +112,6 @@ def update_bitable_record(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"update_bitable_record"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需要审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -169,7 +165,6 @@ def delete_bitable_record(
     *,
     description: str,
     name: str = "delete_bitable_record",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -183,7 +178,6 @@ def delete_bitable_record(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"delete_bitable_record"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需要审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -232,7 +226,6 @@ def list_bitable_records(
     *,
     description: str,
     name: str = "list_bitable_records",
-    locale: str = "zh-CN",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
 ) -> Tool:
@@ -245,7 +238,6 @@ def list_bitable_records(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"list_bitable_records"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
 
@@ -284,3 +276,11 @@ def list_bitable_records(
         return ToolResult(ToolOutcome.COMPLETED, content=result)
 
     return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+
+
+__all__ = [
+    "create_bitable_record",
+    "delete_bitable_record",
+    "list_bitable_records",
+    "update_bitable_record",
+]

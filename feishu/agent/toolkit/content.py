@@ -46,7 +46,6 @@ def create_document(
     *,
     description: str,
     name: str = "create_document",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -60,7 +59,6 @@ def create_document(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"create_document"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需用户审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -107,7 +105,6 @@ def append_to_document(
     *,
     description: str,
     name: str = "append_to_document",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -123,7 +120,6 @@ def append_to_document(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"append_to_document"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需用户审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -180,7 +176,6 @@ def list_document_blocks(
     *,
     description: str,
     name: str = "list_document_blocks",
-    locale: str = "zh-CN",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
 ) -> Tool:
@@ -193,7 +188,6 @@ def list_document_blocks(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"list_document_blocks"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
 
@@ -230,7 +224,6 @@ def update_document(
     *,
     description: str,
     name: str = "update_document",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -246,7 +239,6 @@ def update_document(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"update_document"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需用户审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -292,7 +284,6 @@ def delete_document(
     *,
     description: str,
     name: str = "delete_document",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -306,7 +297,6 @@ def delete_document(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"delete_document"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需用户审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份删除。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -346,7 +336,6 @@ def append_to_sheet(
     *,
     description: str,
     name: str = "append_to_sheet",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -362,7 +351,6 @@ def append_to_sheet(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"append_to_sheet"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需用户审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -415,7 +403,6 @@ def update_sheet_range(
     *,
     description: str,
     name: str = "update_sheet_range",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -430,7 +417,6 @@ def update_sheet_range(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"update_sheet_range"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需用户审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份写入。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -483,7 +469,6 @@ def delete_sheet_rows(
     *,
     description: str,
     name: str = "delete_sheet_rows",
-    locale: str = "zh-CN",
     requires_approval: bool = True,
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
@@ -499,7 +484,6 @@ def delete_sheet_rows(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"delete_sheet_rows"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         requires_approval: 是否需用户审批后执行。默认为 `True`。
         as_user: 是否以请求用户身份删除。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
@@ -554,7 +538,6 @@ def read_sheet_range(
     *,
     description: str,
     name: str = "read_sheet_range",
-    locale: str = "zh-CN",
     as_user: bool = True,
     auth_scopes: Sequence[str] = (),
 ) -> Tool:
@@ -568,7 +551,6 @@ def read_sheet_range(
     Args:
         description: 工具描述（产品本地化文案）。
         name: 工具名。默认为 `"read_sheet_range"`。
-        locale: 本地化标识。默认为 `"zh-CN"`。
         as_user: 是否以请求用户身份读取。默认为 `True`。
         auth_scopes: 缺少授权时申请的飞书权限范围。
 
@@ -607,3 +589,16 @@ def read_sheet_range(
         return ToolResult(ToolOutcome.COMPLETED, content=result)
 
     return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+
+
+__all__ = [
+    "append_to_document",
+    "append_to_sheet",
+    "create_document",
+    "delete_document",
+    "delete_sheet_rows",
+    "list_document_blocks",
+    "read_sheet_range",
+    "update_document",
+    "update_sheet_range",
+]
