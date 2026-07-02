@@ -58,6 +58,9 @@ optional-dependencies.attachments = [
   "python-docx",
   "python-pptx",
 ]
+optional-dependencies.gateway = [
+  "uvicorn",
+]
 optional-dependencies.mcp = [
   "mcp",
   "pymupdf",
