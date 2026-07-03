@@ -25,7 +25,8 @@ r"""
 [feishu.attachments.extractor.AttachmentExtractor][] 抽象「字节 -> [feishu.attachments.extractor.ExtractedContent][]」，
 默认实现 [feishu.attachments.extractor.SandboxedAttachmentExtractor][] 在一个可被 SIGKILL 终止的子进程中运行
 提取，并施加体积、像素、ZIP（防 zip bomb）、页数、字符等上限，从而即便面对恶意构造的文件也不会拖垮或撑爆进程。
-抽取结果是中性的（文本 + 图片 + 元信息，措辞为英文），不含任何产品提示词；产品侧再用
+抽取结果是中性的（文本 + 图片 + 元信息，措辞为英文），不含任何产品提示词；产品侧可以使用
+[feishu.attachments.analysis.analyze_attachment][] 的默认提示词，也可以直接用
 [feishu.attachments.extractor.to_openai_content_parts][] 配上自己的分析提示词构造模型输入。
 
 PDF / Office 解析依赖可选库（PyMuPDF、python-docx、openpyxl、python-pptx、Pillow），按需惰性导入；缺失时对应

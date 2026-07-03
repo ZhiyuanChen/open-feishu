@@ -21,6 +21,12 @@
 
 from __future__ import annotations
 
+from .analysis import (
+    DEFAULT_ATTACHMENT_ANALYSIS_INSTRUCTION,
+    DEFAULT_ATTACHMENT_ANALYSIS_PROMPT,
+    analyze_attachment,
+    normalize_attachment_analysis,
+)
 from .extractor import (
     AttachmentExtractor,
     ExtractedContent,
@@ -40,6 +46,10 @@ __all__ = [
     "ExtractedContent",
     "ExtractedImage",
     "ExtractLimits",
+    "DEFAULT_ATTACHMENT_ANALYSIS_INSTRUCTION",
+    "DEFAULT_ATTACHMENT_ANALYSIS_PROMPT",
+    "analyze_attachment",
+    "normalize_attachment_analysis",
     "to_openai_content_parts",
     "detect_media_type",
     "media_type_from_metadata",
