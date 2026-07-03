@@ -132,7 +132,7 @@ def upload_shared_file_to_drive(
 
     字节经 `feishu.agent.toolkit._base.resolve_shared_file_bytes` 按请求用户取得后，以用户身份调用
     `client.drive.files.upload(file_name, parent_node, data, size=...)`。`requires_approval=True` 时由
-    [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后处理函数才执行上传。
+    [feishu.agent.loop.AgentEngine][] 先发审批卡片，用户批准后处理函数才执行上传。
 
     Examples:
         >>> tool = upload_shared_file_to_drive(description="上传到云盘")

@@ -27,7 +27,7 @@ r"""
 [feishu.auth.user_tokens.OAuthTokenStore][] 抽象按用户多别名（open_id/union_id/user_id）存取凭证，
 [feishu.auth.user_tokens.UserTokenProvider][] 据此解析并刷新凭证、产出用户态客户端（`client.as_user(token)`）。
 其 `as_user(user)` 正好契合 [feishu.agent.context.ToolContext][] 所需的提供方接口，可直接传给
-[feishu.agent.loop.Agent][] 的 `user_tokens` 参数。
+[feishu.agent.loop.AgentEngine][] 的 `user_tokens` 参数。
 """
 
 from __future__ import annotations
@@ -308,7 +308,7 @@ class UserTokenProvider:
     解析并按需刷新用户态凭证，产出用户态飞书客户端。
 
     `as_user(user)` 正是 [feishu.agent.context.ToolContext][] 所需的提供方接口：传给
-    [feishu.agent.loop.Agent][] 的 `user_tokens` 后，工具即可以请求用户的身份执行读写。访问令牌将在临近过期
+    [feishu.agent.loop.AgentEngine][] 的 `user_tokens` 后，工具即可以请求用户的身份执行读写。访问令牌将在临近过期
     （`refresh_skew_seconds`）时用一次性轮换的 `refresh_token` 刷新并整体覆盖保存。
 
     Args:

@@ -122,7 +122,7 @@ def create_calendar_event(
 
     处理函数解析日历（缺省取主日历），用 [feishu.calendar.calendar_event][] 构造事件体，再调用
     `client.calendar.events.create(calendar_id, event)`。`requires_approval=True` 时由
-    [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后才执行。
+    [feishu.agent.loop.AgentEngine][] 先发审批卡片，用户批准后才执行。
 
     Args:
         description: 工具描述（产品本地化文案）。
@@ -263,7 +263,7 @@ def update_calendar_event(
     处理函数解析日历（缺省取主日历），仅依据模型显式传入的字段构造**增量更新体**——未传入的字段保持
     不变——再调用 `client.calendar.events.update(calendar_id, event_id, event)`。时间字段经
     [feishu.calendar.calendar_time][] 归一化（与 [feishu.calendar.calendar_event][] 同形），`location`
-    以 `{"name": ...}` 写入。`requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，
+    以 `{"name": ...}` 写入。`requires_approval=True` 时由 [feishu.agent.loop.AgentEngine][] 先发审批卡片，
     用户批准后处理函数才执行写入。
 
     Args:
@@ -338,7 +338,7 @@ def cancel_calendar_event(
     写类工厂：取消（删除）已有日程，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
     处理函数解析日历（缺省取主日历），再调用 `client.calendar.events.delete(calendar_id, event_id)`。
-    `requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后处理函数才执行删除。
+    `requires_approval=True` 时由 [feishu.agent.loop.AgentEngine][] 先发审批卡片，用户批准后处理函数才执行删除。
 
     Args:
         description: 工具描述（产品本地化文案）。
@@ -393,7 +393,7 @@ def respond_to_invite(
     写类工厂：回复（RSVP）一个日程邀请——接受 / 待定 / 拒绝，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
     处理函数解析日历（缺省取主日历），调用 `client.calendar.events.reply(calendar_id, event_id, rsvp_status=...)`。
-    `requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后才执行；回复的始终是请求
+    `requires_approval=True` 时由 [feishu.agent.loop.AgentEngine][] 先发审批卡片，用户批准后才执行；回复的始终是请求
     用户本人的日历邀请（按用户身份与主日历解析）。
 
     Args:

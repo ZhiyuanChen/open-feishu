@@ -28,7 +28,7 @@ r"""
 [feishu.agent.context.current_tool_context][] 读取按轮上下文以拿到（用户态）飞书客户端，机器人只要
 「选择 + 覆盖文案」即可注册。
 
-审批语义：把 `requires_approval=True` 的工具交给 [feishu.agent.loop.Agent][] 后，模型发起调用会先挂起并发出
+审批语义：把 `requires_approval=True` 的工具交给 [feishu.agent.loop.AgentEngine][] 后，模型发起调用会先挂起并发出
 审批卡片；用户批准后处理函数才真正执行——故写类工具的处理函数直接执行写操作，提议由 `requires_approval` 驱动。
 """
 

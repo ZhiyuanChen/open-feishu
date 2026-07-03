@@ -50,13 +50,8 @@ from feishu.agent.llm import (
     ToolResultPart,
     ToolUsePart,
 )
-from feishu.agent.loop import (
-    Agent,
-    StreamResult,
-    accumulate_stream,
-    session_id_for,
-    user_message_from_event,
-)
+from feishu.agent.loop import AgentEngine as Agent
+from feishu.agent.loop import StreamResult, accumulate_stream, session_id_for, user_message_from_event
 from feishu.agent.persistence import SqlitePendingAuthorizationStore
 from feishu.agent.result import ToolOutcome, ToolResult
 from feishu.agent.session import (

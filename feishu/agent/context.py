@@ -22,7 +22,7 @@
 r"""
 工具的按轮上下文：让工具处理函数在不改变其参数签名的前提下访问飞书客户端与用户态客户端。
 
-[feishu.agent.loop.Agent][] 在处理每条消息 / 卡片回调前，把一个 [feishu.agent.context.ToolContext][] 设入一个
+[feishu.agent.loop.AgentEngine][] 在处理每条消息 / 卡片回调前，把一个 [feishu.agent.context.ToolContext][] 设入一个
 `contextvars.ContextVar`；工具处理函数（如 [feishu.agent.toolkit][] 中的工厂所产出者）经
 [feishu.agent.context.current_tool_context][] 读取它。`contextvars` 的值会随 `await` 在同一任务内保持，并被
 `asyncio.to_thread`（同步处理函数的执行方式）复制，因而读 / 写工具都能拿到正确的按轮上下文，而

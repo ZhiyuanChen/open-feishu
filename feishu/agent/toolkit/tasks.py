@@ -44,7 +44,7 @@ def create_task(
     r"""
     写类工厂：创建任务，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
-    `requires_approval=True` 时，[feishu.agent.loop.Agent][] 先挂起并发审批卡片；用户批准后处理函数才执行。
+    `requires_approval=True` 时，[feishu.agent.loop.AgentEngine][] 先挂起并发审批卡片；用户批准后处理函数才执行。
     处理函数以请求用户身份（`open_id`）调用飞书任务 v2 创建接口。
 
     Args:
@@ -115,7 +115,7 @@ def comment_on_task(
     r"""
     写类工厂：在任务上发表评论，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
-    `requires_approval=True` 时，[feishu.agent.loop.Agent][] 先挂起并发审批卡片；用户批准后处理函数才执行。
+    `requires_approval=True` 时，[feishu.agent.loop.AgentEngine][] 先挂起并发审批卡片；用户批准后处理函数才执行。
     处理函数以请求用户身份（`open_id`）调用飞书任务 v2 评论创建接口
     `client.task.comments.create(task_guid, content, user_id_type="open_id")`，其中 `task_guid` 即任务的
     `guid`（作为评论资源的 `resource_id`，`resource_type` 取默认值 `task`）。
@@ -180,7 +180,7 @@ def update_task(
     处理函数仅依据模型显式传入的字段构造**增量更新体**——未传入的字段保持不变——把新值收进 `task`、
     把待更新字段名收进 `update_fields`（与 [feishu.agent.toolkit.calendar.update_calendar_event][] 同形），
     再以请求用户身份（`open_id`）调用 `client.task.tasks.update(task_guid, task, update_fields, user_id_type="open_id")`。
-    `requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后处理函数才执行写入。
+    `requires_approval=True` 时由 [feishu.agent.loop.AgentEngine][] 先发审批卡片，用户批准后处理函数才执行写入。
 
     Args:
         description: 工具描述（产品本地化文案）。
@@ -246,7 +246,7 @@ def delete_task(
     写类工厂：删除已有任务，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
     处理函数以请求用户身份调用 `client.task.tasks.delete(task_guid)`。`requires_approval=True` 时由
-    [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后处理函数才执行删除。
+    [feishu.agent.loop.AgentEngine][] 先发审批卡片，用户批准后处理函数才执行删除。
 
     Args:
         description: 工具描述（产品本地化文案）。
@@ -301,7 +301,7 @@ def update_task_comment(
     写类工厂：编辑任务评论的内容，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
     处理函数以请求用户身份调用 `client.task.comments.update(comment_id, content)`，用新内容整体替换评论文本。
-    `requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后处理函数才执行写入。
+    `requires_approval=True` 时由 [feishu.agent.loop.AgentEngine][] 先发审批卡片，用户批准后处理函数才执行写入。
 
     Args:
         description: 工具描述（产品本地化文案）。
@@ -357,7 +357,7 @@ def delete_task_comment(
     写类工厂：删除任务评论，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
     处理函数以请求用户身份调用 `client.task.comments.delete(comment_id)`。`requires_approval=True` 时由
-    [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后处理函数才执行删除。
+    [feishu.agent.loop.AgentEngine][] 先发审批卡片，用户批准后处理函数才执行删除。
 
     Args:
         description: 工具描述（产品本地化文案）。

@@ -24,7 +24,7 @@ r"""
 
 这些类分别实现 [feishu.agent.session.SessionStore][]、[feishu.agent.session.PendingApprovalStore][]、
 [feishu.agent.approval.ExecutionResultStore][] 与 [feishu.agent.approval.AuditLog][] 协议，是内置 `InMemory*`
-实现的持久化对应物：把它们传给 [feishu.agent.loop.Agent][] 即可让会话与「人在环」审批在重启后继续。
+实现的持久化对应物：把它们传给 [feishu.agent.loop.AgentEngine][] 即可让会话与「人在环」审批在重启后继续。
 
 并发与异步：结构化存储以 SQLite（WAL 模式）落盘，各自持有独立连接；异步存储用 `asyncio.Lock` 串行化连接
 访问，同步存储用 `threading.Lock`。SQLite 本地操作通常为亚毫秒级，对机器人场景可接受；超大规模部署可按相同

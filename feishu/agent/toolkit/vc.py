@@ -47,7 +47,7 @@ def reserve_meeting(
 
     处理函数把会议主题写入 `meeting_settings`，将 ISO 到期时间经 [feishu.calendar.unix_seconds][] 转为接口所需的
     秒级时间戳字符串，再调用 `client.vc.reserves.apply(meeting_settings, end_time=..., owner_id=..., user_id_type="open_id")`。
-    预约成功后返回会议号与入会链接。`requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后
+    预约成功后返回会议号与入会链接。`requires_approval=True` 时由 [feishu.agent.loop.AgentEngine][] 先发审批卡片，用户批准后
     处理函数才执行预约。
 
     最小权限（zero-trust）：预约人始终是发起请求的用户本人，`owner_id` 取自
@@ -119,7 +119,7 @@ def update_reservation(
 
     处理函数仅把显式传入的字段写入请求：给出 `end_time` 时经 [feishu.calendar.unix_seconds][] 转为接口所需的秒级
     时间戳字符串；给出 `topic` 时写入 `meeting_settings`；并始终以 `user_id_type="open_id"` 调用
-    `client.vc.reserves.update(reserve_id, **kwargs)`。`requires_approval=True` 时由 [feishu.agent.loop.Agent][]
+    `client.vc.reserves.update(reserve_id, **kwargs)`。`requires_approval=True` 时由 [feishu.agent.loop.AgentEngine][]
     先发审批卡片，用户批准后处理函数才执行更新。
 
     Args:
@@ -181,7 +181,7 @@ def cancel_reservation(
     写类工厂：取消一场已预约的视频会议，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
     处理函数直接调用 `client.vc.reserves.delete(reserve_id)` 删除预约。`requires_approval=True` 时由
-    [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后处理函数才执行取消。
+    [feishu.agent.loop.AgentEngine][] 先发审批卡片，用户批准后处理函数才执行取消。
 
     Args:
         description: 工具描述（产品本地化文案）。

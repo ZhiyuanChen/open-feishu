@@ -214,7 +214,7 @@ def book_meeting_room(
 
     飞书没有独立的“订会议室”接口：预订会议室通过创建一条日程、再把会议室作为
     `type=resource` 的日程参与人加入完成。`requires_approval=True`
-    时，[feishu.agent.loop.Agent][] 先挂起并发审批卡片；用户批准后处理函数才执行写入。
+    时，[feishu.agent.loop.AgentEngine][] 先挂起并发审批卡片；用户批准后处理函数才执行写入。
 
     Args:
         description: 工具描述（产品本地化文案）。

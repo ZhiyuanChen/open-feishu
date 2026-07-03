@@ -37,7 +37,7 @@ class SessionStore(Protocol):
     r"""
     会话历史存储协议，是自定义持久化后端的扩展契约。
 
-    [feishu.agent.loop.Agent][] 通过该协议读写各会话的对话历史；内置实现为
+    [feishu.agent.loop.AgentEngine][] 通过该协议读写各会话的对话历史；内置实现为
     [feishu.agent.session.InMemorySessionStore][]，可自行实现该协议接入数据库等持久化后端。该协议标注了
     `runtime_checkable`，可用 `isinstance` 校验实现是否符合契约。
 
@@ -134,7 +134,7 @@ class PendingApproval:
     r"""
     一次挂起的工具审批，记录恢复对话所需的全部上下文。
 
-    当工具的 `requires_approval` 为 `True` 时，[feishu.agent.loop.Agent][] 会创建该记录并发送审批卡片；
+    当工具的 `requires_approval` 为 `True` 时，[feishu.agent.loop.AgentEngine][] 会创建该记录并发送审批卡片；
     用户在卡片上批准或拒绝后，依据其中保存的会话与工具调用信息恢复本轮对话。
 
     Examples:
@@ -174,7 +174,7 @@ class PendingAuthorization:
     r"""
     一次挂起的用户授权，记录 OAuth callback 后恢复原工具调用所需的上下文。
 
-    当工具返回 `NEEDS_USER_AUTH` 时，[feishu.agent.loop.Agent][] 会创建该记录、发送授权卡片并挂起本轮；
+    当工具返回 `NEEDS_USER_AUTH` 时，[feishu.agent.loop.AgentEngine][] 会创建该记录、发送授权卡片并挂起本轮；
     OAuth callback 完成并保存用户 token 后，产品调用 `Agent.resume_authorization`，依据其中保存的工具调用恢复对话。
     """
 
@@ -222,7 +222,7 @@ class PendingApprovalStore(Protocol):
     r"""
     挂起审批存储协议，是自定义审批持久化后端的扩展契约。
 
-    [feishu.agent.loop.Agent][] 通过该协议保存与取回挂起的 [feishu.agent.session.PendingApproval][]；
+    [feishu.agent.loop.AgentEngine][] 通过该协议保存与取回挂起的 [feishu.agent.session.PendingApproval][]；
     内置实现为 [feishu.agent.session.InMemoryPendingApprovalStore][]。该协议标注了 `runtime_checkable`，
     可用 `isinstance` 校验实现是否符合契约。
 
@@ -426,7 +426,7 @@ class PendingAuthorizationStore(Protocol):
     r"""
     挂起授权存储协议，是 OAuth 授权后自动恢复工具调用的扩展契约。
 
-    [feishu.agent.loop.Agent][] 通过该协议保存与取回挂起的 [feishu.agent.session.PendingAuthorization][]；
+    [feishu.agent.loop.AgentEngine][] 通过该协议保存与取回挂起的 [feishu.agent.session.PendingAuthorization][]；
     内置实现为 [feishu.agent.session.InMemoryPendingAuthorizationStore][]。
     """
 

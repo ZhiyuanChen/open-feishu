@@ -54,7 +54,7 @@ def create_document(
     写类工厂：在云空间中创建一篇空白文档，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
     处理函数调用 `client.docx.create(title, folder_token=...)`；`folder_token` 为空时创建在用户云空间根目录下。
-    `requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后处理函数才执行写入。
+    `requires_approval=True` 时由 [feishu.agent.loop.AgentEngine][] 先发审批卡片，用户批准后处理函数才执行写入。
 
     Args:
         description: 工具描述（产品本地化文案）。
@@ -114,7 +114,7 @@ def append_to_document(
 
     仅**追加**（与 [feishu.agent.toolkit.content.append_to_sheet][] 同名同义）：处理函数将 `text` 包装为单个
     文本段落块（`block_type` 为 `2`），调用 `client.docx.append_blocks(document_id, children)` 追加到文档根块
-    末尾，**不能修改 / 删除已有内容**。`requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，
+    末尾，**不能修改 / 删除已有内容**。`requires_approval=True` 时由 [feishu.agent.loop.AgentEngine][] 先发审批卡片，
     用户批准后处理函数才执行写入。
 
     Args:
@@ -234,7 +234,7 @@ def update_document(
     真正的「更新」（区别于 [feishu.agent.toolkit.content.append_to_document][] 的追加）：处理函数以新文本重建该
     块的文本元素，调用 `client.docx.patch_block(document_id, block_id, {"update_text_elements": ...})` 覆盖指定
     块（按 `block_id`）的全部文本。`block_id` 由 [feishu.agent.toolkit.content.list_document_blocks][] 获取；仅
-    适用于文本类块。`requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后才执行写入。
+    适用于文本类块。`requires_approval=True` 时由 [feishu.agent.loop.AgentEngine][] 先发审批卡片，用户批准后才执行写入。
 
     Args:
         description: 工具描述（产品本地化文案）。
@@ -292,7 +292,7 @@ def delete_document(
     写类工厂：将 docx 文档移入回收站，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
     处理函数调用 `client.drive.files.delete(document_id, type="docx")`；删除后文档进入回收站。
-    `requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后处理函数才执行删除。
+    `requires_approval=True` 时由 [feishu.agent.loop.AgentEngine][] 先发审批卡片，用户批准后处理函数才执行删除。
 
     Args:
         description: 工具描述（产品本地化文案）。
@@ -345,7 +345,7 @@ def append_to_sheet(
 
     处理函数调用 `client.sheets.append_range(spreadsheet_token, range, values)`；`range` 形如
     `<sheetId>!<起始位置>:<结束位置>`，`values` 为二维数组（外层为行、内层为列）。飞书会在 `range`
-    所在区域之后自动寻找空行并追加。`requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，
+    所在区域之后自动寻找空行并追加。`requires_approval=True` 时由 [feishu.agent.loop.AgentEngine][] 先发审批卡片，
     用户批准后处理函数才执行写入。
 
     Args:
@@ -412,7 +412,7 @@ def update_sheet_range(
 
     处理函数调用 `client.sheets.write_range(spreadsheet_token, range, values)`；`range` 形如
     `<sheetId>!<起始位置>:<结束位置>`，`values` 为二维数组（外层为行、内层为列）。该接口直接覆盖 `range`
-    区域的现有内容。`requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，用户批准后处理函数才执行写入。
+    区域的现有内容。`requires_approval=True` 时由 [feishu.agent.loop.AgentEngine][] 先发审批卡片，用户批准后处理函数才执行写入。
 
     Args:
         description: 工具描述（产品本地化文案）。
@@ -478,7 +478,7 @@ def delete_sheet_rows(
 
     处理函数调用 `client.sheets.delete_dimension(spreadsheet_token, sheet_id, major_dimension="ROWS",
     start_index=..., end_index=...)`。`start_index` 与 `end_index` 按飞书约定为 1 起始且首尾均包含（删除区间为
-    `[start_index, end_index]`）。`requires_approval=True` 时由 [feishu.agent.loop.Agent][] 先发审批卡片，
+    `[start_index, end_index]`）。`requires_approval=True` 时由 [feishu.agent.loop.AgentEngine][] 先发审批卡片，
     用户批准后处理函数才执行删除。
 
     Args:

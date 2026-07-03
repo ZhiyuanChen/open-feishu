@@ -27,12 +27,12 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..events.dispatcher import EventDispatcher
     from ..events.idempotency import SeenStore
-    from .loop import Agent
+    from .loop import AgentEngine
 
 
 def register_agent(
     dispatcher: EventDispatcher,
-    agent: Agent,
+    agent: AgentEngine,
     *,
     message_event: str = "im.message.receive_v1",
     card_event: str = "card.action.trigger",
@@ -40,13 +40,13 @@ def register_agent(
     r"""
     将智能体的消息处理与卡片回调挂载到事件分发器上。
 
-    把 [feishu.agent.loop.Agent.run][] 注册为消息事件的处理函数，把
-    [feishu.agent.loop.Agent.handle_card_action][] 注册为卡片回调事件的处理函数。`dispatcher` 须提供与
+    把 [feishu.agent.loop.AgentEngine.run][] 注册为消息事件的处理函数，把
+    [feishu.agent.loop.AgentEngine.handle_card_action][] 注册为卡片回调事件的处理函数。`dispatcher` 须提供与
     [feishu.events.dispatcher.EventDispatcher][] 一致的 `on(event_type)` 装饰器接口。
 
     Args:
         dispatcher: 事件分发器，须提供 `on(event_type)` 装饰器接口。
-        agent: 已构造的 [feishu.agent.loop.Agent][]。
+        agent: 已构造的 [feishu.agent.loop.AgentEngine][]。
         message_event: 消息事件类型。默认为 `im.message.receive_v1`。
         card_event: 卡片回调事件类型。默认为 `card.action.trigger`。
 
@@ -63,7 +63,7 @@ def register_agent(
 
 
 def create_agent_dispatcher(
-    agent: Agent,
+    agent: AgentEngine,
     *,
     seen_store: SeenStore | None = None,
     seen_path: str | Path | None = None,
@@ -74,12 +74,12 @@ def create_agent_dispatcher(
     创建 [feishu.events.dispatcher.EventDispatcher][] 并把 agent 绑定到消息与卡片事件上。
 
     Args:
-        agent: 接收消息与卡片事件的 [feishu.agent.loop.Agent][]。
+        agent: 接收消息与卡片事件的 [feishu.agent.loop.AgentEngine][]。
         seen_store: 事件幂等存储；为空时不去重，除非提供 `seen_path`。
         seen_path: 可选 JSON 文件路径，用于构造 [feishu.events.idempotency.FileSeenStore][]；
             适合单进程机器人在重启后继续去重。
-        message_event: 路由到 [feishu.agent.loop.Agent.run][] 的消息事件类型。
-        card_event: 路由到 [feishu.agent.loop.Agent.handle_card_action][] 的卡片回调事件类型。
+        message_event: 路由到 [feishu.agent.loop.AgentEngine.run][] 的消息事件类型。
+        card_event: 路由到 [feishu.agent.loop.AgentEngine.handle_card_action][] 的卡片回调事件类型。
 
     Returns:
         已完成 agent 事件绑定的 dispatcher。

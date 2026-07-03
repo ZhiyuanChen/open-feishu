@@ -52,7 +52,7 @@ class Tool:
     一个已注册的工具：名称、描述、参数 Schema、处理函数、是否需要审批，以及可预检的用户授权范围。
 
     `handler` 既可为同步函数也可为协程函数；同步函数在分发时会被放到工作线程中执行，避免阻塞事件循环。
-    当 `requires_approval` 为 `True` 时，[feishu.agent.loop.Agent][] 会先发送审批卡片并挂起本轮对话，
+    当 `requires_approval` 为 `True` 时，[feishu.agent.loop.AgentEngine][] 会先发送审批卡片并挂起本轮对话，
     待用户批准后再执行。
 
     Examples:

@@ -279,15 +279,15 @@ def user_message_from_event(event: Event) -> Message:
     return Message(role="user", content=[TextPart(text=text)])
 
 
-class Agent:
+class AgentEngine:
     r"""
-    智能体主循环：驱动大模型与工具协作，自动回复飞书消息。
+    智能体底层主循环：驱动大模型与工具协作，自动回复飞书消息。
 
     每收到一条消息，便载入会话历史、调用 [feishu.agent.llm.LlmBackend][] 流式生成响应，并由
     [feishu.agent.loop.accumulate_stream][] 归并结果。若模型请求调用工具，则经
     [feishu.agent.tools.ToolRegistry][] 分发执行，并将结果回传后继续下一轮，直至产出最终文本或触及
     `max_iterations` 上限。需要审批的工具会先发送审批卡片并挂起本轮，待用户在卡片上批准或拒绝后由
-    [feishu.agent.loop.Agent.handle_card_action][] 恢复。
+    [feishu.agent.loop.AgentEngine.handle_card_action][] 恢复。
 
     经 [feishu.agent.registration.register_agent][] 注册到事件分发器后，即可自动处理消息与卡片回调事件。
 
@@ -312,7 +312,7 @@ class Agent:
         user_tokens: 用户态 token 提供方（[feishu.auth][]），供工具以用户身份执行；为 `None` 时
             [feishu.agent.context.ToolContext.as_user][] 返回 `None`。
         authorize_url_builder: 产品注入的授权 URL 构造器，签名
-            `(user_mapping, scopes, pending_authorization=None) -> str | None`。SDK 工具缺少用户授权时会传入
+            `(user, scopes, pending_authorization=None) -> str | None`。SDK 工具缺少用户授权时会传入
             `PendingAuthorization`，产品可把其 `authorization_id` 签入 OAuth state，以便 callback 自动恢复。
         shared_files: 用户分享文件的解析器 [feishu.agent.shared_files.SharedFileResolver][]，是 `file_id` 句柄到
             字节的唯一入口；为 `None` 时相关工具不可用。
@@ -352,9 +352,10 @@ class Agent:
         [卡片回传交互](https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/card-callback-communication)
 
     Examples:
-        >>> from feishu.agent import Agent, ToolRegistry  # doctest:+SKIP
+        >>> from feishu.agent.loop import AgentEngine  # doctest:+SKIP
+        >>> from feishu.agent import ToolRegistry  # doctest:+SKIP
         >>> from feishu.agent.adapters.anthropic import AnthropicBackend  # doctest:+SKIP
-        >>> agent = Agent(  # doctest:+SKIP
+        >>> agent = AgentEngine(  # doctest:+SKIP
         ...     backend=AnthropicBackend(model="claude-sonnet-4-5"),
         ...     registry=ToolRegistry(),
         ...     client=client,
@@ -865,7 +866,7 @@ class Agent:
         为本轮挂起审批 / 未及运行的工具调用补占位工具结果，保证「每个 tool_use 都有对应 tool_result」恒成立。
 
         若用户始终不点确认卡，下一轮会把历史重新发给模型——缺了 tool_result 的 tool_use 会违反工具调用协议。
-        占位结果在恢复时由 `feishu.agent.loop.Agent._decide_and_resume` 用真实结果原地替换。
+        占位结果在恢复时由 `feishu.agent.loop.AgentEngine._decide_and_resume` 用真实结果原地替换。
         """
         await self._mark_awaiting_tool_results(session_id, history, tool_calls, _AWAITING_APPROVAL_NOTE)
 

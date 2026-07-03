@@ -252,7 +252,7 @@ class LlmBackend(Protocol):
     r"""
     大模型后端协议，是自定义模型后端的扩展契约。
 
-    实现该协议即可接入 [feishu.agent.loop.Agent][]；内置实现见 [feishu.agent.adapters.anthropic.AnthropicBackend][]
+    实现该协议即可接入 [feishu.agent.loop.AgentEngine][]；内置实现见 [feishu.agent.adapters.anthropic.AnthropicBackend][]
     与 [feishu.agent.adapters.openai.OpenAIBackend][]。`stream` 须返回逐个产出 [feishu.agent.llm.StreamChunk][]
     的异步迭代器。该协议标注了 `runtime_checkable`，可用 `isinstance` 校验实现是否符合契约。
 

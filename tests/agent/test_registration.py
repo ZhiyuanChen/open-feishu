@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from feishu.agent.loop import Agent
+from feishu.agent.loop import AgentEngine as Agent
 from feishu.agent.registration import create_agent_dispatcher, register_agent
 from feishu.agent.session import InMemoryPendingApprovalStore, InMemorySessionStore
 from feishu.agent.tools import ToolRegistry

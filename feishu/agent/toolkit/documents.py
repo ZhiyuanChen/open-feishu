@@ -22,7 +22,7 @@
 r"""文档工具工厂：搜索文档、读取文档正文、读取消息线程、读取会议记录（全部为读类）。
 
 各工厂返回的 [feishu.agent.tools.Tool][] 只负责「取数」——抓取并回传原始正文/转录文本，由
-[feishu.agent.loop.Agent][] 背后的模型在自己的回复里做总结。处理函数内绝不调用模型。
+[feishu.agent.loop.AgentEngine][] 背后的模型在自己的回复里做总结。处理函数内绝不调用模型。
 详见 [feishu.agent.toolkit][]。
 """
 

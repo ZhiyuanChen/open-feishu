@@ -22,13 +22,13 @@
 r"""
 人在环（human-in-the-loop）审批引擎：把「确认即执行」升级为「校验—认领—执行—记账」。
 
-[feishu.agent.approval.ApprovalEngine][] 是 [feishu.agent.loop.Agent][] 审批环节的可插拔策略对象。
+[feishu.agent.approval.ApprovalEngine][] 是 [feishu.agent.loop.AgentEngine][] 审批环节的可插拔策略对象。
 默认实现 [feishu.agent.approval.DefaultApprovalEngine][] 在执行被审批工具前依次完成：负载防篡改校验、
 幂等重放（同一请求重复确认只执行一次）、并发认领（防止重复执行）、执行后记账与审计，并在执行结果未知时
 冻结审批而非放任重试。所有面向用户的措辞均通过 `outcome_status` 注入，SDK 仅保留中性英文兜底，不内置任何
 产品文案。
 
-与 [feishu.agent.loop.Agent][] 的对接（集成步骤，非本模块职责）：
+与 [feishu.agent.loop.AgentEngine][] 的对接（集成步骤，非本模块职责）：
 
 - `_request_approval` 改为构造带 `payload_sha256` / `idempotency_key` / 归属信息的
   [feishu.agent.session.PendingApproval][]，调用 `await approval_engine.on_request(approval)`，并由可注入的
@@ -115,7 +115,7 @@ _DEFAULT_STATUS_TEXT: dict[str, str] = {
 @dataclass(slots=True)
 class ApprovalOutcome:
     r"""
-    审批决策的结构化结果，告知 [feishu.agent.loop.Agent][] 如何回传模型与更新卡片。
+    审批决策的结构化结果，告知 [feishu.agent.loop.AgentEngine][] 如何回传模型与更新卡片。
 
     `content` 是回传给模型的工具结果：`EXECUTED`/`REPLAYED` 时为真实执行结果，其余情形为一段状态说明文本。
     `is_error` 为 `True` 时模型据此调整后续行为；`status` 供产品侧映射卡片样式与展示措辞。若审批通过后工具发现
@@ -187,7 +187,7 @@ class AuditLog(Protocol):
 @runtime_checkable
 class ApprovalEngine(Protocol):
     r"""
-    审批引擎协议，是 [feishu.agent.loop.Agent][] 人在环环节的可插拔策略契约。
+    审批引擎协议，是 [feishu.agent.loop.AgentEngine][] 人在环环节的可插拔策略契约。
 
     `on_request` 在工具要求审批时被调用以持久化并准备审批；`on_decision` 在用户于卡片上做出决策后被调用，
     完成校验、执行与记账并返回 [feishu.agent.approval.ApprovalOutcome][]。内置实现为

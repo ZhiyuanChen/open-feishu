@@ -42,7 +42,7 @@ def create_bitable_record(
     r"""
     写类工厂：在指定数据表中新增一条记录，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
-    `requires_approval=True` 时，[feishu.agent.loop.Agent][] 先挂起并发审批卡片；用户批准后处理函数才执行，
+    `requires_approval=True` 时，[feishu.agent.loop.AgentEngine][] 先挂起并发审批卡片；用户批准后处理函数才执行，
     直接调用 `client.bitable.records.create(app_token, table_id, fields)` 完成写入。
 
     Args:
@@ -106,7 +106,7 @@ def update_bitable_record(
     r"""
     写类工厂：更新指定数据表中的一条记录，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
-    `requires_approval=True` 时，[feishu.agent.loop.Agent][] 先挂起并发审批卡片；用户批准后处理函数才执行，
+    `requires_approval=True` 时，[feishu.agent.loop.AgentEngine][] 先挂起并发审批卡片；用户批准后处理函数才执行，
     直接调用 `client.bitable.records.update(app_token, table_id, record_id, fields)` 完成写入。
 
     Args:
@@ -172,7 +172,7 @@ def delete_bitable_record(
     r"""
     写类工厂：删除指定数据表中的一条记录，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
-    `requires_approval=True` 时，[feishu.agent.loop.Agent][] 先挂起并发审批卡片；用户批准后处理函数才执行，
+    `requires_approval=True` 时，[feishu.agent.loop.AgentEngine][] 先挂起并发审批卡片；用户批准后处理函数才执行，
     直接调用 `client.bitable.records.delete(app_token, table_id, record_id)` 完成删除。
 
     Args:

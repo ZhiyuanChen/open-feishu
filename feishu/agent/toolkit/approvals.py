@@ -251,7 +251,7 @@ def create_approval_instance(
     r"""
     写类工厂：基于 `approval_code` 与模型构造的 `form` 创建审批实例，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
-    `requires_approval=True` 时，[feishu.agent.loop.Agent][] 先挂起并发审批卡片；用户批准后处理函数才执行写入。
+    `requires_approval=True` 时，[feishu.agent.loop.AgentEngine][] 先挂起并发审批卡片；用户批准后处理函数才执行写入。
     申请人身份**强制**为当前轮的请求用户（[feishu.agent.context.ToolContext.requesting_user][]），模型无法
     覆盖，以防越权代他人提交。`form` 接受 `widget_id -> value` 映射、完整控件载荷列表或已序列化的 JSON 串，
     由 [feishu.approval.approval_instance][] 归一化为 Feishu 审批实例载荷。
@@ -420,7 +420,7 @@ def cancel_approval_instance(
     r"""
     写类工厂：撤回一个审批实例，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
-    `requires_approval=True` 时，[feishu.agent.loop.Agent][] 先挂起并发审批卡片；用户批准后处理函数才执行写入，
+    `requires_approval=True` 时，[feishu.agent.loop.AgentEngine][] 先挂起并发审批卡片；用户批准后处理函数才执行写入，
     调用 `client.approval.instances.cancel(approval_code, instance_code, user_id, user_id_type=...)`。撤回人身份
     **强制**为当前轮的请求用户（[feishu.agent.context.ToolContext.requesting_user][]），模型无法覆盖——
     `instance_code` 标识的审批实例必须由该用户本人发起，以防越权代他人撤回。
@@ -570,7 +570,7 @@ def approve_approval_task(
     r"""
     写类工厂：同意一个审批任务，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
-    `requires_approval=True` 时，[feishu.agent.loop.Agent][] 先挂起并发审批卡片；用户批准后处理函数才执行写入，
+    `requires_approval=True` 时，[feishu.agent.loop.AgentEngine][] 先挂起并发审批卡片；用户批准后处理函数才执行写入，
     调用 `client.approval.tasks.approve(task)`。审批人身份**强制**为当前轮的请求用户
     （[feishu.agent.context.ToolContext.requesting_user][]），模型无法覆盖——`task_id` 标识的待办必须属于该用户本人，
     以防越权代他人审批。`comment` 为可选审批意见。
@@ -648,7 +648,7 @@ def reject_approval_task(
     r"""
     写类工厂：拒绝一个审批任务，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
-    `requires_approval=True` 时，[feishu.agent.loop.Agent][] 先挂起并发审批卡片；用户批准后处理函数才执行写入，
+    `requires_approval=True` 时，[feishu.agent.loop.AgentEngine][] 先挂起并发审批卡片；用户批准后处理函数才执行写入，
     调用 `client.approval.tasks.reject(task)`。审批人身份**强制**为当前轮的请求用户
     （[feishu.agent.context.ToolContext.requesting_user][]），模型无法覆盖——`task_id` 标识的待办必须属于该用户本人，
     以防越权代他人审批。`comment` 为可选审批意见。

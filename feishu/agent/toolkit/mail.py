@@ -674,7 +674,7 @@ def send_mail_message(
     r"""
     写类工厂：以当前用户身份发送一封邮件，返回一个需审批的 [feishu.agent.tools.Tool][]。
 
-    `requires_approval=True` 时，[feishu.agent.loop.Agent][] 会先发确认卡；用户批准后才执行发送。
+    `requires_approval=True` 时，[feishu.agent.loop.AgentEngine][] 会先发确认卡；用户批准后才执行发送。
 
     Args:
         description: 工具描述（产品本地化文案）。
