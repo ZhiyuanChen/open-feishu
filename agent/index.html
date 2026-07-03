@@ -33,7 +33,7 @@
         <link rel="prev" href="../signature/">
       
       
-        <link rel="next" href="approval/">
+        <link rel="next" href="app/">
       
       
         
@@ -1096,6 +1096,8 @@
       
         
       
+        
+      
     
     
     
@@ -1152,6 +1154,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    app
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1662,7 +1692,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_18" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_19" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1684,14 +1714,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_7_18" id="__nav_7_18_label" tabindex="">
+              <label class="md-nav__link " for="__nav_7_19" id="__nav_7_19_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_18_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_18">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_19_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_19">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1798,7 +1828,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_19" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_20" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1820,14 +1850,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_7_19" id="__nav_7_19_label" tabindex="">
+              <label class="md-nav__link " for="__nav_7_20" id="__nav_7_20_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_19_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_19">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_20_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_20">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1954,7 +1984,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_20" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7_21" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1976,14 +2006,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_7_20" id="__nav_7_20_label" tabindex="">
+              <label class="md-nav__link " for="__nav_7_21" id="__nav_7_21_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_20_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7_20">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_21_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_21">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2424,6 +2454,8 @@
       
         
       
+        
+      
     
     
     
@@ -2444,7 +2476,7 @@
   
   
   
-    <a href="../attachments/extractor/" class="md-nav__link">
+    <a href="../attachments/analysis/" class="md-nav__link">
       
   
   
@@ -3369,8 +3401,6 @@
       
         
       
-        
-      
     
     
     
@@ -3904,13 +3934,9 @@
     <div class="doc doc-contents first">
 
         <p>智能体运行时的核心入口。</p>
-<p><code>feishu.agent</code> 只导出高频核心原语：<code>Agent</code>、工具注册表、工具定义与工具结果。模型消息类型、审批引擎、
-持久化 store、OAuth、prompting、summarization、toolkit 工厂与 bundle 装配器都从各自概念模块导入，例如
-<code>feishu.agent.llm</code>、<code>feishu.agent.approval</code>、<code>feishu.agent.persistence</code>、<code>feishu.agent.toolkit.calendar</code> 与
-<code>feishu.agent.bundles</code>。</p>
-<p>SDK 的契约是 primitives-only：它提供可组合的运行时部件，不提供单一默认 <code>build_agent()</code>。产品应显式选择
-backend、store、approval engine、tool registry、OAuth 与 UI policy 后自行装配，这样授权、持久化、安全策略与
-产品体验不会被隐藏在一套默认配置里。</p>
+<p><code>Agent(config)</code> 是开箱即用的应用入口；需要手工装配或产品继承时，可使用底层
+<code>feishu.agent.loop.AgentEngine</code>。模型消息类型、审批引擎、持久化 store、OAuth、prompting、summarization、
+toolkit 工厂与 bundle 装配器仍从各自概念模块导入。</p>
 
 
 
@@ -3959,7 +3985,7 @@ backend、store、approval engine、tool registry、OAuth 与 UI policy 后自�
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月3日 17:49:35 UTC">2026-07-03 17:49:35</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月3日 18:37:36 UTC">2026-07-03 18:37:36</span>
   </span>
 
     
@@ -4062,13 +4088,13 @@ backend、store、approval engine、tool registry、OAuth 与 UI policy 后自�
         
         
           
-          <a href="approval/" class="md-footer__link md-footer__link--next" aria-label="下一页: approval">
+          <a href="app/" class="md-footer__link md-footer__link--next" aria-label="下一页: app">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一页
               </span>
               <div class="md-ellipsis">
-                approval
+                app
               </div>
             </div>
             <div class="md-footer__button md-icon">

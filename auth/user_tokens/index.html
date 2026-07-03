@@ -1094,6 +1094,8 @@
       
         
       
+        
+      
     
     
     
@@ -1114,7 +1116,7 @@
   
   
   
-    <a href="../../agent/approval/" class="md-nav__link">
+    <a href="../../agent/app/" class="md-nav__link">
       
   
   
@@ -1220,6 +1222,8 @@
       
         
       
+        
+      
     
     
     
@@ -1240,7 +1244,7 @@
   
   
   
-    <a href="../../attachments/extractor/" class="md-nav__link">
+    <a href="../../attachments/analysis/" class="md-nav__link">
       
   
   
@@ -2723,8 +2727,6 @@
       
         
       
-        
-      
     
     
     
@@ -3612,7 +3614,7 @@
   &lt;span class=&quot;doc doc-labels&quot;&gt;
       &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
   &lt;/span&gt;" href="../../agent/context/#feishu.agent.context.ToolContext">feishu.agent.context.ToolContext</a> 所需的提供方接口，可直接传给
-<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Agent&lt;/span&gt;" href="../../agent/loop/#feishu.agent.loop.Agent">feishu.agent.loop.Agent</a> 的 <code>user_tokens</code> 参数。</p>
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;AgentEngine&lt;/span&gt;" href="../../agent/loop/#feishu.agent.loop.AgentEngine">feishu.agent.loop.AgentEngine</a> 的 <code>user_tokens</code> 参数。</p>
 
 
 
@@ -4954,7 +4956,7 @@
   &lt;span class=&quot;doc doc-labels&quot;&gt;
       &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
   &lt;/span&gt;" href="../../agent/context/#feishu.agent.context.ToolContext">feishu.agent.context.ToolContext</a> 所需的提供方接口：传给
-<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;Agent&lt;/span&gt;" href="../../agent/loop/#feishu.agent.loop.Agent">feishu.agent.loop.Agent</a> 的 <code>user_tokens</code> 后，工具即可以请求用户的身份执行读写。访问令牌将在临近过期
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;AgentEngine&lt;/span&gt;" href="../../agent/loop/#feishu.agent.loop.AgentEngine">feishu.agent.loop.AgentEngine</a> 的 <code>user_tokens</code> 后，工具即可以请求用户的身份执行读写。访问令牌将在临近过期
 （<code>refresh_skew_seconds</code>）时用一次性轮换的 <code>refresh_token</code> 刷新并整体覆盖保存。</p>
 
 
@@ -5130,7 +5132,7 @@
 </span><span id="__span-0-308"><a id="__codelineno-0-308" name="__codelineno-0-308"></a><span class="sd">    解析并按需刷新用户态凭证，产出用户态飞书客户端。</span>
 </span><span id="__span-0-309"><a id="__codelineno-0-309" name="__codelineno-0-309"></a>
 </span><span id="__span-0-310"><a id="__codelineno-0-310" name="__codelineno-0-310"></a><span class="sd">    `as_user(user)` 正是 [feishu.agent.context.ToolContext][] 所需的提供方接口：传给</span>
-</span><span id="__span-0-311"><a id="__codelineno-0-311" name="__codelineno-0-311"></a><span class="sd">    [feishu.agent.loop.Agent][] 的 `user_tokens` 后，工具即可以请求用户的身份执行读写。访问令牌将在临近过期</span>
+</span><span id="__span-0-311"><a id="__codelineno-0-311" name="__codelineno-0-311"></a><span class="sd">    [feishu.agent.loop.AgentEngine][] 的 `user_tokens` 后，工具即可以请求用户的身份执行读写。访问令牌将在临近过期</span>
 </span><span id="__span-0-312"><a id="__codelineno-0-312" name="__codelineno-0-312"></a><span class="sd">    （`refresh_skew_seconds`）时用一次性轮换的 `refresh_token` 刷新并整体覆盖保存。</span>
 </span><span id="__span-0-313"><a id="__codelineno-0-313" name="__codelineno-0-313"></a>
 </span><span id="__span-0-314"><a id="__codelineno-0-314" name="__codelineno-0-314"></a><span class="sd">    Args:</span>
@@ -5533,7 +5535,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月3日 17:49:40 UTC">2026-07-03 17:49:40</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月3日 18:37:41 UTC">2026-07-03 18:37:41</span>
   </span>
 
     

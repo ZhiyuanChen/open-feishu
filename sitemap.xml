@@ -57,6 +57,10 @@
          <lastmod>2026-07-03</lastmod>
     </url>
     <url>
+         <loc>https://feishu.danling.org/agent/app/</loc>
+         <lastmod>2026-07-03</lastmod>
+    </url>
+    <url>
          <loc>https://feishu.danling.org/agent/approval/</loc>
          <lastmod>2026-07-03</lastmod>
     </url>
@@ -234,6 +238,10 @@
     </url>
     <url>
          <loc>https://feishu.danling.org/attachments/</loc>
+         <lastmod>2026-07-03</lastmod>
+    </url>
+    <url>
+         <loc>https://feishu.danling.org/attachments/analysis/</loc>
          <lastmod>2026-07-03</lastmod>
     </url>
     <url>
@@ -534,10 +542,6 @@
     </url>
     <url>
          <loc>https://feishu.danling.org/plugins/ops/</loc>
-         <lastmod>2026-07-03</lastmod>
-    </url>
-    <url>
-         <loc>https://feishu.danling.org/plugins/prometheus/</loc>
          <lastmod>2026-07-03</lastmod>
     </url>
     <url>
