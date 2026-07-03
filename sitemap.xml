@@ -529,11 +529,15 @@
          <lastmod>2026-07-03</lastmod>
     </url>
     <url>
-         <loc>https://feishu.danling.org/plugins/grafana/</loc>
+         <loc>https://feishu.danling.org/plugins/mlflow/</loc>
          <lastmod>2026-07-03</lastmod>
     </url>
     <url>
-         <loc>https://feishu.danling.org/plugins/mlflow/</loc>
+         <loc>https://feishu.danling.org/plugins/prometheus/</loc>
+         <lastmod>2026-07-03</lastmod>
+    </url>
+    <url>
+         <loc>https://feishu.danling.org/plugins/slurm/</loc>
          <lastmod>2026-07-03</lastmod>
     </url>
     <url>
