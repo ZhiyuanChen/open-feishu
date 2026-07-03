@@ -13,13 +13,13 @@ from feishu.agent.result import ToolOutcome
 from feishu.plugins import MLflowClient, SlurmRestdClient, register_bundled_plugins
 
 
-def test_bundled_plugins_are_registered_explicitly() -> None:
+def test_registry() -> None:
     names = register_bundled_plugins()
 
-    assert names == ("grafana", "mlflow", "slurm")
+    assert names == ("mlflow", "ops", "slurm")
     registry = build_tool_registry(names, BundleContext())
 
-    assert registry.get("normalize_grafana_alerts").name == "normalize_grafana_alerts"
+    assert registry.get("get_operational_health").name == "get_operational_health"
     assert registry.get("normalize_mlflow_run").name == "normalize_mlflow_run"
     assert registry.get("search_mlflow_experiments").name == "search_mlflow_experiments"
     assert registry.get("search_mlflow_runs").name == "search_mlflow_runs"
@@ -28,31 +28,6 @@ def test_bundled_plugins_are_registered_explicitly() -> None:
     assert registry.get("list_slurm_nodes").name == "list_slurm_nodes"
     assert registry.get("list_slurm_jobs").name == "list_slurm_jobs"
     assert registry.get("list_slurm_partitions").name == "list_slurm_partitions"
-
-
-def test_grafana_plugin_registers_alert_normalizer_tool() -> None:
-    register_bundled_plugins()
-    registry = build_tool_registry(["grafana"], BundleContext())
-    result = registry.get("normalize_grafana_alerts").handler(
-        {
-            "status": "firing",
-            "alerts": [
-                {
-                    "status": "firing",
-                    "labels": {"alertname": "HighGPUError", "cluster": "a800-1"},
-                    "annotations": {"summary": "GPU node unhealthy"},
-                    "generatorURL": "https://grafana.example/alert/1",
-                }
-            ],
-        }
-    )
-
-    assert isinstance(result, dict)
-    assert result["status"] == "firing"
-    assert result["alert_count"] == 1
-    assert result["alerts"][0]["title"] == "HighGPUError"
-    assert result["alerts"][0]["cluster"] == "a800-1"
-    assert result["alerts"][0]["url"] == "https://grafana.example/alert/1"
 
 
 def test_slurm_tools() -> None:
@@ -184,6 +159,37 @@ def test_slurm_api() -> None:
     assert down_nodes["nodes"] == [{"name": "gpu-2", "states": ["down", "drain"], "reason": "hardware"}]
     assert alice_jobs["jobs"][0]["job_id"] == 42
     assert partitions["partitions"] == [{"name": "gpu", "states": ["up"], "total_nodes": 2}]
+
+
+def test_ops_summary() -> None:
+    class _SlurmClient:
+        async def cluster_status(self, *, max_jobs: int = 20, max_unhealthy_nodes: int = 20):
+            return {"nodes": {"unhealthy": [{"name": "gpu-2"}]}, "jobs": {"items": []}}
+
+    async def run():
+        register_bundled_plugins()
+        registry = build_tool_registry(
+            ["ops"],
+            BundleContext(
+                extra={
+                    "ops": {},
+                    "slurm": {"client": _SlurmClient()},
+                }
+            ),
+        )
+        with use_tool_context(ToolContext(user={"user_id": "u_ops"})):
+            return await registry.dispatch(
+                "get_operational_health",
+                {"max_jobs": 3, "max_unhealthy_nodes": 2},
+            )
+
+    result = asyncio.run(run())
+
+    assert result.outcome is ToolOutcome.COMPLETED
+    assert result.content["status"] == "degraded"
+    assert result.content["issues"] == [
+        {"source": "slurm", "kind": "unhealthy_nodes", "count": 1},
+    ]
 
 
 def test_run_normalizer() -> None:

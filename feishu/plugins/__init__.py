@@ -23,13 +23,13 @@ from __future__ import annotations
 
 from feishu.agent.bundles import BUNDLES
 
-from .grafana import GrafanaBundle
 from .mlflow import MLflowBundle, MLflowClient
+from .ops import OpsBundle
 from .slurm import SlurmBundle, SlurmRestdClient
 
 _BUNDLED_PLUGIN_BUNDLES = {
-    "grafana": GrafanaBundle,
     "mlflow": MLflowBundle,
+    "ops": OpsBundle,
     "slurm": SlurmBundle,
 }
 
@@ -42,9 +42,9 @@ def register_bundled_plugins() -> tuple[str, ...]:
 
 
 __all__ = [
-    "GrafanaBundle",
     "MLflowBundle",
     "MLflowClient",
+    "OpsBundle",
     "SlurmBundle",
     "SlurmRestdClient",
     "register_bundled_plugins",
