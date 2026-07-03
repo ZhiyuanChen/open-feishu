@@ -166,12 +166,25 @@ async def request_authorization(
         return False
     auth_card_message_id = _message_id_from_response(response)
     if auth_card_message_id:
-        # Do not put the whole authorization again: in multi-worker deployments, the callback can claim this
-        # row right after the card is sent, and writing the stale object back would resurrect executing as
-        # awaiting. The in-memory store keeps this field by reference; durable stores can still resume safely,
-        # with only auth-card cleanup degraded.
-        authorization.extra = {**authorization.extra, "auth_card_message_id": auth_card_message_id}
+        await persist_authorization_card_message_id(agent, authorization, auth_card_message_id)
     return True
+
+
+async def persist_authorization_card_message_id(
+    agent: Any, authorization: PendingAuthorization, message_id: str
+) -> None:
+    r"""Persist the sent auth-card message id without rewriting stale authorization state."""
+    authorization.extra = {**authorization.extra, "auth_card_message_id": message_id}
+
+    def mutator(current: PendingAuthorization) -> tuple[None, PendingAuthorization]:
+        current.extra = {**current.extra, "auth_card_message_id": message_id}
+        return None, current
+
+    try:
+        await agent.authorizations.update(authorization.authorization_id, mutator)
+    except KeyError:
+        # The OAuth callback may already have claimed/resolved the row. The card id is best-effort UI cleanup.
+        logger.debug("authorization %s gone before auth-card id update", authorization.authorization_id)
 
 
 def build_authorize_url(
@@ -430,12 +443,3 @@ def _auto_close_response(message: str, *, title: str = "授权完成") -> Any:
 </body>
 </html>"""
     return HTMLResponse(html_body)
-
-
-__all__ = [
-    "AWAITING_AUTHORIZATION_PROGRESS_TEXT",
-    "AuthorizationResumeCallback",
-    "AuthorizeUrlBuilder",
-    "build_authorize_url_builder",
-    "oauth_callback_handler",
-]

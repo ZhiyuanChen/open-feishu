@@ -559,6 +559,59 @@ class TestAgentLoop:
         assert len(results) == 1
         assert results[0].content == "events result"
 
+    async def test_authorization_card_message_id_is_persisted_for_sqlite_store(self, tmp_path):
+        client = _LoopRecordingClient()
+        reg = ToolRegistry()
+        store = InMemorySessionStore()
+        authorizations = SqlitePendingAuthorizationStore(tmp_path / "auth.db")
+        calls = []
+
+        async def events():
+            calls.append("events")
+            if len(calls) > 1:
+                return "sent"
+            return ToolResult(
+                ToolOutcome.NEEDS_USER_AUTH,
+                content="user authorization required",
+                auth_scopes=("mail:user_mailbox.message:send",),
+                is_error=True,
+            )
+
+        reg.register("events", events, input_schema={"type": "object"}, description="events")
+        backend = FakeLlmBackend(
+            [
+                tool_turn(index=0, id="c1", name="events", arguments_json="{}"),
+                text_turn("sent"),
+            ]
+        )
+        seen_authorizations = []
+
+        def authorize_url_builder(user, scopes, authorization=None):
+            seen_authorizations.append(authorization.authorization_id)
+            return f"https://auth.example/authorize?state={authorization.authorization_id}"
+
+        agent = Agent(
+            backend=backend,
+            registry=reg,
+            store=store,
+            client=client,
+            authorizations=authorizations,
+            auth_card_builder=lambda url: {"url": url},
+            authorize_url_builder=authorize_url_builder,
+        )
+
+        await agent.run(_text_event("send mail", chat_id="oc_1", open_id="ou_tester"))
+
+        pending = await authorizations.get(seen_authorizations[0])
+        assert pending is not None
+        assert pending.extra["auth_card_message_id"] == "om_card_1"
+
+        status = await agent.resume_authorization(pending.authorization_id, user={"open_id": "ou_tester"})
+
+        assert status == "resumed"
+        assert calls == ["events", "events"]
+        assert client.recalled_messages == ["om_card_1"]
+
     async def test_auth_preflight_runs_before_approval_card(self):
         client = _LoopRecordingClient()
         reg = ToolRegistry()

@@ -455,6 +455,13 @@ class PendingAuthorizationStore(Protocol):
         """
         ...
 
+    async def update(
+        self,
+        authorization_id: str,
+        mutator: Callable[[PendingAuthorization], tuple[T, PendingAuthorization]],
+    ) -> T:
+        r"""以 compare-and-swap 方式原子更新一次授权：`mutator(旧值)` 返回 `(返回值, 新值)`。"""
+
 
 class InMemoryPendingAuthorizationStore:
     r"""基于内存的 [feishu.agent.session.PendingAuthorizationStore][] 实现。"""
@@ -504,15 +511,16 @@ class InMemoryPendingAuthorizationStore:
                 return
             self._store.pop(authorization_id, None)
 
-
-__all__ = [
-    "ClaimResult",
-    "InMemoryPendingApprovalStore",
-    "InMemoryPendingAuthorizationStore",
-    "InMemorySessionStore",
-    "PendingApproval",
-    "PendingApprovalStore",
-    "PendingAuthorization",
-    "PendingAuthorizationStore",
-    "SessionStore",
-]
+    async def update(
+        self,
+        authorization_id: str,
+        mutator: Callable[[PendingAuthorization], tuple[T, PendingAuthorization]],
+    ) -> T:
+        r"""以 compare-and-swap 方式原子更新一次授权。"""
+        async with self._lock:
+            authorization = self._store.get(authorization_id)
+            if authorization is None:
+                raise KeyError(authorization_id)
+            value, updated = mutator(authorization)
+            self._store[authorization_id] = updated
+            return value

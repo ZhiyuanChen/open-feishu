@@ -531,6 +531,30 @@ class SqlitePendingAuthorizationStore:
                 self._db.execute("DELETE FROM authorizations WHERE authorization_id = ?", (authorization_id,))
             self._db.commit()
 
+    async def update(
+        self,
+        authorization_id: str,
+        mutator: Callable[[PendingAuthorization], tuple[T, PendingAuthorization]],
+    ) -> T:
+        r"""以 compare-and-swap 方式原子更新一次授权：`mutator(旧值)` 返回 `(返回值, 新值)`。"""
+        async with self._lock:
+            authorization = self._load_locked(authorization_id)
+            if authorization is None:
+                raise KeyError(authorization_id)
+            value, updated = mutator(authorization)
+            created_at = updated.created_at if updated.created_at is not None else _now()
+            self._db.execute(
+                "UPDATE authorizations SET state = ?, created_at = ?, data = ? WHERE authorization_id = ?",
+                (
+                    updated.state,
+                    created_at,
+                    json.dumps(authorization_to_dict(updated), ensure_ascii=False),
+                    authorization_id,
+                ),
+            )
+            self._db.commit()
+            return value
+
     async def purge_expired(self) -> int:
         r"""删除所有已过期的授权记录，返回删除数量。"""
         now = _now()
@@ -676,18 +700,3 @@ class JsonlAuditLog:
             fd = os.open(self._path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
             with os.fdopen(fd, "a", encoding="utf-8") as handle:
                 handle.write(line + "\n")
-
-
-__all__ = [
-    "JsonlAuditLog",
-    "SqliteExecutionResultStore",
-    "SqlitePendingApprovalStore",
-    "SqlitePendingAuthorizationStore",
-    "SqliteSessionStore",
-    "approval_from_dict",
-    "approval_to_dict",
-    "authorization_from_dict",
-    "authorization_to_dict",
-    "message_from_dict",
-    "message_to_dict",
-]
