@@ -47,6 +47,8 @@ _ENDPOINT_PATH = "/callback/ws/endpoint"
 # dispatch first, then ACK. Other events, especially `im.message.receive_v1`, ACK immediately and dispatch in
 # the background; otherwise slow handlers trigger Feishu's at-least-once redelivery and duplicate replies.
 _SYNC_ACK_EVENT_TYPES = frozenset({"card.action.trigger"})
+_CARD_ACK_TIMEOUT_SECONDS = 1.5
+_CARD_ACK_TIMEOUT_RESULT = {"toast": {"type": "info", "content": "处理中…"}}
 
 # Maximum number of incomplete messages held in the fragment reassembly buffer. Drop the oldest partial
 # message when exceeded so a missing upstream fragment cannot grow memory without bound.
@@ -129,6 +131,7 @@ class WsClient:
         connect: Connect | None = None,
         sleep: Callable[[float], Awaitable[Any]] | None = None,
         max_partial_messages: int = _MAX_PARTIAL_MESSAGES,
+        card_ack_timeout: float | None = _CARD_ACK_TIMEOUT_SECONDS,
     ) -> None:
         if not app_id:
             raise ValueError("app_id must not be empty")
@@ -136,6 +139,8 @@ class WsClient:
             raise ValueError("app_secret must not be empty")
         if max_partial_messages < 1:
             raise ValueError("max_partial_messages must be positive")
+        if card_ack_timeout is not None and card_ack_timeout <= 0:
+            raise ValueError("card_ack_timeout must be positive or None")
         self._app_id = app_id
         self._app_secret = app_secret
         self._dispatcher = dispatcher
@@ -146,6 +151,7 @@ class WsClient:
         self._connect: Connect = connect or _default_connect
         self._sleep = sleep or asyncio.sleep
         self._max_partial_messages = max_partial_messages
+        self._card_ack_timeout = card_ack_timeout
 
         # Populated after the handshake: service frame field comes from the wss URL's service_id query param.
         self._service_id = 0
@@ -331,14 +337,29 @@ class WsClient:
             event = Event.from_payload(json.loads(payload.decode("utf-8")))
             if event.event_type in _SYNC_ACK_EVENT_TYPES:
                 # Card actions: the ACK carries the toast / updated card, so dispatch first.
-                result = await self._dispatcher.dispatch(event)
+                result, pending_dispatch = await self._dispatch_card_action_for_ack(event)
                 await self._send_frame(websocket, _build_ack(frame, result), send_lock)
+                if pending_dispatch is not None:
+                    await pending_dispatch
             else:
                 # ACK immediately so the broker can't redeliver while a slow handler runs, then dispatch.
                 await self._send_frame(websocket, _build_ack(frame, None), send_lock)
                 await self._dispatcher.dispatch(event)
         except Exception:  # noqa: BLE001 - a per-message task failure must be logged, not silently dropped
             self.logger.exception("ws ack/dispatch failed for frame seq_id=%s", frame.seq_id)
+
+    async def _dispatch_card_action_for_ack(
+        self, event: Event
+    ) -> tuple[dict[str, Any] | None, asyncio.Task[dict | None] | None]:
+        r"""Dispatch a card action, but do not let a slow handler delay the Feishu ACK indefinitely."""
+        task = asyncio.ensure_future(self._dispatcher.dispatch(event))
+        if self._card_ack_timeout is None:
+            return await task, None
+        try:
+            result = await asyncio.wait_for(asyncio.shield(task), timeout=self._card_ack_timeout)
+            return result, None
+        except asyncio.TimeoutError:
+            return _CARD_ACK_TIMEOUT_RESULT, task
 
     async def start(self) -> None:
         r"""
