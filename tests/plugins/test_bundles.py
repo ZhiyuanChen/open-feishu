@@ -10,13 +10,13 @@ import httpx
 from feishu.agent.bundles import BundleContext, build_tool_registry
 from feishu.agent.context import ToolContext, use_tool_context
 from feishu.agent.result import ToolOutcome
-from feishu.plugins import MLflowClient, register_bundled_plugins
+from feishu.plugins import MLflowClient, SlurmRestdClient, register_bundled_plugins
 
 
 def test_bundled_plugins_are_registered_explicitly() -> None:
     names = register_bundled_plugins()
 
-    assert names == ("grafana", "mlflow")
+    assert names == ("grafana", "mlflow", "slurm")
     registry = build_tool_registry(names, BundleContext())
 
     assert registry.get("normalize_grafana_alerts").name == "normalize_grafana_alerts"
@@ -24,6 +24,10 @@ def test_bundled_plugins_are_registered_explicitly() -> None:
     assert registry.get("search_mlflow_experiments").name == "search_mlflow_experiments"
     assert registry.get("search_mlflow_runs").name == "search_mlflow_runs"
     assert registry.get("get_mlflow_run").name == "get_mlflow_run"
+    assert registry.get("get_slurm_cluster_status").name == "get_slurm_cluster_status"
+    assert registry.get("list_slurm_nodes").name == "list_slurm_nodes"
+    assert registry.get("list_slurm_jobs").name == "list_slurm_jobs"
+    assert registry.get("list_slurm_partitions").name == "list_slurm_partitions"
 
 
 def test_grafana_plugin_registers_alert_normalizer_tool() -> None:
@@ -49,6 +53,137 @@ def test_grafana_plugin_registers_alert_normalizer_tool() -> None:
     assert result["alerts"][0]["title"] == "HighGPUError"
     assert result["alerts"][0]["cluster"] == "a800-1"
     assert result["alerts"][0]["url"] == "https://grafana.example/alert/1"
+
+
+def test_slurm_tools() -> None:
+    class _SlurmClient:
+        def __init__(self) -> None:
+            self.calls: list[tuple[Any, ...]] = []
+
+        async def cluster_status(self, *, max_jobs: int = 20, max_unhealthy_nodes: int = 20):
+            self.calls.append(("cluster_status", max_jobs, max_unhealthy_nodes))
+            return {"nodes": {"count": 2}, "jobs": {"count": 1}}
+
+        async def nodes(self, *, state: str | None = None, max_results: int = 100):
+            self.calls.append(("nodes", state, max_results))
+            return {"nodes": [{"name": "gpu-1", "states": ["down"]}]}
+
+        async def jobs(self, *, state: str | None = None, user: str | None = None, max_results: int = 50):
+            self.calls.append(("jobs", state, user, max_results))
+            return {"jobs": [{"job_id": 42, "user": user, "states": [state]}]}
+
+        async def partitions(self, *, max_results: int = 50):
+            self.calls.append(("partitions", max_results))
+            return {"partitions": [{"name": "gpu"}]}
+
+    async def run():
+        client = _SlurmClient()
+        register_bundled_plugins()
+        registry = build_tool_registry(
+            ["slurm"],
+            BundleContext(
+                extra={
+                    "slurm": {"client": client},
+                }
+            ),
+        )
+        with use_tool_context(ToolContext(user={"user_id": "alice"})):
+            status = await registry.dispatch("get_slurm_cluster_status", {"max_jobs": 5, "max_unhealthy_nodes": 2})
+            nodes = await registry.dispatch("list_slurm_nodes", {"state": "down", "max_results": 1})
+            jobs = await registry.dispatch("list_slurm_jobs", {"state": "running", "user": "alice", "max_results": 1})
+            partitions = await registry.dispatch("list_slurm_partitions", {"max_results": 1})
+        return client, status, nodes, jobs, partitions
+
+    client, status, nodes, jobs, partitions = asyncio.run(run())
+
+    assert status.outcome is ToolOutcome.COMPLETED
+    assert status.content["nodes"]["count"] == 2
+    assert nodes.content["nodes"][0]["name"] == "gpu-1"
+    assert jobs.content["jobs"][0]["user"] == "alice"
+    assert partitions.content["partitions"][0]["name"] == "gpu"
+    assert client.calls == [
+        ("cluster_status", 5, 2),
+        ("nodes", "down", 1),
+        ("jobs", "running", "alice", 1),
+        ("partitions", 1),
+    ]
+
+
+def test_slurm_api() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.headers["x-slurm-user-name"] == "loki"
+        assert request.headers["x-slurm-user-token"] == "jwt-token"
+        if request.url.path == "/slurm/v0.0.45/ping/":
+            return httpx.Response(200, json={"pings": [{"hostname": "ctrl", "pinged": "UP"}]})
+        if request.url.path == "/slurm/v0.0.45/nodes/":
+            return httpx.Response(
+                200,
+                json={
+                    "nodes": [
+                        {
+                            "name": "gpu-1",
+                            "state": ["ALLOCATED"],
+                            "partitions": ["gpu"],
+                            "cpus": 128,
+                            "alloc_cpus": 64,
+                        },
+                        {"name": "gpu-2", "state": "DOWN+DRAIN", "reason": "hardware"},
+                    ]
+                },
+            )
+        if request.url.path == "/slurm/v0.0.45/partitions/":
+            return httpx.Response(200, json={"partitions": [{"name": "gpu", "state": ["UP"], "total_nodes": 2}]})
+        if request.url.path == "/slurm/v0.0.45/jobs/":
+            return httpx.Response(
+                200,
+                json={
+                    "jobs": [
+                        {
+                            "job_id": 42,
+                            "name": "train",
+                            "user_name": "alice",
+                            "job_state": ["RUNNING"],
+                            "partition": "gpu",
+                            "nodes": "gpu-1",
+                        },
+                        {"job_id": 43, "user_name": "bob", "job_state": ["PENDING"], "state_reason": "Priority"},
+                    ]
+                },
+            )
+        raise AssertionError(request.url.path)
+
+    async def run():
+        client = SlurmRestdClient(
+            "https://slurm.example",
+            user="loki",
+            token="jwt-token",
+            transport=httpx.MockTransport(handler),
+        )
+        status = await client.cluster_status(max_jobs=1, max_unhealthy_nodes=1)
+        down_nodes = await client.nodes(state="down")
+        alice_jobs = await client.jobs(state="running", user="alice")
+        partitions = await client.partitions()
+        return status, down_nodes, alice_jobs, partitions
+
+    status, down_nodes, alice_jobs, partitions = asyncio.run(run())
+
+    assert status["nodes"]["count"] == 2
+    assert status["nodes"]["by_state"] == {"allocated": 1, "down": 1, "drain": 1}
+    assert status["nodes"]["unhealthy"] == [{"name": "gpu-2", "states": ["down", "drain"], "reason": "hardware"}]
+    assert status["jobs"]["count"] == 2
+    assert status["jobs"]["items"] == [
+        {
+            "job_id": 42,
+            "name": "train",
+            "user": "alice",
+            "partition": "gpu",
+            "states": ["running"],
+            "nodes": "gpu-1",
+        }
+    ]
+    assert down_nodes["nodes"] == [{"name": "gpu-2", "states": ["down", "drain"], "reason": "hardware"}]
+    assert alice_jobs["jobs"][0]["job_id"] == 42
+    assert partitions["partitions"] == [{"name": "gpu", "states": ["up"], "total_nodes": 2}]
 
 
 def test_run_normalizer() -> None:
