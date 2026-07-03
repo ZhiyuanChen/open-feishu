@@ -24,7 +24,7 @@ from __future__ import annotations
 from feishu.agent.bundles import BUNDLES
 
 from .grafana import GrafanaBundle
-from .mlflow import MLflowBundle
+from .mlflow import MLflowBundle, MLflowClient
 
 _BUNDLED_PLUGIN_BUNDLES = {
     "grafana": GrafanaBundle,
@@ -39,4 +39,4 @@ def register_bundled_plugins() -> tuple[str, ...]:
     return tuple(_BUNDLED_PLUGIN_BUNDLES)
 
 
-__all__ = ["GrafanaBundle", "MLflowBundle", "register_bundled_plugins"]
+__all__ = ["GrafanaBundle", "MLflowBundle", "MLflowClient", "register_bundled_plugins"]
