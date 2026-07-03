@@ -1236,6 +1236,48 @@ class TestApprovalFlow:
         # the clicked card was patched in place with the decided card (buttons removed)
         assert client.patches and not _has_buttons(client.patches[-1][1])
 
+    async def test_approve_ack_does_not_wait_for_pending_lookup(self):
+        class BlockingGetApprovalStore(InMemoryPendingApprovalStore):
+            def __init__(self):
+                super().__init__()
+                self.started = asyncio.Event()
+                self.release = asyncio.Event()
+
+            async def get(self, approval_id: str):
+                self.started.set()
+                await self.release.wait()
+                return await super().get(approval_id)
+
+        client = _ApprovalRecordingClient()
+        store = InMemorySessionStore()
+        approvals = BlockingGetApprovalStore()
+        ran = []
+        agent, _ = _agent_with_deploy(client, store, approvals, ran)
+        await agent.run(_text_event("deploy prod", chat_id="oc_1"))
+        card, _ = client.cards[0]
+        approval_id = _extract_approval_id(card)
+        sha = _extract_payload_sha256(card)
+
+        task = asyncio.create_task(
+            agent.handle_card_action(
+                _action_event(
+                    approval_id,
+                    "approve",
+                    chat_id="oc_1",
+                    payload_sha256=sha,
+                )
+            )
+        )
+        response = await asyncio.wait_for(task, timeout=0.1)
+
+        assert response == {"toast": {"type": "info", "content": "处理中…"}}
+        assert ran == []
+        assert approvals.started.is_set()
+
+        approvals.release.set()
+        await _drain(agent)
+        assert ran == ["prod"]
+
     async def test_reject_skips_tool(self):
         client = _ApprovalRecordingClient()
         store = InMemorySessionStore()
@@ -1515,7 +1557,7 @@ class TestApprovalFlow:
             _action_event(approval_id, "approve", chat_id="oc_1", open_id="ou_bob")
         )
         await _drain(agent)
-        assert response["toast"]["type"] == "error"  # rejected: not Bob's to confirm
+        assert response["toast"] == {"type": "info", "content": "处理中…"}
         assert ran == []  # the write did NOT execute
 
     async def test_fail_closed_without_identity(self):

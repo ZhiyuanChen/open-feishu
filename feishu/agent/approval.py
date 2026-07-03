@@ -524,18 +524,33 @@ async def handle_card_action(agent: Any, event: Event) -> dict[str, Any]:
     decision = value.get("decision")
     if decision not in ("approve", "reject"):
         return {"toast": {"type": "info", "content": "无效的确认操作"}}
-    approval = await agent.approvals.get(approval_id)
-    if approval is None:
-        return {"toast": {"type": "info", "content": "没有待处理的确认请求"}}
-    clicker_keys = set(user_identity_keys(agent._tool_context(event).requesting_user()))
-    if not approval.owner_user_keys or not (clicker_keys & set(approval.owner_user_keys)):
-        return {"toast": {"type": "error", "content": "这不是你的确认请求"}}
 
     from ..cards.callback import parse_action
 
     card_message_id = parse_action(event).message_id
-    agent._spawn_background(decide_and_resume(agent, event, approval, decision, value, card_message_id))
+    agent._spawn_background(load_and_decide(agent, event, str(approval_id), decision, value, card_message_id))
     return {"toast": {"type": "info", "content": "处理中…"}}
+
+
+async def load_and_decide(
+    agent: Any,
+    event: Event,
+    approval_id: str,
+    decision: Literal["approve", "reject"],
+    value: dict[str, Any],
+    card_message_id: str | None,
+) -> None:
+    r"""在卡片回调完成 ACK 之后，于后台加载并校验对应的待处理确认请求。"""
+    try:
+        approval = await agent.approvals.get(approval_id)
+        if approval is None:
+            return
+        clicker_keys = set(user_identity_keys(agent._tool_context(event).requesting_user()))
+        if not approval.owner_user_keys or not (clicker_keys & set(approval.owner_user_keys)):
+            return
+        await decide_and_resume(agent, event, approval, decision, value, card_message_id)
+    except Exception:  # noqa: BLE001 - background preparation must not surface as an unhandled task error
+        logging.getLogger("feishu").exception("handle_card_action: error loading approval %s", approval_id)
 
 
 async def decide_and_resume(
