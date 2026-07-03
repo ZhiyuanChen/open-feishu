@@ -105,13 +105,6 @@ def reserve_meeting(
     )
 
 
-__all__ = [
-    "cancel_reservation",
-    "reserve_meeting",
-    "update_reservation",
-]
-
-
 def update_reservation(
     *,
     description: str,

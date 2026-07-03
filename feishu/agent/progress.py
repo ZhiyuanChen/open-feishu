@@ -340,10 +340,3 @@ def _fallback_status(snapshot: ProgressSnapshot, *, max_chars: int) -> str:
     else:
         status = "正在处理你的请求"
     return _clean_status(status, max_chars=max_chars) or "正在处理你的请求"
-
-
-__all__ = [
-    "PROGRESS_SUMMARY_INSTRUCTION",
-    "ProgressSnapshot",
-    "build_progress_summarizer",
-]

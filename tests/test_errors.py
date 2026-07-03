@@ -117,8 +117,7 @@ class TestExceptionAPI:
 class TestExceptionExports:
     """The catchable exception types are reachable from the package surface.
 
-    (Candidates to consolidate into ``test_public_api.py``; kept here so the
-    error-surface coverage is not lost in the meantime.)
+    Keep these assertions next to the error hierarchy they cover.
     """
 
     def test_signature_and_crypto_exported(self):

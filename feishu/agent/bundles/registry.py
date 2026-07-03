@@ -89,11 +89,3 @@ def build_tool_registry(
             raise TypeError(f"bundle {name!r} does not define register(registry, context)")
         register(target, bundle_context)
     return target
-
-
-__all__ = [
-    "BUNDLES",
-    "Bundle",
-    "BundleContext",
-    "build_tool_registry",
-]

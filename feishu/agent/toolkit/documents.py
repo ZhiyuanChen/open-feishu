@@ -338,11 +338,3 @@ async def _resolve_meeting(client: Any, arguments: dict[str, Any], *, timezone: 
     with_note = [item for item in meetings if meeting_note_reference_from_meeting(item)]
     chosen = with_note[0] if with_note else meetings[0]
     return dict(chosen) if isinstance(chosen, dict) else {}
-
-
-__all__ = [
-    "get_document_content",
-    "get_meeting_record",
-    "get_message_thread",
-    "search_documents",
-]

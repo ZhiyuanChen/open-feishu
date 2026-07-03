@@ -738,14 +738,3 @@ def send_mail_message(
         requires_approval=requires_approval,
         auth_scopes=tuple(auth_scopes),
     )
-
-
-__all__ = [
-    "list_mail_messages",
-    "search_mail_messages",
-    "get_mail_message",
-    "summarize_mail_message",
-    "summarize_mail_messages",
-    "list_mail_folders",
-    "send_mail_message",
-]

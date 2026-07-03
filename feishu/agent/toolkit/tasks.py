@@ -495,15 +495,3 @@ def list_task_comments(
         return ToolResult(ToolOutcome.COMPLETED, content=result)
 
     return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
-
-
-__all__ = [
-    "comment_on_task",
-    "create_task",
-    "delete_task",
-    "delete_task_comment",
-    "list_my_tasks",
-    "list_task_comments",
-    "update_task",
-    "update_task_comment",
-]

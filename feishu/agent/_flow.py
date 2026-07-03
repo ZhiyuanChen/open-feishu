@@ -98,16 +98,3 @@ def authorization_complete_card() -> dict[str, Any]:
     from ..cards.builder import Card
 
     return Card().header("授权已完成", template="green").markdown("授权已完成，我会回到原对话继续处理。").to_dict()
-
-
-__all__ = [
-    "AUTH_CARD_SENT_NOTE",
-    "AWAITING_APPROVAL_NOTE",
-    "AWAITING_AUTHORIZATION_NOTE",
-    "INTERRUPTED_TOOL_NOTE",
-    "authorization_card_message_id",
-    "authorization_complete_card",
-    "replace_tool_result",
-    "suspension_progress_note",
-    "tool_calls_after",
-]

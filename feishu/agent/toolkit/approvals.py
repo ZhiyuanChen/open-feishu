@@ -803,16 +803,3 @@ def list_my_payment_accounts(
         return ToolResult(ToolOutcome.COMPLETED, content=[account.summary() for account in accounts])
 
     return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
-
-
-__all__ = [
-    "approve_approval_task",
-    "cancel_approval_instance",
-    "create_approval_instance",
-    "get_approval_definition",
-    "get_approval_status",
-    "list_approval_definitions",
-    "list_my_payment_accounts",
-    "list_my_pending_approvals",
-    "reject_approval_task",
-]

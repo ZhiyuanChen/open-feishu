@@ -182,16 +182,6 @@ def create_calendar_event(
     )
 
 
-__all__ = [
-    "cancel_calendar_event",
-    "create_calendar_event",
-    "list_calendar_events",
-    "query_calendar_freebusy",
-    "respond_to_invite",
-    "update_calendar_event",
-]
-
-
 def query_calendar_freebusy(
     *,
     description: str,

@@ -608,15 +608,3 @@ def _connect(db_path: str | Path) -> sqlite3.Connection:
     from .._sqlite import connect
 
     return connect(db_path)
-
-
-__all__ = [
-    "SharedFile",
-    "SharedFileStore",
-    "InMemorySharedFileStore",
-    "SqliteSharedFileStore",
-    "SharedFileResolver",
-    "collect_shared_file_ids",
-    "shared_file_keys",
-    "shared_files_note",
-]

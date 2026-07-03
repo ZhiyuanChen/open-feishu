@@ -30,8 +30,6 @@ from .adapters.anthropic import _translate_events as _anthropic_translate
 from .adapters.openai import _translate_chunks as _openai_translate
 from .llm import ReasoningDelta, TextDelta
 
-__all__ = ["stream_text"]
-
 _SENTINEL = object()
 
 

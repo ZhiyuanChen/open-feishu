@@ -589,16 +589,3 @@ def read_sheet_range(
         return ToolResult(ToolOutcome.COMPLETED, content=result)
 
     return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
-
-
-__all__ = [
-    "append_to_document",
-    "append_to_sheet",
-    "create_document",
-    "delete_document",
-    "delete_sheet_rows",
-    "list_document_blocks",
-    "read_sheet_range",
-    "update_document",
-    "update_sheet_range",
-]

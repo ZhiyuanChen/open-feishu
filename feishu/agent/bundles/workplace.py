@@ -510,25 +510,3 @@ class FeishuWorkplaceBundle:
 
 
 BUNDLES.register(FeishuWorkplaceBundle, name="feishu.workplace", override=True)
-
-
-__all__ = [
-    "APPROVAL_SCOPES",
-    "BITABLE_SCOPES",
-    "BOARD_SCOPES",
-    "CALENDAR_READ_SCOPES",
-    "CALENDAR_SCOPES",
-    "CONTACT_SCOPES",
-    "DOC_READ_SCOPES",
-    "DOC_WRITE_SCOPES",
-    "DRIVE_SCOPES",
-    "FeishuWorkplaceBundle",
-    "MAIL_FOLDER_READ_SCOPES",
-    "MAIL_READ_SCOPES",
-    "MAIL_SEND_SCOPES",
-    "ROOM_SCOPES",
-    "SHEET_SCOPES",
-    "TASK_COMMENT_SCOPES",
-    "TASK_SCOPES",
-    "VC_SCOPES",
-]

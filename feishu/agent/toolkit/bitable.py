@@ -276,11 +276,3 @@ def list_bitable_records(
         return ToolResult(ToolOutcome.COMPLETED, content=result)
 
     return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
-
-
-__all__ = [
-    "create_bitable_record",
-    "delete_bitable_record",
-    "list_bitable_records",
-    "update_bitable_record",
-]

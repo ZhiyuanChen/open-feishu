@@ -293,11 +293,3 @@ async def _primary_calendar_id(client: Any) -> str:
         if isinstance(calendar, dict) and calendar.get("calendar_id"):
             return str(calendar["calendar_id"])
     raise ValueError("没有找到主日历")
-
-
-__all__ = [
-    "book_meeting_room",
-    "list_meeting_room_buildings",
-    "list_meeting_rooms",
-    "query_meeting_room_freebusy",
-]

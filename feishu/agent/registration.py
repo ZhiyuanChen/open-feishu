@@ -91,9 +91,3 @@ def create_agent_dispatcher(
     dispatcher = EventDispatcher(seen_store=resolved_seen_store)
     register_agent(dispatcher, agent, message_event=message_event, card_event=card_event)
     return dispatcher
-
-
-__all__ = [
-    "create_agent_dispatcher",
-    "register_agent",
-]

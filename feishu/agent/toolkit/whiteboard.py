@@ -75,8 +75,3 @@ def list_whiteboard_nodes(
         return ToolResult(ToolOutcome.COMPLETED, content=nodes)
 
     return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
-
-
-__all__ = [
-    "list_whiteboard_nodes",
-]

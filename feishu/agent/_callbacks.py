@@ -39,8 +39,3 @@ def accepts_positional_arguments(callback: Callable[..., Any], count: int) -> bo
         if parameter.kind in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD):
             positional += 1
     return positional >= count
-
-
-__all__ = [
-    "accepts_positional_arguments",
-]

@@ -329,10 +329,3 @@ class ToolRegistry:
         # Normalize every handler's return into a ToolResult so callers get one uniform shape; a raw value
         # becomes a COMPLETED result carrying it verbatim.
         return result if isinstance(result, ToolResult) else ToolResult(ToolOutcome.COMPLETED, content=result)
-
-
-__all__ = [
-    "Tool",
-    "ToolRegistry",
-    "ToolValidationError",
-]
