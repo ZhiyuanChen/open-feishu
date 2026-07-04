@@ -177,7 +177,13 @@ class Agent:
             logger.warning(
                 "ws backend does not serve OAuth callback; run http backend to handle %s", self.oauth_callback_path
             )
-        ws = WsClient(app_id, app_secret, self.dispatcher(), region=str(feishu.get("region") or "feishu"))
+        ws = WsClient(
+            app_id,
+            app_secret,
+            self.dispatcher(),
+            region=str(feishu.get("region") or "feishu"),
+            card_ack_timeout=self._card_ack_timeout_seconds(),
+        )
         loop = asyncio.get_running_loop()
 
         def stop() -> None:
@@ -267,6 +273,10 @@ class Agent:
             ttl = float(self._get("server.seen_ttl_seconds", 7 * 24 * 3600) or 7 * 24 * 3600)
             return SqliteSeenStore(str(path), ttl=ttl)
         raise ValueError(f"unknown server.seen_store mode: {mode_value!r}")
+
+    def _card_ack_timeout_seconds(self) -> float | None:
+        value = self._get("ws.card_ack_timeout_seconds", self._get("server.card_ack_timeout_seconds", 1.5))
+        return None if value is None else float(value)
 
     async def handle_event(self, event: Any) -> None:
         r"""直接处理一条消息事件。"""

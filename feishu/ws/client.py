@@ -139,8 +139,8 @@ class WsClient:
             raise ValueError("app_secret must not be empty")
         if max_partial_messages < 1:
             raise ValueError("max_partial_messages must be positive")
-        if card_ack_timeout is not None and card_ack_timeout <= 0:
-            raise ValueError("card_ack_timeout must be positive or None")
+        if card_ack_timeout is not None and card_ack_timeout < 0:
+            raise ValueError("card_ack_timeout must be non-negative or None")
         self._app_id = app_id
         self._app_secret = app_secret
         self._dispatcher = dispatcher
@@ -355,6 +355,8 @@ class WsClient:
         task = asyncio.ensure_future(self._dispatcher.dispatch(event))
         if self._card_ack_timeout is None:
             return await task, None
+        if self._card_ack_timeout == 0:
+            return _CARD_ACK_TIMEOUT_RESULT, task
         try:
             result = await asyncio.wait_for(asyncio.shield(task), timeout=self._card_ack_timeout)
             return result, None

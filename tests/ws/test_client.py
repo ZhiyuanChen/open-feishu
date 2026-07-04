@@ -301,6 +301,45 @@ class TestServe:
         assert finished == ["c_slow"]
         assert len(ws.sent) == 1
 
+    async def test_zero_card_ack_timeout_acknowledges_before_dispatch_finishes(self):
+        dispatcher = EventDispatcher()
+        started = asyncio.Event()
+        release = asyncio.Event()
+        finished = []
+
+        @dispatcher.on("card.action.trigger")
+        async def on_card(event):
+            started.set()
+            await release.wait()
+            finished.append(event.event_id)
+            return {"toast": {"type": "success", "content": "done"}}
+
+        ws = FakeWebSocket([_event_frame("card.action.trigger", "c_zero")])
+        client = _make_client(
+            _endpoint_handler,
+            dispatcher=dispatcher,
+            connect=lambda url: _FakeConn(ws),
+            auto_reconnect=False,
+            card_ack_timeout=0,
+        )
+        task = asyncio.create_task(client.start())
+
+        for _ in range(20):
+            if ws.sent:
+                break
+            await asyncio.sleep(0.01)
+
+        assert len(ws.sent) == 1
+        response = json.loads(decode_frame(ws.sent[0]).payload.decode("utf-8"))
+        ack = json.loads(base64.b64decode(response["data"]).decode("utf-8"))
+        assert ack == {"toast": {"type": "info", "content": "处理中…"}}
+        assert finished == []
+
+        release.set()
+        await asyncio.wait_for(started.wait(), timeout=1)
+        await asyncio.wait_for(task, timeout=1)
+        assert finished == ["c_zero"]
+
     async def test_control_frame_is_not_acked(self):
         dispatcher = EventDispatcher()
         seen = []
