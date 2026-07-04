@@ -49,7 +49,8 @@ def build_oauth_redirect_uri(public_url: str | None, callback_path: str = "/oaut
 
     Product applications should usually expose a public origin (for example
     ``https://app.example.com``) plus a local callback route, then derive the full
-    redirect URI for [OAuthNamespace.authorize_url][] and [OAuthNamespace.exchange_code][].
+    redirect URI for [feishu.auth.oauth.OAuthNamespace.authorize_url][] and
+    [feishu.auth.oauth.OAuthNamespace.exchange_code][].
 
     Examples:
         >>> build_oauth_redirect_uri("https://app.example.com", "oauth/callback")

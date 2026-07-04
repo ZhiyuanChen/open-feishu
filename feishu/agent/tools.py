@@ -25,10 +25,12 @@ import asyncio
 import inspect
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypeVar, overload
 
 from .llm import ToolSpec
 from .result import ToolOutcome, ToolResult
+
+_ToolHandler = TypeVar("_ToolHandler", bound=Callable[..., Any])
 
 
 class ToolValidationError(ValueError):
@@ -169,16 +171,40 @@ class ToolRegistry:
     def __init__(self) -> None:
         self._tools: dict[str, Tool] = {}
 
+    @overload
     def register(
         self,
         name: str | None = None,
-        handler: Callable[..., Any] | None = None,
+        handler: None = None,
         *,
         input_schema: dict[str, Any],
         description: str,
         requires_approval: bool = False,
         auth_scopes: Sequence[str] = (),
-    ) -> Callable[..., Any] | None:
+    ) -> Callable[[_ToolHandler], _ToolHandler]: ...
+
+    @overload
+    def register(
+        self,
+        name: str | None,
+        handler: _ToolHandler,
+        *,
+        input_schema: dict[str, Any],
+        description: str,
+        requires_approval: bool = False,
+        auth_scopes: Sequence[str] = (),
+    ) -> _ToolHandler: ...
+
+    def register(
+        self,
+        name: str | None = None,
+        handler: _ToolHandler | None = None,
+        *,
+        input_schema: dict[str, Any],
+        description: str,
+        requires_approval: bool = False,
+        auth_scopes: Sequence[str] = (),
+    ) -> Callable[[_ToolHandler], _ToolHandler] | _ToolHandler:
         r"""
         注册一个工具，支持装饰器与直接调用两种形式。
 
@@ -209,7 +235,7 @@ class ToolRegistry:
             'ping'
         """
 
-        def _add(fn: Callable[..., Any]) -> Callable[..., Any]:
+        def _add(fn: _ToolHandler) -> _ToolHandler:
             tool_name = name or getattr(fn, "__name__", None)
             if not tool_name:
                 raise ValueError("tool name is required")

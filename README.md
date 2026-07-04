@@ -60,16 +60,7 @@ async def on_message(event):
     print(event.event_id)
 ```
 
-**方式一：Webhook 接收器。** 当应用有公网回调地址时，用 `create_event_app` 生成一个可独立运行的 Starlette 应用，默认带签名新鲜度（防重放）与去重保护，以任意 ASGI 服务器（如 `uvicorn`）运行即可：
-
-```python
-from feishu.events import create_event_app
-
-app = create_event_app(dispatcher, encrypt_key="ek_secret")
-# uvicorn module:app
-```
-
-**方式二：长连接（WebSocket）。** 当应用没有公网回调地址时，用 `feishu.ws.WsClient` 主动与飞书建立一条持久 WebSocket 连接（对标 Slack 的 Socket Mode），事件经该连接推送：
+**方式一：长连接（WebSocket）。** 本地开发、内网部署或轻量机器人可用 `feishu.ws.WsClient` 主动与飞书建立一条持久 WebSocket 连接（对标 Slack 的 Socket Mode），事件经该连接推送：
 
 ```python
 import asyncio
@@ -81,6 +72,54 @@ asyncio.run(ws.start())
 ```
 
 长连接依赖可选的 `websockets` 包，可通过 `pip install open-feishu[ws]` 安装。
+
+**方式二：HTTP Webhook。** 公网 Webhook 场景可用 `create_event_app` 生成一个可独立运行的 Starlette 应用，默认带签名新鲜度（防重放）与去重保护，以任意 ASGI 服务器（如 `uvicorn`）运行即可：
+
+```python
+from feishu.events import create_event_app
+
+app = create_event_app(dispatcher, encrypt_key="ek_secret")
+# uvicorn module:app
+```
+
+### Agent
+
+`feishu.agent.Agent` 是面向机器人产品的开箱即用入口：它把飞书客户端、LLM 后端、工具注册表、会话存储、审批卡片、OAuth 授权恢复、附件处理和事件接入装配在一起。最小可部署模板在仓库的 `examples/agent` 目录，完整说明见 https://feishu.danling.org/guides/agent/。
+
+```bash
+pip install "open-feishu[openai,ws,gateway]"
+```
+
+```python
+from feishu.agent import Agent, ToolRegistry
+
+registry = ToolRegistry()
+
+
+@registry.register(
+    input_schema={"type": "object", "properties": {}, "additionalProperties": False},
+    description="返回当前服务状态。",
+)
+def service_status():
+    return "ok"
+
+
+config = {
+    "feishu": {"app_id": "cli_xxx", "app_secret": "app_secret"},
+    "model": {
+        "model": "gpt-4o-mini",
+        "api_key": "sk_xxx",
+        "base_url": "https://api.openai.com/v1",
+    },
+    "storage": {"path": ".agent/agent.db"},
+    "toolkits": [],
+    "system": "你是一个简洁的飞书助手。",
+}
+
+Agent(config, registry=registry).run(backend="ws")
+```
+
+`backend="ws"` 通过飞书长连接收事件，适合本地、内网和容器常驻部署；`backend="http"` 暴露 `/feishu/event`、`/health` 和 OAuth 回调路由，适合公网 Webhook、用户授权工具和统一健康检查。`Agent(config)` 接收已加载的 mapping；YAML、TOML、`.env` 或密钥服务由应用层读取后组装进配置。
 
 ## 安装
 
