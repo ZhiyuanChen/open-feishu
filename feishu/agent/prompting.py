@@ -42,14 +42,25 @@ def build_time_aware_system_prompt(
         tz = _valid_timezone(timezone) or await _call_timezone_resolver(timezone_resolver, event)
         zone = ZoneInfo(tz)
         current = now(zone) if now is not None else datetime.now(zone)
-        return (
-            f"{prompt}\n\n"
-            f"Current datetime: {current.isoformat(timespec='seconds')}\n"
-            f"Current date: {current.date().isoformat()}\n"
-            f"Current timezone: {tz}"
-        )
+        return f"{prompt}\n\n{_render_time_context(current, tz)}"
 
     return system
+
+
+def build_time_context(
+    timezone_resolver: Callable[..., Any],
+    *,
+    now: Callable[[ZoneInfo], datetime] | None = None,
+) -> Callable[..., Any]:
+    r"""构建每轮动态时间上下文；调用方可把它附加到当前用户消息，避免破坏 system/历史前缀缓存。"""
+
+    async def context(event: Any | None = None, timezone: str | None = None) -> str:
+        tz = _valid_timezone(timezone) or await _call_timezone_resolver(timezone_resolver, event)
+        zone = ZoneInfo(tz)
+        current = now(zone) if now is not None else datetime.now(zone)
+        return _render_time_context(current, tz)
+
+    return context
 
 
 def build_timezone_resolver(
@@ -81,6 +92,14 @@ def build_timezone_resolver(
         return fallback_timezone
 
     return resolve
+
+
+def _render_time_context(current: datetime, timezone: str) -> str:
+    return (
+        f"Current datetime: {current.isoformat(timespec='seconds')}\n"
+        f"Current date: {current.date().isoformat()}\n"
+        f"Current timezone: {timezone}"
+    )
 
 
 async def _call_timezone_resolver(timezone_resolver: Callable[..., Any], event: Any | None) -> str:

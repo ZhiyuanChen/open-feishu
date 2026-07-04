@@ -1891,6 +1891,64 @@ class TestAdapterLoopIntegration:
 
         assert read_system(fake_sdk) == "You are a helpful assistant."
 
+    async def test_turn_context_is_sent_outside_static_system_prompt(self):
+        backend, fake_sdk = _openai_backend()
+        store = InMemorySessionStore()
+        agent = Agent(
+            backend=backend,
+            registry=ToolRegistry(),
+            client=_IntegrationRecordingClient(),
+            store=store,
+            system="Static system prompt.",
+            turn_context=lambda _event, _timezone: "Current datetime: 2026-07-04T18:55:00+08:00",
+            timezone="Asia/Shanghai",
+        )
+
+        await agent.run(_text_event("hi", chat_id="oc_cache"))
+
+        request = fake_sdk.chat.completions.calls[0]
+        assert next(m["content"] for m in request["messages"] if m["role"] == "system") == "Static system prompt."
+        assert request["messages"][-1] == {
+            "role": "user",
+            "content": "hi\n\nCurrent datetime: 2026-07-04T18:55:00+08:00",
+        }
+        persisted = await store.get("oc_cache")
+        assert persisted[0] == Message(role="user", content=[TextPart(text="hi")])
+
+    async def test_turn_context_remains_available_after_tool_call(self):
+        reg = ToolRegistry()
+
+        async def weather():
+            return "sunny"
+
+        reg.register("weather", weather, input_schema={"type": "object", "properties": {}}, description="d")
+        backend = FakeLlmBackend(
+            [
+                tool_turn(index=0, id="c_weather", name="weather", arguments_json="{}"),
+                text_turn("done"),
+            ]
+        )
+        store = InMemorySessionStore()
+        agent = Agent(
+            backend=backend,
+            registry=reg,
+            client=_IntegrationRecordingClient(),
+            store=store,
+            system="Static system prompt.",
+            turn_context=lambda _event, _timezone: "Current datetime: 2026-07-04T19:05:00+08:00",
+            timezone="Asia/Shanghai",
+        )
+
+        await agent.run(_text_event("hi", chat_id="oc_tool_ctx"))
+
+        second_call_user = next(message for message in backend.calls[1]["messages"] if message.role == "user")
+        assert second_call_user.content == [
+            TextPart(text="hi"),
+            TextPart(text="\n\nCurrent datetime: 2026-07-04T19:05:00+08:00"),
+        ]
+        persisted = await store.get("oc_tool_ctx")
+        assert persisted[0] == Message(role="user", content=[TextPart(text="hi")])
+
 
 # ===========================================================================
 # Cross-adapter parity: both providers translate equivalent streams identically

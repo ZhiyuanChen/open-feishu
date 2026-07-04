@@ -59,7 +59,7 @@ from .persistence import (
     SqliteSessionStore,
 )
 from .progress import build_progress_summarizer
-from .prompting import build_time_aware_system_prompt, build_timezone_resolver
+from .prompting import build_time_context, build_timezone_resolver
 from .registration import create_agent_dispatcher
 from .shared_files import SharedFileResolver, SqliteSharedFileStore
 from .summarization import build_fast_text_summarizer
@@ -333,6 +333,7 @@ class Agent:
             shared_file_ttl_seconds=int(self._get("shared_files.ttl_seconds", 7 * 24 * 3600) or 7 * 24 * 3600),
             payment_accounts=overrides.pop("payment_accounts", None) or PaymentAccountResolver(self.client),
             system=overrides.pop("system", None) or self._system_prompt(timezone_resolver),
+            turn_context=overrides.pop("turn_context", None) or self._turn_context(timezone_resolver),
             timezone=timezone_resolver,
             summarize_threshold_tokens=int(self._get("session.summarize_threshold_tokens", 0) or 0),
             summarize_keep_recent=int(self._get("session.summarize_keep_recent", 12) or 12),
@@ -441,9 +442,12 @@ class Agent:
             return None
         if callable(system):
             return system
-        if bool(self._get("time_aware_system", True)):
-            return build_time_aware_system_prompt(str(system), timezone_resolver)
         return str(system)
+
+    def _turn_context(self, timezone_resolver: Any) -> Any:
+        if bool(self._get("time_aware_system", True)):
+            return build_time_context(timezone_resolver)
+        return None
 
     def _describe_analyzer(self) -> Any:
         model_name = self._section("model").get("model") or self._section("model").get("name")

@@ -279,6 +279,39 @@ def user_message_from_event(event: Event) -> Message:
     return Message(role="user", content=[TextPart(text=text)])
 
 
+async def _dynamic_text(value: str | Callable[..., Any] | None, event: Event, timezone: str | None) -> str | None:
+    if callable(value):
+        if _accepts_positional_arguments(value, 2):
+            value = value(event, timezone)
+        elif _accepts_positional_arguments(value, 1):
+            value = value(event)
+        else:
+            value = value()
+        if inspect.isawaitable(value):
+            value = await value
+    if value is None or isinstance(value, str):
+        return value
+    return str(value)
+
+
+def _messages_with_turn_context(history: list[Message], turn_context: str | None) -> list[Message]:
+    context = (turn_context or "").strip()
+    if not context:
+        return history
+    user_index = next((index for index in range(len(history) - 1, -1, -1) if history[index].role == "user"), None)
+    if user_index is None:
+        return history
+    current_user = history[user_index]
+    return [
+        *history[:user_index],
+        Message(
+            role=current_user.role,
+            content=[*current_user.content, TextPart(text=f"\n\n{context}")],
+        ),
+        *history[user_index + 1 :],
+    ]
+
+
 class AgentEngine:
     r"""
     智能体底层主循环：驱动大模型与工具协作，自动回复飞书消息。
@@ -337,6 +370,8 @@ class AgentEngine:
         max_iterations: 单轮对话中模型与工具往返的最大次数。默认为 `8`。
         system: 系统提示词；也可以传入 callable，每轮调用前动态生成。callable 可接收 `(event, timezone)`、
             `event`，或不接收参数。
+        turn_context: 每轮附加给模型的动态上下文；也可以传入 callable，签名同 `system`。SDK 会把它临时追加到
+            当前 user message 末尾，不写入会话历史，避免动态时间等信息破坏 system/历史前缀缓存。
         timezone: 本轮默认时区；也可以传入 callable，每轮按事件动态解析。卡片回调中若包含用户时区，会优先使用。
         interrupted_progress_text: 同一会话的新消息打断旧轮次时，旧进度卡收尾展示的文案。
         stream: 未使用进度卡片时是否以流式卡片回复。为 `True` 时经 `client.stream_card` 输出，否则调用
@@ -403,6 +438,7 @@ class AgentEngine:
         summary_prefix: str = "[Summary of earlier conversation]",
         max_iterations: int = 8,
         system: str | Callable[..., Any] | None = None,
+        turn_context: str | Callable[..., Any] | None = None,
         timezone: str | Callable[..., Any] | None = None,
         interrupted_progress_text: str = "已被更新的消息打断。",
         stream: bool = False,
@@ -443,6 +479,7 @@ class AgentEngine:
         self._summary_prefix = summary_prefix
         self.max_iterations = max_iterations
         self.system = system
+        self.turn_context = turn_context
         self.timezone = timezone
         self._interrupted_progress_text = interrupted_progress_text
         self.stream = stream
@@ -566,9 +603,10 @@ class AgentEngine:
             timezone = await self._timezone_for_event(event)
             for _ in range(self.max_iterations):
                 system = await self._system_for_event(event, timezone)
+                messages = _messages_with_turn_context(history, await self._turn_context_for_event(event, timezone))
                 result = await self._accumulate_stream_with_progress(
                     self.backend.stream(
-                        messages=history,
+                        messages=messages,
                         tools=self.registry.specs(),
                         system=system,
                         **self.backend_kwargs,
@@ -774,19 +812,10 @@ class AgentEngine:
         return await ToolContext(event=event, timezone=self.timezone).current_timezone()
 
     async def _system_for_event(self, event: Event, timezone: str | None) -> str | None:
-        system = self.system
-        if callable(system):
-            if _accepts_positional_arguments(system, 2):
-                system = system(event, timezone)
-            elif _accepts_positional_arguments(system, 1):
-                system = system(event)
-            else:
-                system = system()
-            if inspect.isawaitable(system):
-                system = await system
-        if system is None or isinstance(system, str):
-            return system
-        return str(system)
+        return await _dynamic_text(self.system, event, timezone)
+
+    async def _turn_context_for_event(self, event: Event, timezone: str | None) -> str | None:
+        return await _dynamic_text(self.turn_context, event, timezone)
 
     async def _register_inbound_files(self, event: Event) -> list[Any]:
         r"""把入站消息携带的全部文件登记为 SharedFile 句柄（支持多文件）；未配置存储或无文件时返回空列表。"""

@@ -5,7 +5,7 @@ from datetime import datetime
 from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 
-from feishu.agent.prompting import build_time_aware_system_prompt, build_timezone_resolver
+from feishu.agent.prompting import build_time_aware_system_prompt, build_time_context, build_timezone_resolver
 
 
 def test_time_aware_system_prompt_appends_current_time_context() -> None:
@@ -23,6 +23,21 @@ def test_time_aware_system_prompt_appends_current_time_context() -> None:
     assert "Current datetime: 2026-07-02T09:30:05+02:00" in rendered
     assert "Current date: 2026-07-02" in rendered
     assert "Current timezone: Europe/Berlin" in rendered
+
+
+def test_time_context_can_be_rendered_separately_from_system_prompt() -> None:
+    async def timezone_resolver(_event=None) -> str:
+        return "Asia/Shanghai"
+
+    context = build_time_context(
+        timezone_resolver,
+        now=lambda tz: datetime(2026, 7, 2, 9, 30, 5, tzinfo=tz),
+    )
+    rendered = asyncio.run(context(timezone="Europe/Berlin"))
+
+    assert rendered == (
+        "Current datetime: 2026-07-02T09:30:05+02:00\n" "Current date: 2026-07-02\n" "Current timezone: Europe/Berlin"
+    )
 
 
 def test_timezone_resolver_prefers_event_context_timezone() -> None:
