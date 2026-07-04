@@ -7,6 +7,9 @@ from feishu.agent.bundles import (
     CALENDAR_SCOPES,
     MAIL_READ_SCOPES,
     MAIL_SEND_SCOPES,
+    TASK_DELETE_SCOPES,
+    TASK_READ_SCOPES,
+    TASK_WRITE_SCOPES,
     BundleContext,
     build_tool_registry,
 )
@@ -52,6 +55,14 @@ def test_workplace_bundle_builds_default_tools_with_scopes() -> None:
     assert registry.get("summarize_mail_message").auth_scopes == MAIL_READ_SCOPES
     assert registry.get("send_mail_message").auth_scopes == MAIL_SEND_SCOPES
     assert registry.get("send_mail_message").requires_approval is True
+    assert registry.get("list_my_tasks").auth_scopes == TASK_READ_SCOPES
+    assert registry.get("create_task").auth_scopes == TASK_WRITE_SCOPES
+    assert registry.get("update_task").auth_scopes == TASK_WRITE_SCOPES
+    assert registry.get("delete_task").auth_scopes == TASK_DELETE_SCOPES
+    assert all(
+        "task:task" not in registry.get(name).auth_scopes
+        for name in ("list_my_tasks", "create_task", "update_task", "delete_task")
+    )
 
 
 def test_workplace_mail_tools_pin_current_user_mailbox() -> None:

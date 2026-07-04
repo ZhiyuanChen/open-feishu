@@ -96,7 +96,10 @@ ROOM_SCOPES = ("calendar:room:readonly",)
 # Valid, app-enabled identifiers (colon form). The legacy `docs:document.readonly`-style names are
 # rejected by the authorize page (error 20043). These were live-confirmed on the user's token.
 DOC_READ_SCOPES = ("docx:document", "drive:drive", "wiki:wiki")
-TASK_SCOPES = ("task:task",)
+TASK_READ_SCOPES = ("task:task:read",)
+TASK_WRITE_SCOPES = ("task:task:writeonly",)
+TASK_DELETE_SCOPES = ("task:task:delete",)
+TASK_SCOPES = ("task:task:write",)
 BITABLE_SCOPES = ("bitable:app",)
 APPROVAL_SCOPES = ("approval:approval",)
 VC_SCOPES = ("vc:reserve",)
@@ -216,23 +219,23 @@ def _build_workplace_tool_registry(
     )
 
     # Tasks
-    add(create_task(description="创建一个任务；执行前我会先发确认卡片。", auth_scopes=TASK_SCOPES))
+    add(create_task(description="创建一个任务；执行前我会先发确认卡片。", auth_scopes=TASK_WRITE_SCOPES))
     add(
         list_my_tasks(
             description="列出你负责的任务（只看你本人的任务，可按是否完成筛选）。",
-            auth_scopes=TASK_SCOPES,
+            auth_scopes=TASK_READ_SCOPES,
         )
     )
     add(
         update_task(
             description="修改某个任务的标题或描述（按 task_guid，只改你给到的字段）；执行前我会先发确认卡片。",
-            auth_scopes=TASK_SCOPES,
+            auth_scopes=TASK_WRITE_SCOPES,
         )
     )
     add(
         delete_task(
             description="删除某个任务（按 task_guid）；执行前我会先发确认卡片。",
-            auth_scopes=TASK_SCOPES,
+            auth_scopes=TASK_DELETE_SCOPES,
         )
     )
 

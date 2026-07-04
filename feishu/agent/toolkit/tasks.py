@@ -101,6 +101,7 @@ def create_task(
         input_schema=input_schema,
         handler=handler,
         requires_approval=requires_approval,
+        auth_scopes=tuple(auth_scopes),
     )
 
 
@@ -163,6 +164,7 @@ def comment_on_task(
         input_schema=input_schema,
         handler=handler,
         requires_approval=requires_approval,
+        auth_scopes=tuple(auth_scopes),
     )
 
 
@@ -231,6 +233,7 @@ def update_task(
         input_schema=input_schema,
         handler=handler,
         requires_approval=requires_approval,
+        auth_scopes=tuple(auth_scopes),
     )
 
 
@@ -286,6 +289,7 @@ def delete_task(
         input_schema=input_schema,
         handler=handler,
         requires_approval=requires_approval,
+        auth_scopes=tuple(auth_scopes),
     )
 
 
@@ -342,6 +346,7 @@ def update_task_comment(
         input_schema=input_schema,
         handler=handler,
         requires_approval=requires_approval,
+        auth_scopes=tuple(auth_scopes),
     )
 
 
@@ -397,6 +402,7 @@ def delete_task_comment(
         input_schema=input_schema,
         handler=handler,
         requires_approval=requires_approval,
+        auth_scopes=tuple(auth_scopes),
     )
 
 
@@ -448,7 +454,13 @@ def list_my_tasks(
         result = await client.task.tasks.list(completed=arguments.get("completed"), user_id_type="open_id")
         return ToolResult(ToolOutcome.COMPLETED, content=result)
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(
+        name=name,
+        description=description,
+        input_schema=input_schema,
+        handler=handler,
+        auth_scopes=tuple(auth_scopes),
+    )
 
 
 def list_task_comments(
@@ -494,4 +506,10 @@ def list_task_comments(
         result = await client.task.comments.list(arguments["task_guid"])
         return ToolResult(ToolOutcome.COMPLETED, content=result)
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(
+        name=name,
+        description=description,
+        input_schema=input_schema,
+        handler=handler,
+        auth_scopes=tuple(auth_scopes),
+    )
