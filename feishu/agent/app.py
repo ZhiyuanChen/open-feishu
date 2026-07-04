@@ -251,7 +251,22 @@ class Agent:
 
     def dispatcher(self) -> Any:
         r"""创建并返回绑定了当前 engine 的事件 dispatcher。"""
-        return create_agent_dispatcher(self.engine, seen_path=self._get("server.seen_path"))
+        return create_agent_dispatcher(self.engine, seen_store=self._seen_store_config())
+
+    def _seen_store_config(self) -> Any | None:
+        mode_value = self._get("server.seen_store")
+        if mode_value is None:
+            return None
+        mode = str(mode_value).strip().lower()
+        if mode in {"", "none", "off", "false", "0", "disabled"}:
+            return None
+        if mode == "sqlite":
+            from ..events.idempotency import SqliteSeenStore
+
+            path = self._get("server.seen_db_path") or self.db_path
+            ttl = float(self._get("server.seen_ttl_seconds", 7 * 24 * 3600) or 7 * 24 * 3600)
+            return SqliteSeenStore(str(path), ttl=ttl)
+        raise ValueError(f"unknown server.seen_store mode: {mode_value!r}")
 
     async def handle_event(self, event: Any) -> None:
         r"""直接处理一条消息事件。"""

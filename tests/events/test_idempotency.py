@@ -1,6 +1,6 @@
 import pytest
 
-from feishu.events.idempotency import InMemorySeenStore, SeenStore, claim
+from feishu.events.idempotency import InMemorySeenStore, SeenStore, SqliteSeenStore, claim
 
 
 class TestInMemorySeenStore:
@@ -33,6 +33,30 @@ class TestInMemorySeenStore:
     async def test_implements_protocol(self):
         # runtime_checkable structural check
         assert isinstance(InMemorySeenStore(), SeenStore)
+
+
+class TestSqliteSeenStore:
+    async def test_claim_persists_across_store_instances(self, tmp_path):
+        path = tmp_path / "seen.db"
+        first = SqliteSeenStore(path)
+        second = SqliteSeenStore(path)
+
+        assert await first.claim("evt_1") is True
+        assert await second.claim("evt_1") is False
+        assert await second.seen("evt_1") is True
+
+    async def test_ttl_expiry(self, tmp_path):
+        clock = {"t": 1000.0}
+        store = SqliteSeenStore(tmp_path / "seen.db", ttl=60.0, now=lambda: clock["t"])
+
+        await store.mark("evt_ttl")
+        clock["t"] = 1061.0
+
+        assert await store.seen("evt_ttl") is False
+        assert await store.claim("evt_ttl") is True
+
+    async def test_implements_protocol(self, tmp_path):
+        assert isinstance(SqliteSeenStore(tmp_path / "seen.db"), SeenStore)
 
 
 class SeenMarkOnly:

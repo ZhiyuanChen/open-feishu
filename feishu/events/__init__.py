@@ -25,7 +25,7 @@ from ..signature import verify_signature
 from .crypto import decrypt
 from .dispatcher import EventDispatcher
 from .envelope import Event
-from .idempotency import FileSeenStore, InMemorySeenStore, SeenStore
+from .idempotency import InMemorySeenStore, SeenStore, SqliteSeenStore
 from .receiver import create_card_route, create_event_app, create_event_route
 
 __all__ = [
@@ -33,7 +33,7 @@ __all__ = [
     "EventDispatcher",
     "SeenStore",
     "InMemorySeenStore",
-    "FileSeenStore",
+    "SqliteSeenStore",
     "verify_signature",
     "decrypt",
     "create_event_route",

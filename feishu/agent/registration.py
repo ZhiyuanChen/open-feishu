@@ -21,7 +21,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -66,7 +65,6 @@ def create_agent_dispatcher(
     agent: AgentEngine,
     *,
     seen_store: SeenStore | None = None,
-    seen_path: str | Path | None = None,
     message_event: str = "im.message.receive_v1",
     card_event: str = "card.action.trigger",
 ) -> EventDispatcher:
@@ -75,9 +73,7 @@ def create_agent_dispatcher(
 
     Args:
         agent: 接收消息与卡片事件的 [feishu.agent.loop.AgentEngine][]。
-        seen_store: 事件幂等存储；为空时不去重，除非提供 `seen_path`。
-        seen_path: 可选 JSON 文件路径，用于构造 [feishu.events.idempotency.FileSeenStore][]；
-            适合单进程机器人在重启后继续去重。
+        seen_store: 事件幂等存储；为空时不去重。
         message_event: 路由到 [feishu.agent.loop.AgentEngine.run][] 的消息事件类型。
         card_event: 路由到 [feishu.agent.loop.AgentEngine.handle_card_action][] 的卡片回调事件类型。
 
@@ -85,9 +81,7 @@ def create_agent_dispatcher(
         已完成 agent 事件绑定的 dispatcher。
     """
     from ..events.dispatcher import EventDispatcher
-    from ..events.idempotency import FileSeenStore
 
-    resolved_seen_store = FileSeenStore(seen_path) if seen_store is None and seen_path is not None else seen_store
-    dispatcher = EventDispatcher(seen_store=resolved_seen_store)
+    dispatcher = EventDispatcher(seen_store=seen_store)
     register_agent(dispatcher, agent, message_event=message_event, card_event=card_event)
     return dispatcher
