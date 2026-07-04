@@ -228,6 +228,11 @@ def session_id_for(event: Event) -> str:
     return message.get("message_id") or ""
 
 
+def _sender_type_for(event: Event) -> str:
+    sender = event.body.get("sender") or {}
+    return str(sender.get("sender_type") or "").strip().lower()
+
+
 def user_message_from_event(event: Event) -> Message:
     r"""
     将飞书消息事件转换为一条用户角色的 [feishu.agent.llm.Message][]。
@@ -566,6 +571,9 @@ class AgentEngine:
         Examples:
             >>> await agent.run(event)  # doctest:+SKIP
         """
+        if _sender_type_for(event) == "app":
+            logging.getLogger("feishu").debug("ignore app-sent message event")
+            return
         session_id = session_id_for(event)
         user_msg = user_message_from_event(event)
         progress = _ProgressCard(self, event)

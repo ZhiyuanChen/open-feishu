@@ -73,9 +73,9 @@ def _ns(**kw):
     return SimpleNamespace(**kw)
 
 
-def _text_event(text="hi", *, message_id="om_in", chat_id="oc_1", open_id="ou_tester"):
+def _text_event(text="hi", *, message_id="om_in", chat_id="oc_1", open_id="ou_tester", sender_type="user"):
     body = {
-        "sender": {"sender_id": {"open_id": open_id}},
+        "sender": {"sender_id": {"open_id": open_id}, "sender_type": sender_type},
         "message": {
             "chat_id": chat_id,
             "message_id": message_id,
@@ -202,6 +202,20 @@ class TestAgentLoop:
         # user message + assistant message persisted
         assert history[0].role == "user"
         assert history[-1].role == "assistant"
+
+    async def test_ignores_messages_sent_by_the_app(self):
+        store = InMemorySessionStore()
+        backend = FakeLlmBackend([text_turn("should not run")])
+        client = _LoopRecordingClient()
+        agent = Agent(backend=backend, registry=ToolRegistry(), store=store, client=client)
+
+        await agent.run(_text_event("bot card payload", message_id="om_self", chat_id="oc_1", sender_type="app"))
+
+        assert backend.calls == []
+        assert await store.get("oc_1") == []
+        assert client.replies == []
+        assert client.sent_cards == []
+        assert client.stream_card_calls == []
 
     async def test_idle_session_timeout_zero_keeps_existing_history(self):
         store = InMemorySessionStore()
