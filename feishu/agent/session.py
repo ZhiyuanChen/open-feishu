@@ -22,6 +22,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
@@ -62,6 +63,10 @@ class SessionStore(Protocol):
         r"""清空指定会话的历史（彻底删除，而非隐藏）。"""
         ...
 
+    async def updated_at(self, session_id: str) -> float | None:
+        r"""返回指定会话最近写入时间戳；未知会话返回 `None`。"""
+        ...
+
 
 class InMemorySessionStore:
     r"""
@@ -84,6 +89,7 @@ class InMemorySessionStore:
 
     def __init__(self) -> None:
         self._store: dict[str, list[Message]] = {}
+        self._updated_at: dict[str, float] = {}
         self._lock = asyncio.Lock()
 
     async def get(self, session_id: str) -> list[Message]:
@@ -111,6 +117,7 @@ class InMemorySessionStore:
             if bucket is None:  # double-checked read after acquiring the lock
                 bucket = self._store.setdefault(session_id, [])
             bucket.extend(messages)
+            self._updated_at[session_id] = time.time()
 
     async def set(self, session_id: str, messages: list[Message]) -> None:
         r"""
@@ -122,11 +129,17 @@ class InMemorySessionStore:
         """
         async with self._lock:
             self._store[session_id] = list(messages)
+            self._updated_at[session_id] = time.time()
 
     async def clear(self, session_id: str) -> None:
         r"""清空指定会话的历史（彻底删除该会话条目）。"""
         async with self._lock:
             self._store.pop(session_id, None)
+            self._updated_at.pop(session_id, None)
+
+    async def updated_at(self, session_id: str) -> float | None:
+        r"""返回指定会话最近写入时间戳；未知会话返回 `None`。"""
+        return self._updated_at.get(session_id)
 
 
 @dataclass

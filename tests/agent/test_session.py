@@ -3,6 +3,7 @@ import asyncio
 import pytest
 
 from feishu.agent.llm import Message, TextPart
+from feishu.agent.persistence import SqliteSessionStore
 from feishu.agent.session import (
     InMemoryPendingApprovalStore,
     InMemoryPendingAuthorizationStore,
@@ -56,6 +57,13 @@ class TestSessionStore:
         await store.set("s", replacement)
         assert await store.get("s") == replacement
 
+    async def test_updated_at_tracks_writes_and_clear(self, store):
+        assert await store.updated_at("s") is None
+        await store.append("s", msg("hi"))
+        assert await store.updated_at("s") is not None
+        await store.clear("s")
+        assert await store.updated_at("s") is None
+
     async def test_get_returns_copy(self, store):
         await store.append("s", msg("hi"))
         got = await store.get("s")
@@ -65,6 +73,15 @@ class TestSessionStore:
     async def test_concurrent_appends_keep_all(self, store):
         await asyncio.gather(*[store.append("s", msg(str(i))) for i in range(50)])
         assert len(await store.get("s")) == 50
+
+
+async def test_sqlite_session_store_tracks_updated_at(tmp_path):
+    store = SqliteSessionStore(tmp_path / "agent.db")
+    assert await store.updated_at("s") is None
+    await store.append("s", msg("hi"))
+    assert await store.updated_at("s") is not None
+    await store.clear("s")
+    assert await store.updated_at("s") is None
 
 
 class TestPendingApprovalStore:

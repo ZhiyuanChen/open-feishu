@@ -25,6 +25,7 @@ import asyncio
 import inspect
 import logging
 import re
+import time
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, AsyncIterator, Literal
@@ -312,6 +313,10 @@ def _messages_with_turn_context(history: list[Message], turn_context: str | None
     ]
 
 
+def _default_now() -> float:
+    return time.time()
+
+
 class AgentEngine:
     r"""
     智能体底层主循环：驱动大模型与工具协作，自动回复飞书消息。
@@ -372,6 +377,7 @@ class AgentEngine:
             `event`，或不接收参数。
         turn_context: 每轮附加给模型的动态上下文；也可以传入 callable，签名同 `system`。SDK 会把它临时追加到
             当前 user message 末尾，不写入会话历史，避免动态时间等信息破坏 system/历史前缀缓存。
+        idle_session_timeout_seconds: 会话空闲超过该秒数后自动清空普通历史；`0` 或负数表示关闭。
         timezone: 本轮默认时区；也可以传入 callable，每轮按事件动态解析。卡片回调中若包含用户时区，会优先使用。
         interrupted_progress_text: 同一会话的新消息打断旧轮次时，旧进度卡收尾展示的文案。
         stream: 未使用进度卡片时是否以流式卡片回复。为 `True` 时经 `client.stream_card` 输出，否则调用
@@ -439,6 +445,8 @@ class AgentEngine:
         max_iterations: int = 8,
         system: str | Callable[..., Any] | None = None,
         turn_context: str | Callable[..., Any] | None = None,
+        idle_session_timeout_seconds: float = 0.0,
+        now: Callable[[], float] | None = None,
         timezone: str | Callable[..., Any] | None = None,
         interrupted_progress_text: str = "已被更新的消息打断。",
         stream: bool = False,
@@ -480,6 +488,8 @@ class AgentEngine:
         self.max_iterations = max_iterations
         self.system = system
         self.turn_context = turn_context
+        self.idle_session_timeout_seconds = max(0.0, float(idle_session_timeout_seconds or 0.0))
+        self._now = now or _default_now
         self.timezone = timezone
         self._interrupted_progress_text = interrupted_progress_text
         self.stream = stream
@@ -532,6 +542,15 @@ class AgentEngine:
         except Exception:  # noqa: BLE001 - cancellation cleanup must not hide the newer turn
             logging.getLogger("feishu").debug("could not finalize interrupted progress card", exc_info=True)
 
+    async def _clear_idle_session(self, session_id: str) -> None:
+        if self.idle_session_timeout_seconds <= 0:
+            return
+        updated_at = await self.store.updated_at(session_id)
+        if updated_at is None:
+            return
+        if self._now() - updated_at > self.idle_session_timeout_seconds:
+            await self.store.clear(session_id)
+
     async def run(self, event: Event) -> None:
         r"""
         处理一条飞书消息事件：载入历史、追加用户消息并驱动主循环。
@@ -573,6 +592,7 @@ class AgentEngine:
                         )
                         await self._finalize(event, reply)
                         return
+                    await self._clear_idle_session(session_id)
                     history = await self.store.get(session_id)
                     shared = await self._register_inbound_files(event)
                     if shared:

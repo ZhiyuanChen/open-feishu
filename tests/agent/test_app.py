@@ -44,3 +44,18 @@ def test_agent_facade_keeps_time_context_out_of_system_prompt(tmp_path: Path) ->
     assert rendered is not None
     assert "Current datetime:" in rendered
     assert "Current timezone: Europe/Berlin" in rendered
+
+
+def test_agent_facade_passes_idle_session_timeout(tmp_path: Path) -> None:
+    agent = Agent(
+        {
+            "storage": {"path": str(tmp_path / "agent.db")},
+            "session": {"idle_session_timeout_seconds": 7200},
+            "toolkits": [],
+        },
+        client=_Client(),
+        backend=FakeLlmBackend([]),
+        registry=ToolRegistry(),
+    )
+
+    assert agent.engine.idle_session_timeout_seconds == 7200

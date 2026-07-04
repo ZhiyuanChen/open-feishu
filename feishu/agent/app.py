@@ -337,6 +337,7 @@ class Agent:
             timezone=timezone_resolver,
             summarize_threshold_tokens=int(self._get("session.summarize_threshold_tokens", 0) or 0),
             summarize_keep_recent=int(self._get("session.summarize_keep_recent", 12) or 12),
+            idle_session_timeout_seconds=float(self._get("session.idle_session_timeout_seconds", 0) or 0),
             stream=bool(self._get("reply.stream", True)),
             **overrides,
         )

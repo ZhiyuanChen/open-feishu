@@ -143,6 +143,17 @@ class _LoopRecordingClient:
         )
 
 
+class _TimestampedSessionStore(InMemorySessionStore):
+    def __init__(self, updated_at: float) -> None:
+        super().__init__()
+        self._timestamp = updated_at
+
+    async def updated_at(self, session_id: str) -> float | None:
+        if not await self.get(session_id):
+            return None
+        return self._timestamp
+
+
 class _NestedMessageIdClient(_LoopRecordingClient):
     """Recording client whose send response mirrors nested Feishu envelopes."""
 
@@ -191,6 +202,41 @@ class TestAgentLoop:
         # user message + assistant message persisted
         assert history[0].role == "user"
         assert history[-1].role == "assistant"
+
+    async def test_idle_session_timeout_zero_keeps_existing_history(self):
+        store = InMemorySessionStore()
+        await store.append("oc_1", Message(role="user", content=[TextPart(text="old")]))
+        backend = FakeLlmBackend([text_turn("hello there")])
+        agent = Agent(
+            backend=backend,
+            registry=ToolRegistry(),
+            store=store,
+            client=_LoopRecordingClient(),
+            idle_session_timeout_seconds=0,
+        )
+
+        await agent.run(_text_event("new", message_id="om_in", chat_id="oc_1"))
+
+        assert [part.text for part in backend.calls[0]["messages"][0].content] == ["old"]
+
+    async def test_idle_session_timeout_clears_stale_history_before_new_turn(self):
+        store = _TimestampedSessionStore(updated_at=100)
+        await store.append("oc_1", Message(role="user", content=[TextPart(text="old")]))
+        backend = FakeLlmBackend([text_turn("hello there")])
+        agent = Agent(
+            backend=backend,
+            registry=ToolRegistry(),
+            store=store,
+            client=_LoopRecordingClient(),
+            idle_session_timeout_seconds=7200,
+            now=lambda: 100 + 7201,
+        )
+
+        await agent.run(_text_event("new", message_id="om_in", chat_id="oc_1"))
+
+        sent = backend.calls[0]["messages"]
+        assert [part.text for part in sent[0].content] == ["new"]
+        assert all(part.text != "old" for message in sent for part in message.content if isinstance(part, TextPart))
 
     async def test_system_callback_receives_resolved_timezone(self):
         backend = FakeLlmBackend([text_turn("hello there")])

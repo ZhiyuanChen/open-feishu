@@ -213,7 +213,10 @@ class SqliteSessionStore:
 
     def __init__(self, db_path: str | Path, *, max_messages: int = 400) -> None:
         self._db = _connect(db_path)
-        self._db.execute("CREATE TABLE IF NOT EXISTS sessions (session_id TEXT PRIMARY KEY, messages TEXT NOT NULL)")
+        self._db.execute(
+            "CREATE TABLE IF NOT EXISTS sessions ("
+            "session_id TEXT PRIMARY KEY, messages TEXT NOT NULL, updated_at REAL)"
+        )
         self._db.commit()
         self._max_messages = max_messages
         self._lock = asyncio.Lock()
@@ -248,13 +251,21 @@ class SqliteSessionStore:
             self._db.execute("DELETE FROM sessions WHERE session_id = ?", (session_id,))
             self._db.commit()
 
+    async def updated_at(self, session_id: str) -> float | None:
+        r"""返回指定会话最近写入时间戳；未知会话返回 `None`。"""
+        async with self._lock:
+            row = self._db.execute("SELECT updated_at FROM sessions WHERE session_id = ?", (session_id,)).fetchone()
+        if not row or row[0] is None:
+            return None
+        return float(row[0])
+
     def _write(self, session_id: str, data: list[dict[str, Any]]) -> None:
         if self._max_messages and len(data) > self._max_messages:
             data = data[-self._max_messages :]
         self._db.execute(
-            "INSERT INTO sessions (session_id, messages) VALUES (?, ?) "
-            "ON CONFLICT(session_id) DO UPDATE SET messages = excluded.messages",
-            (session_id, json.dumps(data, ensure_ascii=False)),
+            "INSERT INTO sessions (session_id, messages, updated_at) VALUES (?, ?, ?) "
+            "ON CONFLICT(session_id) DO UPDATE SET messages = excluded.messages, updated_at = excluded.updated_at",
+            (session_id, json.dumps(data, ensure_ascii=False), time.time()),
         )
         self._db.commit()
 
