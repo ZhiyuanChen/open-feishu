@@ -819,6 +819,28 @@
     
     
       <li class="md-tabs__item">
+        <a href="../../guides/agent/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
         <a href="../../about/" class="md-tabs__link">
           
   
@@ -1626,17 +1648,6 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;seen_store
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#feishu.agent.registration.create_agent_dispatcher(seen_path)" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;seen_path
       
     </span>
   </a>
@@ -4004,6 +4015,63 @@
     
       
         
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../guides/agent/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    guides
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
           
         
       
@@ -4182,17 +4250,6 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;seen_store
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#feishu.agent.registration.create_agent_dispatcher(seen_path)" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-parameter"></code>&nbsp;seen_path
       
     </span>
   </a>
@@ -4406,7 +4463,8 @@
 
             <details class="mkdocstrings-source">
               <summary>源代码位于： <code>feishu/agent/registration.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-33">33</a></span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#__codelineno-0-33">33</a></span>
 <span class="normal"><a href="#__codelineno-0-34">34</a></span>
 <span class="normal"><a href="#__codelineno-0-35">35</a></span>
 <span class="normal"><a href="#__codelineno-0-36">36</a></span>
@@ -4434,37 +4492,36 @@
 <span class="normal"><a href="#__codelineno-0-58">58</a></span>
 <span class="normal"><a href="#__codelineno-0-59">59</a></span>
 <span class="normal"><a href="#__codelineno-0-60">60</a></span>
-<span class="normal"><a href="#__codelineno-0-61">61</a></span>
-<span class="normal"><a href="#__codelineno-0-62">62</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="k">def</span><span class="w"> </span><span class="nf">register_agent</span><span class="p">(</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a>    <span class="n">dispatcher</span><span class="p">:</span> <span class="n">EventDispatcher</span><span class="p">,</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a>    <span class="n">agent</span><span class="p">:</span> <span class="n">AgentEngine</span><span class="p">,</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="n">message_event</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;im.message.receive_v1&quot;</span><span class="p">,</span>
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="n">card_event</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;card.action.trigger&quot;</span><span class="p">,</span>
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="sd">    将智能体的消息处理与卡片回调挂载到事件分发器上。</span>
-</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a>
-</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">    把 [feishu.agent.loop.AgentEngine.run][] 注册为消息事件的处理函数，把</span>
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">    [feishu.agent.loop.AgentEngine.handle_card_action][] 注册为卡片回调事件的处理函数。`dispatcher` 须提供与</span>
-</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">    [feishu.events.dispatcher.EventDispatcher][] 一致的 `on(event_type)` 装饰器接口。</span>
-</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">        dispatcher: 事件分发器，须提供 `on(event_type)` 装饰器接口。</span>
-</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">        agent: 已构造的 [feishu.agent.loop.AgentEngine][]。</span>
-</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">        message_event: 消息事件类型。默认为 `im.message.receive_v1`。</span>
-</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">        card_event: 卡片回调事件类型。默认为 `card.action.trigger`。</span>
-</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a>
-</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">        [接收消息](https://open.feishu.cn/document/server-docs/im-v1/message/events/receive)</span>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a>
-</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">        [卡片回传交互](https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/card-callback-communication)</span>
-</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a>
-</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">        &gt;&gt;&gt; register_agent(dispatcher, agent)  # doctest:+SKIP</span>
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="n">dispatcher</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="n">message_event</span><span class="p">)(</span><span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">)</span>
-</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="n">dispatcher</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="n">card_event</span><span class="p">)(</span><span class="n">agent</span><span class="o">.</span><span class="n">handle_card_action</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="k">def</span><span class="w"> </span><span class="nf">register_agent</span><span class="p">(</span>
+</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a>    <span class="n">dispatcher</span><span class="p">:</span> <span class="n">EventDispatcher</span><span class="p">,</span>
+</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a>    <span class="n">agent</span><span class="p">:</span> <span class="n">AgentEngine</span><span class="p">,</span>
+</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="n">message_event</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;im.message.receive_v1&quot;</span><span class="p">,</span>
+</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="n">card_event</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;card.action.trigger&quot;</span><span class="p">,</span>
+</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="sd">    将智能体的消息处理与卡片回调挂载到事件分发器上。</span>
+</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a>
+</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">    把 [feishu.agent.loop.AgentEngine.run][] 注册为消息事件的处理函数，把</span>
+</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">    [feishu.agent.loop.AgentEngine.handle_card_action][] 注册为卡片回调事件的处理函数。`dispatcher` 须提供与</span>
+</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">    [feishu.events.dispatcher.EventDispatcher][] 一致的 `on(event_type)` 装饰器接口。</span>
+</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a>
+</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">        dispatcher: 事件分发器，须提供 `on(event_type)` 装饰器接口。</span>
+</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">        agent: 已构造的 [feishu.agent.loop.AgentEngine][]。</span>
+</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">        message_event: 消息事件类型。默认为 `im.message.receive_v1`。</span>
+</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">        card_event: 卡片回调事件类型。默认为 `card.action.trigger`。</span>
+</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a>
+</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">    飞书文档:</span>
+</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="sd">        [接收消息](https://open.feishu.cn/document/server-docs/im-v1/message/events/receive)</span>
+</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a>
+</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">        [卡片回传交互](https://open.feishu.cn/document/uAjLw4CM/ukzMukzMukzM/feishu-cards/card-callback-communication)</span>
+</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a>
+</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">    Examples:</span>
+</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">        &gt;&gt;&gt; register_agent(dispatcher, agent)  # doctest:+SKIP</span>
+</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="n">dispatcher</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="n">message_event</span><span class="p">)(</span><span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">)</span>
+</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="n">dispatcher</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="n">card_event</span><span class="p">)(</span><span class="n">agent</span><span class="o">.</span><span class="n">handle_card_action</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -4479,7 +4536,7 @@
 
 
 <a href="#feishu.agent.registration.create_agent_dispatcher" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">create_agent_dispatcher</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;agent&lt;/code&gt; (&lt;code&gt;feishu.agent.registration.create_agent_dispatcher(agent)&lt;/code&gt;)" href="#feishu.agent.registration.create_agent_dispatcher(agent)">agent</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;AgentEngine&lt;/span&gt; (&lt;code&gt;feishu.agent.loop.AgentEngine&lt;/code&gt;)" href="../loop/#feishu.agent.loop.AgentEngine">AgentEngine</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;seen_store&lt;/code&gt; (&lt;code&gt;feishu.agent.registration.create_agent_dispatcher(seen_store)&lt;/code&gt;)" href="#feishu.agent.registration.create_agent_dispatcher(seen_store)">seen_store</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SeenStore&lt;/span&gt; (&lt;code&gt;feishu.events.idempotency.SeenStore&lt;/code&gt;)" href="../../events/idempotency/#feishu.events.idempotency.SeenStore">SeenStore</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;seen_path&lt;/code&gt; (&lt;code&gt;feishu.agent.registration.create_agent_dispatcher(seen_path)&lt;/code&gt;)" href="#feishu.agent.registration.create_agent_dispatcher(seen_path)">seen_path</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;pathlib.Path&lt;/code&gt;" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;message_event&lt;/code&gt; (&lt;code&gt;feishu.agent.registration.create_agent_dispatcher(message_event)&lt;/code&gt;)" href="#feishu.agent.registration.create_agent_dispatcher(message_event)">message_event</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s1">&#39;im.message.receive_v1&#39;</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;card_event&lt;/code&gt; (&lt;code&gt;feishu.agent.registration.create_agent_dispatcher(card_event)&lt;/code&gt;)" href="#feishu.agent.registration.create_agent_dispatcher(card_event)">card_event</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s1">&#39;card.action.trigger&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;EventDispatcher&lt;/span&gt; (&lt;code&gt;feishu.events.dispatcher.EventDispatcher&lt;/code&gt;)" href="../../events/dispatcher/#feishu.events.dispatcher.EventDispatcher">EventDispatcher</a></span>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">create_agent_dispatcher</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;agent&lt;/code&gt; (&lt;code&gt;feishu.agent.registration.create_agent_dispatcher(agent)&lt;/code&gt;)" href="#feishu.agent.registration.create_agent_dispatcher(agent)">agent</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;AgentEngine&lt;/span&gt; (&lt;code&gt;feishu.agent.loop.AgentEngine&lt;/code&gt;)" href="../loop/#feishu.agent.loop.AgentEngine">AgentEngine</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;seen_store&lt;/code&gt; (&lt;code&gt;feishu.agent.registration.create_agent_dispatcher(seen_store)&lt;/code&gt;)" href="#feishu.agent.registration.create_agent_dispatcher(seen_store)">seen_store</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SeenStore&lt;/span&gt; (&lt;code&gt;feishu.events.idempotency.SeenStore&lt;/code&gt;)" href="../../events/idempotency/#feishu.events.idempotency.SeenStore">SeenStore</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;message_event&lt;/code&gt; (&lt;code&gt;feishu.agent.registration.create_agent_dispatcher(message_event)&lt;/code&gt;)" href="#feishu.agent.registration.create_agent_dispatcher(message_event)">message_event</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s1">&#39;im.message.receive_v1&#39;</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;card_event&lt;/code&gt; (&lt;code&gt;feishu.agent.registration.create_agent_dispatcher(card_event)&lt;/code&gt;)" href="#feishu.agent.registration.create_agent_dispatcher(card_event)">card_event</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">=</span> <span class="s1">&#39;card.action.trigger&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;EventDispatcher&lt;/span&gt; (&lt;code&gt;feishu.events.dispatcher.EventDispatcher&lt;/code&gt;)" href="../../events/dispatcher/#feishu.events.dispatcher.EventDispatcher">EventDispatcher</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4523,24 +4580,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>事件幂等存储；为空时不去重，除非提供 <code>seen_path</code>。</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-<h4 id="feishu.agent.registration.create_agent_dispatcher(seen_path)" class="doc doc-heading doc-heading-parameter">                  <code>seen_path</code>
-<a href="#feishu.agent.registration.create_agent_dispatcher(seen_path)" class="headerlink" title="Permanent link">&para;</a></h4>            </td>
-            <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | <a class="autorefs autorefs-external" title="&lt;code&gt;pathlib.Path&lt;/code&gt;" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path">Path</a> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>可选 JSON 文件路径，用于构造 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;FileSeenStore&lt;/span&gt;" href="../../events/idempotency/#feishu.events.idempotency.FileSeenStore">feishu.events.idempotency.FileSeenStore</a>；
-适合单进程机器人在重启后继续去重。</p>
+                <p>事件幂等存储；为空时不去重。</p>
               </div>
             </td>
             <td>
@@ -4618,7 +4658,8 @@
 
             <details class="mkdocstrings-source">
               <summary>源代码位于： <code>feishu/agent/registration.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-65">65</a></span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
 <span class="normal"><a href="#__codelineno-0-66">66</a></span>
 <span class="normal"><a href="#__codelineno-0-67">67</a></span>
 <span class="normal"><a href="#__codelineno-0-68">68</a></span>
@@ -4640,41 +4681,30 @@
 <span class="normal"><a href="#__codelineno-0-84">84</a></span>
 <span class="normal"><a href="#__codelineno-0-85">85</a></span>
 <span class="normal"><a href="#__codelineno-0-86">86</a></span>
-<span class="normal"><a href="#__codelineno-0-87">87</a></span>
-<span class="normal"><a href="#__codelineno-0-88">88</a></span>
-<span class="normal"><a href="#__codelineno-0-89">89</a></span>
-<span class="normal"><a href="#__codelineno-0-90">90</a></span>
-<span class="normal"><a href="#__codelineno-0-91">91</a></span>
-<span class="normal"><a href="#__codelineno-0-92">92</a></span>
-<span class="normal"><a href="#__codelineno-0-93">93</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_agent_dispatcher</span><span class="p">(</span>
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="n">agent</span><span class="p">:</span> <span class="n">AgentEngine</span><span class="p">,</span>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="n">seen_store</span><span class="p">:</span> <span class="n">SeenStore</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="n">seen_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="n">message_event</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;im.message.receive_v1&quot;</span><span class="p">,</span>
-</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="n">card_event</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;card.action.trigger&quot;</span><span class="p">,</span>
-</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EventDispatcher</span><span class="p">:</span>
-</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">    创建 [feishu.events.dispatcher.EventDispatcher][] 并把 agent 绑定到消息与卡片事件上。</span>
-</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a>
-</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="sd">        agent: 接收消息与卡片事件的 [feishu.agent.loop.AgentEngine][]。</span>
-</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">        seen_store: 事件幂等存储；为空时不去重，除非提供 `seen_path`。</span>
-</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">        seen_path: 可选 JSON 文件路径，用于构造 [feishu.events.idempotency.FileSeenStore][]；</span>
-</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">            适合单进程机器人在重启后继续去重。</span>
-</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">        message_event: 路由到 [feishu.agent.loop.AgentEngine.run][] 的消息事件类型。</span>
-</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">        card_event: 路由到 [feishu.agent.loop.AgentEngine.handle_card_action][] 的卡片回调事件类型。</span>
-</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a>
-</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="sd">        已完成 agent 事件绑定的 dispatcher。</span>
-</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">..events.dispatcher</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventDispatcher</span>
-</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">..events.idempotency</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileSeenStore</span>
-</span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>
-</span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="n">resolved_seen_store</span> <span class="o">=</span> <span class="n">FileSeenStore</span><span class="p">(</span><span class="n">seen_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">seen_store</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">seen_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">seen_store</span>
-</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="n">dispatcher</span> <span class="o">=</span> <span class="n">EventDispatcher</span><span class="p">(</span><span class="n">seen_store</span><span class="o">=</span><span class="n">resolved_seen_store</span><span class="p">)</span>
-</span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="n">register_agent</span><span class="p">(</span><span class="n">dispatcher</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">message_event</span><span class="o">=</span><span class="n">message_event</span><span class="p">,</span> <span class="n">card_event</span><span class="o">=</span><span class="n">card_event</span><span class="p">)</span>
-</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>    <span class="k">return</span> <span class="n">dispatcher</span>
+<span class="normal"><a href="#__codelineno-0-87">87</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_agent_dispatcher</span><span class="p">(</span>
+</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="n">agent</span><span class="p">:</span> <span class="n">AgentEngine</span><span class="p">,</span>
+</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="n">seen_store</span><span class="p">:</span> <span class="n">SeenStore</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="n">message_event</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;im.message.receive_v1&quot;</span><span class="p">,</span>
+</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="n">card_event</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;card.action.trigger&quot;</span><span class="p">,</span>
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EventDispatcher</span><span class="p">:</span>
+</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="sd">    创建 [feishu.events.dispatcher.EventDispatcher][] 并把 agent 绑定到消息与卡片事件上。</span>
+</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>
+</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="sd">        agent: 接收消息与卡片事件的 [feishu.agent.loop.AgentEngine][]。</span>
+</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">        seen_store: 事件幂等存储；为空时不去重。</span>
+</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="sd">        message_event: 路由到 [feishu.agent.loop.AgentEngine.run][] 的消息事件类型。</span>
+</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">        card_event: 路由到 [feishu.agent.loop.AgentEngine.handle_card_action][] 的卡片回调事件类型。</span>
+</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a>
+</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">    Returns:</span>
+</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">        已完成 agent 事件绑定的 dispatcher。</span>
+</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">..events.dispatcher</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventDispatcher</span>
+</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a>
+</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="n">dispatcher</span> <span class="o">=</span> <span class="n">EventDispatcher</span><span class="p">(</span><span class="n">seen_store</span><span class="o">=</span><span class="n">seen_store</span><span class="p">)</span>
+</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="n">register_agent</span><span class="p">(</span><span class="n">dispatcher</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">message_event</span><span class="o">=</span><span class="n">message_event</span><span class="p">,</span> <span class="n">card_event</span><span class="o">=</span><span class="n">card_event</span><span class="p">)</span>
+</span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="k">return</span> <span class="n">dispatcher</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -4708,7 +4738,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月3日 18:57:57 UTC">2026-07-03 18:57:57</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月4日 12:46:36 UTC">2026-07-04 12:46:36</span>
   </span>
 
     
