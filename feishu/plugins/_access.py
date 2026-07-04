@@ -21,12 +21,16 @@
 
 from __future__ import annotations
 
+import inspect
+import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
 from feishu.agent.context import current_tool_context
 from feishu.agent.result import ToolOutcome, ToolResult
+
+logger = logging.getLogger("feishu")
 
 _ACCESS_DENIAL_REASONS = {
     "requester identity is unavailable": "无法获取请求者身份",
@@ -59,7 +63,7 @@ async def resolve_operational_access(
     user = tool_context.requesting_user()
     if not user:
         return access_blocked(service, "requester identity is unavailable")
-    username = service_username(user)
+    username = await resolve_service_username(user, client=tool_context.client)
     if not username:
         return access_blocked(service, "requester user_id is unavailable")
     principal_identities = verified_principal_identities(user)
@@ -93,6 +97,34 @@ def service_username(user: Mapping[str, Any]) -> str:
     r"""按组织规则解析服务账号用户名：只使用 Feishu `user_id`。"""
 
     return text(user.get("user_id"))
+
+
+async def resolve_service_username(
+    user: Mapping[str, Any],
+    *,
+    client: Any | None = None,
+) -> str:
+    r"""解析服务账号用户名；事件缺少 `user_id` 时通过可信 tenant client 用 `open_id` 补全。"""
+
+    username = service_username(user)
+    if username:
+        return username
+    open_id = text(user.get("open_id"))
+    if not open_id or client is None:
+        return ""
+    users = getattr(getattr(client, "contact", None), "users", None)
+    get_user = getattr(users, "get", None)
+    if get_user is None:
+        return ""
+    try:
+        resolved = get_user(open_id, user_id_type="open_id")
+        if inspect.isawaitable(resolved):
+            resolved = await resolved
+    except Exception:  # noqa: BLE001 - missing contact scope should become a local access denial
+        logger.debug("failed to resolve requester user_id from open_id", exc_info=True)
+        return ""
+    resolved_user = resolved.get("user") if isinstance(resolved, Mapping) else None
+    return text(resolved_user.get("user_id")) if isinstance(resolved_user, Mapping) else ""
 
 
 def owner_aliases(username: str) -> frozenset[str]:
@@ -133,5 +165,6 @@ __all__ = [
     "normalize_identity",
     "owner_aliases",
     "resolve_operational_access",
+    "resolve_service_username",
     "text",
 ]

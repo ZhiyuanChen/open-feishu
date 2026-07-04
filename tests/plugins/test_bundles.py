@@ -84,6 +84,81 @@ def test_slurm_tools() -> None:
     ]
 
 
+def test_slurm_tools_resolve_open_id_requester() -> None:
+    class _Users:
+        def __init__(self) -> None:
+            self.calls: list[tuple[str, str]] = []
+
+        async def get(self, user_id, *, user_id_type="open_id", **kwargs):
+            self.calls.append((user_id, user_id_type))
+            return {"user": {"user_id": "qinghanw313"}}
+
+    class _Contact:
+        def __init__(self) -> None:
+            self.users = _Users()
+
+    class _FeishuClient:
+        def __init__(self) -> None:
+            self.contact = _Contact()
+
+    class _SlurmClient:
+        def __init__(self) -> None:
+            self.calls: list[tuple[Any, ...]] = []
+
+        async def cluster_status(self, *, max_jobs: int = 20, max_unhealthy_nodes: int = 20):
+            self.calls.append(("cluster_status", max_jobs, max_unhealthy_nodes))
+            return {"jobs": {"items": []}, "nodes": {"unhealthy": []}}
+
+    async def run():
+        feishu_client = _FeishuClient()
+        slurm_client = _SlurmClient()
+        register_bundled_plugins()
+        registry = build_tool_registry(["slurm"], BundleContext(extra={"slurm": {"client": slurm_client}}))
+        with use_tool_context(ToolContext(client=feishu_client, user={"open_id": "ou_qing"})):
+            result = await registry.dispatch("get_slurm_cluster_status", {})
+        return feishu_client, slurm_client, result
+
+    feishu_client, slurm_client, result = asyncio.run(run())
+
+    assert result.outcome is ToolOutcome.COMPLETED
+    assert feishu_client.contact.users.calls == [("ou_qing", "open_id")]
+    assert slurm_client.calls == [("cluster_status", 20, 20)]
+
+
+def test_slurm_tools_bind_injected_client_user() -> None:
+    class _BoundSlurmClient:
+        def __init__(self, username: str) -> None:
+            self.username = username
+            self.calls: list[tuple[Any, ...]] = []
+
+        async def cluster_status(self, *, max_jobs: int = 20, max_unhealthy_nodes: int = 20):
+            self.calls.append(("cluster_status", self.username, max_jobs, max_unhealthy_nodes))
+            return {"nodes": {"unhealthy": []}, "jobs": {"items": []}}
+
+    class _SlurmClient:
+        def __init__(self) -> None:
+            self.bound: list[_BoundSlurmClient] = []
+
+        def with_user(self, username: str) -> _BoundSlurmClient:
+            bound = _BoundSlurmClient(username)
+            self.bound.append(bound)
+            return bound
+
+    async def run():
+        client = _SlurmClient()
+        register_bundled_plugins()
+        registry = build_tool_registry(["slurm"], BundleContext(extra={"slurm": {"client": client}}))
+        with use_tool_context(ToolContext(user={"user_id": "qinghanw313"})):
+            result = await registry.dispatch("get_slurm_cluster_status", {})
+        return client, result
+
+    client, result = asyncio.run(run())
+
+    assert result.outcome is ToolOutcome.COMPLETED
+    assert len(client.bound) == 1
+    assert client.bound[0].calls == [("cluster_status", "qinghanw313", 20, 20)]
+
+
 def test_slurm_api() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.headers["x-slurm-user-name"] == "loki"

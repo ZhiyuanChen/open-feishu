@@ -22,13 +22,20 @@
 from __future__ import annotations
 
 import asyncio
+import base64
+import hashlib
+import hmac
+import json
+import time
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any
 
 import httpx
 
 from feishu.agent.bundles import BundleContext
+from feishu.agent.context import current_tool_context
 from feishu.agent.result import ToolOutcome, ToolResult
 from feishu.agent.tools import Tool, ToolRegistry
 
@@ -51,13 +58,13 @@ _BAD_NODE_STATES = {
 
 
 class SlurmBundle:
-    r"""Slurm 只读状态 bundle，通过 slurmrestd 查询节点、队列、分区与集群概览。"""
+    r"""Slurm 只读状态 bundle，通过配置的 Slurm 客户端查询节点、队列、分区与集群概览。"""
 
     def register(self, registry: ToolRegistry, context: BundleContext) -> None:
         registry.add(
             Tool(
                 name="get_slurm_cluster_status",
-                description="通过 slurmrestd 读取 Slurm 集群节点、分区与队列的只读状态摘要。",
+                description="通过配置的 Slurm 客户端读取集群节点、分区与队列的只读状态摘要。",
                 input_schema={
                     "type": "object",
                     "properties": {
@@ -77,7 +84,7 @@ class SlurmBundle:
         registry.add(
             Tool(
                 name="list_slurm_nodes",
-                description="通过 slurmrestd 读取 Slurm 节点列表，可按状态做客户端侧过滤。",
+                description="通过配置的 Slurm 客户端读取节点列表，可按状态做客户端侧过滤。",
                 input_schema={
                     "type": "object",
                     "properties": {
@@ -92,7 +99,7 @@ class SlurmBundle:
         registry.add(
             Tool(
                 name="list_slurm_jobs",
-                description="通过 slurmrestd 读取当前 Slurm 作业列表，可按用户或状态做客户端侧过滤。",
+                description="通过配置的 Slurm 客户端读取当前作业列表，可按用户或状态做客户端侧过滤。",
                 input_schema={
                     "type": "object",
                     "properties": {
@@ -110,7 +117,7 @@ class SlurmBundle:
         registry.add(
             Tool(
                 name="list_slurm_partitions",
-                description="通过 slurmrestd 读取 Slurm 分区列表。",
+                description="通过配置的 Slurm 客户端读取分区列表。",
                 input_schema={
                     "type": "object",
                     "properties": {
@@ -227,6 +234,148 @@ class SlurmRestdClient:
         return f"/slurm/{self.api_version}/{suffix.lstrip('/')}"
 
 
+class SlurmWebGatewayClient:
+    r"""基于集中式 Slurm-web gateway 的只读 Slurm 客户端。"""
+
+    def __init__(
+        self,
+        base_url: str,
+        *,
+        cluster: str | Sequence[str],
+        jwt_key_file: str,
+        groups: Sequence[str] = (),
+        audience: str = "slurm-web",
+        token_ttl_seconds: int = 300,
+        timeout: float = 10.0,
+        transport: httpx.AsyncBaseTransport | None = None,
+        username: str | None = None,
+    ) -> None:
+        self.base_url = base_url.rstrip("/")
+        self.clusters = _clusters(cluster)
+        self.cluster = self.clusters[0]
+        self.jwt_key_file = jwt_key_file
+        self.groups = tuple(groups) or tuple(f"cluster.{cluster_name}.user" for cluster_name in self.clusters)
+        self.audience = audience
+        self.token_ttl_seconds = token_ttl_seconds
+        self.timeout = timeout
+        self.transport = transport
+        self.username = _text(username)
+
+    def with_user(self, username: str) -> SlurmWebGatewayClient:
+        return SlurmWebGatewayClient(
+            self.base_url,
+            cluster=self.clusters,
+            jwt_key_file=self.jwt_key_file,
+            groups=self.groups,
+            audience=self.audience,
+            token_ttl_seconds=self.token_ttl_seconds,
+            timeout=self.timeout,
+            transport=self.transport,
+            username=username,
+        )
+
+    async def cluster_status(self, *, max_jobs: int = 20, max_unhealthy_nodes: int = 20) -> dict[str, Any]:
+        ping, nodes, partitions, jobs = await asyncio.gather(
+            self.ping(),
+            self.nodes(max_results=10000),
+            self.partitions(max_results=10000),
+            self.jobs(max_results=10000),
+        )
+        compact_nodes = nodes["nodes"]
+        compact_partitions = partitions["partitions"]
+        compact_jobs = jobs["jobs"]
+        return {
+            "ping": ping,
+            "nodes": {
+                "count": len(compact_nodes),
+                "by_state": _state_counts(compact_nodes),
+                "unhealthy": _limit([node for node in compact_nodes if _is_unhealthy_node(node)], max_unhealthy_nodes),
+            },
+            "partitions": {
+                "count": len(compact_partitions),
+                "by_state": _state_counts(compact_partitions),
+                "items": _limit(compact_partitions, 50),
+            },
+            "jobs": {
+                "count": len(compact_jobs),
+                "by_state": _state_counts(compact_jobs),
+                "items": _limit(compact_jobs, max_jobs),
+            },
+        }
+
+    async def ping(self) -> dict[str, Any]:
+        payloads = await self._request_all("ping")
+        if len(payloads) == 1:
+            payload = next(iter(payloads.values()))
+            return payload if isinstance(payload, dict) else {"payload": payload}
+        return {"clusters": payloads}
+
+    async def nodes(self, *, state: str | None = None, max_results: int = 100) -> dict[str, Any]:
+        payloads = await self._request_all("nodes")
+        nodes = [
+            {**_compact_node(item), "cluster": cluster}
+            for cluster, payload in payloads.items()
+            for item in _payload_items(payload, "nodes")
+        ]
+        return _limited_collection("nodes", [node for node in nodes if _matches_state(node, state)], max_results)
+
+    async def jobs(
+        self,
+        *,
+        state: str | None = None,
+        user: str | None = None,
+        max_results: int = 50,
+    ) -> dict[str, Any]:
+        requested_user = _text(user) or self._requester_username()
+        payloads = await self._request_all("jobs")
+        jobs = [
+            {**_compact_job(item), "cluster": cluster}
+            for cluster, payload in payloads.items()
+            for item in _payload_items(payload, "jobs")
+        ]
+        filtered = [job for job in jobs if _matches_state(job, state) and _matches_user(job, requested_user)]
+        return _limited_collection("jobs", filtered, max_results)
+
+    async def partitions(self, *, max_results: int = 50) -> dict[str, Any]:
+        payloads = await self._request_all("partitions")
+        partitions = [
+            {**_compact_partition(item), "cluster": cluster}
+            for cluster, payload in payloads.items()
+            for item in _payload_items(payload, "partitions")
+        ]
+        return _limited_collection("partitions", partitions, max_results)
+
+    async def _request_all(self, path: str) -> dict[str, Any]:
+        results = await asyncio.gather(*(self._request(cluster, path) for cluster in self.clusters))
+        return dict(zip(self.clusters, results, strict=True))
+
+    async def _request(self, cluster: str, path: str) -> Any:
+        token = self._token(self._requester_username())
+        headers = {"Accept": "application/json", "Authorization": f"Bearer {token}"}
+        url = f"{self.base_url}/api/agents/{cluster}/{path.lstrip('/')}"
+        async with httpx.AsyncClient(timeout=self.timeout, headers=headers, transport=self.transport) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            return response.json()
+
+    def _requester_username(self) -> str:
+        return self.username or _requester_username()
+
+    def _token(self, username: str) -> str:
+        now = int(time.time())
+        key = Path(self.jwt_key_file).read_text(encoding="utf-8").strip()
+        return _jwt_hs256(
+            key,
+            {
+                "aud": self.audience,
+                "sub": username,
+                "groups": list(self.groups),
+                "iat": now,
+                "exp": now + self.token_ttl_seconds,
+            },
+        )
+
+
 async def _get_cluster_status(context: BundleContext, *, max_jobs: int = 20, max_unhealthy_nodes: int = 20) -> Any:
     access = await _authorize_slurm(context)
     if isinstance(access, ToolResult):
@@ -320,13 +469,37 @@ def _job_user_filter(
 def resolve_slurm_client(context: BundleContext, *, user: str | None = None) -> Any | None:
     injected = context.extra.get("slurm_client")
     if injected is not None:
+        if user:
+            bind = getattr(injected, "with_user", None)
+            if bind is not None:
+                return bind(user)
         return injected
     config = _slurm_config(context)
     if not config:
         return None
     injected = config.get("client")
     if injected is not None:
+        if user:
+            bind = getattr(injected, "with_user", None)
+            if bind is not None:
+                return bind(user)
         return injected
+    gateway_url = _text(config.get("gateway_url") or config.get("slurmweb_gateway_url"))
+    jwt_key_file = _text(config.get("jwt_key_file") or config.get("slurmweb_jwt_key_file"))
+    cluster = config.get("cluster") or config.get("clusters") or config.get("slurmweb_cluster")
+    if gateway_url and jwt_key_file and cluster:
+        transport = config.get("transport")
+        return SlurmWebGatewayClient(
+            gateway_url,
+            cluster=_cluster_value(cluster),
+            jwt_key_file=jwt_key_file,
+            groups=_sequence_value(config.get("groups") or config.get("slurmweb_groups")),
+            audience=_text(config.get("audience")) or "slurm-web",
+            token_ttl_seconds=_int(config.get("token_ttl_seconds"), default=300),
+            timeout=_float(config.get("timeout"), default=10.0),
+            transport=transport if isinstance(transport, httpx.AsyncBaseTransport) else None,
+            username=_text(user) or None,
+        )
     base_url = _text(config.get("base_url") or config.get("url"))
     if not base_url:
         return None
@@ -350,7 +523,7 @@ def _slurm_config(context: BundleContext) -> Mapping[str, Any]:
 
 def _compact_node(item: dict[str, Any]) -> dict[str, Any]:
     name = _text(item.get("name") or item.get("hostname") or item.get("node_name"))
-    states = _states(item.get("state") or item.get("state_flags") or item.get("state_string"))
+    states = _states(item.get("state") or item.get("states") or item.get("state_flags") or item.get("state_string"))
     return _drop_empty(
         {
             "name": name,
@@ -367,7 +540,7 @@ def _compact_node(item: dict[str, Any]) -> dict[str, Any]:
 
 
 def _compact_job(item: dict[str, Any]) -> dict[str, Any]:
-    states = _states(item.get("job_state") or item.get("state"))
+    states = _states(item.get("job_state") or item.get("state") or item.get("states"))
     return _drop_empty(
         {
             "job_id": item.get("job_id") or item.get("id"),
@@ -394,7 +567,7 @@ def _compact_partition(item: dict[str, Any]) -> dict[str, Any]:
     return _drop_empty(
         {
             "name": _text(item.get("name") or item.get("partition")),
-            "states": _states(item.get("state")),
+            "states": _states(item.get("state") or item.get("states")),
             "total_nodes": item.get("total_nodes") or node_info.get("total"),
             "total_cpus": item.get("total_cpus"),
             "nodes": _text(node_info.get("configured") or item.get("nodes")),
@@ -479,6 +652,65 @@ def _drop_empty(value: dict[str, Any]) -> dict[str, Any]:
     return {key: item for key, item in value.items() if item not in (None, "", [])}
 
 
+def _requester_username() -> str:
+    user = current_tool_context().requesting_user()
+    return _text(user.get("user_id"))
+
+
+def _clusters(value: str | Sequence[str]) -> tuple[str, ...]:
+    if isinstance(value, str):
+        items: Sequence[str] = value.split(",")
+    else:
+        items = value
+    clusters = tuple(_text(item) for item in items if _text(item))
+    if not clusters:
+        raise ValueError("at least one Slurm-web cluster is required")
+    return clusters
+
+
+def _cluster_value(value: Any) -> str | Sequence[str]:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, Sequence):
+        return [str(item) for item in value]
+    return str(value)
+
+
+def _sequence_value(value: Any) -> tuple[str, ...]:
+    if value in (None, ""):
+        return ()
+    if isinstance(value, str):
+        return tuple(item.strip() for item in value.split(",") if item.strip())
+    if isinstance(value, Sequence):
+        return tuple(str(item).strip() for item in value if str(item).strip())
+    return (str(value).strip(),)
+
+
+def _payload_items(payload: Any, key: str) -> list[dict[str, Any]]:
+    if isinstance(payload, list):
+        return [item for item in payload if isinstance(item, dict)]
+    if isinstance(payload, dict):
+        value = payload.get(key)
+        if isinstance(value, list):
+            return [item for item in value if isinstance(item, dict)]
+    return []
+
+
+def _jwt_hs256(key: str, payload: dict[str, Any]) -> str:
+    header = {"alg": "HS256", "typ": "JWT"}
+    signing_input = f"{_b64json(header)}.{_b64json(payload)}"
+    signature = hmac.new(key.encode(), signing_input.encode(), hashlib.sha256).digest()
+    return f"{signing_input}.{_b64(signature)}"
+
+
+def _b64json(value: dict[str, Any]) -> str:
+    return _b64(json.dumps(value, separators=(",", ":")).encode())
+
+
+def _b64(value: bytes) -> str:
+    return base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
+
 def _not_configured(service: str) -> ToolResult:
     return ToolResult(
         ToolOutcome.BLOCKED,
@@ -511,4 +743,13 @@ def _float(value: Any, *, default: float) -> float:
         return default
 
 
-__all__ = ["SlurmBundle", "SlurmRestdClient"]
+def _int(value: Any, *, default: int) -> int:
+    if value in (None, ""):
+        return default
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+__all__ = ["SlurmBundle", "SlurmRestdClient", "SlurmWebGatewayClient"]

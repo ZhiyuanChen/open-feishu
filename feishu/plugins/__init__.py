@@ -25,7 +25,7 @@ from feishu.agent.bundles import BUNDLES
 
 from .mlflow import MLflowBundle, MLflowClient
 from .ops import OpsBundle
-from .slurm import SlurmBundle, SlurmRestdClient
+from .slurm import SlurmBundle, SlurmRestdClient, SlurmWebGatewayClient
 
 _BUNDLED_PLUGIN_BUNDLES = {
     "mlflow": MLflowBundle,
@@ -47,5 +47,6 @@ __all__ = [
     "OpsBundle",
     "SlurmBundle",
     "SlurmRestdClient",
+    "SlurmWebGatewayClient",
     "register_bundled_plugins",
 ]
