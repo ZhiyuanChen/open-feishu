@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from .contact import ContactNamespace
 from .departments import DepartmentsNamespace
+from .directory import OrganizationSnapshot, fetch_organization_snapshot
 from .normalize import (
     get_user_department_ids,
     get_user_email,
@@ -37,7 +38,9 @@ from .users import UsersNamespace
 __all__ = [
     "ContactNamespace",
     "DepartmentsNamespace",
+    "OrganizationSnapshot",
     "UsersNamespace",
+    "fetch_organization_snapshot",
     "get_user_department_ids",
     "get_user_email",
     "get_user_identity",
