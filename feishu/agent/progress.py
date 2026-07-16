@@ -181,6 +181,20 @@ class _ProgressCard:
             logger.debug("progress status update failed", exc_info=True)
             return False
 
+    async def replace_with_card(self, card: dict[str, Any]) -> str | None:
+        r"""把已存在的进度卡原地替换为外部卡片，并阻止后续 finalize 覆盖它。"""
+        ready = self._ready()
+        if ready is None or self._message_id is None or self._done:
+            return None
+        _, client, _ = ready
+        try:
+            await client.im.patch(self._message_id, card)
+            self._done = True
+            return self._message_id
+        except Exception:  # noqa: BLE001 - caller can fall back to sending a separate card
+            logger.debug("progress card replacement failed", exc_info=True)
+            return None
+
     async def step(self, tool_name: str, *, description: str | None = None) -> None:
         r"""记录一步并发送 / 更新进度卡片（首步发送，后续 patch）。"""
         ready = self._ready()
@@ -215,6 +229,8 @@ class _ProgressCard:
 
         返回 `False` 表示本轮没有进度卡片（未调用任何工具），调用方应改用常规文本回复。
         """
+        if self._done:
+            return True
         ready = self._ready()
         if ready is None or self._message_id is None:
             return False

@@ -798,7 +798,7 @@ class AgentEngine:
             if await self._request_authorization(event, session_id, history, call, tool_result, progress):
                 return ToolResultPart(tool_call_id=call.id, content=_AWAITING_AUTHORIZATION_NOTE, is_error=False), True
             authorize_url = tool_result.authorize_url
-            if authorize_url and await self._try_send_auth_card(event, authorize_url):
+            if authorize_url and await self._try_send_auth_card(event, authorize_url, progress):
                 content = _AUTH_CARD_SENT_NOTE
         return ToolResultPart(tool_call_id=call.id, content=content, is_error=is_error), False
 
@@ -908,13 +908,15 @@ class AgentEngine:
         r"""把审批参数中引用到的分享文件句柄逐个 pin 缓存。"""
         await approval_flow.pin_referenced_files(self, arguments)
 
-    async def _send_auth_card(self, event: Event, authorize_url: str) -> bool:
+    async def _send_auth_card(self, event: Event, authorize_url: str, progress: _ProgressCard | None = None) -> bool:
         r"""向当前会话发送授权卡片。"""
-        return await oauth_flow.send_auth_card(self, event, authorize_url)
+        return await oauth_flow.send_auth_card(self, event, authorize_url, progress)
 
-    async def _try_send_auth_card(self, event: Event, authorize_url: str) -> bool:
+    async def _try_send_auth_card(
+        self, event: Event, authorize_url: str, progress: _ProgressCard | None = None
+    ) -> bool:
         r"""发送授权卡片的不抛错封装。"""
-        return await oauth_flow.try_send_auth_card(self, event, authorize_url)
+        return await oauth_flow.try_send_auth_card(self, event, authorize_url, progress)
 
     async def _mark_awaiting_confirmation(
         self, session_id: str, history: list[Message], tool_calls: list[ToolCall]

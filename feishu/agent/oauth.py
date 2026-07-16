@@ -36,6 +36,7 @@ from ._callbacks import accepts_positional_arguments
 from ._flow import (
     authorization_card_message_id,
     authorization_complete_card,
+    authorization_expired_card,
     suspension_progress_note,
 )
 from .context import current_tool_context, use_tool_context
@@ -151,20 +152,24 @@ async def request_authorization(
     except Exception:  # noqa: BLE001 - no persisted pending means callback cannot resume safely
         logger.warning("failed to persist pending authorization", exc_info=True)
         return False
-    try:
-        response = await agent.client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
-    except Exception:  # noqa: BLE001 - undeliverable card -> cancel the pending, then fall back
-        logger.warning("failed to send auth card; cancelling pending %s", authorization.authorization_id, exc_info=True)
+    auth_card_message_id = await progress.replace_with_card(card) if progress is not None else None
+    if not auth_card_message_id:
         try:
-            await agent.authorizations.complete(authorization.authorization_id, outcome="cancelled")
-        except Exception:  # noqa: BLE001 - best-effort cleanup; an uncancelled pending will TTL-expire
+            response = await agent.client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
+        except Exception:  # noqa: BLE001 - undeliverable card -> cancel the pending, then fall back
             logger.warning(
-                "failed to cancel pending authorization %s after card send failure",
-                authorization.authorization_id,
-                exc_info=True,
+                "failed to send auth card; cancelling pending %s", authorization.authorization_id, exc_info=True
             )
-        return False
-    auth_card_message_id = _message_id_from_response(response)
+            try:
+                await agent.authorizations.complete(authorization.authorization_id, outcome="cancelled")
+            except Exception:  # noqa: BLE001 - best-effort cleanup; an uncancelled pending will TTL-expire
+                logger.warning(
+                    "failed to cancel pending authorization %s after card send failure",
+                    authorization.authorization_id,
+                    exc_info=True,
+                )
+            return False
+        auth_card_message_id = _message_id_from_response(response)
     if auth_card_message_id:
         await persist_authorization_card_message_id(agent, authorization, auth_card_message_id)
     return True
@@ -199,7 +204,7 @@ def build_authorize_url(
     return builder(user, scopes)
 
 
-async def send_auth_card(agent: Any, event: Event, authorize_url: str) -> bool:
+async def send_auth_card(agent: Any, event: Event, authorize_url: str, progress: _ProgressCard | None = None) -> bool:
     r"""向当前会话发送一张授权卡片；缺少构造器、客户端或 chat 时返回 `False`。"""
     if agent._auth_card_builder is None or agent.client is None or not authorize_url:
         return False
@@ -208,14 +213,18 @@ async def send_auth_card(agent: Any, event: Event, authorize_url: str) -> bool:
     if not chat_id:
         return False
     card = agent._auth_card_builder(authorize_url)
+    if progress is not None and await progress.replace_with_card(card):
+        return True
     await agent.client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
     return True
 
 
-async def try_send_auth_card(agent: Any, event: Event, authorize_url: str) -> bool:
+async def try_send_auth_card(
+    agent: Any, event: Event, authorize_url: str, progress: _ProgressCard | None = None
+) -> bool:
     r"""发送授权卡片的不抛错封装：发送失败只记日志并返回 `False`。"""
     try:
-        return await send_auth_card(agent, event, authorize_url)
+        return await send_auth_card(agent, event, authorize_url, progress)
     except Exception:  # noqa: BLE001 — auth-card delivery must never crash the turn or drop the tool result
         logger.warning("failed to send auth card; returning the URL inline", exc_info=True)
         return False
@@ -243,7 +252,7 @@ async def resume_authorization(agent: Any, authorization_id: str, *, user: Mappi
     claim = await agent.authorizations.claim(authorization_id)
     if claim is not ClaimResult.CLAIMED:
         if claim in (ClaimResult.EXPIRED, ClaimResult.MISSING):
-            await remove_authorization_card(agent, authorization)
+            await remove_authorization_card(agent, authorization, card=authorization_expired_card())
             await notify_authorization_resume_problem(
                 agent,
                 authorization,
@@ -333,20 +342,22 @@ async def notify_authorization_resume_problem(agent: Any, authorization: Pending
         )
 
 
-async def remove_authorization_card(agent: Any, authorization: PendingAuthorization) -> None:
-    r"""授权完成后尽力清理独立 OAuth 授权卡片。"""
+async def remove_authorization_card(
+    agent: Any, authorization: PendingAuthorization, *, card: dict[str, Any] | None = None
+) -> None:
+    r"""授权结束后尽力把独立 OAuth 授权卡片原地结算为不可点击状态。"""
     message_id = authorization_card_message_id(authorization.extra)
     if agent.client is None or not message_id:
         return
     try:
-        await agent.client.im.recall(message_id)
+        await agent.client.im.patch(message_id, card or authorization_complete_card())
         return
-    except Exception:  # noqa: BLE001 - deletion is UI cleanup; fall back to making the card inert
-        logger.debug("could not recall authorization card %s", message_id, exc_info=True)
-    try:
-        await agent.client.im.patch(message_id, authorization_complete_card())
-    except Exception:  # noqa: BLE001 - never let cleanup affect the resumed tool
+    except Exception:  # noqa: BLE001 - UI cleanup must never affect the resumed tool
         logger.debug("could not patch authorization card %s", message_id, exc_info=True)
+    try:
+        await agent.client.im.recall(message_id)
+    except Exception:  # noqa: BLE001 - never let cleanup affect the resumed tool
+        logger.debug("could not recall authorization card %s", message_id, exc_info=True)
 
 
 def event_from_pending_authorization(authorization: PendingAuthorization) -> Event:

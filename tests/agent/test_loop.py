@@ -607,7 +607,9 @@ class TestAgentLoop:
         assert calls == ["events", "events"]
         assert len(backend.calls) == 2
         assert client.replies[-1][1] == "Here are your events"
-        assert client.recalled_messages == ["om_card_1"]
+        assert client.recalled_messages == []
+        assert client.patched_cards[0][0] == "om_card_1"
+        assert "授权已完成" in str(client.patched_cards[0][1])
         assert authorizations._store == {}
         history = await store.get("oc_1")
         results = [p for m in history if m.role == "tool" for p in m.content if isinstance(p, ToolResultPart)]
@@ -665,7 +667,101 @@ class TestAgentLoop:
 
         assert status == "resumed"
         assert calls == ["events", "events"]
-        assert client.recalled_messages == ["om_card_1"]
+        assert client.recalled_messages == []
+        assert client.patched_cards[0][0] == "om_card_1"
+        assert "授权已完成" in str(client.patched_cards[0][1])
+
+    async def test_authorization_replaces_existing_progress_card_instead_of_sending_separate_card(self):
+        client = _LoopRecordingClient()
+        reg = ToolRegistry()
+        store = InMemorySessionStore()
+        authorizations = InMemoryPendingAuthorizationStore()
+
+        async def events():
+            return ToolResult(
+                ToolOutcome.NEEDS_USER_AUTH,
+                content="user authorization required",
+                auth_scopes=("mail:user_mailbox.message:readonly",),
+                is_error=True,
+            )
+
+        def progress_builder(tool_names, done, result):
+            return {"progress": True, "tools": tool_names, "done": done, "result": result}
+
+        def auth_builder(url):
+            return {"auth": True, "url": url}
+
+        reg.register("events", events, input_schema={"type": "object"}, description="events")
+        backend = FakeLlmBackend([tool_turn(index=0, id="c1", name="events", arguments_json="{}")])
+        agent = Agent(
+            backend=backend,
+            registry=reg,
+            store=store,
+            client=client,
+            authorizations=authorizations,
+            auth_card_builder=auth_builder,
+            authorize_url_builder=lambda _user, _scopes, authorization=None: (
+                f"https://auth.example/authorize?state={authorization.authorization_id}"
+            ),
+            progress_card_builder=progress_builder,
+        )
+
+        await agent.run(_text_event("mail?", chat_id="oc_1", open_id="ou_tester"))
+
+        assert client.sent_cards == [
+            ("oc_1", {"progress": True, "tools": [], "done": False, "result": ""}, "interactive", "chat_id")
+        ]
+        pending = next(iter(authorizations._store.values()))
+        assert pending.extra["auth_card_message_id"] == "om_card_1"
+        assert pending.extra["progress_message_id"] == "om_card_1"
+        assert client.patched_cards[-1][0] == "om_card_1"
+        assert client.patched_cards[-1][1]["auth"] is True
+
+    async def test_legacy_authorize_url_fallback_replaces_existing_progress_card(self):
+        client = _LoopRecordingClient()
+        reg = ToolRegistry()
+        store = InMemorySessionStore()
+
+        async def events():
+            return ToolResult(
+                ToolOutcome.NEEDS_USER_AUTH,
+                content="user authorization required",
+                authorize_url="https://auth.example/legacy",
+                is_error=True,
+            )
+
+        def progress_builder(tool_names, done, result):
+            return {"progress": True, "tools": tool_names, "done": done, "result": result}
+
+        def auth_builder(url):
+            return {"auth": True, "url": url}
+
+        reg.register("events", events, input_schema={"type": "object"}, description="events")
+        backend = FakeLlmBackend(
+            [
+                tool_turn(index=0, id="c1", name="events", arguments_json="{}"),
+                text_turn("Please authorize"),
+            ]
+        )
+        agent = Agent(
+            backend=backend,
+            registry=reg,
+            store=store,
+            client=client,
+            auth_card_builder=auth_builder,
+            progress_card_builder=progress_builder,
+        )
+
+        await agent.run(_text_event("mail?", chat_id="oc_1", open_id="ou_tester"))
+
+        assert client.sent_cards == [
+            ("oc_1", {"progress": True, "tools": [], "done": False, "result": ""}, "interactive", "chat_id")
+        ]
+        assert client.patched_cards[0] == (
+            "om_card_1",
+            {"progress": True, "tools": ["events"], "done": False, "result": ""},
+        )
+        assert client.patched_cards[1] == ("om_card_1", {"auth": True, "url": "https://auth.example/legacy"})
 
     async def test_auth_preflight_runs_before_approval_card(self):
         client = _LoopRecordingClient()
@@ -761,6 +857,7 @@ class TestAgentLoop:
             chat_id="oc_1",
             created_message_id="om_in",
             created_at=0,
+            extra={"auth_card_message_id": "om_auth"},
         )
         await authorizations.put(pending)
         agent = Agent(
@@ -774,6 +871,9 @@ class TestAgentLoop:
         status = await agent.resume_authorization("az_expired", user={"open_id": "ou_tester"})
 
         assert status == "expired"
+        assert client.patched_cards[0][0] == "om_auth"
+        assert "原请求已过期" in str(client.patched_cards[0][1])
+        assert client.recalled_messages == []
         assert client.replies[-1][0] == "om_in"
         assert "原请求已过期" in client.replies[-1][1]
 
@@ -1178,10 +1278,10 @@ class TestApprovalFlow:
 
         await agent.run(_text_event("deploy prod", chat_id="oc_1"))
 
-        assert len(client.sent_cards) == 2
+        assert len(client.sent_cards) == 1
         progress_message_id = "om_card_1"
-        approval_message_id = "om_card_2"
-        approval_card = client.sent_cards[1][1]
+        approval_message_id = progress_message_id
+        approval_card = client.patched_cards[-1][1]
         approval_id = _extract_approval_id(approval_card)
         sha = _extract_payload_sha256(approval_card)
 
@@ -1191,7 +1291,7 @@ class TestApprovalFlow:
         await _drain(agent)
 
         assert ran == ["prod"]
-        assert len(client.sent_cards) == 2  # no extra progress card on resume
+        assert len(client.sent_cards) == 1  # no separate confirmation/progress card on resume
         patched_ids = [message_id for message_id, _ in client.patched_cards]
         assert progress_message_id in patched_ids
         assert approval_message_id in patched_ids

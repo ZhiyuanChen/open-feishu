@@ -94,7 +94,19 @@ def authorization_card_message_id(extra: Mapping[str, Any] | None) -> str | None
 
 
 def authorization_complete_card() -> dict[str, Any]:
-    r"""构造授权完成后的中性卡片，用于无法 recall 时的降级 patch。"""
+    r"""构造授权完成后的中性卡片，用于把授权卡原地结算为不可点击状态。"""
     from ..cards.builder import Card
 
     return Card().header("授权已完成", template="green").markdown("授权已完成，我会回到原对话继续处理。").to_dict()
+
+
+def authorization_expired_card() -> dict[str, Any]:
+    r"""构造授权完成但原请求已过期的中性卡片。"""
+    from ..cards.builder import Card
+
+    return (
+        Card()
+        .header("原请求已过期", template="orange")
+        .markdown("授权已完成，但原请求已过期。请重新发起请求。")
+        .to_dict()
+    )

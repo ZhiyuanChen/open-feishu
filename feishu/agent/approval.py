@@ -481,7 +481,13 @@ async def request_approval(
         )
         return False
     try:
-        await agent.client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
+        approval_message_id = await progress.replace_with_card(card)
+        if approval_message_id is None:
+            response = await agent.client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
+            approval_message_id = response.get("message_id") if isinstance(response, Mapping) else None
+        if approval_message_id:
+            approval.extra = {**(approval.extra or {}), "progress_message_id": approval_message_id}
+            await agent.approvals.put(approval)
     except Exception:  # noqa: BLE001 — undeliverable card → cancel the pending, then let the model respond
         logging.getLogger("feishu").warning(
             "failed to send approval card; cancelling pending %s", approval.approval_id, exc_info=True
@@ -617,7 +623,7 @@ async def decide_and_resume(
                         return
                 content, tr_is_error, _ = coerce_tool_result(outcome.content)
                 if outcome.authorize_url and not outcome.auth_scopes:
-                    if await agent._try_send_auth_card(resume_event, outcome.authorize_url):
+                    if await agent._try_send_auth_card(resume_event, outcome.authorize_url, progress):
                         content = AUTH_CARD_SENT_NOTE
                     else:
                         content = f"{content}\n授权链接：{outcome.authorize_url}".strip()
