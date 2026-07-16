@@ -21,32 +21,36 @@
 
 from __future__ import annotations
 
-from feishu.agent.bundles import BUNDLES
-
 from .mlflow import MLflowBundle, MLflowClient
 from .ops import OpsBundle
+from .registry import GatewayIntegration, IntegrationRegistry
 from .slurm import SlurmBundle, SlurmRestdClient, SlurmWebGatewayClient
 
-_BUNDLED_PLUGIN_BUNDLES = {
+INTEGRATIONS = IntegrationRegistry()
+
+_BUNDLED_TOOL_INTEGRATIONS = {
     "mlflow": MLflowBundle,
     "ops": OpsBundle,
     "slurm": SlurmBundle,
 }
 
 
-def register_bundled_plugins() -> tuple[str, ...]:
-    r"""把 SDK 内置的第三方插件 bundle 注册进共享 bundle registry。"""
-    for name, bundle in _BUNDLED_PLUGIN_BUNDLES.items():
-        BUNDLES.register(bundle, name=name, override=True)
-    return tuple(_BUNDLED_PLUGIN_BUNDLES)
+def register_bundled_integrations() -> tuple[str, ...]:
+    r"""Register the SDK's built-in integrations explicitly."""
+    for name, bundle in _BUNDLED_TOOL_INTEGRATIONS.items():
+        INTEGRATIONS.register_tool_bundle(name, bundle, override=True)
+    return INTEGRATIONS.tool_bundle_names
 
 
 __all__ = [
+    "GatewayIntegration",
+    "INTEGRATIONS",
+    "IntegrationRegistry",
     "MLflowBundle",
     "MLflowClient",
     "OpsBundle",
     "SlurmBundle",
     "SlurmRestdClient",
     "SlurmWebGatewayClient",
-    "register_bundled_plugins",
+    "register_bundled_integrations",
 ]

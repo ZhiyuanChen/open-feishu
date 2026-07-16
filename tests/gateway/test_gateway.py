@@ -1,8 +1,10 @@
 from chanfig import NestedDict
+from starlette.responses import JSONResponse
+from starlette.routing import Route
 from starlette.testclient import TestClient
 
 from feishu.errors import FeishuApiError
-from feishu.gateway import GatewayConfig, create_gateway
+from feishu.gateway import GatewayConfig, GatewayContext, create_gateway
 from feishu.gateway.config import parse_service_keys
 from feishu.gateway.errors import feishu_error_response
 
@@ -61,6 +63,14 @@ def _auth():
     return {"Authorization": "Bearer k-status"}
 
 
+class _StatusIntegration:
+    def routes(self, context: GatewayContext):
+        async def status(_):
+            return JSONResponse({"app_id": context.config.app_id})
+
+        return [Route("/integrations/status", status, methods=["GET"])]
+
+
 class TestGatewayAuth:
     def test_env_service_keys_are_key_to_service_mapping(self):
         config = GatewayConfig.from_env(
@@ -88,6 +98,14 @@ class TestGatewayAuth:
         client, _ = _app()
         assert client.get("/healthz").json() == {"status": "ok"}
         assert client.get("/readyz").json() == {"status": "ok"}
+
+    def test_mounts_integration_routes(self):
+        config = GatewayConfig(app_id="cli_test", app_secret="secret", service_keys={"k-status": "status"})
+
+        with TestClient(create_gateway(config, client=StubClient(), integrations=(_StatusIntegration(),))) as client:
+            response = client.get("/integrations/status")
+
+        assert response.json() == {"app_id": "cli_test"}
 
     def test_internal_routes_require_service_key(self):
         client, _ = _app()

@@ -10,11 +10,11 @@ import httpx
 from feishu.agent.bundles import BundleContext, build_tool_registry
 from feishu.agent.context import ToolContext, use_tool_context
 from feishu.agent.result import ToolOutcome
-from feishu.plugins import MLflowClient, SlurmRestdClient, register_bundled_plugins
+from feishu.integrations import MLflowClient, SlurmRestdClient, register_bundled_integrations
 
 
 def test_registry() -> None:
-    names = register_bundled_plugins()
+    names = register_bundled_integrations()
 
     assert names == ("mlflow", "ops", "slurm")
     registry = build_tool_registry(names, BundleContext())
@@ -53,7 +53,7 @@ def test_slurm_tools() -> None:
 
     async def run():
         client = _SlurmClient()
-        register_bundled_plugins()
+        register_bundled_integrations()
         registry = build_tool_registry(
             ["slurm"],
             BundleContext(
@@ -112,7 +112,7 @@ def test_slurm_tools_resolve_open_id_requester() -> None:
     async def run():
         feishu_client = _FeishuClient()
         slurm_client = _SlurmClient()
-        register_bundled_plugins()
+        register_bundled_integrations()
         registry = build_tool_registry(["slurm"], BundleContext(extra={"slurm": {"client": slurm_client}}))
         with use_tool_context(ToolContext(client=feishu_client, user={"open_id": "ou_qing"})):
             result = await registry.dispatch("get_slurm_cluster_status", {})
@@ -146,7 +146,7 @@ def test_slurm_tools_bind_injected_client_user() -> None:
 
     async def run():
         client = _SlurmClient()
-        register_bundled_plugins()
+        register_bundled_integrations()
         registry = build_tool_registry(["slurm"], BundleContext(extra={"slurm": {"client": client}}))
         with use_tool_context(ToolContext(user={"user_id": "qinghanw313"})):
             result = await registry.dispatch("get_slurm_cluster_status", {})
@@ -242,7 +242,7 @@ def test_ops_summary() -> None:
             return {"nodes": {"unhealthy": [{"name": "gpu-2"}]}, "jobs": {"items": []}}
 
     async def run():
-        register_bundled_plugins()
+        register_bundled_integrations()
         registry = build_tool_registry(
             ["ops"],
             BundleContext(
@@ -268,7 +268,7 @@ def test_ops_summary() -> None:
 
 
 def test_run_normalizer() -> None:
-    register_bundled_plugins()
+    register_bundled_integrations()
     registry = build_tool_registry(["mlflow"], BundleContext())
     result = registry.get("normalize_mlflow_run").handler(
         {
@@ -331,7 +331,7 @@ def test_mlflow_tools() -> None:
 
     async def run():
         client = _MLflowClient()
-        register_bundled_plugins()
+        register_bundled_integrations()
         registry = build_tool_registry(
             ["mlflow"],
             BundleContext(extra={"mlflow": {"client": client}}),

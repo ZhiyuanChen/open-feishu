@@ -21,10 +21,10 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from starlette.applications import Starlette
 
@@ -33,11 +33,15 @@ from ..events import EventDispatcher, InMemorySeenStore, SeenStore, create_card_
 from .config import GatewayConfig
 from .routes import create_gateway_routes
 
+if TYPE_CHECKING:
+    from ..integrations import GatewayIntegration
+
 
 @dataclass(frozen=True)
 class GatewayContext:
     r"""供部署方在网关上挂载事件处理器的配置上下文。"""
 
+    config: GatewayConfig
     client: Any
     seen_store: SeenStore
 
@@ -50,6 +54,7 @@ def create_gateway(
     *,
     configure: GatewayConfigure | None = None,
     client: Any | None = None,
+    integrations: Sequence[GatewayIntegration] = (),
 ) -> Starlette:
     r"""创建一个轻量的 Starlette 飞书网关应用。"""
     if not config.service_keys:
@@ -67,10 +72,13 @@ def create_gateway(
     )
     seen_store = InMemorySeenStore()
     routes = create_gateway_routes(config, feishu_client)
+    context = GatewayContext(config, feishu_client, seen_store)
+    for integration in integrations:
+        routes.extend(integration.routes(context))
 
     dispatcher: EventDispatcher | None = None
     if config.encrypt_key is not None:
-        configured = configure(GatewayContext(feishu_client, seen_store)) if configure is not None else None
+        configured = configure(context) if configure is not None else None
         dispatcher = configured or EventDispatcher()
         routes.extend(
             [

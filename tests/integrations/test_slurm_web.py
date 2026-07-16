@@ -11,7 +11,7 @@ import httpx
 from feishu.agent.bundles import BundleContext, build_tool_registry
 from feishu.agent.context import ToolContext, use_tool_context
 from feishu.agent.result import ToolOutcome
-from feishu.plugins import SlurmWebGatewayClient, register_bundled_plugins
+from feishu.integrations import SlurmWebGatewayClient, register_bundled_integrations
 
 
 def test_slurmweb_gateway_client(tmp_path: Path) -> None:
@@ -152,7 +152,7 @@ def test_slurmweb_gateway_config_registers_client(tmp_path: Path) -> None:
         return httpx.Response(200, json=[{"job_id": 7, "user_name": "qinghanw313", "job_state": "RUNNING"}])
 
     async def run():
-        register_bundled_plugins()
+        register_bundled_integrations()
         registry = build_tool_registry(
             ["slurm"],
             BundleContext(
