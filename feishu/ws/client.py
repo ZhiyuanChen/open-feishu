@@ -49,6 +49,7 @@ _ENDPOINT_PATH = "/callback/ws/endpoint"
 _SYNC_ACK_EVENT_TYPES = frozenset({"card.action.trigger"})
 _CARD_ACK_TIMEOUT_SECONDS = 1.5
 _CARD_ACK_TIMEOUT_RESULT = {"toast": {"type": "info", "content": "处理中…"}}
+_BACKGROUND_DISPATCH_DRAIN_TIMEOUT_SECONDS = 30.0
 
 # Maximum number of incomplete messages held in the fragment reassembly buffer. Drop the oldest partial
 # message when exceeded so a missing upstream fragment cannot grow memory without bound.
@@ -57,6 +58,20 @@ _MAX_PARTIAL_MESSAGES = 1024
 # Injectable websocket connector type: given a wss URL, return an async context manager whose value exposes
 # recv() and send() coroutines.
 Connect = Callable[[str], AbstractAsyncContextManager[Any]]
+
+
+def _log_background_dispatch_error(logger: logging.Logger, event_id: str) -> Callable[[asyncio.Task[Any]], None]:
+    r"""Build a done callback that logs background card dispatch failures without holding the ACK path."""
+
+    def callback(task: asyncio.Task[Any]) -> None:
+        try:
+            task.result()
+        except asyncio.CancelledError:
+            logger.debug("ws background card dispatch cancelled for event_id=%s", event_id)
+        except Exception:  # noqa: BLE001 - background dispatch must never become an unhandled task exception
+            logger.exception("ws background card dispatch failed for event_id=%s", event_id)
+
+    return callback
 
 
 def _default_connect(url: str) -> AbstractAsyncContextManager[Any]:
@@ -132,6 +147,7 @@ class WsClient:
         sleep: Callable[[float], Awaitable[Any]] | None = None,
         max_partial_messages: int = _MAX_PARTIAL_MESSAGES,
         card_ack_timeout: float | None = _CARD_ACK_TIMEOUT_SECONDS,
+        background_dispatch_drain_timeout: float | None = _BACKGROUND_DISPATCH_DRAIN_TIMEOUT_SECONDS,
     ) -> None:
         if not app_id:
             raise ValueError("app_id must not be empty")
@@ -141,6 +157,8 @@ class WsClient:
             raise ValueError("max_partial_messages must be positive")
         if card_ack_timeout is not None and card_ack_timeout < 0:
             raise ValueError("card_ack_timeout must be non-negative or None")
+        if background_dispatch_drain_timeout is not None and background_dispatch_drain_timeout < 0:
+            raise ValueError("background_dispatch_drain_timeout must be non-negative or None")
         self._app_id = app_id
         self._app_secret = app_secret
         self._dispatcher = dispatcher
@@ -152,6 +170,8 @@ class WsClient:
         self._sleep = sleep or asyncio.sleep
         self._max_partial_messages = max_partial_messages
         self._card_ack_timeout = card_ack_timeout
+        self._background_dispatch_drain_timeout = background_dispatch_drain_timeout
+        self._background_dispatches: set[asyncio.Task[Any]] = set()
 
         # Populated after the handshake: service frame field comes from the wss URL's service_id query param.
         self._service_id = 0
@@ -319,7 +339,21 @@ class WsClient:
             # Wait for in-flight dispatch tasks after close; their ACKs may fail on the closed connection.
             if pending:
                 await asyncio.gather(*pending, return_exceptions=True)
+            await self._drain_background_dispatches()
             self._websocket = None
+
+    async def _drain_background_dispatches(self) -> None:
+        r"""On connection shutdown, give ACK-detached card handlers a bounded chance to finish."""
+        tasks = {task for task in self._background_dispatches if not task.done()}
+        if not tasks:
+            return
+        _done, pending = await asyncio.wait(tasks, timeout=self._background_dispatch_drain_timeout)
+        if not pending:
+            return
+        self.logger.warning("ws background dispatch drain timed out; cancelling %d pending task(s)", len(pending))
+        for task in pending:
+            task.cancel()
+        await asyncio.gather(*pending, return_exceptions=True)
 
     async def _handle_frame(self, websocket: Any, frame: Frame, payload: bytes, send_lock: asyncio.Lock) -> None:
         r"""
@@ -336,11 +370,20 @@ class WsClient:
         try:
             event = Event.from_payload(json.loads(payload.decode("utf-8")))
             if event.event_type in _SYNC_ACK_EVENT_TYPES:
+                if self._card_ack_timeout == 0:
+                    await self._send_frame(websocket, _build_ack(frame, _CARD_ACK_TIMEOUT_RESULT), send_lock)
+                    background_dispatch = asyncio.ensure_future(self._dispatcher.dispatch(event))
+                    self._background_dispatches.add(background_dispatch)
+                    background_dispatch.add_done_callback(self._background_dispatches.discard)
+                    background_dispatch.add_done_callback(_log_background_dispatch_error(self.logger, event.event_id))
+                    return
                 # Card actions: the ACK carries the toast / updated card, so dispatch first.
                 result, pending_dispatch = await self._dispatch_card_action_for_ack(event)
                 await self._send_frame(websocket, _build_ack(frame, result), send_lock)
                 if pending_dispatch is not None:
-                    await pending_dispatch
+                    self._background_dispatches.add(pending_dispatch)
+                    pending_dispatch.add_done_callback(self._background_dispatches.discard)
+                    pending_dispatch.add_done_callback(_log_background_dispatch_error(self.logger, event.event_id))
             else:
                 # ACK immediately so the broker can't redeliver while a slow handler runs, then dispatch.
                 await self._send_frame(websocket, _build_ack(frame, None), send_lock)
