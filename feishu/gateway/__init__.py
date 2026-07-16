@@ -23,9 +23,23 @@ from __future__ import annotations
 
 from .app import GatewayContext, create_gateway
 from .config import GatewayConfig
+from .notifications import (
+    EventMessageStore,
+    InMemoryEventMessageStore,
+    InteractiveCardDelivery,
+    JsonFileEventMessageStore,
+    deterministic_uuid,
+    upsert_interactive_card,
+)
 
 __all__ = [
+    "EventMessageStore",
     "GatewayConfig",
     "GatewayContext",
+    "InMemoryEventMessageStore",
+    "InteractiveCardDelivery",
+    "JsonFileEventMessageStore",
     "create_gateway",
+    "deterministic_uuid",
+    "upsert_interactive_card",
 ]
