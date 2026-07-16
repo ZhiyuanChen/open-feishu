@@ -22,13 +22,17 @@
 from __future__ import annotations
 
 import hmac
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 
 from starlette.requests import Request
 
 
 class ServiceAuthError(Exception):
     r"""内部网关请求缺少有效服务密钥时抛出。"""
+
+
+class ServiceCapabilityError(Exception):
+    r"""已认证服务没有调用当前路由的能力时抛出。"""
 
 
 def require_service(request: Request, service_keys: Mapping[str, str]) -> str:
@@ -50,3 +54,30 @@ def require_service(request: Request, service_keys: Mapping[str, str]) -> str:
         raise ServiceAuthError("invalid bearer token")
     request.state.service = matched_service
     return matched_service
+
+
+def require_service_capability(
+    request: Request,
+    service_keys: Mapping[str, str],
+    service_capabilities: Mapping[str, Collection[str]],
+) -> str:
+    r"""Validate a bearer key and, when configured, its route capability.
+
+    Empty capability configuration preserves the legacy authenticated gateway
+    behavior. Once an ACL is configured, every service must have an explicit
+    route capability and unmatched requests are denied.
+    """
+    service = require_service(request, service_keys)
+    if not service_capabilities:
+        return service
+
+    capabilities = service_capabilities.get(service)
+    if capabilities is None or not any(_matches_capability(request.url.path, item) for item in capabilities):
+        raise ServiceCapabilityError("service lacks required route capability")
+    return service
+
+
+def _matches_capability(route_path: str, capability: str) -> bool:
+    if capability.endswith("/*"):
+        return route_path.startswith(capability[:-1])
+    return hmac.compare_digest(route_path, capability)

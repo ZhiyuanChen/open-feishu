@@ -33,6 +33,7 @@ class GatewayConfig:
     app_id: str
     app_secret: str
     service_keys: dict[str, str] = field(default_factory=dict)
+    service_capabilities: dict[str, frozenset[str]] = field(default_factory=dict)
     region: str = "feishu"
     base_url: str | None = None
     accounts_url: str | None = None
@@ -41,6 +42,9 @@ class GatewayConfig:
     event_max_age_seconds: float | None = 300.0
     host: str = "0.0.0.0"
     port: int = 8000
+
+    def __post_init__(self) -> None:
+        _validate_service_capabilities(self.service_keys, self.service_capabilities)
 
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> GatewayConfig:
@@ -52,6 +56,7 @@ class GatewayConfig:
             app_id=app_id,
             app_secret=app_secret,
             service_keys=parse_service_keys(env.get("FEISHU_GATEWAY_SERVICE_KEYS", "")),
+            service_capabilities=parse_service_capabilities(env.get("FEISHU_GATEWAY_SERVICE_CAPABILITIES", "")),
             region=env.get("FEISHU_REGION", "feishu") or "feishu",
             base_url=env.get("FEISHU_BASE_URL") or None,
             accounts_url=env.get("FEISHU_ACCOUNTS_URL") or None,
@@ -75,6 +80,62 @@ def parse_service_keys(raw: str) -> dict[str, str]:
             raise ValueError("FEISHU_GATEWAY_SERVICE_KEYS entries must be service:key pairs")
         service_keys[api_key] = service_name
     return service_keys
+
+
+def parse_service_capabilities(raw: str) -> dict[str, frozenset[str]]:
+    r"""Parse ``service:capability|capability`` entries separated by semicolons."""
+    service_capabilities: dict[str, frozenset[str]] = {}
+    for item in raw.split(";"):
+        item = item.strip()
+        if not item:
+            continue
+        service_name, separator, raw_capabilities = item.partition(":")
+        service_name = service_name.strip()
+        if not separator or not service_name or not raw_capabilities:
+            raise ValueError(
+                "FEISHU_GATEWAY_SERVICE_CAPABILITIES entries must be " "service:capability|capability pairs"
+            )
+        if service_name in service_capabilities:
+            raise ValueError("FEISHU_GATEWAY_SERVICE_CAPABILITIES cannot repeat a service")
+
+        capabilities = frozenset(capability.strip() for capability in raw_capabilities.split("|") if capability.strip())
+        if not capabilities:
+            raise ValueError("FEISHU_GATEWAY_SERVICE_CAPABILITIES entries require a capability")
+        for capability in capabilities:
+            _validate_capability(capability)
+        service_capabilities[service_name] = capabilities
+    return service_capabilities
+
+
+def _validate_service_capabilities(
+    service_keys: Mapping[str, str], service_capabilities: Mapping[str, frozenset[str]]
+) -> None:
+    if not service_capabilities:
+        return
+
+    configured_services = set(service_keys.values())
+    capability_services = set(service_capabilities)
+    unknown = capability_services - configured_services
+    if unknown:
+        raise ValueError("FEISHU_GATEWAY_SERVICE_CAPABILITIES contains unknown services: " + ", ".join(sorted(unknown)))
+    missing = configured_services - capability_services
+    if missing:
+        raise ValueError(
+            "FEISHU_GATEWAY_SERVICE_CAPABILITIES missing capability entries for services: " + ", ".join(sorted(missing))
+        )
+
+    for capabilities in service_capabilities.values():
+        if not capabilities:
+            raise ValueError("FEISHU_GATEWAY_SERVICE_CAPABILITIES entries require a capability")
+        for capability in capabilities:
+            _validate_capability(capability)
+
+
+def _validate_capability(capability: str) -> None:
+    if not capability.startswith("/") or "?" in capability or "#" in capability:
+        raise ValueError("FEISHU_GATEWAY_SERVICE_CAPABILITIES capabilities must be route paths")
+    if "*" in capability and (capability.count("*") != 1 or not capability.endswith("/*")):
+        raise ValueError("FEISHU_GATEWAY_SERVICE_CAPABILITIES wildcards must be terminal /* route prefixes")
 
 
 def _required(env: Mapping[str, str], name: str) -> str:

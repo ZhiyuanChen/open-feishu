@@ -29,7 +29,7 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import BaseRoute, Route
 
 from ..errors import FeishuError
-from .auth import ServiceAuthError, require_service
+from .auth import ServiceAuthError, ServiceCapabilityError, require_service_capability
 from .config import GatewayConfig
 from .errors import GatewayRequestError, error_response, feishu_error_response, read_json_object
 
@@ -54,7 +54,11 @@ def create_gateway_routes(config: GatewayConfig, client: Any) -> list[BaseRoute]
         Route("/org/users", _internal(config, _list_users(client)), methods=["GET"]),
         Route("/org/users/{user_id}", _internal(config, _get_user(client)), methods=["GET"]),
         Route("/org/departments", _internal(config, _list_departments(client)), methods=["GET"]),
-        Route("/org/departments/{department_id}", _internal(config, _get_department(client)), methods=["GET"]),
+        Route(
+            "/org/departments/{department_id}",
+            _internal(config, _get_department(client)),
+            methods=["GET"],
+        ),
         Route("/org/resolve", _internal(config, _resolve_users(client)), methods=["POST"]),
     ]
 
@@ -62,10 +66,16 @@ def create_gateway_routes(config: GatewayConfig, client: Any) -> list[BaseRoute]
 def _internal(config: GatewayConfig, endpoint: GatewayEndpoint) -> GatewayEndpoint:
     async def wrapped(request: Request) -> Response:
         try:
-            require_service(request, config.service_keys)
+            require_service_capability(
+                request,
+                config.service_keys,
+                config.service_capabilities,
+            )
             return await endpoint(request)
         except ServiceAuthError:
             return error_response("unauthorized", status_code=401)
+        except ServiceCapabilityError:
+            return error_response("forbidden", status_code=403)
         except GatewayRequestError as exc:
             return error_response(exc.message, status_code=exc.status_code)
         except FeishuError as exc:

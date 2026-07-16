@@ -1,3 +1,4 @@
+import pytest
 from chanfig import NestedDict
 from starlette.responses import JSONResponse
 from starlette.routing import Route
@@ -119,6 +120,76 @@ class TestGatewayAuth:
             ).status_code
             == 401
         )
+
+    def test_service_capabilities_limit_routes(self):
+        stub = StubClient()
+        config = GatewayConfig(
+            app_id="cli_test",
+            app_secret="secret",
+            service_keys={"k-org": "org-sync", "k-messages": "messaging"},
+            service_capabilities={
+                "org-sync": frozenset({"/org/*"}),
+                "messaging": frozenset({"/messages/send"}),
+            },
+        )
+
+        with TestClient(create_gateway(config, client=stub)) as client:
+            denied_message = client.post(
+                "/messages/send",
+                headers={"Authorization": "Bearer k-org"},
+                json={"receive_id": "oc_ops", "content": "blocked"},
+            )
+            denied_card = client.post(
+                "/messages/card",
+                headers={"Authorization": "Bearer k-messages"},
+                json={"receive_id": "oc_ops", "card": {"schema": "2.0"}},
+            )
+            message = client.post(
+                "/messages/send",
+                headers={"Authorization": "Bearer k-messages"},
+                json={"receive_id": "oc_ops", "content": "allowed"},
+            )
+            org = client.get("/org/users", headers={"Authorization": "Bearer k-org"})
+
+        assert denied_message.status_code == 403
+        assert denied_card.status_code == 403
+        assert message.status_code == 200
+        assert org.status_code == 200
+        assert stub.im.send.calls == [(("oc_ops", "allowed"), {})]
+
+    @pytest.mark.parametrize(
+        ("service_keys", "service_capabilities", "message"),
+        (
+            (
+                {"k-status": "status", "k-messages": "messaging"},
+                {"status": frozenset({"/alerts/alertmanager"})},
+                "missing capability entries",
+            ),
+            (
+                {"k-status": "status"},
+                {"unknown": frozenset({"/alerts/alertmanager"})},
+                "unknown services",
+            ),
+        ),
+    )
+    def test_rejects_incomplete_capability_config(self, service_keys, service_capabilities, message):
+        with pytest.raises(ValueError, match=message):
+            GatewayConfig(
+                app_id="cli_test",
+                app_secret="secret",
+                service_keys=service_keys,
+                service_capabilities=service_capabilities,
+            )
+
+    @pytest.mark.parametrize("capability", ("/org/*/*", "/org/users*"))
+    def test_rejects_invalid_capability_wildcards(self, capability):
+        with pytest.raises(ValueError, match="wildcards must be terminal"):
+            GatewayConfig(
+                app_id="cli_test",
+                app_secret="secret",
+                service_keys={"k-org": "org"},
+                service_capabilities={"org": frozenset({capability})},
+            )
 
 
 class TestGatewayErrors:
