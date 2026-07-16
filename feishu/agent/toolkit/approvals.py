@@ -92,6 +92,28 @@ def _form_to_mapping(form: Any) -> dict[str, Any]:
     return {}
 
 
+def _widget_key_aliases(index: Mapping[str, Mapping[str, Any]]) -> dict[str, str]:
+    r"""返回可唯一映射到控件 ID 的人类字段名别名。重复字段名不映射，避免猜错控件。"""
+    names: dict[str, str | None] = {}
+    for widget_id, entry in index.items():
+        name = entry.get("name")
+        if not isinstance(name, str) or not name.strip():
+            continue
+        key = name.strip()
+        names[key] = widget_id if key not in names else None
+    return {name: widget_id for name, widget_id in names.items() if widget_id is not None}
+
+
+def _normalize_widget_keys(index: Mapping[str, Mapping[str, Any]], values: Mapping[str, Any]) -> dict[str, Any]:
+    r"""把模型传入的字段名 key 归一为 widget id；widget id 原样保留。"""
+    aliases = _widget_key_aliases(index)
+    normalized: dict[str, Any] = {}
+    for key, value in values.items():
+        widget_key = str(key)
+        normalized[widget_key if widget_key in index else aliases.get(widget_key, widget_key)] = value
+    return normalized
+
+
 def _account_fields_in_form(index: Mapping[str, Mapping[str, Any]], values: Mapping[str, Any]) -> list[str]:
     r"""返回直接出现在 `form` 参数中的 account 控件问题，避免模型把原始账户对象混入表单。"""
     problems: list[str] = []
@@ -279,13 +301,15 @@ def create_approval_instance(
             "approval_code": {"type": "string", "description": "Approval definition code"},
             "form": {
                 "description": (
-                    "Approval form as a widget_id -> value mapping (or serialized JSON) built from the "
-                    "definition schema. Fill EVERY required widget: plain text for input/textarea, the "
-                    "option id for radioV2, a number for amount/formula (formula = the computed total, e.g. "
-                    "the sum of the amount rows), YYYY-MM-DD for date, and a list of row objects for a "
-                    "fieldList (费用明细). For account/收款账户 widgets, pass {widget_id: account_id} in "
-                    "'accounts' using account_id from list_my_payment_accounts; never put raw account values "
-                    "or handles in 'form'. The handler types and serializes each value from the definition."
+                    "Approval form as a field-name-or-widget-id -> value mapping (or serialized JSON) built "
+                    "from the definition schema. Prefer the unique field name, e.g. 付款事由, over copying long "
+                    "widget ids. Fill EVERY required widget: plain text for input/textarea, the option id for "
+                    "radioV2, a number for amount/formula (formula = the computed total, e.g. the sum of the "
+                    "amount rows), YYYY-MM-DD for date, and a list of row objects for a fieldList (费用明细). "
+                    "For account/收款账户 widgets, pass {field_name_or_widget_id: account_id} in 'accounts' "
+                    "using account_id from list_my_payment_accounts; never put raw account values or handles "
+                    "in 'form'. The handler maps unique field names to widget ids, then types and serializes "
+                    "each value from the definition."
                 ),
                 "type": ["object", "array", "string"],
             },
@@ -293,16 +317,18 @@ def create_approval_instance(
             "attachments": {
                 "type": "object",
                 "description": (
-                    "Optional file widgets: {widget_id: shared file_id, or [file_id, ...]}. Each shared file_id "
-                    "is resolved and uploaded to the approval, and its returned code is placed in that widget."
+                    "Optional file widgets: {field_name_or_widget_id: shared file_id, or [file_id, ...]}. Each "
+                    "shared file_id is resolved and uploaded to the approval, and its returned code is placed "
+                    "in that widget."
                 ),
                 "additionalProperties": {"type": ["string", "array"]},
             },
             "accounts": {
                 "type": "object",
                 "description": (
-                    "Optional payment-account (收款账户) widgets: {widget_id: account_id}. account_id comes "
-                    "from list_my_payment_accounts and is resolved to the requesting user's own account value."
+                    "Optional payment-account (收款账户) widgets: {field_name_or_widget_id: account_id}. "
+                    "account_id comes from list_my_payment_accounts and is resolved to the requesting user's "
+                    "own account value."
                 ),
                 "additionalProperties": {"type": "string"},
             },
@@ -329,7 +355,7 @@ def create_approval_instance(
         # 1390001 on any mismatch or missing required field.
         definition = await client.approval.definitions.get(approval_code, locale=locale)
         index = approval_definition_index(definition)
-        form_mapping = _form_to_mapping(arguments["form"])
+        form_mapping = _normalize_widget_keys(index, _form_to_mapping(arguments["form"]))
         form_account_problems = _account_fields_in_form(index, form_mapping)
         if form_account_problems:
             return ToolResult(
@@ -337,7 +363,7 @@ def create_approval_instance(
                 content="cannot submit this approval form:\n- " + "\n- ".join(form_account_problems),
                 is_error=True,
             )
-        attachments = arguments.get("attachments") or {}
+        attachments = _normalize_widget_keys(index, arguments.get("attachments") or {})
         for widget_id, file_ids in attachments.items():
             # Resolve each shared file_id (per requesting user), upload it to the approval, and place the
             # returned code(s) into the named file/image widget. The model passes file_ids, never bytes.
@@ -363,7 +389,7 @@ def create_approval_instance(
                     )
                 codes.append(code)
             form_mapping[str(widget_id)] = codes
-        accounts = arguments.get("accounts") or {}
+        accounts = _normalize_widget_keys(index, arguments.get("accounts") or {})
         resolved_account_widget_ids: set[str] = set()
         for widget_id, account_id in accounts.items():
             # Resolve each handle to the requesting user's OWN account value; the model never sees raw bank data.

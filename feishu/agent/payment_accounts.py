@@ -50,6 +50,26 @@ def payment_account_handle(number: str) -> str:
     return "pa_" + hashlib.sha256(number.encode("utf-8")).hexdigest()[:16]
 
 
+def _looks_like_round_trip_dump(value: Any) -> bool:
+    if isinstance(value, Mapping):
+        return any(_looks_like_round_trip_dump(item) for item in value.values())
+    if not isinstance(value, str):
+        return False
+    text = value.strip()
+    if text.startswith("map["):
+        return True
+    if not (text.startswith("[") and text.endswith("]")):
+        return False
+    body = text[1:-1].strip()
+    return bool(body) and all(part.isdigit() for part in body.split())
+
+
+def _is_reusable_account_value(value: Any) -> bool:
+    return (
+        isinstance(value, Mapping) and bool(approval_account_number(value)) and not _looks_like_round_trip_dump(value)
+    )
+
+
 @dataclass
 class PaymentAccount:
     r"""一个收款账户：模型可见的句柄和脱敏标签，外加仅服务端可见的完整控件值。"""
@@ -135,6 +155,11 @@ class PaymentAccountResolver:
                 continue
             for widget in approval_account_widgets(instance):
                 value = widget.get("value")
+                if not _is_reusable_account_value(value):
+                    logging.getLogger("feishu").debug(
+                        "skipping non-reusable payment account value from instance %s", code
+                    )
+                    continue
                 number = approval_account_number(value)
                 if not number:
                     continue

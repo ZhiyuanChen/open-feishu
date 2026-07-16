@@ -126,6 +126,24 @@ class TestApprovalToolkit:
         assert {"id": "bank", "type": "account", "value": _ACCOUNT_VALUE} in form
         assert {"id": "reason", "type": "textarea", "value": "打车报销"} in form
 
+    async def test_create_approval_instance_accepts_unique_field_names(self):
+        client = _Client()
+        accounts = _PaymentAccounts()
+        tool = create_approval_instance(description="create")
+
+        with use_tool_context(ToolContext(client=client, user={"open_id": "ou_1"}, payment_accounts=accounts)):
+            result = await tool.handler(
+                approval_code="APPROVAL",
+                form={"事由": "打车报销"},
+                accounts={"收款账户": "pa_1"},
+            )
+
+        assert result.outcome is ToolOutcome.COMPLETED
+        [payload] = client.approval.instances.create_calls
+        form = json.loads(payload.form)
+        assert {"id": "bank", "type": "account", "value": _ACCOUNT_VALUE} in form
+        assert {"id": "reason", "type": "textarea", "value": "打车报销"} in form
+
     async def test_create_approval_instance_rejects_raw_payment_account_in_form(self):
         client = _Client()
         accounts = _PaymentAccounts()
