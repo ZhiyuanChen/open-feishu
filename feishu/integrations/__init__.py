@@ -21,6 +21,7 @@
 
 from __future__ import annotations
 
+from .alertmanager import AlertmanagerIntegration
 from .mlflow import MLflowBundle, MLflowClient
 from .ops import OpsBundle
 from .registry import GatewayIntegration, IntegrationRegistry
@@ -34,11 +35,17 @@ _BUNDLED_TOOL_INTEGRATIONS = {
     "slurm": SlurmBundle,
 }
 
+_BUNDLED_GATEWAY_INTEGRATIONS = {
+    "alertmanager": AlertmanagerIntegration,
+}
+
 
 def register_bundled_integrations() -> tuple[str, ...]:
     r"""Register the SDK's built-in integrations explicitly."""
     for name, bundle in _BUNDLED_TOOL_INTEGRATIONS.items():
         INTEGRATIONS.register_tool_bundle(name, bundle, override=True)
+    for name, factory in _BUNDLED_GATEWAY_INTEGRATIONS.items():
+        INTEGRATIONS.register_gateway(name, factory, override=True)
     return INTEGRATIONS.tool_bundle_names
 
 
@@ -46,6 +53,7 @@ __all__ = [
     "GatewayIntegration",
     "INTEGRATIONS",
     "IntegrationRegistry",
+    "AlertmanagerIntegration",
     "MLflowBundle",
     "MLflowClient",
     "OpsBundle",

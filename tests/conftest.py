@@ -57,6 +57,33 @@ class RequestRecorder(list):
         return self[-1]
 
 
+class AsyncRecorder:
+    def __init__(self, result: dict[str, str]) -> None:
+        self.result = result
+        self.calls: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
+
+    async def __call__(self, *args: Any, **kwargs: Any) -> dict[str, str]:
+        self.calls.append((args, kwargs))
+        return self.result
+
+
+class GatewayClient:
+    def __init__(self) -> None:
+        self.im = type(
+            "IM",
+            (),
+            {
+                "send": AsyncRecorder({"message_id": "om_card"}),
+                "patch": AsyncRecorder({"message_id": "om_card"}),
+            },
+        )()
+
+
+@pytest.fixture
+def gateway_client() -> GatewayClient:
+    return GatewayClient()
+
+
 def token_handler(request: httpx.Request) -> httpx.Response | None:
     """Short-circuit the tenant_access_token fetch; returns ``None`` for any other request.
 
