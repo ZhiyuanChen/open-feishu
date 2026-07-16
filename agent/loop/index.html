@@ -627,6 +627,25 @@
   
   
     <li class="md-tabs__item">
+      <a href="../../integrations/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  integrations
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
       <a href="../../mail/" class="md-tabs__link">
         
   
@@ -672,25 +691,6 @@
     
   
   meeting_room
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../plugins/" class="md-tabs__link">
-        
-  
-  
-    
-  
-  plugins
 
       </a>
     </li>
@@ -3484,6 +3484,8 @@
       
         
       
+        
+      
     
     
     
@@ -3736,6 +3738,8 @@
       
         
       
+        
+      
     
     
     
@@ -3829,6 +3833,71 @@
     
   
     im
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../integrations/alertmanager/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    integrations
   
 
     
@@ -4008,67 +4077,6 @@
     
   
     meeting_room
-  
-
-    
-  </span>
-  
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../plugins/mlflow/" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    plugins
   
 
     
@@ -6782,7 +6790,9 @@ SDK 会把近期 reasoning 仅在内存中传入，返回值用于原地更新�
 <span class="normal"><a href="#__codelineno-0-1036">1036</a></span>
 <span class="normal"><a href="#__codelineno-0-1037">1037</a></span>
 <span class="normal"><a href="#__codelineno-0-1038">1038</a></span>
-<span class="normal"><a href="#__codelineno-0-1039">1039</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-325"><a id="__codelineno-0-325" name="__codelineno-0-325"></a><span class="k">class</span><span class="w"> </span><span class="nc">AgentEngine</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-1039">1039</a></span>
+<span class="normal"><a href="#__codelineno-0-1040">1040</a></span>
+<span class="normal"><a href="#__codelineno-0-1041">1041</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-325"><a id="__codelineno-0-325" name="__codelineno-0-325"></a><span class="k">class</span><span class="w"> </span><span class="nc">AgentEngine</span><span class="p">:</span>
 </span><span id="__span-0-326"><a id="__codelineno-0-326" name="__codelineno-0-326"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="__span-0-327"><a id="__codelineno-0-327" name="__codelineno-0-327"></a><span class="sd">    智能体底层主循环：驱动大模型与工具协作，自动回复飞书消息。</span>
 </span><span id="__span-0-328"><a id="__codelineno-0-328" name="__codelineno-0-328"></a>
@@ -7258,7 +7268,7 @@ SDK 会把近期 reasoning 仅在内存中传入，返回值用于原地更新�
 </span><span id="__span-0-798"><a id="__codelineno-0-798" name="__codelineno-0-798"></a>            <span class="k">if</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_authorization</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">history</span><span class="p">,</span> <span class="n">call</span><span class="p">,</span> <span class="n">tool_result</span><span class="p">,</span> <span class="n">progress</span><span class="p">):</span>
 </span><span id="__span-0-799"><a id="__codelineno-0-799" name="__codelineno-0-799"></a>                <span class="k">return</span> <span class="n">ToolResultPart</span><span class="p">(</span><span class="n">tool_call_id</span><span class="o">=</span><span class="n">call</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">_AWAITING_AUTHORIZATION_NOTE</span><span class="p">,</span> <span class="n">is_error</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="kc">True</span>
 </span><span id="__span-0-800"><a id="__codelineno-0-800" name="__codelineno-0-800"></a>            <span class="n">authorize_url</span> <span class="o">=</span> <span class="n">tool_result</span><span class="o">.</span><span class="n">authorize_url</span>
-</span><span id="__span-0-801"><a id="__codelineno-0-801" name="__codelineno-0-801"></a>            <span class="k">if</span> <span class="n">authorize_url</span> <span class="ow">and</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_send_auth_card</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">authorize_url</span><span class="p">):</span>
+</span><span id="__span-0-801"><a id="__codelineno-0-801" name="__codelineno-0-801"></a>            <span class="k">if</span> <span class="n">authorize_url</span> <span class="ow">and</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_send_auth_card</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">authorize_url</span><span class="p">,</span> <span class="n">progress</span><span class="p">):</span>
 </span><span id="__span-0-802"><a id="__codelineno-0-802" name="__codelineno-0-802"></a>                <span class="n">content</span> <span class="o">=</span> <span class="n">_AUTH_CARD_SENT_NOTE</span>
 </span><span id="__span-0-803"><a id="__codelineno-0-803" name="__codelineno-0-803"></a>        <span class="k">return</span> <span class="n">ToolResultPart</span><span class="p">(</span><span class="n">tool_call_id</span><span class="o">=</span><span class="n">call</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">content</span><span class="p">,</span> <span class="n">is_error</span><span class="o">=</span><span class="n">is_error</span><span class="p">),</span> <span class="kc">False</span>
 </span><span id="__span-0-804"><a id="__codelineno-0-804" name="__codelineno-0-804"></a>
@@ -7368,135 +7378,137 @@ SDK 会把近期 reasoning 仅在内存中传入，返回值用于原地更新�
 </span><span id="__span-0-908"><a id="__codelineno-0-908" name="__codelineno-0-908"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;把审批参数中引用到的分享文件句柄逐个 pin 缓存。&quot;&quot;&quot;</span>
 </span><span id="__span-0-909"><a id="__codelineno-0-909" name="__codelineno-0-909"></a>        <span class="k">await</span> <span class="n">approval_flow</span><span class="o">.</span><span class="n">pin_referenced_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arguments</span><span class="p">)</span>
 </span><span id="__span-0-910"><a id="__codelineno-0-910" name="__codelineno-0-910"></a>
-</span><span id="__span-0-911"><a id="__codelineno-0-911" name="__codelineno-0-911"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_send_auth_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">authorize_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="__span-0-911"><a id="__codelineno-0-911" name="__codelineno-0-911"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_send_auth_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">authorize_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="n">_ProgressCard</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 </span><span id="__span-0-912"><a id="__codelineno-0-912" name="__codelineno-0-912"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;向当前会话发送授权卡片。&quot;&quot;&quot;</span>
-</span><span id="__span-0-913"><a id="__codelineno-0-913" name="__codelineno-0-913"></a>        <span class="k">return</span> <span class="k">await</span> <span class="n">oauth_flow</span><span class="o">.</span><span class="n">send_auth_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">authorize_url</span><span class="p">)</span>
+</span><span id="__span-0-913"><a id="__codelineno-0-913" name="__codelineno-0-913"></a>        <span class="k">return</span> <span class="k">await</span> <span class="n">oauth_flow</span><span class="o">.</span><span class="n">send_auth_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">authorize_url</span><span class="p">,</span> <span class="n">progress</span><span class="p">)</span>
 </span><span id="__span-0-914"><a id="__codelineno-0-914" name="__codelineno-0-914"></a>
-</span><span id="__span-0-915"><a id="__codelineno-0-915" name="__codelineno-0-915"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_try_send_auth_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">authorize_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span id="__span-0-916"><a id="__codelineno-0-916" name="__codelineno-0-916"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;发送授权卡片的不抛错封装。&quot;&quot;&quot;</span>
-</span><span id="__span-0-917"><a id="__codelineno-0-917" name="__codelineno-0-917"></a>        <span class="k">return</span> <span class="k">await</span> <span class="n">oauth_flow</span><span class="o">.</span><span class="n">try_send_auth_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">authorize_url</span><span class="p">)</span>
-</span><span id="__span-0-918"><a id="__codelineno-0-918" name="__codelineno-0-918"></a>
-</span><span id="__span-0-919"><a id="__codelineno-0-919" name="__codelineno-0-919"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_mark_awaiting_confirmation</span><span class="p">(</span>
-</span><span id="__span-0-920"><a id="__codelineno-0-920" name="__codelineno-0-920"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">history</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Message</span><span class="p">],</span> <span class="n">tool_calls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ToolCall</span><span class="p">]</span>
-</span><span id="__span-0-921"><a id="__codelineno-0-921" name="__codelineno-0-921"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-922"><a id="__codelineno-0-922" name="__codelineno-0-922"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="__span-0-923"><a id="__codelineno-0-923" name="__codelineno-0-923"></a><span class="sd">        为本轮挂起审批 / 未及运行的工具调用补占位工具结果，保证「每个 tool_use 都有对应 tool_result」恒成立。</span>
-</span><span id="__span-0-924"><a id="__codelineno-0-924" name="__codelineno-0-924"></a>
-</span><span id="__span-0-925"><a id="__codelineno-0-925" name="__codelineno-0-925"></a><span class="sd">        若用户始终不点确认卡，下一轮会把历史重新发给模型——缺了 tool_result 的 tool_use 会违反工具调用协议。</span>
-</span><span id="__span-0-926"><a id="__codelineno-0-926" name="__codelineno-0-926"></a><span class="sd">        占位结果在恢复时由 `feishu.agent.loop.AgentEngine._decide_and_resume` 用真实结果原地替换。</span>
-</span><span id="__span-0-927"><a id="__codelineno-0-927" name="__codelineno-0-927"></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="__span-0-928"><a id="__codelineno-0-928" name="__codelineno-0-928"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_awaiting_tool_results</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">history</span><span class="p">,</span> <span class="n">tool_calls</span><span class="p">,</span> <span class="n">_AWAITING_APPROVAL_NOTE</span><span class="p">)</span>
-</span><span id="__span-0-929"><a id="__codelineno-0-929" name="__codelineno-0-929"></a>
-</span><span id="__span-0-930"><a id="__codelineno-0-930" name="__codelineno-0-930"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_mark_awaiting_authorization</span><span class="p">(</span>
-</span><span id="__span-0-931"><a id="__codelineno-0-931" name="__codelineno-0-931"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">history</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Message</span><span class="p">],</span> <span class="n">tool_calls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ToolCall</span><span class="p">]</span>
-</span><span id="__span-0-932"><a id="__codelineno-0-932" name="__codelineno-0-932"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-933"><a id="__codelineno-0-933" name="__codelineno-0-933"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;为本轮挂起授权 / 未及运行的工具调用补占位工具结果。&quot;&quot;&quot;</span>
-</span><span id="__span-0-934"><a id="__codelineno-0-934" name="__codelineno-0-934"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_awaiting_tool_results</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">history</span><span class="p">,</span> <span class="n">tool_calls</span><span class="p">,</span> <span class="n">_AWAITING_AUTHORIZATION_NOTE</span><span class="p">)</span>
-</span><span id="__span-0-935"><a id="__codelineno-0-935" name="__codelineno-0-935"></a>
-</span><span id="__span-0-936"><a id="__codelineno-0-936" name="__codelineno-0-936"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_mark_interrupted_tool_results</span><span class="p">(</span>
-</span><span id="__span-0-937"><a id="__codelineno-0-937" name="__codelineno-0-937"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">history</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Message</span><span class="p">],</span> <span class="n">tool_calls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ToolCall</span><span class="p">]</span>
-</span><span id="__span-0-938"><a id="__codelineno-0-938" name="__codelineno-0-938"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-939"><a id="__codelineno-0-939" name="__codelineno-0-939"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;为被新消息打断的未完成工具调用补错误结果，避免下一轮历史中出现悬空 tool_use。&quot;&quot;&quot;</span>
-</span><span id="__span-0-940"><a id="__codelineno-0-940" name="__codelineno-0-940"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_awaiting_tool_results</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">history</span><span class="p">,</span> <span class="n">tool_calls</span><span class="p">,</span> <span class="n">_INTERRUPTED_TOOL_NOTE</span><span class="p">,</span> <span class="n">is_error</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="__span-0-941"><a id="__codelineno-0-941" name="__codelineno-0-941"></a>
-</span><span id="__span-0-942"><a id="__codelineno-0-942" name="__codelineno-0-942"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_mark_awaiting_tool_results</span><span class="p">(</span>
-</span><span id="__span-0-943"><a id="__codelineno-0-943" name="__codelineno-0-943"></a>        <span class="bp">self</span><span class="p">,</span>
-</span><span id="__span-0-944"><a id="__codelineno-0-944" name="__codelineno-0-944"></a>        <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span id="__span-0-945"><a id="__codelineno-0-945" name="__codelineno-0-945"></a>        <span class="n">history</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Message</span><span class="p">],</span>
-</span><span id="__span-0-946"><a id="__codelineno-0-946" name="__codelineno-0-946"></a>        <span class="n">tool_calls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ToolCall</span><span class="p">],</span>
-</span><span id="__span-0-947"><a id="__codelineno-0-947" name="__codelineno-0-947"></a>        <span class="n">note</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span id="__span-0-948"><a id="__codelineno-0-948" name="__codelineno-0-948"></a>        <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-949"><a id="__codelineno-0-949" name="__codelineno-0-949"></a>        <span class="n">is_error</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span id="__span-0-950"><a id="__codelineno-0-950" name="__codelineno-0-950"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-951"><a id="__codelineno-0-951" name="__codelineno-0-951"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;为尚未写入 tool_result 的 tool_use 追加占位结果，保持历史符合工具调用协议。&quot;&quot;&quot;</span>
-</span><span id="__span-0-952"><a id="__codelineno-0-952" name="__codelineno-0-952"></a>        <span class="n">answered</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="__span-0-953"><a id="__codelineno-0-953" name="__codelineno-0-953"></a>            <span class="n">part</span><span class="o">.</span><span class="n">tool_call_id</span>
-</span><span id="__span-0-954"><a id="__codelineno-0-954" name="__codelineno-0-954"></a>            <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">history</span>
-</span><span id="__span-0-955"><a id="__codelineno-0-955" name="__codelineno-0-955"></a>            <span class="k">if</span> <span class="n">msg</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="s2">&quot;tool&quot;</span>
-</span><span id="__span-0-956"><a id="__codelineno-0-956" name="__codelineno-0-956"></a>            <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">content</span>
-</span><span id="__span-0-957"><a id="__codelineno-0-957" name="__codelineno-0-957"></a>            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">ToolResultPart</span><span class="p">)</span>
-</span><span id="__span-0-958"><a id="__codelineno-0-958" name="__codelineno-0-958"></a>        <span class="p">}</span>
-</span><span id="__span-0-959"><a id="__codelineno-0-959" name="__codelineno-0-959"></a>        <span class="n">placeholders</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TextPart</span> <span class="o">|</span> <span class="n">ToolUsePart</span> <span class="o">|</span> <span class="n">ToolResultPart</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="__span-0-960"><a id="__codelineno-0-960" name="__codelineno-0-960"></a>            <span class="n">ToolResultPart</span><span class="p">(</span><span class="n">tool_call_id</span><span class="o">=</span><span class="n">call</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">note</span><span class="p">,</span> <span class="n">is_error</span><span class="o">=</span><span class="n">is_error</span><span class="p">)</span>
-</span><span id="__span-0-961"><a id="__codelineno-0-961" name="__codelineno-0-961"></a>            <span class="k">for</span> <span class="n">call</span> <span class="ow">in</span> <span class="n">tool_calls</span>
-</span><span id="__span-0-962"><a id="__codelineno-0-962" name="__codelineno-0-962"></a>            <span class="k">if</span> <span class="n">call</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">answered</span>
-</span><span id="__span-0-963"><a id="__codelineno-0-963" name="__codelineno-0-963"></a>        <span class="p">]</span>
-</span><span id="__span-0-964"><a id="__codelineno-0-964" name="__codelineno-0-964"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">placeholders</span><span class="p">:</span>
-</span><span id="__span-0-965"><a id="__codelineno-0-965" name="__codelineno-0-965"></a>            <span class="k">return</span>
-</span><span id="__span-0-966"><a id="__codelineno-0-966" name="__codelineno-0-966"></a>        <span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">&quot;tool&quot;</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">placeholders</span><span class="p">)</span>
-</span><span id="__span-0-967"><a id="__codelineno-0-967" name="__codelineno-0-967"></a>        <span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
-</span><span id="__span-0-968"><a id="__codelineno-0-968" name="__codelineno-0-968"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
-</span><span id="__span-0-969"><a id="__codelineno-0-969" name="__codelineno-0-969"></a>
-</span><span id="__span-0-970"><a id="__codelineno-0-970" name="__codelineno-0-970"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_card_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span id="__span-0-971"><a id="__codelineno-0-971" name="__codelineno-0-971"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;处理审批卡片回传：同步 ACK，后台完成决策、工具执行、历史续跑与卡片更新。&quot;&quot;&quot;</span>
-</span><span id="__span-0-972"><a id="__codelineno-0-972" name="__codelineno-0-972"></a>        <span class="k">return</span> <span class="k">await</span> <span class="n">approval_flow</span><span class="o">.</span><span class="n">handle_card_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
-</span><span id="__span-0-973"><a id="__codelineno-0-973" name="__codelineno-0-973"></a>
-</span><span id="__span-0-974"><a id="__codelineno-0-974" name="__codelineno-0-974"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">resume_authorization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">user</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="__span-0-975"><a id="__codelineno-0-975" name="__codelineno-0-975"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;在 OAuth 回调成功保存用户 token 后，恢复一次挂起授权对应的原工具调用。&quot;&quot;&quot;</span>
-</span><span id="__span-0-976"><a id="__codelineno-0-976" name="__codelineno-0-976"></a>        <span class="k">return</span> <span class="k">await</span> <span class="n">oauth_flow</span><span class="o">.</span><span class="n">resume_authorization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization_id</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
-</span><span id="__span-0-977"><a id="__codelineno-0-977" name="__codelineno-0-977"></a>
-</span><span id="__span-0-978"><a id="__codelineno-0-978" name="__codelineno-0-978"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_notify_authorization_resume_problem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization</span><span class="p">:</span> <span class="n">PendingAuthorization</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-979"><a id="__codelineno-0-979" name="__codelineno-0-979"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;在 OAuth 回调无法恢复已知 pending authorization 时，尽力向聊天里反馈状态。&quot;&quot;&quot;</span>
-</span><span id="__span-0-980"><a id="__codelineno-0-980" name="__codelineno-0-980"></a>        <span class="k">await</span> <span class="n">oauth_flow</span><span class="o">.</span><span class="n">notify_authorization_resume_problem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
-</span><span id="__span-0-981"><a id="__codelineno-0-981" name="__codelineno-0-981"></a>
-</span><span id="__span-0-982"><a id="__codelineno-0-982" name="__codelineno-0-982"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_remove_authorization_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization</span><span class="p">:</span> <span class="n">PendingAuthorization</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-983"><a id="__codelineno-0-983" name="__codelineno-0-983"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;授权完成后尽力清理独立 OAuth 授权卡片。&quot;&quot;&quot;</span>
-</span><span id="__span-0-984"><a id="__codelineno-0-984" name="__codelineno-0-984"></a>        <span class="k">await</span> <span class="n">oauth_flow</span><span class="o">.</span><span class="n">remove_authorization_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization</span><span class="p">)</span>
-</span><span id="__span-0-985"><a id="__codelineno-0-985" name="__codelineno-0-985"></a>
-</span><span id="__span-0-986"><a id="__codelineno-0-986" name="__codelineno-0-986"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_event_from_pending_authorization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization</span><span class="p">:</span> <span class="n">PendingAuthorization</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Event</span><span class="p">:</span>
-</span><span id="__span-0-987"><a id="__codelineno-0-987" name="__codelineno-0-987"></a>        <span class="k">return</span> <span class="n">oauth_flow</span><span class="o">.</span><span class="n">event_from_pending_authorization</span><span class="p">(</span><span class="n">authorization</span><span class="p">)</span>
-</span><span id="__span-0-988"><a id="__codelineno-0-988" name="__codelineno-0-988"></a>
-</span><span id="__span-0-989"><a id="__codelineno-0-989" name="__codelineno-0-989"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_tool_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-990"><a id="__codelineno-0-990" name="__codelineno-0-990"></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="__span-0-991"><a id="__codelineno-0-991" name="__codelineno-0-991"></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tool_name</span><span class="p">)</span><span class="o">.</span><span class="n">description</span>
-</span><span id="__span-0-992"><a id="__codelineno-0-992" name="__codelineno-0-992"></a>        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-</span><span id="__span-0-993"><a id="__codelineno-0-993" name="__codelineno-0-993"></a>            <span class="k">return</span> <span class="kc">None</span>
-</span><span id="__span-0-994"><a id="__codelineno-0-994" name="__codelineno-0-994"></a>
-</span><span id="__span-0-995"><a id="__codelineno-0-995" name="__codelineno-0-995"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_spawn_background</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coro</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-996"><a id="__codelineno-0-996" name="__codelineno-0-996"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;把协程作为后台任务运行（保留引用以防被 GC）；其异常已在任务内部自行捕获。&quot;&quot;&quot;</span>
-</span><span id="__span-0-997"><a id="__codelineno-0-997" name="__codelineno-0-997"></a>        <span class="n">task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span><span class="n">coro</span><span class="p">)</span>
-</span><span id="__span-0-998"><a id="__codelineno-0-998" name="__codelineno-0-998"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_bg_tasks</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
-</span><span id="__span-0-999"><a id="__codelineno-0-999" name="__codelineno-0-999"></a>        <span class="n">task</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bg_tasks</span><span class="o">.</span><span class="n">discard</span><span class="p">)</span>
-</span><span id="__span-0-1000"><a id="__codelineno-0-1000" name="__codelineno-0-1000"></a>
-</span><span id="__span-0-1001"><a id="__codelineno-0-1001" name="__codelineno-0-1001"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_decide_and_resume</span><span class="p">(</span>
-</span><span id="__span-0-1002"><a id="__codelineno-0-1002" name="__codelineno-0-1002"></a>        <span class="bp">self</span><span class="p">,</span>
-</span><span id="__span-0-1003"><a id="__codelineno-0-1003" name="__codelineno-0-1003"></a>        <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span>
-</span><span id="__span-0-1004"><a id="__codelineno-0-1004" name="__codelineno-0-1004"></a>        <span class="n">approval</span><span class="p">:</span> <span class="n">PendingApproval</span><span class="p">,</span>
-</span><span id="__span-0-1005"><a id="__codelineno-0-1005" name="__codelineno-0-1005"></a>        <span class="n">decision</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;approve&quot;</span><span class="p">,</span> <span class="s2">&quot;reject&quot;</span><span class="p">],</span>
-</span><span id="__span-0-1006"><a id="__codelineno-0-1006" name="__codelineno-0-1006"></a>        <span class="n">value</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
-</span><span id="__span-0-1007"><a id="__codelineno-0-1007" name="__codelineno-0-1007"></a>        <span class="n">card_message_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-1008"><a id="__codelineno-0-1008" name="__codelineno-0-1008"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-1009"><a id="__codelineno-0-1009" name="__codelineno-0-1009"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;后台执行审批决定，并在需要时恢复原模型轮次。&quot;&quot;&quot;</span>
-</span><span id="__span-0-1010"><a id="__codelineno-0-1010" name="__codelineno-0-1010"></a>        <span class="k">await</span> <span class="n">approval_flow</span><span class="o">.</span><span class="n">decide_and_resume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">approval</span><span class="p">,</span> <span class="n">decision</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">card_message_id</span><span class="p">)</span>
-</span><span id="__span-0-1011"><a id="__codelineno-0-1011" name="__codelineno-0-1011"></a>
-</span><span id="__span-0-1012"><a id="__codelineno-0-1012" name="__codelineno-0-1012"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_default_approval_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">approval</span><span class="p">:</span> <span class="n">PendingApproval</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span id="__span-0-1013"><a id="__codelineno-0-1013" name="__codelineno-0-1013"></a>        <span class="k">return</span> <span class="n">approval_flow</span><span class="o">.</span><span class="n">default_approval_card</span><span class="p">(</span><span class="n">approval</span><span class="p">)</span>
-</span><span id="__span-0-1014"><a id="__codelineno-0-1014" name="__codelineno-0-1014"></a>
-</span><span id="__span-0-1015"><a id="__codelineno-0-1015" name="__codelineno-0-1015"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_default_decided_card</span><span class="p">(</span>
-</span><span id="__span-0-1016"><a id="__codelineno-0-1016" name="__codelineno-0-1016"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">approval</span><span class="p">:</span> <span class="n">PendingApproval</span><span class="p">,</span> <span class="n">decision</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">outcome</span><span class="p">:</span> <span class="n">ApprovalOutcome</span>
-</span><span id="__span-0-1017"><a id="__codelineno-0-1017" name="__codelineno-0-1017"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span id="__span-0-1018"><a id="__codelineno-0-1018" name="__codelineno-0-1018"></a>        <span class="k">return</span> <span class="n">approval_flow</span><span class="o">.</span><span class="n">default_decided_card</span><span class="p">(</span><span class="n">approval</span><span class="p">,</span> <span class="n">decision</span><span class="p">,</span> <span class="n">outcome</span><span class="p">)</span>
-</span><span id="__span-0-1019"><a id="__codelineno-0-1019" name="__codelineno-0-1019"></a>
-</span><span id="__span-0-1020"><a id="__codelineno-0-1020" name="__codelineno-0-1020"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-1021"><a id="__codelineno-0-1021" name="__codelineno-0-1021"></a>        <span class="n">message</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-</span><span id="__span-0-1022"><a id="__codelineno-0-1022" name="__codelineno-0-1022"></a>        <span class="n">message_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message_id&quot;</span><span class="p">)</span>
-</span><span id="__span-0-1023"><a id="__codelineno-0-1023" name="__codelineno-0-1023"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-1024"><a id="__codelineno-0-1024" name="__codelineno-0-1024"></a>            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finalize_stream</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
-</span><span id="__span-0-1025"><a id="__codelineno-0-1025" name="__codelineno-0-1025"></a>            <span class="k">return</span>
-</span><span id="__span-0-1026"><a id="__codelineno-0-1026" name="__codelineno-0-1026"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">message_id</span><span class="p">:</span>
-</span><span id="__span-0-1027"><a id="__codelineno-0-1027" name="__codelineno-0-1027"></a>            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">message_id</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">msg_type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">)</span>
-</span><span id="__span-0-1028"><a id="__codelineno-0-1028" name="__codelineno-0-1028"></a>
-</span><span id="__span-0-1029"><a id="__codelineno-0-1029" name="__codelineno-0-1029"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_finalize_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-1030"><a id="__codelineno-0-1030" name="__codelineno-0-1030"></a>        <span class="n">message</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-</span><span id="__span-0-1031"><a id="__codelineno-0-1031" name="__codelineno-0-1031"></a>        <span class="n">message_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message_id&quot;</span><span class="p">)</span>
-</span><span id="__span-0-1032"><a id="__codelineno-0-1032" name="__codelineno-0-1032"></a>        <span class="c1"># Mirror the non-stream _finalize: reply in-thread to the inbound message; skip if absent.</span>
-</span><span id="__span-0-1033"><a id="__codelineno-0-1033" name="__codelineno-0-1033"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">message_id</span><span class="p">:</span>
-</span><span id="__span-0-1034"><a id="__codelineno-0-1034" name="__codelineno-0-1034"></a>            <span class="k">return</span>
-</span><span id="__span-0-1035"><a id="__codelineno-0-1035" name="__codelineno-0-1035"></a>
-</span><span id="__span-0-1036"><a id="__codelineno-0-1036" name="__codelineno-0-1036"></a>        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_one_token</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span id="__span-0-1037"><a id="__codelineno-0-1037" name="__codelineno-0-1037"></a>            <span class="k">yield</span> <span class="n">text</span>
-</span><span id="__span-0-1038"><a id="__codelineno-0-1038" name="__codelineno-0-1038"></a>
-</span><span id="__span-0-1039"><a id="__codelineno-0-1039" name="__codelineno-0-1039"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">stream_card</span><span class="p">(</span><span class="n">_one_token</span><span class="p">(),</span> <span class="n">reply_to_message_id</span><span class="o">=</span><span class="n">message_id</span><span class="p">)</span>  <span class="c1"># type: ignore[union-attr]</span>
+</span><span id="__span-0-915"><a id="__codelineno-0-915" name="__codelineno-0-915"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_try_send_auth_card</span><span class="p">(</span>
+</span><span id="__span-0-916"><a id="__codelineno-0-916" name="__codelineno-0-916"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">authorize_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="n">_ProgressCard</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-0-917"><a id="__codelineno-0-917" name="__codelineno-0-917"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="__span-0-918"><a id="__codelineno-0-918" name="__codelineno-0-918"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;发送授权卡片的不抛错封装。&quot;&quot;&quot;</span>
+</span><span id="__span-0-919"><a id="__codelineno-0-919" name="__codelineno-0-919"></a>        <span class="k">return</span> <span class="k">await</span> <span class="n">oauth_flow</span><span class="o">.</span><span class="n">try_send_auth_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">authorize_url</span><span class="p">,</span> <span class="n">progress</span><span class="p">)</span>
+</span><span id="__span-0-920"><a id="__codelineno-0-920" name="__codelineno-0-920"></a>
+</span><span id="__span-0-921"><a id="__codelineno-0-921" name="__codelineno-0-921"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_mark_awaiting_confirmation</span><span class="p">(</span>
+</span><span id="__span-0-922"><a id="__codelineno-0-922" name="__codelineno-0-922"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">history</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Message</span><span class="p">],</span> <span class="n">tool_calls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ToolCall</span><span class="p">]</span>
+</span><span id="__span-0-923"><a id="__codelineno-0-923" name="__codelineno-0-923"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-924"><a id="__codelineno-0-924" name="__codelineno-0-924"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-925"><a id="__codelineno-0-925" name="__codelineno-0-925"></a><span class="sd">        为本轮挂起审批 / 未及运行的工具调用补占位工具结果，保证「每个 tool_use 都有对应 tool_result」恒成立。</span>
+</span><span id="__span-0-926"><a id="__codelineno-0-926" name="__codelineno-0-926"></a>
+</span><span id="__span-0-927"><a id="__codelineno-0-927" name="__codelineno-0-927"></a><span class="sd">        若用户始终不点确认卡，下一轮会把历史重新发给模型——缺了 tool_result 的 tool_use 会违反工具调用协议。</span>
+</span><span id="__span-0-928"><a id="__codelineno-0-928" name="__codelineno-0-928"></a><span class="sd">        占位结果在恢复时由 `feishu.agent.loop.AgentEngine._decide_and_resume` 用真实结果原地替换。</span>
+</span><span id="__span-0-929"><a id="__codelineno-0-929" name="__codelineno-0-929"></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="__span-0-930"><a id="__codelineno-0-930" name="__codelineno-0-930"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_awaiting_tool_results</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">history</span><span class="p">,</span> <span class="n">tool_calls</span><span class="p">,</span> <span class="n">_AWAITING_APPROVAL_NOTE</span><span class="p">)</span>
+</span><span id="__span-0-931"><a id="__codelineno-0-931" name="__codelineno-0-931"></a>
+</span><span id="__span-0-932"><a id="__codelineno-0-932" name="__codelineno-0-932"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_mark_awaiting_authorization</span><span class="p">(</span>
+</span><span id="__span-0-933"><a id="__codelineno-0-933" name="__codelineno-0-933"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">history</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Message</span><span class="p">],</span> <span class="n">tool_calls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ToolCall</span><span class="p">]</span>
+</span><span id="__span-0-934"><a id="__codelineno-0-934" name="__codelineno-0-934"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-935"><a id="__codelineno-0-935" name="__codelineno-0-935"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;为本轮挂起授权 / 未及运行的工具调用补占位工具结果。&quot;&quot;&quot;</span>
+</span><span id="__span-0-936"><a id="__codelineno-0-936" name="__codelineno-0-936"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_awaiting_tool_results</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">history</span><span class="p">,</span> <span class="n">tool_calls</span><span class="p">,</span> <span class="n">_AWAITING_AUTHORIZATION_NOTE</span><span class="p">)</span>
+</span><span id="__span-0-937"><a id="__codelineno-0-937" name="__codelineno-0-937"></a>
+</span><span id="__span-0-938"><a id="__codelineno-0-938" name="__codelineno-0-938"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_mark_interrupted_tool_results</span><span class="p">(</span>
+</span><span id="__span-0-939"><a id="__codelineno-0-939" name="__codelineno-0-939"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">history</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Message</span><span class="p">],</span> <span class="n">tool_calls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ToolCall</span><span class="p">]</span>
+</span><span id="__span-0-940"><a id="__codelineno-0-940" name="__codelineno-0-940"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-941"><a id="__codelineno-0-941" name="__codelineno-0-941"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;为被新消息打断的未完成工具调用补错误结果，避免下一轮历史中出现悬空 tool_use。&quot;&quot;&quot;</span>
+</span><span id="__span-0-942"><a id="__codelineno-0-942" name="__codelineno-0-942"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mark_awaiting_tool_results</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">history</span><span class="p">,</span> <span class="n">tool_calls</span><span class="p">,</span> <span class="n">_INTERRUPTED_TOOL_NOTE</span><span class="p">,</span> <span class="n">is_error</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-0-943"><a id="__codelineno-0-943" name="__codelineno-0-943"></a>
+</span><span id="__span-0-944"><a id="__codelineno-0-944" name="__codelineno-0-944"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_mark_awaiting_tool_results</span><span class="p">(</span>
+</span><span id="__span-0-945"><a id="__codelineno-0-945" name="__codelineno-0-945"></a>        <span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-0-946"><a id="__codelineno-0-946" name="__codelineno-0-946"></a>        <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-0-947"><a id="__codelineno-0-947" name="__codelineno-0-947"></a>        <span class="n">history</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Message</span><span class="p">],</span>
+</span><span id="__span-0-948"><a id="__codelineno-0-948" name="__codelineno-0-948"></a>        <span class="n">tool_calls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ToolCall</span><span class="p">],</span>
+</span><span id="__span-0-949"><a id="__codelineno-0-949" name="__codelineno-0-949"></a>        <span class="n">note</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-0-950"><a id="__codelineno-0-950" name="__codelineno-0-950"></a>        <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-0-951"><a id="__codelineno-0-951" name="__codelineno-0-951"></a>        <span class="n">is_error</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-0-952"><a id="__codelineno-0-952" name="__codelineno-0-952"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-953"><a id="__codelineno-0-953" name="__codelineno-0-953"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;为尚未写入 tool_result 的 tool_use 追加占位结果，保持历史符合工具调用协议。&quot;&quot;&quot;</span>
+</span><span id="__span-0-954"><a id="__codelineno-0-954" name="__codelineno-0-954"></a>        <span class="n">answered</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-0-955"><a id="__codelineno-0-955" name="__codelineno-0-955"></a>            <span class="n">part</span><span class="o">.</span><span class="n">tool_call_id</span>
+</span><span id="__span-0-956"><a id="__codelineno-0-956" name="__codelineno-0-956"></a>            <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">history</span>
+</span><span id="__span-0-957"><a id="__codelineno-0-957" name="__codelineno-0-957"></a>            <span class="k">if</span> <span class="n">msg</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="s2">&quot;tool&quot;</span>
+</span><span id="__span-0-958"><a id="__codelineno-0-958" name="__codelineno-0-958"></a>            <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">content</span>
+</span><span id="__span-0-959"><a id="__codelineno-0-959" name="__codelineno-0-959"></a>            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">ToolResultPart</span><span class="p">)</span>
+</span><span id="__span-0-960"><a id="__codelineno-0-960" name="__codelineno-0-960"></a>        <span class="p">}</span>
+</span><span id="__span-0-961"><a id="__codelineno-0-961" name="__codelineno-0-961"></a>        <span class="n">placeholders</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TextPart</span> <span class="o">|</span> <span class="n">ToolUsePart</span> <span class="o">|</span> <span class="n">ToolResultPart</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-0-962"><a id="__codelineno-0-962" name="__codelineno-0-962"></a>            <span class="n">ToolResultPart</span><span class="p">(</span><span class="n">tool_call_id</span><span class="o">=</span><span class="n">call</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">note</span><span class="p">,</span> <span class="n">is_error</span><span class="o">=</span><span class="n">is_error</span><span class="p">)</span>
+</span><span id="__span-0-963"><a id="__codelineno-0-963" name="__codelineno-0-963"></a>            <span class="k">for</span> <span class="n">call</span> <span class="ow">in</span> <span class="n">tool_calls</span>
+</span><span id="__span-0-964"><a id="__codelineno-0-964" name="__codelineno-0-964"></a>            <span class="k">if</span> <span class="n">call</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">answered</span>
+</span><span id="__span-0-965"><a id="__codelineno-0-965" name="__codelineno-0-965"></a>        <span class="p">]</span>
+</span><span id="__span-0-966"><a id="__codelineno-0-966" name="__codelineno-0-966"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">placeholders</span><span class="p">:</span>
+</span><span id="__span-0-967"><a id="__codelineno-0-967" name="__codelineno-0-967"></a>            <span class="k">return</span>
+</span><span id="__span-0-968"><a id="__codelineno-0-968" name="__codelineno-0-968"></a>        <span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">&quot;tool&quot;</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">placeholders</span><span class="p">)</span>
+</span><span id="__span-0-969"><a id="__codelineno-0-969" name="__codelineno-0-969"></a>        <span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+</span><span id="__span-0-970"><a id="__codelineno-0-970" name="__codelineno-0-970"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+</span><span id="__span-0-971"><a id="__codelineno-0-971" name="__codelineno-0-971"></a>
+</span><span id="__span-0-972"><a id="__codelineno-0-972" name="__codelineno-0-972"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_card_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span id="__span-0-973"><a id="__codelineno-0-973" name="__codelineno-0-973"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;处理审批卡片回传：同步 ACK，后台完成决策、工具执行、历史续跑与卡片更新。&quot;&quot;&quot;</span>
+</span><span id="__span-0-974"><a id="__codelineno-0-974" name="__codelineno-0-974"></a>        <span class="k">return</span> <span class="k">await</span> <span class="n">approval_flow</span><span class="o">.</span><span class="n">handle_card_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
+</span><span id="__span-0-975"><a id="__codelineno-0-975" name="__codelineno-0-975"></a>
+</span><span id="__span-0-976"><a id="__codelineno-0-976" name="__codelineno-0-976"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">resume_authorization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">user</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="__span-0-977"><a id="__codelineno-0-977" name="__codelineno-0-977"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;在 OAuth 回调成功保存用户 token 后，恢复一次挂起授权对应的原工具调用。&quot;&quot;&quot;</span>
+</span><span id="__span-0-978"><a id="__codelineno-0-978" name="__codelineno-0-978"></a>        <span class="k">return</span> <span class="k">await</span> <span class="n">oauth_flow</span><span class="o">.</span><span class="n">resume_authorization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization_id</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+</span><span id="__span-0-979"><a id="__codelineno-0-979" name="__codelineno-0-979"></a>
+</span><span id="__span-0-980"><a id="__codelineno-0-980" name="__codelineno-0-980"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_notify_authorization_resume_problem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization</span><span class="p">:</span> <span class="n">PendingAuthorization</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-981"><a id="__codelineno-0-981" name="__codelineno-0-981"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;在 OAuth 回调无法恢复已知 pending authorization 时，尽力向聊天里反馈状态。&quot;&quot;&quot;</span>
+</span><span id="__span-0-982"><a id="__codelineno-0-982" name="__codelineno-0-982"></a>        <span class="k">await</span> <span class="n">oauth_flow</span><span class="o">.</span><span class="n">notify_authorization_resume_problem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span><span id="__span-0-983"><a id="__codelineno-0-983" name="__codelineno-0-983"></a>
+</span><span id="__span-0-984"><a id="__codelineno-0-984" name="__codelineno-0-984"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_remove_authorization_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization</span><span class="p">:</span> <span class="n">PendingAuthorization</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-985"><a id="__codelineno-0-985" name="__codelineno-0-985"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;授权完成后尽力清理独立 OAuth 授权卡片。&quot;&quot;&quot;</span>
+</span><span id="__span-0-986"><a id="__codelineno-0-986" name="__codelineno-0-986"></a>        <span class="k">await</span> <span class="n">oauth_flow</span><span class="o">.</span><span class="n">remove_authorization_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization</span><span class="p">)</span>
+</span><span id="__span-0-987"><a id="__codelineno-0-987" name="__codelineno-0-987"></a>
+</span><span id="__span-0-988"><a id="__codelineno-0-988" name="__codelineno-0-988"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_event_from_pending_authorization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization</span><span class="p">:</span> <span class="n">PendingAuthorization</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Event</span><span class="p">:</span>
+</span><span id="__span-0-989"><a id="__codelineno-0-989" name="__codelineno-0-989"></a>        <span class="k">return</span> <span class="n">oauth_flow</span><span class="o">.</span><span class="n">event_from_pending_authorization</span><span class="p">(</span><span class="n">authorization</span><span class="p">)</span>
+</span><span id="__span-0-990"><a id="__codelineno-0-990" name="__codelineno-0-990"></a>
+</span><span id="__span-0-991"><a id="__codelineno-0-991" name="__codelineno-0-991"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_tool_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-992"><a id="__codelineno-0-992" name="__codelineno-0-992"></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="__span-0-993"><a id="__codelineno-0-993" name="__codelineno-0-993"></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tool_name</span><span class="p">)</span><span class="o">.</span><span class="n">description</span>
+</span><span id="__span-0-994"><a id="__codelineno-0-994" name="__codelineno-0-994"></a>        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+</span><span id="__span-0-995"><a id="__codelineno-0-995" name="__codelineno-0-995"></a>            <span class="k">return</span> <span class="kc">None</span>
+</span><span id="__span-0-996"><a id="__codelineno-0-996" name="__codelineno-0-996"></a>
+</span><span id="__span-0-997"><a id="__codelineno-0-997" name="__codelineno-0-997"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_spawn_background</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coro</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-998"><a id="__codelineno-0-998" name="__codelineno-0-998"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;把协程作为后台任务运行（保留引用以防被 GC）；其异常已在任务内部自行捕获。&quot;&quot;&quot;</span>
+</span><span id="__span-0-999"><a id="__codelineno-0-999" name="__codelineno-0-999"></a>        <span class="n">task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span><span class="n">coro</span><span class="p">)</span>
+</span><span id="__span-0-1000"><a id="__codelineno-0-1000" name="__codelineno-0-1000"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_bg_tasks</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+</span><span id="__span-0-1001"><a id="__codelineno-0-1001" name="__codelineno-0-1001"></a>        <span class="n">task</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bg_tasks</span><span class="o">.</span><span class="n">discard</span><span class="p">)</span>
+</span><span id="__span-0-1002"><a id="__codelineno-0-1002" name="__codelineno-0-1002"></a>
+</span><span id="__span-0-1003"><a id="__codelineno-0-1003" name="__codelineno-0-1003"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_decide_and_resume</span><span class="p">(</span>
+</span><span id="__span-0-1004"><a id="__codelineno-0-1004" name="__codelineno-0-1004"></a>        <span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-0-1005"><a id="__codelineno-0-1005" name="__codelineno-0-1005"></a>        <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span>
+</span><span id="__span-0-1006"><a id="__codelineno-0-1006" name="__codelineno-0-1006"></a>        <span class="n">approval</span><span class="p">:</span> <span class="n">PendingApproval</span><span class="p">,</span>
+</span><span id="__span-0-1007"><a id="__codelineno-0-1007" name="__codelineno-0-1007"></a>        <span class="n">decision</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;approve&quot;</span><span class="p">,</span> <span class="s2">&quot;reject&quot;</span><span class="p">],</span>
+</span><span id="__span-0-1008"><a id="__codelineno-0-1008" name="__codelineno-0-1008"></a>        <span class="n">value</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+</span><span id="__span-0-1009"><a id="__codelineno-0-1009" name="__codelineno-0-1009"></a>        <span class="n">card_message_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-1010"><a id="__codelineno-0-1010" name="__codelineno-0-1010"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-1011"><a id="__codelineno-0-1011" name="__codelineno-0-1011"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;后台执行审批决定，并在需要时恢复原模型轮次。&quot;&quot;&quot;</span>
+</span><span id="__span-0-1012"><a id="__codelineno-0-1012" name="__codelineno-0-1012"></a>        <span class="k">await</span> <span class="n">approval_flow</span><span class="o">.</span><span class="n">decide_and_resume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">approval</span><span class="p">,</span> <span class="n">decision</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">card_message_id</span><span class="p">)</span>
+</span><span id="__span-0-1013"><a id="__codelineno-0-1013" name="__codelineno-0-1013"></a>
+</span><span id="__span-0-1014"><a id="__codelineno-0-1014" name="__codelineno-0-1014"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_default_approval_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">approval</span><span class="p">:</span> <span class="n">PendingApproval</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span id="__span-0-1015"><a id="__codelineno-0-1015" name="__codelineno-0-1015"></a>        <span class="k">return</span> <span class="n">approval_flow</span><span class="o">.</span><span class="n">default_approval_card</span><span class="p">(</span><span class="n">approval</span><span class="p">)</span>
+</span><span id="__span-0-1016"><a id="__codelineno-0-1016" name="__codelineno-0-1016"></a>
+</span><span id="__span-0-1017"><a id="__codelineno-0-1017" name="__codelineno-0-1017"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_default_decided_card</span><span class="p">(</span>
+</span><span id="__span-0-1018"><a id="__codelineno-0-1018" name="__codelineno-0-1018"></a>        <span class="bp">self</span><span class="p">,</span> <span class="n">approval</span><span class="p">:</span> <span class="n">PendingApproval</span><span class="p">,</span> <span class="n">decision</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">outcome</span><span class="p">:</span> <span class="n">ApprovalOutcome</span>
+</span><span id="__span-0-1019"><a id="__codelineno-0-1019" name="__codelineno-0-1019"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span id="__span-0-1020"><a id="__codelineno-0-1020" name="__codelineno-0-1020"></a>        <span class="k">return</span> <span class="n">approval_flow</span><span class="o">.</span><span class="n">default_decided_card</span><span class="p">(</span><span class="n">approval</span><span class="p">,</span> <span class="n">decision</span><span class="p">,</span> <span class="n">outcome</span><span class="p">)</span>
+</span><span id="__span-0-1021"><a id="__codelineno-0-1021" name="__codelineno-0-1021"></a>
+</span><span id="__span-0-1022"><a id="__codelineno-0-1022" name="__codelineno-0-1022"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-1023"><a id="__codelineno-0-1023" name="__codelineno-0-1023"></a>        <span class="n">message</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+</span><span id="__span-0-1024"><a id="__codelineno-0-1024" name="__codelineno-0-1024"></a>        <span class="n">message_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message_id&quot;</span><span class="p">)</span>
+</span><span id="__span-0-1025"><a id="__codelineno-0-1025" name="__codelineno-0-1025"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-1026"><a id="__codelineno-0-1026" name="__codelineno-0-1026"></a>            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finalize_stream</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span><span id="__span-0-1027"><a id="__codelineno-0-1027" name="__codelineno-0-1027"></a>            <span class="k">return</span>
+</span><span id="__span-0-1028"><a id="__codelineno-0-1028" name="__codelineno-0-1028"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">message_id</span><span class="p">:</span>
+</span><span id="__span-0-1029"><a id="__codelineno-0-1029" name="__codelineno-0-1029"></a>            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="n">message_id</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">msg_type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">)</span>
+</span><span id="__span-0-1030"><a id="__codelineno-0-1030" name="__codelineno-0-1030"></a>
+</span><span id="__span-0-1031"><a id="__codelineno-0-1031" name="__codelineno-0-1031"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_finalize_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-1032"><a id="__codelineno-0-1032" name="__codelineno-0-1032"></a>        <span class="n">message</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+</span><span id="__span-0-1033"><a id="__codelineno-0-1033" name="__codelineno-0-1033"></a>        <span class="n">message_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message_id&quot;</span><span class="p">)</span>
+</span><span id="__span-0-1034"><a id="__codelineno-0-1034" name="__codelineno-0-1034"></a>        <span class="c1"># Mirror the non-stream _finalize: reply in-thread to the inbound message; skip if absent.</span>
+</span><span id="__span-0-1035"><a id="__codelineno-0-1035" name="__codelineno-0-1035"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">message_id</span><span class="p">:</span>
+</span><span id="__span-0-1036"><a id="__codelineno-0-1036" name="__codelineno-0-1036"></a>            <span class="k">return</span>
+</span><span id="__span-0-1037"><a id="__codelineno-0-1037" name="__codelineno-0-1037"></a>
+</span><span id="__span-0-1038"><a id="__codelineno-0-1038" name="__codelineno-0-1038"></a>        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_one_token</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span id="__span-0-1039"><a id="__codelineno-0-1039" name="__codelineno-0-1039"></a>            <span class="k">yield</span> <span class="n">text</span>
+</span><span id="__span-0-1040"><a id="__codelineno-0-1040" name="__codelineno-0-1040"></a>
+</span><span id="__span-0-1041"><a id="__codelineno-0-1041" name="__codelineno-0-1041"></a>        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">stream_card</span><span class="p">(</span><span class="n">_one_token</span><span class="p">(),</span> <span class="n">reply_to_message_id</span><span class="o">=</span><span class="n">message_id</span><span class="p">)</span>  <span class="c1"># type: ignore[union-attr]</span>
 </span></code></pre></div></td></tr></table></div>
               </details>
 
@@ -7724,11 +7736,11 @@ SDK 会把近期 reasoning 仅在内存中传入，返回值用于原地更新�
 
             <details class="mkdocstrings-source">
               <summary>源代码位于： <code>feishu/agent/loop.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-970">970</a></span>
-<span class="normal"><a href="#__codelineno-0-971">971</a></span>
-<span class="normal"><a href="#__codelineno-0-972">972</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-970"><a id="__codelineno-0-970" name="__codelineno-0-970"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_card_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span id="__span-0-971"><a id="__codelineno-0-971" name="__codelineno-0-971"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;处理审批卡片回传：同步 ACK，后台完成决策、工具执行、历史续跑与卡片更新。&quot;&quot;&quot;</span>
-</span><span id="__span-0-972"><a id="__codelineno-0-972" name="__codelineno-0-972"></a>    <span class="k">return</span> <span class="k">await</span> <span class="n">approval_flow</span><span class="o">.</span><span class="n">handle_card_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-972">972</a></span>
+<span class="normal"><a href="#__codelineno-0-973">973</a></span>
+<span class="normal"><a href="#__codelineno-0-974">974</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-972"><a id="__codelineno-0-972" name="__codelineno-0-972"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_card_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span id="__span-0-973"><a id="__codelineno-0-973" name="__codelineno-0-973"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;处理审批卡片回传：同步 ACK，后台完成决策、工具执行、历史续跑与卡片更新。&quot;&quot;&quot;</span>
+</span><span id="__span-0-974"><a id="__codelineno-0-974" name="__codelineno-0-974"></a>    <span class="k">return</span> <span class="k">await</span> <span class="n">approval_flow</span><span class="o">.</span><span class="n">handle_card_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -7757,11 +7769,11 @@ SDK 会把近期 reasoning 仅在内存中传入，返回值用于原地更新�
 
             <details class="mkdocstrings-source">
               <summary>源代码位于： <code>feishu/agent/loop.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-974">974</a></span>
-<span class="normal"><a href="#__codelineno-0-975">975</a></span>
-<span class="normal"><a href="#__codelineno-0-976">976</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-974"><a id="__codelineno-0-974" name="__codelineno-0-974"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">resume_authorization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">user</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="__span-0-975"><a id="__codelineno-0-975" name="__codelineno-0-975"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;在 OAuth 回调成功保存用户 token 后，恢复一次挂起授权对应的原工具调用。&quot;&quot;&quot;</span>
-</span><span id="__span-0-976"><a id="__codelineno-0-976" name="__codelineno-0-976"></a>    <span class="k">return</span> <span class="k">await</span> <span class="n">oauth_flow</span><span class="o">.</span><span class="n">resume_authorization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization_id</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-976">976</a></span>
+<span class="normal"><a href="#__codelineno-0-977">977</a></span>
+<span class="normal"><a href="#__codelineno-0-978">978</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-976"><a id="__codelineno-0-976" name="__codelineno-0-976"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">resume_authorization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">user</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="__span-0-977"><a id="__codelineno-0-977" name="__codelineno-0-977"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;在 OAuth 回调成功保存用户 token 后，恢复一次挂起授权对应的原工具调用。&quot;&quot;&quot;</span>
+</span><span id="__span-0-978"><a id="__codelineno-0-978" name="__codelineno-0-978"></a>    <span class="k">return</span> <span class="k">await</span> <span class="n">oauth_flow</span><span class="o">.</span><span class="n">resume_authorization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">authorization_id</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -8529,7 +8541,7 @@ SDK 会把近期 reasoning 仅在内存中传入，返回值用于原地更新�
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月4日 15:44:28 UTC">2026-07-04 15:44:28</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月16日 18:54:03 UTC">2026-07-16 18:54:03</span>
   </span>
 
     
