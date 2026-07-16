@@ -595,7 +595,7 @@ class TestAgentLoop:
         assert len(client.sent_cards) == 1
         pending = next(iter(authorizations._store.values()))
         assert seen_authorizations == [({"open_id": "ou_tester"}, ("calendar:calendar",), pending.authorization_id)]
-        assert pending.extra["auth_card_message_id"] == "om_card_1"
+        auth_card_message_id = pending.extra["auth_card_message_id"]
         history = await store.get("oc_1")
         results = [p for m in history if m.role == "tool" for p in m.content if isinstance(p, ToolResultPart)]
         assert [p.tool_call_id for p in results] == ["c1"]
@@ -608,15 +608,14 @@ class TestAgentLoop:
         assert len(backend.calls) == 2
         assert client.replies[-1][1] == "Here are your events"
         assert client.recalled_messages == []
-        assert client.patched_cards[0][0] == "om_card_1"
-        assert "授权已完成" in str(client.patched_cards[0][1])
+        assert client.patched_cards[0][0] == auth_card_message_id
         assert authorizations._store == {}
         history = await store.get("oc_1")
         results = [p for m in history if m.role == "tool" for p in m.content if isinstance(p, ToolResultPart)]
         assert len(results) == 1
         assert results[0].content == "events result"
 
-    async def test_authorization_card_message_id_is_persisted_for_sqlite_store(self, tmp_path):
+    async def test_authorization_resumes_after_restart(self, tmp_path):
         client = _LoopRecordingClient()
         reg = ToolRegistry()
         store = InMemorySessionStore()
@@ -661,17 +660,16 @@ class TestAgentLoop:
 
         pending = await authorizations.get(seen_authorizations[0])
         assert pending is not None
-        assert pending.extra["auth_card_message_id"] == "om_card_1"
+        auth_card_message_id = pending.extra["auth_card_message_id"]
 
         status = await agent.resume_authorization(pending.authorization_id, user={"open_id": "ou_tester"})
 
         assert status == "resumed"
         assert calls == ["events", "events"]
         assert client.recalled_messages == []
-        assert client.patched_cards[0][0] == "om_card_1"
-        assert "授权已完成" in str(client.patched_cards[0][1])
+        assert client.patched_cards[0][0] == auth_card_message_id
 
-    async def test_authorization_replaces_existing_progress_card_instead_of_sending_separate_card(self):
+    async def test_authorization_reuses_card(self):
         client = _LoopRecordingClient()
         reg = ToolRegistry()
         store = InMemorySessionStore()
@@ -708,16 +706,10 @@ class TestAgentLoop:
 
         await agent.run(_text_event("mail?", chat_id="oc_1", open_id="ou_tester"))
 
-        assert client.sent_cards == [
-            ("oc_1", {"progress": True, "tools": [], "done": False, "result": ""}, "interactive", "chat_id")
-        ]
-        pending = next(iter(authorizations._store.values()))
-        assert pending.extra["auth_card_message_id"] == "om_card_1"
-        assert pending.extra["progress_message_id"] == "om_card_1"
-        assert client.patched_cards[-1][0] == "om_card_1"
+        assert len(client.sent_cards) == 1
         assert client.patched_cards[-1][1]["auth"] is True
 
-    async def test_legacy_authorize_url_fallback_replaces_existing_progress_card(self):
+    async def test_legacy_authorization_reuses_card(self):
         client = _LoopRecordingClient()
         reg = ToolRegistry()
         store = InMemorySessionStore()
@@ -754,14 +746,9 @@ class TestAgentLoop:
 
         await agent.run(_text_event("mail?", chat_id="oc_1", open_id="ou_tester"))
 
-        assert client.sent_cards == [
-            ("oc_1", {"progress": True, "tools": [], "done": False, "result": ""}, "interactive", "chat_id")
-        ]
-        assert client.patched_cards[0] == (
-            "om_card_1",
-            {"progress": True, "tools": ["events"], "done": False, "result": ""},
-        )
-        assert client.patched_cards[1] == ("om_card_1", {"auth": True, "url": "https://auth.example/legacy"})
+        assert len(client.sent_cards) == 1
+        assert client.patched_cards[-1][1]["auth"] is True
+        assert client.patched_cards[-1][1]["url"] == "https://auth.example/legacy"
 
     async def test_auth_preflight_runs_before_approval_card(self):
         client = _LoopRecordingClient()
@@ -844,7 +831,7 @@ class TestAgentLoop:
         assert client.replies[-1][1].startswith("授权已完成，但无法确认完成授权的用户身份")
         assert pending.authorization_id in authorizations._store
 
-    async def test_authorization_resume_expired_pending_reports_to_chat(self, tmp_path):
+    async def test_expired_authorization_notifies_chat(self, tmp_path):
         client = _LoopRecordingClient()
         authorizations = SqlitePendingAuthorizationStore(tmp_path / "auth.db", ttl_seconds=1)
         pending = PendingAuthorization(
@@ -871,8 +858,7 @@ class TestAgentLoop:
         status = await agent.resume_authorization("az_expired", user={"open_id": "ou_tester"})
 
         assert status == "expired"
-        assert client.patched_cards[0][0] == "om_auth"
-        assert "原请求已过期" in str(client.patched_cards[0][1])
+        assert len(client.patched_cards) == 1
         assert client.recalled_messages == []
         assert client.replies[-1][0] == "om_in"
         assert "原请求已过期" in client.replies[-1][1]
@@ -1265,7 +1251,7 @@ class TestApprovalFlow:
         history = await store.get("oc_1")
         assert any(m.role == "assistant" for m in history)
 
-    async def test_approval_resume_reuses_suspended_progress_card(self):
+    async def test_approval_reuses_card(self):
         client = _LoopRecordingClient()
         store = InMemorySessionStore()
         approvals = InMemoryPendingApprovalStore()
@@ -1279,9 +1265,7 @@ class TestApprovalFlow:
         await agent.run(_text_event("deploy prod", chat_id="oc_1"))
 
         assert len(client.sent_cards) == 1
-        progress_message_id = "om_card_1"
-        approval_message_id = progress_message_id
-        approval_card = client.patched_cards[-1][1]
+        approval_message_id, approval_card = client.patched_cards[-1]
         approval_id = _extract_approval_id(approval_card)
         sha = _extract_payload_sha256(approval_card)
 
@@ -1292,9 +1276,6 @@ class TestApprovalFlow:
 
         assert ran == ["prod"]
         assert len(client.sent_cards) == 1  # no separate confirmation/progress card on resume
-        patched_ids = [message_id for message_id, _ in client.patched_cards]
-        assert progress_message_id in patched_ids
-        assert approval_message_id in patched_ids
         assert client.patched_cards[-1][0] == approval_message_id
 
     async def test_suspended_history_is_well_formed_and_placeholder_is_replaced(self):

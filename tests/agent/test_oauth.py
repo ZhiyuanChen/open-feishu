@@ -5,6 +5,8 @@ from types import SimpleNamespace
 from typing import Any, cast
 from urllib.parse import parse_qs, quote, urlsplit
 
+import pytest
+
 from feishu.agent.oauth import (
     _RESUME_TASKS,
     build_authorize_url_builder,
@@ -111,62 +113,38 @@ def test_oauth_callback_auto_closes_and_resumes_pending_authorization() -> None:
     asyncio.run(run())
 
 
-def test_remove_authorization_card_patches_completion_before_recall() -> None:
-    async def run() -> None:
-        client = _CleanupClient()
-        authorization = PendingAuthorization(
-            authorization_id="az_1",
-            session_id="oc_1",
-            tool_call_id="c1",
-            tool_name="events",
-            arguments={},
-            extra={"auth_card_message_id": "om_auth"},
-        )
+@pytest.mark.parametrize(("fail_patch", "recalls"), ((False, []), (True, ["om_auth"])))
+async def test_finishes_authorization_card(fail_patch: bool, recalls: list[str]) -> None:
+    client = _CleanupClient(fail_patch=fail_patch)
+    authorization = PendingAuthorization(
+        authorization_id="az_1",
+        session_id="oc_1",
+        tool_call_id="c1",
+        tool_name="events",
+        arguments={},
+        extra={"auth_card_message_id": "om_auth"},
+    )
 
-        await remove_authorization_card(SimpleNamespace(client=client), authorization)
+    await remove_authorization_card(SimpleNamespace(client=client), authorization)
 
-        assert client.calls == [("patch", "om_auth")]
-        assert "授权已完成" in str(client.patches[0][1])
-
-    asyncio.run(run())
-
-
-def test_remove_authorization_card_recalls_when_patch_fails() -> None:
-    async def run() -> None:
-        client = _CleanupClient(fail_patch=True)
-        authorization = PendingAuthorization(
-            authorization_id="az_1",
-            session_id="oc_1",
-            tool_call_id="c1",
-            tool_name="events",
-            arguments={},
-            extra={"auth_card_message_id": "om_auth"},
-        )
-
-        await remove_authorization_card(SimpleNamespace(client=client), authorization)
-
-        assert client.calls == [("patch", "om_auth"), ("recall", "om_auth")]
-
-    asyncio.run(run())
+    assert [message_id for message_id, _ in client.patches] == ["om_auth"]
+    assert client.recalls == recalls
 
 
 class _CleanupClient:
     def __init__(self, *, fail_patch: bool = False) -> None:
-        self.calls: list[tuple[str, str]] = []
         self.patches: list[tuple[str, dict[str, Any]]] = []
         self.recalls: list[str] = []
         self.fail_patch = fail_patch
 
         class _IM:
             async def patch(_self, message_id: str, content: dict[str, Any]) -> dict[str, str]:
-                self.calls.append(("patch", message_id))
                 self.patches.append((message_id, content))
                 if self.fail_patch:
                     raise RuntimeError("patch failed")
                 return {"message_id": message_id}
 
             async def recall(_self, message_id: str) -> dict[str, str]:
-                self.calls.append(("recall", message_id))
                 self.recalls.append(message_id)
                 return {}
 

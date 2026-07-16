@@ -107,38 +107,28 @@ class TestApprovalToolkit:
 
         assert tool.input_schema["properties"]["accounts"]["additionalProperties"] == {"type": "string"}
 
-    async def test_create_approval_instance_resolves_payment_account_handle(self):
+    @pytest.mark.parametrize(
+        ("form", "accounts"),
+        (
+            ({"reason": "打车报销"}, {"bank": "pa_1"}),
+            ({"事由": "打车报销"}, {"收款账户": "pa_1"}),
+        ),
+        ids=("field_ids", "field_names"),
+    )
+    async def test_resolves_account(self, form, accounts):
         client = _Client()
-        accounts = _PaymentAccounts()
+        payment_accounts = _PaymentAccounts()
         tool = create_approval_instance(description="create")
 
-        with use_tool_context(ToolContext(client=client, user={"open_id": "ou_1"}, payment_accounts=accounts)):
+        with use_tool_context(ToolContext(client=client, user={"open_id": "ou_1"}, payment_accounts=payment_accounts)):
             result = await tool.handler(
                 approval_code="APPROVAL",
-                form={"reason": "打车报销"},
-                accounts={"bank": "pa_1"},
+                form=form,
+                accounts=accounts,
             )
 
         assert result.outcome is ToolOutcome.COMPLETED
-        assert accounts.resolve_calls == [({"open_id": "ou_1"}, "pa_1")]
-        [payload] = client.approval.instances.create_calls
-        form = json.loads(payload.form)
-        assert {"id": "bank", "type": "account", "value": _ACCOUNT_VALUE} in form
-        assert {"id": "reason", "type": "textarea", "value": "打车报销"} in form
-
-    async def test_create_approval_instance_accepts_unique_field_names(self):
-        client = _Client()
-        accounts = _PaymentAccounts()
-        tool = create_approval_instance(description="create")
-
-        with use_tool_context(ToolContext(client=client, user={"open_id": "ou_1"}, payment_accounts=accounts)):
-            result = await tool.handler(
-                approval_code="APPROVAL",
-                form={"事由": "打车报销"},
-                accounts={"收款账户": "pa_1"},
-            )
-
-        assert result.outcome is ToolOutcome.COMPLETED
+        assert payment_accounts.resolve_calls == [({"open_id": "ou_1"}, "pa_1")]
         [payload] = client.approval.instances.create_calls
         form = json.loads(payload.form)
         assert {"id": "bank", "type": "account", "value": _ACCOUNT_VALUE} in form

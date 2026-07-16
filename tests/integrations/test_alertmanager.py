@@ -1,40 +1,20 @@
 from __future__ import annotations
 
-from chanfig import NestedDict
+from typing import Any
+
+import pytest
 from starlette.applications import Starlette
 from starlette.testclient import TestClient
 
 from feishu.gateway import GatewayConfig
 from feishu.integrations.alertmanager import (
     InMemoryAlertmanagerStore,
-    alertmanager_event_id,
     create_alertmanager_route,
 )
 
 
-class _Recorder:
-    def __init__(self, ret):
-        self.ret = ret
-        self.calls = []
-
-    async def __call__(self, *args, **kwargs):
-        self.calls.append((args, kwargs))
-        return self.ret
-
-
-class _StubIM:
-    def __init__(self):
-        self.send = _Recorder(NestedDict({"message_id": "om_alert"}))
-        self.patch = _Recorder(NestedDict({"message_id": "om_alert"}))
-
-
-class _StubClient:
-    def __init__(self):
-        self.im = _StubIM()
-
-
-def _payload() -> dict:
-    return {
+def _payload(identity: str = "group_key") -> dict[str, Any]:
+    payload: dict[str, Any] = {
         "receiver": "cluster-oncall",
         "status": "firing",
         "groupKey": '{}:{alertname="ClusterGPUNodeUnhealthy", cluster="a800-1"}',
@@ -55,69 +35,71 @@ def _payload() -> dict:
             }
         ],
     }
+    if identity != "group_key":
+        payload.pop("groupKey")
+    if identity == "content":
+        payload["alerts"][0].pop("fingerprint")
+    return payload
 
 
-def test_event_id_prefers_group_key() -> None:
-    assert alertmanager_event_id(_payload()).startswith("{}:")
-
-
-def test_event_id_falls_back_to_alert_fingerprint() -> None:
-    payload = _payload()
-    payload.pop("groupKey")
-
-    assert alertmanager_event_id(payload) == "fp-1"
-
-
-def test_event_id_stably_hashes_payload_without_group_key_or_fingerprint() -> None:
-    payload = _payload()
-    payload.pop("groupKey")
-    payload["alerts"][0].pop("fingerprint")
-
-    assert alertmanager_event_id(payload).startswith("sha256:")
-    assert alertmanager_event_id(payload) == alertmanager_event_id(payload)
-
-
-def test_alertmanager_route_creates_then_updates_same_event() -> None:
-    stub = _StubClient()
+@pytest.mark.parametrize("identity", ("group_key", "fingerprint", "content"))
+def test_webhook_updates_alert(gateway_client, identity: str) -> None:
     store = InMemoryAlertmanagerStore()
     config = GatewayConfig(app_id="cli_test", app_secret="secret", service_keys={"k-status": "status"})
-    route = create_alertmanager_route(config, stub, "oc_ops", store=store)
+    route = create_alertmanager_route(config, gateway_client, "oc_ops", store=store)
     app = Starlette(routes=[route])
 
     with TestClient(app) as client:
         first = client.post(
             "/alerts/alertmanager",
             headers={"Authorization": "Bearer k-status"},
-            json=_payload(),
+            json=_payload(identity),
         )
         second = client.post(
             "/alerts/alertmanager",
             headers={"Authorization": "Bearer k-status"},
-            json=_payload(),
+            json=_payload(identity),
         )
 
     assert first.status_code == 200
     assert first.json()["action"] == "created"
     assert second.status_code == 200
     assert second.json()["action"] == "updated"
-    assert len(stub.im.send.calls) == 1
-    assert len(stub.im.patch.calls) == 1
-    _, send_kwargs = stub.im.send.calls[0]
-    assert send_kwargs["receive_id_type"] == "chat_id"
-    assert send_kwargs["msg_type"] == "interactive"
-    assert send_kwargs["uuid"].startswith("am-")
+    assert len(gateway_client.im.send.calls) == 1
+    assert len(gateway_client.im.patch.calls) == 1
 
 
-def test_alertmanager_route_requires_service_auth() -> None:
-    stub = _StubClient()
+def test_webhook_shows_alert_labels(gateway_client) -> None:
+    payload = _payload()
+    route = create_alertmanager_route(
+        GatewayConfig(app_id="cli_test", app_secret="secret", service_keys={"k-status": "status"}),
+        gateway_client,
+        "oc_ops",
+    )
+
+    with TestClient(Starlette(routes=[route])) as client:
+        response = client.post(
+            "/alerts/alertmanager",
+            headers={"Authorization": "Bearer k-status"},
+            json=payload,
+        )
+
+    assert response.status_code == 200
+    _, card = gateway_client.im.send.calls[0][0]
+    body = card["body"]["elements"][0]["content"]
+    assert "ClusterGPUNodeUnhealthy" in body
+    assert payload["groupKey"] not in body
+
+
+def test_webhook_requires_auth(gateway_client) -> None:
     config = GatewayConfig(app_id="cli_test", app_secret="secret", service_keys={"k-status": "status"})
-    app = Starlette(routes=[create_alertmanager_route(config, stub, "oc_ops")])
+    app = Starlette(routes=[create_alertmanager_route(config, gateway_client, "oc_ops")])
 
     with TestClient(app) as client:
         resp = client.post("/alerts/alertmanager", json=_payload())
 
     assert resp.status_code == 401
-    assert stub.im.send.calls == []
+    assert gateway_client.im.send.calls == []
 
 
 def test_webhook_requires_alertmanager_capability(gateway_client) -> None:

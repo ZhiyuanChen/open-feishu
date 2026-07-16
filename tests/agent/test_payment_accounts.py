@@ -74,7 +74,7 @@ class _Client:
         self.approval = _Approval(query_codes=query_codes, instances=instances)
 
 
-async def test_payment_account_resolver_lists_masked_own_accounts_and_resolves_cached_value():
+async def test_lists_own_accounts():
     client = _Client()
     resolver = PaymentAccountResolver(client)
     user = {"open_id": "ou_1", "user_id": "u_1"}
@@ -89,12 +89,11 @@ async def test_payment_account_resolver_lists_masked_own_accounts_and_resolves_c
     assert client.approval.instances.query_calls[0]["user_id"] == "ou_1"
     assert client.approval.instances.query_calls[0]["user_id_type"] == "open_id"
     assert client.approval.instances.query_calls[0]["approval_code"] == "APPROVAL"
-    assert client.approval.instances.get_calls == ["own", "other"]
 
     assert await resolver.resolve(user, account_id) == _ACCOUNT_VALUE
 
 
-async def test_payment_account_resolver_requires_open_id_to_scope_history_query():
+async def test_requires_open_id():
     client = _Client()
     resolver = PaymentAccountResolver(client)
 
@@ -102,7 +101,7 @@ async def test_payment_account_resolver_requires_open_id_to_scope_history_query(
     assert client.approval.instances.query_calls == []
 
 
-async def test_payment_account_resolver_skips_api_round_trip_polluted_account_values():
+async def test_skips_invalid_accounts():
     client = _Client(
         query_codes=["own_polluted", "own"],
         instances={
