@@ -21,11 +21,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Protocol
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -46,9 +49,95 @@ from ..gateway.notifications import (
 if TYPE_CHECKING:
     from ..gateway import GatewayContext
 
-AlertmanagerMessageStore = EventMessageStore
-InMemoryAlertmanagerStore = InMemoryEventMessageStore
-JsonFileAlertmanagerStore = JsonFileEventMessageStore
+_AlertRevision = tuple[float, int]
+_AlertRevisions = dict[str, _AlertRevision]
+AlertmanagerCardBuilder = Callable[[dict[str, Any]], dict[str, Any]]
+
+
+class AlertmanagerMessageStore(EventMessageStore, Protocol):
+    r"""Store Feishu message IDs and per-alert lifecycle revisions."""
+
+    def get_alert_revisions(self, event_id: str) -> _AlertRevisions:
+        r"""Return lifecycle revisions keyed by Alertmanager fingerprint."""
+        ...
+
+    def set_alert_revisions(
+        self,
+        event_id: str,
+        revisions: _AlertRevisions,
+    ) -> None:
+        r"""Persist lifecycle revisions for an Alertmanager notification group."""
+        ...
+
+
+class InMemoryAlertmanagerStore(InMemoryEventMessageStore):
+    r"""Process-local Alertmanager message and alert lifecycle state."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._alert_revisions: dict[str, _AlertRevisions] = {}
+
+    def get_alert_revisions(self, event_id: str) -> _AlertRevisions:
+        return dict(self._alert_revisions.get(event_id, {}))
+
+    def set_alert_revisions(
+        self,
+        event_id: str,
+        revisions: _AlertRevisions,
+    ) -> None:
+        self._alert_revisions[event_id] = dict(revisions)
+
+
+class JsonFileAlertmanagerStore(JsonFileEventMessageStore):
+    r"""Single-process JSON-file Alertmanager message and lifecycle state."""
+
+    def __init__(self, path: str | Path) -> None:
+        super().__init__(path)
+        self._alerts_path = Path(f"{self.path}.alerts")
+
+    def get_alert_revisions(self, event_id: str) -> _AlertRevisions:
+        with self._lock:
+            return dict(self._read_alert_revisions().get(event_id, {}))
+
+    def set_alert_revisions(
+        self,
+        event_id: str,
+        revisions: _AlertRevisions,
+    ) -> None:
+        with self._lock:
+            state = self._read_alert_revisions()
+            state[event_id] = dict(revisions)
+            self._alerts_path.parent.mkdir(parents=True, exist_ok=True)
+            serializable = {
+                group: {fingerprint: [revision[0], revision[1]] for fingerprint, revision in alerts.items()}
+                for group, alerts in state.items()
+            }
+            self._alerts_path.write_text(json.dumps(serializable, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+
+    def _read_alert_revisions(self) -> dict[str, _AlertRevisions]:
+        if not self._alerts_path.exists():
+            return {}
+        data = json.loads(self._alerts_path.read_text())
+        if not isinstance(data, Mapping):
+            return {}
+        state: dict[str, _AlertRevisions] = {}
+        for event_id, raw_alerts in data.items():
+            if not isinstance(raw_alerts, Mapping):
+                continue
+            alerts: _AlertRevisions = {}
+            for fingerprint, raw_revision in raw_alerts.items():
+                if (
+                    isinstance(raw_revision, list)
+                    and len(raw_revision) == 2
+                    and isinstance(raw_revision[0], (int, float))
+                    and isinstance(raw_revision[1], int)
+                ):
+                    alerts[str(fingerprint)] = (
+                        float(raw_revision[0]),
+                        raw_revision[1],
+                    )
+            state[str(event_id)] = alerts
+        return state
 
 
 @dataclass(frozen=True)
@@ -59,6 +148,7 @@ class AlertmanagerIntegration:
     receive_id_type: str = "chat_id"
     path: str = "/alerts/alertmanager"
     store: AlertmanagerMessageStore | None = None
+    card_builder: AlertmanagerCardBuilder | None = None
 
     def routes(self, context: GatewayContext) -> list[Route]:
         return [
@@ -69,6 +159,7 @@ class AlertmanagerIntegration:
                 receive_id_type=self.receive_id_type,
                 path=self.path,
                 store=self.store,
+                card_builder=self.card_builder,
             )
         ]
 
@@ -81,17 +172,27 @@ def create_alertmanager_route(
     receive_id_type: str = "chat_id",
     path: str = "/alerts/alertmanager",
     store: AlertmanagerMessageStore | None = None,
+    card_builder: AlertmanagerCardBuilder | None = None,
 ) -> Route:
     r"""Create a service-authenticated Alertmanager webhook route.
 
     The route converts the standard Alertmanager webhook payload into a Feishu
     interactive card. It uses the Alertmanager ``groupKey`` or alert
     ``fingerprint`` as a stable event ID, so repeated notifications update the
-    original Feishu card instead of creating a new post.
+    original Feishu card instead of creating a new post. The built-in stores
+    serialize delivery within one process; multi-worker deployments require a
+    gateway-level distributed delivery lock.
     """
     return Route(
         path,
-        _alertmanager_endpoint(config, client, receive_id, receive_id_type=receive_id_type, store=store),
+        _alertmanager_endpoint(
+            config,
+            client,
+            receive_id,
+            receive_id_type=receive_id_type,
+            store=store,
+            card_builder=card_builder,
+        ),
         methods=["POST"],
     )
 
@@ -168,6 +269,23 @@ def alertmanager_event_id(payload: Mapping[str, Any]) -> str:
     return f"sha256:{digest}"
 
 
+def _single_alert_alias(payload: Mapping[str, Any]) -> str:
+    alerts = [alert for alert in payload.get("alerts", []) if isinstance(alert, Mapping)]
+    if len(alerts) != 1:
+        return ""
+    return _single_alert_identity(payload, alerts[0])
+
+
+def _single_alert_identity(payload: Mapping[str, Any], alert: Mapping[str, Any]) -> str:
+    labels = {**_dict(payload.get("commonLabels")), **_dict(alert.get("labels"))}
+    keys = ("alertname", "cluster", "node", "device", "service", "job", "instance")
+    parts = [(key, _text(labels.get(key))) for key in keys]
+    selected = [(key, value) for key, value in parts if value]
+    if not selected:
+        return ""
+    return "{}:{" + ", ".join(f'{key}="{value}"' for key, value in selected) + "}"
+
+
 def alertmanager_display_id(payload: Mapping[str, Any]) -> str:
     r"""Return a user-readable Alertmanager identifier for cards."""
     labels = _dict(payload.get("commonLabels"))
@@ -203,8 +321,11 @@ def _alertmanager_endpoint(
     *,
     receive_id_type: str,
     store: AlertmanagerMessageStore | None,
+    card_builder: AlertmanagerCardBuilder | None,
 ) -> Callable[[Request], Awaitable[Response]]:
     event_store = store or InMemoryAlertmanagerStore()
+    build_card = card_builder or build_alertmanager_card
+    delivery_lock = asyncio.Lock()
 
     async def endpoint(request: Request) -> Response:
         try:
@@ -215,16 +336,28 @@ def _alertmanager_endpoint(
             )
             payload = await read_json_object(request)
             event_id = alertmanager_event_id(payload)
-            card = build_alertmanager_card(payload)
-            delivery = await upsert_interactive_card(
-                client,
-                event_id,
-                card,
-                receive_id,
-                receive_id_type=receive_id_type,
-                store=event_store,
-                uuid_prefix="am-",
-            )
+            alias_id = _single_alert_alias(payload)
+            delivery_id = _delivery_event_id(event_store, event_id, alias_id)
+            async with delivery_lock:
+                if _update_is_stale(event_store, delivery_id, payload):
+                    return JSONResponse(
+                        {
+                            "action": "ignored_stale",
+                            "event_id": delivery_id,
+                            "message_id": event_store.get(delivery_id),
+                        }
+                    )
+                card = build_card(payload)
+                delivery = await upsert_interactive_card(
+                    client,
+                    delivery_id,
+                    card,
+                    receive_id,
+                    receive_id_type=receive_id_type,
+                    store=event_store,
+                    uuid_prefix="am-",
+                )
+                _remember_alert_alias(event_store, event_id, alias_id, delivery.message_id, delivery_id)
             return JSONResponse(
                 {
                     "action": delivery.action,
@@ -242,6 +375,75 @@ def _alertmanager_endpoint(
             return feishu_error_response(exc)
 
     return endpoint
+
+
+def _delivery_event_id(store: AlertmanagerMessageStore, event_id: str, alias_id: str) -> str:
+    if alias_id and not store.get(event_id) and store.get(alias_id):
+        return alias_id
+    return event_id
+
+
+def _remember_alert_alias(
+    store: AlertmanagerMessageStore, event_id: str, alias_id: str, message_id: str | None, delivery_id: str
+) -> None:
+    if not alias_id or not message_id:
+        return
+    store.set(event_id, message_id)
+    store.set(alias_id, message_id)
+    revisions = store.get_alert_revisions(delivery_id)
+    if revisions:
+        store.set_alert_revisions(event_id, revisions)
+        store.set_alert_revisions(alias_id, revisions)
+
+
+def _update_is_stale(
+    store: AlertmanagerMessageStore,
+    event_id: str,
+    payload: Mapping[str, Any],
+) -> bool:
+    incoming = _alert_revisions(payload)
+    payload_status = _text(payload.get("status")).lower()
+    if incoming is None or payload_status not in {"firing", "resolved"}:
+        return False
+
+    current = store.get_alert_revisions(event_id)
+    merged = dict(current)
+    stale = False
+    for fingerprint, revision in incoming.items():
+        previous = current.get(fingerprint)
+        if previous is not None and revision < previous:
+            stale = True
+            continue
+        merged[fingerprint] = revision
+
+    store.set_alert_revisions(event_id, merged)
+    merged_status = "firing" if any(lifecycle == 0 for _, lifecycle in merged.values()) else "resolved"
+    return stale or payload_status != merged_status
+
+
+def _alert_revisions(payload: Mapping[str, Any]) -> _AlertRevisions | None:
+    alerts = [alert for alert in payload.get("alerts", []) if isinstance(alert, Mapping)]
+    if not alerts:
+        return None
+
+    revisions: _AlertRevisions = {}
+    for alert in alerts:
+        fingerprint = _text(alert.get("fingerprint"))
+        raw_started_at = _text(alert.get("startsAt"))
+        status = _text(alert.get("status")).lower()
+        if not fingerprint or not raw_started_at or status not in {"firing", "resolved"}:
+            return None
+        try:
+            started_at = datetime.fromisoformat(raw_started_at.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+        if started_at.tzinfo is None:
+            started_at = started_at.replace(tzinfo=timezone.utc)
+        revisions[fingerprint] = (
+            started_at.timestamp(),
+            1 if status == "resolved" else 0,
+        )
+    return revisions
 
 
 def _alert_title(payload: Mapping[str, Any]) -> str:
