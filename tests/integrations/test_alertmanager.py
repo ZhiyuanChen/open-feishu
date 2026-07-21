@@ -109,6 +109,26 @@ def test_webhook_updates_alert(gateway_client, identity: str) -> None:
     assert len(gateway_client.im.patch.calls) == 1
 
 
+def test_refiring_alert_creates_a_new_message(gateway_client) -> None:
+    store = InMemoryAlertmanagerStore()
+    config = GatewayConfig(app_id="cli_test", app_secret="secret", service_keys={"k-status": "status"})
+    route = create_alertmanager_route(config, gateway_client, "oc_ops", store=store)
+    first_start = "2026-07-17T02:40:41Z"
+    second_start = "2026-07-21T04:32:27Z"
+
+    actions = _post_alerts(
+        route,
+        _group("firing", _alert("fp-link", "compute-0015", first_start)),
+        _group("resolved", _alert("fp-link", "compute-0015", first_start, status="resolved")),
+        _group("firing", _alert("fp-link", "compute-0015", second_start)),
+        _group("firing", _alert("fp-link", "compute-0015", second_start)),
+    )
+
+    assert actions == ["created", "updated", "created", "updated"]
+    assert len(gateway_client.im.send.calls) == 2
+    assert len(gateway_client.im.patch.calls) == 2
+
+
 def test_webhook_shows_alert_labels(gateway_client) -> None:
     payload = _payload()
     route = create_alertmanager_route(
@@ -160,6 +180,7 @@ def test_single_alert_alias_updates_when_group_key_gains_node(gateway_client) ->
     base = _payload()
     base["commonLabels"]["job"] = "cluster-health-a800-1"
     base["alerts"][0]["labels"] = {"node": "compute-0015"}
+    base["alerts"][0]["startsAt"] = "2026-07-17T02:40:41Z"
     base["commonLabels"]["alertname"] = "ClusterMMHealthNetworkEntityFailed"
     base["groupKey"] = (
         '{}:{alertname="ClusterMMHealthNetworkEntityFailed", cluster="a800-1", job="cluster-health-a800-1"}'

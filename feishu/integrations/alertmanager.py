@@ -177,9 +177,9 @@ def create_alertmanager_route(
     r"""Create a service-authenticated Alertmanager webhook route.
 
     The route converts the standard Alertmanager webhook payload into a Feishu
-    interactive card. It uses the Alertmanager ``groupKey`` or alert
-    ``fingerprint`` as a stable event ID, so repeated notifications update the
-    original Feishu card instead of creating a new post. The built-in stores
+    interactive card. Repeated notifications for one incident update the
+    original card, while a single-alert incident with a new ``startsAt`` posts
+    a new card so operators receive a fresh notification. The built-in stores
     serialize delivery within one process; multi-worker deployments require a
     gateway-level distributed delivery lock.
     """
@@ -338,6 +338,12 @@ def _alertmanager_endpoint(
             event_id = alertmanager_event_id(payload)
             alias_id = _single_alert_alias(payload)
             delivery_id = _delivery_event_id(event_store, event_id, alias_id)
+            delivery_id = _single_alert_incident_id(
+                event_store,
+                payload,
+                delivery_id,
+                alias_id,
+            )
             async with delivery_lock:
                 if _update_is_stale(event_store, delivery_id, payload):
                     return JSONResponse(
@@ -381,6 +387,23 @@ def _delivery_event_id(store: AlertmanagerMessageStore, event_id: str, alias_id:
     if alias_id and not store.get(event_id) and store.get(alias_id):
         return alias_id
     return event_id
+
+
+def _single_alert_incident_id(
+    store: AlertmanagerMessageStore,
+    payload: Mapping[str, Any],
+    event_id: str,
+    alias_id: str,
+) -> str:
+    alerts = [alert for alert in payload.get("alerts", []) if isinstance(alert, Mapping)]
+    if len(alerts) != 1:
+        return event_id
+    if len(store.get_alert_revisions(event_id)) > 1:
+        return event_id
+    starts_at = _text(alerts[0].get("startsAt"))
+    if not starts_at:
+        return event_id
+    return f"{alias_id or event_id}:startsAt={starts_at}"
 
 
 def _remember_alert_alias(
