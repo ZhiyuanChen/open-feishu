@@ -398,12 +398,13 @@ def _single_alert_incident_id(
     alerts = [alert for alert in payload.get("alerts", []) if isinstance(alert, Mapping)]
     if len(alerts) != 1:
         return event_id
-    if len(store.get_alert_revisions(event_id)) > 1:
-        return event_id
     starts_at = _text(alerts[0].get("startsAt"))
     if not starts_at:
         return event_id
-    return f"{alias_id or event_id}:startsAt={starts_at}"
+    incident_id = f"{alias_id or event_id}:startsAt={starts_at}"
+    if _text(payload.get("status")).lower() == "resolved" and not store.get(incident_id):
+        return event_id
+    return incident_id
 
 
 def _remember_alert_alias(
