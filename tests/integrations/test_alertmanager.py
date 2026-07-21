@@ -189,9 +189,14 @@ def test_alertmanager_card_formats_incident_for_operators() -> None:
 
     card = build_alertmanager_card(payload)
     title = card["header"]["title"]["content"]
-    body = card["body"]["elements"][0]["content"]
+    blocks = [element["content"] for element in card["body"]["elements"]]
+    body = "\n\n".join(blocks)
 
     assert title == "RESOLVED - P3 - a800-1 compute-0015 infiniband mlx5_22/1 (ib2) recently dropped"
+    assert blocks[1] == "**Instances**:\n- `compute-0015` (`172.51.4.170`)"
+    assert blocks[2].startswith("**Details**:\n")
+    assert blocks[3] == "**Impact**:\nThe flap can explain recent NCCL/RDMA failures."
+    assert blocks[4] == "**Action**:\nInspect link error counters, the cable, optic, and switch port."
     assert "**ID**: `a800-1/compute-0015/mlx5_22@2026-07-21T11:53:00Z`" in body
     assert "**Instances**:\n- `compute-0015` (`172.51.4.170`)" in body
     assert "**Details**:" in body
