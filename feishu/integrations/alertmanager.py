@@ -214,7 +214,7 @@ def build_alertmanager_card(payload: dict[str, Any]) -> dict[str, Any]:
     if priority:
         title_parts.append(priority)
     title_parts.append(title)
-    if cluster:
+    if cluster and cluster.casefold() not in title.casefold():
         title_parts.append(cluster)
 
     lines = [
@@ -233,7 +233,8 @@ def build_alertmanager_card(payload: dict[str, Any]) -> dict[str, Any]:
         lines.append("")
         lines.append("**Instances**:")
         for alert in alerts[:8]:
-            lines.append(f"- {_alert_line(alert)}")
+            lines.append(f"- {_alert_instance_line(payload, alert)}")
+        lines.extend(_alert_detail_lines(payload, alerts))
     external_url = _text(payload.get("externalURL"))
     if external_url:
         lines.append("")
@@ -291,7 +292,15 @@ def alertmanager_display_id(payload: Mapping[str, Any]) -> str:
     labels = _dict(payload.get("commonLabels"))
     alerts = [alert for alert in payload.get("alerts", []) if isinstance(alert, Mapping)]
     if len(alerts) == 1:
-        labels = {**_dict(alerts[0].get("labels")), **labels}
+        alert = alerts[0]
+        labels = {**labels, **_dict(alert.get("labels"))}
+        cluster = _text(labels.get("cluster"))
+        resource = _text(labels.get("node") or labels.get("service") or labels.get("instance") or labels.get("job"))
+        device = _text(labels.get("device"))
+        started_at = _display_timestamp(alert.get("startsAt"))
+        concise = [part for part in (cluster, resource, device) if part]
+        if concise and started_at:
+            return f"{'/'.join(concise)}@{started_at}"
 
     parts = [
         _text(labels.get("alertname")),
@@ -481,27 +490,92 @@ def _alert_title(payload: Mapping[str, Any]) -> str:
     )
 
 
-def _alert_line(alert: dict[str, Any]) -> str:
-    labels = _dict(alert.get("labels"))
+def _alert_instance_line(payload: Mapping[str, Any], alert: Mapping[str, Any]) -> str:
+    labels = {**_dict(payload.get("commonLabels")), **_dict(alert.get("labels"))}
     annotations = _dict(alert.get("annotations"))
     node = _text(labels.get("node") or labels.get("instance") or labels.get("service") or labels.get("job"))
-    fingerprint = _text(alert.get("fingerprint"))
-    description = _text(annotations.get("description") or annotations.get("summary"))
-    status = _text(alert.get("status"))
-    url = _text(alert.get("generatorURL"))
-    parts = []
+    internal_ip = _text(labels.get("internal_ip") or annotations.get("node_ip"))
+    if node and internal_ip and internal_ip != node:
+        return f"`{node}` (`{internal_ip}`)"
     if node:
-        parts.append(f"`{node}`")
-    if status:
-        parts.append(status)
-    if description:
-        parts.append(description)
-    if fingerprint:
-        parts.append(f"`{fingerprint}`")
-    line = " - ".join(parts) if parts else "alert"
-    if url:
-        line = f"{line} ([source]({url}))"
-    return line
+        return f"`{node}`"
+    if internal_ip:
+        return f"`{internal_ip}`"
+    return "alert"
+
+
+def _alert_detail_lines(payload: Mapping[str, Any], alerts: list[dict[str, Any]]) -> list[str]:
+    common_annotations = _dict(payload.get("commonAnnotations"))
+    details: list[str] = []
+    impacts: list[str] = []
+    actions: list[str] = []
+    sources: list[tuple[str, str]] = []
+
+    for alert in alerts[:8]:
+        annotations = {**common_annotations, **_dict(alert.get("annotations"))}
+        detail, impact, action = _description_sections(_text(annotations.get("description")))
+        detail = _text(annotations.get("details")) or detail
+        impact = _sentence_case(_text(annotations.get("impact")) or impact)
+        action = _sentence_case(_text(annotations.get("action")) or action)
+        if detail and detail not in details:
+            details.append(detail)
+        if impact and impact not in impacts:
+            impacts.append(impact)
+        if action and action not in actions:
+            actions.append(action)
+
+        source = _text(alert.get("generatorURL"))
+        if source and all(url != source for _, url in sources):
+            labels = {**_dict(payload.get("commonLabels")), **_dict(alert.get("labels"))}
+            source_name = _text(labels.get("node") or labels.get("instance"))
+            sources.append((source_name, source))
+
+    lines: list[str] = []
+    for heading, values in (("Details", details), ("Impact", impacts), ("Action", actions)):
+        if not values:
+            continue
+        lines.extend(("", f"**{heading}**:", "\n".join(values)))
+    if sources:
+        lines.append("")
+        if len(sources) == 1:
+            lines.append(f"[Source]({sources[0][1]})")
+        else:
+            lines.append(" · ".join(f"[{name or 'Source'}]({url})" for name, url in sources))
+    return lines
+
+
+def _description_sections(description: str) -> tuple[str, str, str]:
+    detail = description.strip()
+    impact = ""
+    action = ""
+    if " Impact: " in detail:
+        detail, remainder = detail.split(" Impact: ", 1)
+        if " Action: " in remainder:
+            impact, action = remainder.split(" Action: ", 1)
+        else:
+            impact = remainder
+    elif " Action: " in detail:
+        detail, action = detail.split(" Action: ", 1)
+    return detail.strip(), impact.strip(), action.strip()
+
+
+def _sentence_case(value: str) -> str:
+    if not value:
+        return ""
+    return value[0].upper() + value[1:]
+
+
+def _display_timestamp(value: Any) -> str:
+    raw = _text(value)
+    if not raw:
+        return ""
+    try:
+        timestamp = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return ""
+    if timestamp.tzinfo is None:
+        timestamp = timestamp.replace(tzinfo=timezone.utc)
+    return timestamp.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _priority(payload: Mapping[str, Any]) -> str:

@@ -10,6 +10,7 @@ from feishu.gateway import GatewayConfig
 from feishu.integrations.alertmanager import (
     InMemoryAlertmanagerStore,
     JsonFileAlertmanagerStore,
+    build_alertmanager_card,
     create_alertmanager_route,
 )
 
@@ -149,6 +150,55 @@ def test_webhook_shows_alert_labels(gateway_client) -> None:
     body = card["body"]["elements"][0]["content"]
     assert "ClusterGPUNodeUnhealthy" in body
     assert payload["groupKey"] not in body
+
+
+def test_alertmanager_card_formats_incident_for_operators() -> None:
+    payload = _payload()
+    payload["status"] = "resolved"
+    payload["commonLabels"] = {
+        "alertname": "ClusterFabricLinkRecentlyDown",
+        "cluster": "a800-1",
+        "device": "mlx5_22",
+        "internal_ip": "172.51.4.170",
+        "job": "cluster-health-a800-1",
+        "node": "compute-0015",
+        "priority": "p3",
+        "severity": "warning",
+    }
+    payload["commonAnnotations"] = {
+        "summary": "a800-1 compute-0015 infiniband mlx5_22/1 (ib2) recently dropped",
+    }
+    payload["alerts"] = [
+        {
+            "status": "resolved",
+            "fingerprint": "7bd198673b7e6d1b",
+            "startsAt": "2026-07-21T11:53:00.601Z",
+            "labels": payload["commonLabels"],
+            "annotations": {
+                "description": (
+                    "Node compute-0015 (172.51.4.170) expected infiniband link "
+                    "mlx5_22/1 -> ib2, PCI 0000:96:00.0, was not ready at least "
+                    "once in the last 10 minutes and is ready now. Impact: the "
+                    "flap can explain recent NCCL/RDMA failures. Action: inspect "
+                    "link error counters, the cable, optic, and switch port."
+                )
+            },
+            "generatorURL": "https://status.example.test/alerts/fabric-link",
+        }
+    ]
+
+    card = build_alertmanager_card(payload)
+    title = card["header"]["title"]["content"]
+    body = card["body"]["elements"][0]["content"]
+
+    assert title == "RESOLVED - P3 - a800-1 compute-0015 infiniband mlx5_22/1 (ib2) recently dropped"
+    assert "**ID**: `a800-1/compute-0015/mlx5_22@2026-07-21T11:53:00Z`" in body
+    assert "**Instances**:\n- `compute-0015` (`172.51.4.170`)" in body
+    assert "**Details**:" in body
+    assert "**Impact**:\nThe flap can explain recent NCCL/RDMA failures." in body
+    assert "**Action**:\nInspect link error counters, the cable, optic, and switch port." in body
+    assert "[Source](https://status.example.test/alerts/fabric-link)" in body
+    assert "7bd198673b7e6d1b" not in body
 
 
 def test_webhook_uses_supplied_card_builder(gateway_client) -> None:
