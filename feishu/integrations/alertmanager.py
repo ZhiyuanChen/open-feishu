@@ -34,7 +34,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from ..cards.factories import alert_card
+from ..cards.builder import Card
 from ..errors import FeishuError
 from ..gateway.auth import ServiceAuthError, ServiceCapabilityError, require_service_capability
 from ..gateway.config import GatewayConfig
@@ -217,34 +217,30 @@ def build_alertmanager_card(payload: dict[str, Any]) -> dict[str, Any]:
     if cluster and cluster.casefold() not in title.casefold():
         title_parts.append(cluster)
 
-    lines = [
+    metadata = [
         f"**ID**: `{display_id}`",
         f"**Status**: {status}",
     ]
     if priority:
-        lines.append(f"**Priority**: {priority}")
+        metadata.append(f"**Priority**: {priority}")
     if cluster:
-        lines.append(f"**Cluster**: {cluster}")
+        metadata.append(f"**Cluster**: {cluster}")
     if severity:
-        lines.append(f"**Severity**: {severity}")
+        metadata.append(f"**Severity**: {severity}")
     if summary and summary != title:
-        lines.append(f"**Summary**: {summary}")
+        metadata.append(f"**Summary**: {summary}")
+
+    card = Card().header(" - ".join(title_parts), template=_template(status, priority)).markdown("\n".join(metadata))
     if alerts:
-        lines.append("")
-        lines.append("**Instances**:")
-        for alert in alerts[:8]:
-            lines.append(f"- {_alert_instance_line(payload, alert)}")
-        lines.extend(_alert_detail_lines(payload, alerts))
+        instances = ["**Instances**:"]
+        instances.extend(f"- {_alert_instance_line(payload, alert)}" for alert in alerts[:8])
+        card.markdown("\n".join(instances))
+        for block in _alert_detail_blocks(payload, alerts):
+            card.markdown(block)
     external_url = _text(payload.get("externalURL"))
     if external_url:
-        lines.append("")
-        lines.append(f"[Open Alertmanager]({external_url})")
-
-    return alert_card(
-        "\n".join(lines),
-        title=" - ".join(title_parts),
-        template=_template(status, priority),
-    )
+        card.markdown(f"[Open Alertmanager]({external_url})")
+    return card.to_dict()
 
 
 def alertmanager_event_id(payload: Mapping[str, Any]) -> str:
@@ -504,7 +500,7 @@ def _alert_instance_line(payload: Mapping[str, Any], alert: Mapping[str, Any]) -
     return "alert"
 
 
-def _alert_detail_lines(payload: Mapping[str, Any], alerts: list[dict[str, Any]]) -> list[str]:
+def _alert_detail_blocks(payload: Mapping[str, Any], alerts: list[dict[str, Any]]) -> list[str]:
     common_annotations = _dict(payload.get("commonAnnotations"))
     details: list[str] = []
     impacts: list[str] = []
@@ -530,18 +526,17 @@ def _alert_detail_lines(payload: Mapping[str, Any], alerts: list[dict[str, Any]]
             source_name = _text(labels.get("node") or labels.get("instance"))
             sources.append((source_name, source))
 
-    lines: list[str] = []
+    blocks: list[str] = []
     for heading, values in (("Details", details), ("Impact", impacts), ("Action", actions)):
         if not values:
             continue
-        lines.extend(("", f"**{heading}**:", "\n".join(values)))
+        blocks.append(f"**{heading}**:\n{'\n'.join(values)}")
     if sources:
-        lines.append("")
         if len(sources) == 1:
-            lines.append(f"[Source]({sources[0][1]})")
+            blocks.append(f"[Source]({sources[0][1]})")
         else:
-            lines.append(" · ".join(f"[{name or 'Source'}]({url})" for name, url in sources))
-    return lines
+            blocks.append(" · ".join(f"[{name or 'Source'}]({url})" for name, url in sources))
+    return blocks
 
 
 def _description_sections(description: str) -> tuple[str, str, str]:
