@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import uuid as _uuid
+from collections.abc import Iterable
 from email.utils import parseaddr
 from typing import TYPE_CHECKING, Any
 
@@ -35,6 +36,8 @@ from ..errors import FeishuApiError
 
 _NestedDictList = list[NestedDict]
 _StringList = list[str]
+_URGENT_CHANNELS = frozenset({"app", "sms", "phone"})
+_MAX_URGENT_USER_IDS = 200
 
 if TYPE_CHECKING:
     from .chats import ChatsNamespace
@@ -447,6 +450,52 @@ class IMNamespace(Namespace):
         """
         body = {"content": _content(card)}
         return await self._request_data("PATCH", f"im/v1/messages/{quote_segment(message_id)}", json=body)
+
+    async def urgent(
+        self,
+        message_id: str,
+        user_ids: Iterable[str],
+        *,
+        channel: str = "app",
+        user_id_type: str = "open_id",
+    ) -> NestedDict:
+        r"""
+        对机器人发出的消息加急。
+
+        `channel` 决定调用哪条加急接口：`app` 为应用内加急，`sms` 为短信加急，`phone` 为电话加急。
+        飞书限制单次最多 200 个用户 ID；超过时直接抛出 [ValueError][]。目标用户必须在消息所属会话内。
+
+        Args:
+            message_id: 要加急的消息 ID。
+            user_ids: 加急目标用户 ID 列表，单次最多 200 个；ID 类型与 `user_id_type` 一致。
+            channel: 加急通道，可选 `app`、`sms`、`phone`。默认为 `app`。
+            user_id_type: 用户 ID 类型，可选 `open_id`、`union_id`、`user_id`。默认为 `open_id`。
+
+        Returns:
+            飞书返回的 `data` 数据体，可能含 `invalid_user_id_list`。
+
+        Raises:
+            ValueError: 当 `channel` 非法，或用户 ID 超过 200 个时抛出。
+            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
+
+        飞书文档:
+            [发送应用内加急](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/im-v1/message/urgent_app)
+
+        Examples:
+            >>> await client.im.urgent("om_1", ["ou_oncall"], channel="app")  # doctest:+SKIP
+            {}
+        """
+        if channel not in _URGENT_CHANNELS:
+            raise ValueError(f"urgent channel must be one of {sorted(_URGENT_CHANNELS)}, got {channel!r}")
+        ids = list(user_ids)
+        if len(ids) > _MAX_URGENT_USER_IDS:
+            raise ValueError(f"urgent accepts at most {_MAX_URGENT_USER_IDS} user_ids per call, got {len(ids)}")
+        return await self._request_data(
+            "PATCH",
+            f"im/v1/messages/{quote_segment(message_id)}/urgent_{channel}",
+            params={"user_id_type": user_id_type},
+            json={"user_id_list": ids},
+        )
 
     @property
     def pins(self) -> PinsNamespace:

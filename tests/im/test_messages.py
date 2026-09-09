@@ -367,6 +367,32 @@ class TestGetResource:
         await client.aclose()
 
 
+class TestUrgent:
+    @pytest.mark.parametrize(
+        "channel,suffix",
+        [("app", "urgent_app"), ("sms", "urgent_sms"), ("phone", "urgent_phone")],
+    )
+    async def test_patches_channel_path(self, im, recorder, channel, suffix):
+        result = await im(lambda r: envelope({"invalid_user_id_list": []})).urgent(
+            "om_1", ["ou_a", "ou_b"], channel=channel, user_id_type="open_id"
+        )
+        method, path, params, body = recorder.last
+        assert method == "PATCH" and path.endswith(f"/im/v1/messages/om_1/{suffix}")
+        assert params["user_id_type"] == "open_id"
+        assert body["user_id_list"] == ["ou_a", "ou_b"]
+        assert result["invalid_user_id_list"] == []
+
+    async def test_rejects_unknown_channel(self, im, recorder):
+        with pytest.raises(ValueError, match="channel"):
+            await im().urgent("om_1", ["ou_a"], channel="pager")
+        assert recorder == []
+
+    async def test_rejects_over_200(self, im, recorder):
+        with pytest.raises(ValueError, match="200"):
+            await im().urgent("om_1", [f"ou_{i}" for i in range(201)])
+        assert recorder == []
+
+
 class TestPushFollowUp:
     async def test_wraps_string(self, im, recorder):
         result = await im(lambda r: envelope({})).push_follow_up("om_1", "点击查看")
