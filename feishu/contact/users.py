@@ -356,3 +356,44 @@ class UsersNamespace(Namespace):
         return await self._request_data(
             "PATCH", f"contact/v3/users/{quote_segment(user_id)}", params=params or None, json=user
         )
+
+    async def update_user_id(
+        self,
+        user_id: str,
+        new_user_id: str,
+        *,
+        user_id_type: str | None = None,
+    ) -> NestedDict:
+        r"""
+        更新用户的 `user_id`。
+
+        以 PATCH 方式调用更新 UserID 接口。仅在显式传入时附带 `user_id_type` 查询参数，未设置时省略。
+        路径中的 `user_id` 按该查询参数解释；`new_user_id` 写入请求体。
+
+        Args:
+            user_id: 当前用户 ID。
+            new_user_id: 要改成的新 `user_id`。
+            user_id_type: 路径中用户 ID 的类型，可选 `open_id`、`union_id`、`user_id`；为空时省略该查询参数。
+
+        Returns:
+            飞书返回的 `data` 数据体。
+
+        Raises:
+            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
+
+        飞书文档:
+            [更新用户 ID](https://open.feishu.cn/document/server-docs/contact-v3/user/update_user_id)
+
+        Examples:
+            >>> await client.contact.users.update_user_id("7ed1ag1f", "jhsu", user_id_type="user_id")  # doctest: +SKIP
+            {}
+        """
+        params: dict[str, Any] = {}
+        if user_id_type is not None:
+            params["user_id_type"] = user_id_type
+        return await self._request_data(
+            "PATCH",
+            f"contact/v3/users/{quote_segment(user_id)}/update_user_id",
+            params=params or None,
+            json={"new_user_id": new_user_id},
+        )

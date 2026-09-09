@@ -163,14 +163,23 @@ class TestWriteUsers:
         method, path, _, _ = recorder.last
         assert method == "DELETE" and path.endswith("/contact/v3/users/u1")
 
+    async def test_update_user_id_patches_new_id(self, users, recorder):
+        client = users(lambda r: envelope({}))
+        await client.contact.users.update_user_id("7ed1ag1f", "jhsu", user_id_type="user_id")
+        method, path, params, body = recorder.last
+        assert method == "PATCH" and path.endswith("/contact/v3/users/7ed1ag1f/update_user_id")
+        assert params["user_id_type"] == "user_id"
+        assert body["new_user_id"] == "jhsu"
+
     @pytest.mark.parametrize(
         "call",
         [
             lambda ns: ns.create({"name": "Bob"}, user_id_type="open_id", department_id_type="department_id"),
             lambda ns: ns.update("ou_1", {"name": "Bobby"}, user_id_type="open_id", department_id_type="department_id"),
             lambda ns: ns.delete("ou_1", user_id_type="open_id"),
+            lambda ns: ns.update_user_id("ou_1", "jhsu", user_id_type="open_id"),
         ],
-        ids=["create", "update", "delete"],
+        ids=["create", "update", "delete", "update_user_id"],
     )
     async def test_write_forwards_id_types(self, users, recorder, call):
         client = users(lambda r: envelope({"user": {}}))
