@@ -124,7 +124,7 @@ class TestAsUser:
         client, _record = auth_client
         # fmt: off
         lazy = [
-            "approval", "bitable", "board", "calendar", "contact", "docx",
+            "approval", "bitable", "board", "calendar", "contact", "directory", "docx",
             "drive", "im", "mail", "oauth", "sheets", "task", "vc", "wiki",
         ]
         # fmt: on

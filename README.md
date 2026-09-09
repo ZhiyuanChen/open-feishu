@@ -32,6 +32,7 @@ asyncio.run(main())
 | --- | --- |
 | `client.im` | 即时消息：发送、回复、编辑、撤回、转发消息 |
 | `client.contact.users` / `client.contact.departments` | 通讯录：用户与部门 |
+| `client.directory.employees` | 人事 Directory：按 ID 批量查询员工与自定义字段 |
 | `client.bitable.tables` | 多维表格：数据表、字段与记录 |
 | `client.calendar.events` | 日历：日程与参与人 |
 | `client.approval.instances` | 审批：审批实例与任务 |
