@@ -48,6 +48,7 @@ if TYPE_CHECKING:
     from .cards import CardAction as _CardAction
     from .cards import ColumnSet as _ColumnSet
     from .contact.contact import ContactNamespace
+    from .directory.directory import DirectoryNamespace
     from .docx.documents import DocxNamespace
     from .drive.drive import DriveNamespace
     from .im.messages import IMNamespace
@@ -89,6 +90,7 @@ _NAMESPACE_SLOTS = (
     "_board",
     "_calendar",
     "_contact",
+    "_directory",
     "_docx",
     "_drive",
     "_im",
@@ -191,6 +193,7 @@ class FeishuClient:
         self._board: BoardNamespace | None = None
         self._calendar: CalendarNamespace | None = None
         self._contact: ContactNamespace | None = None
+        self._directory: DirectoryNamespace | None = None
         self._docx: DocxNamespace | None = None
         self._drive: DriveNamespace | None = None
         self._im: IMNamespace | None = None
@@ -315,6 +318,26 @@ class FeishuClient:
 
             self._contact = ContactNamespace(self)
         return self._contact
+
+    @property
+    def directory(self) -> DirectoryNamespace:
+        r"""
+        人事 Directory 命名空间，提供员工批量查询与自定义字段读取。
+
+        与 [feishu.client.FeishuClient.contact][] 不同：通讯录是组织架构用户对象，
+        Directory 是人事员工实体，可按 `required_fields` 拉取自定义字段。
+
+        Returns:
+            绑定到本客户端的 Directory 命名空间对象（首次访问时惰性创建）。
+
+        飞书文档:
+            [Directory 员工概述](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/directory-v1/employee/overview)
+        """
+        if self._directory is None:
+            from .directory.directory import DirectoryNamespace
+
+            self._directory = DirectoryNamespace(self)
+        return self._directory
 
     @property
     def docx(self) -> DocxNamespace:
