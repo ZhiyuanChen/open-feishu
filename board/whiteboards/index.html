@@ -43,7 +43,7 @@
         <link rel="alternate" type="application/rss+xml" title="已更新内容的 RSS 订阅" href="../../feed_rss_updated.xml">
       
       <link rel="icon" href="../../assets/images/logo.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -51,7 +51,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -520,6 +520,25 @@
     
   
   contact
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../directory/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  directory
 
       </a>
     </li>
@@ -1118,6 +1137,8 @@
       
         
       
+        
+      
     
     
     
@@ -1138,7 +1159,7 @@
   
   
   
-    <a href="../../agent/app/" class="md-nav__link">
+    <a href="../../agent/addressing/" class="md-nav__link">
       
   
   
@@ -1941,6 +1962,67 @@
       
         
       
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../directory/custom_fields/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    directory
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
     
     
     
@@ -2257,6 +2339,8 @@
   
     
     
+      
+        
       
         
       
@@ -3310,7 +3394,7 @@
 <span class="normal"><a href="#__codelineno-0-128">128</a></span>
 <span class="normal"><a href="#__codelineno-0-129">129</a></span>
 <span class="normal"><a href="#__codelineno-0-130">130</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="k">class</span><span class="w"> </span><span class="nc">WhiteboardsNamespace</span><span class="p">(</span><span class="n">Namespace</span><span class="p">):</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 </span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">    画板资源接口命名空间。</span>
 </span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a>
 </span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    封装飞书开放平台 `board/v1/whiteboards` 资源下的服务端接口，包括获取画板主题、</span>
@@ -3321,10 +3405,10 @@
 </span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a>
 </span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="sd">    飞书文档:</span>
 </span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">        [画板概述](https://open.feishu.cn/document/docs/board-v1/overview)</span>
-</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">    """</span>
 </span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a>
 </span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">download_as_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 </span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">        下载画板为图片。</span>
 </span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a>
 </span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">        将整块画板渲染并导出为图片，返回图片的原始字节内容（通常为 PNG）。</span>
@@ -3345,15 +3429,15 @@
 </span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">        Examples:</span>
 </span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">            &gt;&gt;&gt; import asyncio</span>
 </span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">            &gt;&gt;&gt; async def main():</span>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">            ...     async with FeishuClient(&quot;cli_xxx&quot;, &quot;secret&quot;) as client:</span>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">            ...         return await client.board.whiteboards.download_as_image(&quot;wb_abc&quot;)</span>
+</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">            ...     async with FeishuClient("cli_xxx", "secret") as client:</span>
+</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">            ...         return await client.board.whiteboards.download_as_image("wb_abc")</span>
 </span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">            &gt;&gt;&gt; asyncio.run(main())  # doctest: +SKIP</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">            b&#39;\\x89PNG...&#39;</span>
-</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/download_as_image&quot;</span><span class="p">)</span>
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">            b'\\x89PNG...'</span>
+</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">        """</span>
+</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/download_as_image"</span><span class="p">)</span>
 </span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>
 </span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_theme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedDict</span><span class="p">:</span>
-</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 </span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">        获取画板主题。</span>
 </span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a>
 </span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">        返回画板当前使用的主题信息。该接口对应开放平台的「获取画板主题」能力，响应数据</span>
@@ -3373,13 +3457,13 @@
 </span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">            参见 [feishu.board.whiteboards.WhiteboardsNamespace.list_nodes][]。</span>
 </span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>
 </span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="sd">        Examples:</span>
-</span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="sd">            &gt;&gt;&gt; await client.board.whiteboards.get_theme(&quot;wb_abc&quot;)  # doctest:+SKIP</span>
-</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">            {&#39;theme&#39;: &#39;classic&#39;}</span>
-</span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_data</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/theme&quot;</span><span class="p">)</span>
+</span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="sd">            &gt;&gt;&gt; await client.board.whiteboards.get_theme("wb_abc")  # doctest:+SKIP</span>
+</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">            {'theme': 'classic'}</span>
+</span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="sd">        """</span>
+</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_data</span><span class="p">(</span><span class="s2">"GET"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/theme"</span><span class="p">)</span>
 </span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99"></a>
 </span><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">user_id_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">NestedDict</span><span class="p">]:</span>
-</span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 </span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">        获取画板内的所有节点。</span>
 </span><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103"></a>
 </span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="sd">        一次性返回画板内的全部节点（该接口不分页），节点以 `id`、`type`、`parent_id`、</span>
@@ -3401,14 +3485,14 @@
 </span><span id="__span-0-120"><a id="__codelineno-0-120" name="__codelineno-0-120"></a><span class="sd">            参见 [feishu.board.whiteboards.WhiteboardsNamespace.get_theme][]。</span>
 </span><span id="__span-0-121"><a id="__codelineno-0-121" name="__codelineno-0-121"></a>
 </span><span id="__span-0-122"><a id="__codelineno-0-122" name="__codelineno-0-122"></a><span class="sd">        Examples:</span>
-</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">            &gt;&gt;&gt; await client.board.whiteboards.list_nodes(&quot;wb_abc&quot;)  # doctest:+SKIP</span>
-</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">            [{&#39;id&#39;: &#39;n1&#39;, &#39;type&#39;: &#39;composite_shape&#39;, ...}, {&#39;id&#39;: &#39;n2&#39;, &#39;type&#39;: &#39;text&#39;, ...}]</span>
-</span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a>        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;user_id_type&quot;</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span>
+</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">            &gt;&gt;&gt; await client.board.whiteboards.list_nodes("wb_abc")  # doctest:+SKIP</span>
+</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">            [{'id': 'n1', 'type': 'composite_shape', ...}, {'id': 'n2', 'type': 'text', ...}]</span>
+</span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="sd">        """</span>
+</span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a>        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"user_id_type"</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span>
 </span><span id="__span-0-127"><a id="__codelineno-0-127" name="__codelineno-0-127"></a>        <span class="n">envelope</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
-</span><span id="__span-0-128"><a id="__codelineno-0-128" name="__codelineno-0-128"></a>            <span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/nodes&quot;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span>
+</span><span id="__span-0-128"><a id="__codelineno-0-128" name="__codelineno-0-128"></a>            <span class="s2">"GET"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/nodes"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span>
 </span><span id="__span-0-129"><a id="__codelineno-0-129" name="__codelineno-0-129"></a>        <span class="p">)</span>
-</span><span id="__span-0-130"><a id="__codelineno-0-130" name="__codelineno-0-130"></a>        <span class="k">return</span> <span class="n">_data</span><span class="p">(</span><span class="n">envelope</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nodes&quot;</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]</span>
+</span><span id="__span-0-130"><a id="__codelineno-0-130" name="__codelineno-0-130"></a>        <span class="k">return</span> <span class="n">_data</span><span class="p">(</span><span class="n">envelope</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodes"</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]</span>
 </span></code></pre></div></td></tr></table></div>
               </details>
 
@@ -3437,7 +3521,7 @@
   </span>
 
 <a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">download_as_image</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;whiteboard_id&lt;/code&gt; (&lt;code&gt;feishu.board.whiteboards.WhiteboardsNamespace.download_as_image(whiteboard_id)&lt;/code&gt;)" href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image(whiteboard_id)">whiteboard_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#bytes">bytes</a></span>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">download_as_image</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;whiteboard_id&lt;/code&gt; (&lt;code&gt;feishu.board.whiteboards.WhiteboardsNamespace.download_as_image(whiteboard_id)&lt;/code&gt;)" href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image(whiteboard_id)">whiteboard_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#bytes">bytes</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3462,7 +3546,7 @@
 <h5 id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image(whiteboard_id)" class="doc doc-heading doc-heading-parameter">                  <code>whiteboard_id</code>
 <a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image(whiteboard_id)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3488,7 +3572,7 @@
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#bytes">bytes</a></code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#bytes">bytes</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3542,10 +3626,10 @@
 <span class="normal"><a href="#__codelineno-0-5">5</a></span>
 <span class="normal"><a href="#__codelineno-0-6">6</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="gp">... </span>    <span class="k">async</span> <span class="k">with</span> <span class="n">FeishuClient</span><span class="p">(</span><span class="s2">&quot;cli_xxx&quot;</span><span class="p">,</span> <span class="s2">&quot;secret&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="gp">... </span>        <span class="k">return</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">board</span><span class="o">.</span><span class="n">whiteboards</span><span class="o">.</span><span class="n">download_as_image</span><span class="p">(</span><span class="s2">&quot;wb_abc&quot;</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="gp">... </span>    <span class="k">async</span> <span class="k">with</span> <span class="n">FeishuClient</span><span class="p">(</span><span class="s2">"cli_xxx"</span><span class="p">,</span> <span class="s2">"secret"</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="gp">... </span>        <span class="k">return</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">board</span><span class="o">.</span><span class="n">whiteboards</span><span class="o">.</span><span class="n">download_as_image</span><span class="p">(</span><span class="s2">"wb_abc"</span><span class="p">)</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="go">b&#39;\\x89PNG...&#39;</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="go">b'\\x89PNG...'</span>
 </span></code></pre></div></td></tr></table></div>
 
 
@@ -3579,7 +3663,7 @@
 <span class="normal"><a href="#__codelineno-0-70">70</a></span>
 <span class="normal"><a href="#__codelineno-0-71">71</a></span>
 <span class="normal"><a href="#__codelineno-0-72">72</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">download_as_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 </span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">    下载画板为图片。</span>
 </span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a>
 </span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">    将整块画板渲染并导出为图片，返回图片的原始字节内容（通常为 PNG）。</span>
@@ -3600,12 +3684,12 @@
 </span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">    Examples:</span>
 </span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">        &gt;&gt;&gt; import asyncio</span>
 </span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">        &gt;&gt;&gt; async def main():</span>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">        ...     async with FeishuClient(&quot;cli_xxx&quot;, &quot;secret&quot;) as client:</span>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">        ...         return await client.board.whiteboards.download_as_image(&quot;wb_abc&quot;)</span>
+</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">        ...     async with FeishuClient("cli_xxx", "secret") as client:</span>
+</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">        ...         return await client.board.whiteboards.download_as_image("wb_abc")</span>
 </span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">        &gt;&gt;&gt; asyncio.run(main())  # doctest: +SKIP</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">        b&#39;\\x89PNG...&#39;</span>
-</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/download_as_image&quot;</span><span class="p">)</span>
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">        b'\\x89PNG...'</span>
+</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">    """</span>
+</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/download_as_image"</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3624,7 +3708,7 @@
   </span>
 
 <a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_theme</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;whiteboard_id&lt;/code&gt; (&lt;code&gt;feishu.board.whiteboards.WhiteboardsNamespace.get_theme(whiteboard_id)&lt;/code&gt;)" href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme(whiteboard_id)">whiteboard_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_theme</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;whiteboard_id&lt;/code&gt; (&lt;code&gt;feishu.board.whiteboards.WhiteboardsNamespace.get_theme(whiteboard_id)&lt;/code&gt;)" href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme(whiteboard_id)">whiteboard_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3650,7 +3734,7 @@
 <h5 id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme(whiteboard_id)" class="doc doc-heading doc-heading-parameter">                  <code>whiteboard_id</code>
 <a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme(whiteboard_id)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3724,8 +3808,8 @@
 
 <p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
-<span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">board</span><span class="o">.</span><span class="n">whiteboards</span><span class="o">.</span><span class="n">get_theme</span><span class="p">(</span><span class="s2">&quot;wb_abc&quot;</span><span class="p">)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">{&#39;theme&#39;: &#39;classic&#39;}</span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">board</span><span class="o">.</span><span class="n">whiteboards</span><span class="o">.</span><span class="n">get_theme</span><span class="p">(</span><span class="s2">"wb_abc"</span><span class="p">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">{'theme': 'classic'}</span>
 </span></code></pre></div></td></tr></table></div>
 
 
@@ -3756,7 +3840,7 @@
 <span class="normal"><a href="#__codelineno-0-96">96</a></span>
 <span class="normal"><a href="#__codelineno-0-97">97</a></span>
 <span class="normal"><a href="#__codelineno-0-98">98</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_theme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedDict</span><span class="p">:</span>
-</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 </span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">    获取画板主题。</span>
 </span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a>
 </span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">    返回画板当前使用的主题信息。该接口对应开放平台的「获取画板主题」能力，响应数据</span>
@@ -3776,10 +3860,10 @@
 </span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">        参见 [feishu.board.whiteboards.WhiteboardsNamespace.list_nodes][]。</span>
 </span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>
 </span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="sd">        &gt;&gt;&gt; await client.board.whiteboards.get_theme(&quot;wb_abc&quot;)  # doctest:+SKIP</span>
-</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">        {&#39;theme&#39;: &#39;classic&#39;}</span>
-</span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_data</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/theme&quot;</span><span class="p">)</span>
+</span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="sd">        &gt;&gt;&gt; await client.board.whiteboards.get_theme("wb_abc")  # doctest:+SKIP</span>
+</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">        {'theme': 'classic'}</span>
+</span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="sd">    """</span>
+</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_data</span><span class="p">(</span><span class="s2">"GET"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/theme"</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3798,7 +3882,7 @@
   </span>
 
 <a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">list_nodes</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;whiteboard_id&lt;/code&gt; (&lt;code&gt;feishu.board.whiteboards.WhiteboardsNamespace.list_nodes(whiteboard_id)&lt;/code&gt;)" href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes(whiteboard_id)">whiteboard_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_type&lt;/code&gt; (&lt;code&gt;feishu.board.whiteboards.WhiteboardsNamespace.list_nodes(user_id_type)&lt;/code&gt;)" href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes(user_id_type)">user_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#list">list</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span><span class="p">]</span>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">list_nodes</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;whiteboard_id&lt;/code&gt; (&lt;code&gt;feishu.board.whiteboards.WhiteboardsNamespace.list_nodes(whiteboard_id)&lt;/code&gt;)" href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes(whiteboard_id)">whiteboard_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_type&lt;/code&gt; (&lt;code&gt;feishu.board.whiteboards.WhiteboardsNamespace.list_nodes(user_id_type)&lt;/code&gt;)" href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes(user_id_type)">user_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#list">list</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3824,7 +3908,7 @@
 <h5 id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes(whiteboard_id)" class="doc doc-heading doc-heading-parameter">                  <code>whiteboard_id</code>
 <a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes(whiteboard_id)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3840,7 +3924,7 @@
 <h5 id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes(user_id_type)" class="doc doc-heading doc-heading-parameter">                  <code>user_id_type</code>
 <a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes(user_id_type)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | None</code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3867,7 +3951,7 @@
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#list">list</a>[<a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a>]</code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#list">list</a>[<a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3915,8 +3999,8 @@
 
 <p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
-<span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">board</span><span class="o">.</span><span class="n">whiteboards</span><span class="o">.</span><span class="n">list_nodes</span><span class="p">(</span><span class="s2">&quot;wb_abc&quot;</span><span class="p">)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">[{&#39;id&#39;: &#39;n1&#39;, &#39;type&#39;: &#39;composite_shape&#39;, ...}, {&#39;id&#39;: &#39;n2&#39;, &#39;type&#39;: &#39;text&#39;, ...}]</span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">board</span><span class="o">.</span><span class="n">whiteboards</span><span class="o">.</span><span class="n">list_nodes</span><span class="p">(</span><span class="s2">"wb_abc"</span><span class="p">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">[{'id': 'n1', 'type': 'composite_shape', ...}, {'id': 'n2', 'type': 'text', ...}]</span>
 </span></code></pre></div></td></tr></table></div>
 
 
@@ -3953,7 +4037,7 @@
 <span class="normal"><a href="#__codelineno-0-128">128</a></span>
 <span class="normal"><a href="#__codelineno-0-129">129</a></span>
 <span class="normal"><a href="#__codelineno-0-130">130</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">user_id_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">NestedDict</span><span class="p">]:</span>
-</span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 </span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">    获取画板内的所有节点。</span>
 </span><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103"></a>
 </span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="sd">    一次性返回画板内的全部节点（该接口不分页），节点以 `id`、`type`、`parent_id`、</span>
@@ -3975,14 +4059,14 @@
 </span><span id="__span-0-120"><a id="__codelineno-0-120" name="__codelineno-0-120"></a><span class="sd">        参见 [feishu.board.whiteboards.WhiteboardsNamespace.get_theme][]。</span>
 </span><span id="__span-0-121"><a id="__codelineno-0-121" name="__codelineno-0-121"></a>
 </span><span id="__span-0-122"><a id="__codelineno-0-122" name="__codelineno-0-122"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">        &gt;&gt;&gt; await client.board.whiteboards.list_nodes(&quot;wb_abc&quot;)  # doctest:+SKIP</span>
-</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">        [{&#39;id&#39;: &#39;n1&#39;, &#39;type&#39;: &#39;composite_shape&#39;, ...}, {&#39;id&#39;: &#39;n2&#39;, &#39;type&#39;: &#39;text&#39;, ...}]</span>
-</span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a>    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;user_id_type&quot;</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span>
+</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">        &gt;&gt;&gt; await client.board.whiteboards.list_nodes("wb_abc")  # doctest:+SKIP</span>
+</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">        [{'id': 'n1', 'type': 'composite_shape', ...}, {'id': 'n2', 'type': 'text', ...}]</span>
+</span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="sd">    """</span>
+</span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a>    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"user_id_type"</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span>
 </span><span id="__span-0-127"><a id="__codelineno-0-127" name="__codelineno-0-127"></a>    <span class="n">envelope</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
-</span><span id="__span-0-128"><a id="__codelineno-0-128" name="__codelineno-0-128"></a>        <span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/nodes&quot;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span>
+</span><span id="__span-0-128"><a id="__codelineno-0-128" name="__codelineno-0-128"></a>        <span class="s2">"GET"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/nodes"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span>
 </span><span id="__span-0-129"><a id="__codelineno-0-129" name="__codelineno-0-129"></a>    <span class="p">)</span>
-</span><span id="__span-0-130"><a id="__codelineno-0-130" name="__codelineno-0-130"></a>    <span class="k">return</span> <span class="n">_data</span><span class="p">(</span><span class="n">envelope</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nodes&quot;</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]</span>
+</span><span id="__span-0-130"><a id="__codelineno-0-130" name="__codelineno-0-130"></a>    <span class="k">return</span> <span class="n">_data</span><span class="p">(</span><span class="n">envelope</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodes"</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -4025,7 +4109,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月16日 18:54:08 UTC">2026-07-16 18:54:08</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年9月14日 14:58:20 UTC">2026-09-14 14:58:20</span>
   </span>
 
     
@@ -4235,7 +4319,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       

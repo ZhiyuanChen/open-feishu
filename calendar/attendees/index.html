@@ -43,7 +43,7 @@
         <link rel="alternate" type="application/rss+xml" title="已更新内容的 RSS 订阅" href="../../feed_rss_updated.xml">
       
       <link rel="icon" href="../../assets/images/logo.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -51,7 +51,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -520,6 +520,25 @@
     
   
   contact
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../directory/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  directory
 
       </a>
     </li>
@@ -1118,6 +1137,8 @@
       
         
       
+        
+      
     
     
     
@@ -1138,7 +1159,7 @@
   
   
   
-    <a href="../../agent/app/" class="md-nav__link">
+    <a href="../../agent/addressing/" class="md-nav__link">
       
   
   
@@ -2152,6 +2173,67 @@
       
         
       
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../directory/custom_fields/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    directory
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
     
     
     
@@ -2468,6 +2550,8 @@
   
     
     
+      
+        
       
         
       
@@ -3656,7 +3740,7 @@
 <span class="normal"><a href="#__codelineno-0-167">167</a></span>
 <span class="normal"><a href="#__codelineno-0-168">168</a></span>
 <span class="normal"><a href="#__codelineno-0-169">169</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="k">class</span><span class="w"> </span><span class="nc">AttendeesNamespace</span><span class="p">(</span><span class="n">Namespace</span><span class="p">):</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 </span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    日程参与人接口命名空间。</span>
 </span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a>
 </span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">    通过 `client.calendar.attendees` 访问，封装飞书日历中日程参与人（attendee）相关的服务端接口，</span>
@@ -3666,7 +3750,7 @@
 </span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a>
 </span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">    飞书文档:</span>
 </span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">        [日程参与人](https://open.feishu.cn/document/server-docs/calendar-v4/calendar-event-attendee/create)</span>
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">    """</span>
 </span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a>
 </span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span>
 </span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a>        <span class="bp">self</span><span class="p">,</span>
@@ -3677,7 +3761,7 @@
 </span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a>        <span class="n">need_notification</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a>        <span class="n">user_id_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedDict</span><span class="p">:</span>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 </span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">        添加日程参与人。</span>
 </span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a>
 </span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">        `attendees` 是待添加的参与人列表，作为请求体的 `attendees` 字段发送，每个元素</span>
@@ -3687,7 +3771,7 @@
 </span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">        Args:</span>
 </span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">            calendar_id: 日历的 `calendar_id`。</span>
 </span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">            event_id: 日程的 `event_id`。</span>
-</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">            attendees: 待添加的参与人列表，例如 `[{&quot;type&quot;: &quot;user&quot;, &quot;user_id&quot;: &quot;ou_xxx&quot;}]`。</span>
+</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">            attendees: 待添加的参与人列表，例如 `[{"type": "user", "user_id": "ou_xxx"}]`。</span>
 </span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">            need_notification: 是否在添加后发送 Bot 通知；为空时省略该字段。</span>
 </span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">            user_id_type: 参与人 `user_id` 的类型（`open_id` / `union_id` / `user_id`）；为空时随接口默认</span>
 </span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">                （`open_id`）。当 `attendees` 用非 `open_id` 形式标识用户时必须显式指定，否则飞书按 `open_id`</span>
@@ -3704,24 +3788,24 @@
 </span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">            [添加日程参与人](https://open.feishu.cn/document/server-docs/calendar-v4/calendar-event-attendee/create)</span>
 </span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a>
 </span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">        Examples:</span>
-</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">            &gt;&gt;&gt; atts = [{&quot;type&quot;: &quot;user&quot;, &quot;user_id&quot;: &quot;ou_xxx&quot;}]</span>
-</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">            &gt;&gt;&gt; await client.calendar.attendees.add(&quot;feishu.cn_xxx&quot;, &quot;evtxxx&quot;, atts)  # doctest:+SKIP</span>
-</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">            {&#39;attendees&#39;: [{&#39;attendee_id&#39;: &#39;axxx&#39;, &#39;type&#39;: &#39;user&#39;, ...}]}  # noqa: E501</span>
-</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a>        <span class="n">body</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;attendees&quot;</span><span class="p">:</span> <span class="n">attendees</span><span class="p">}</span>
+</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">            &gt;&gt;&gt; atts = [{"type": "user", "user_id": "ou_xxx"}]</span>
+</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">            &gt;&gt;&gt; await client.calendar.attendees.add("feishu.cn_xxx", "evtxxx", atts)  # doctest:+SKIP</span>
+</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">            {'attendees': [{'attendee_id': 'axxx', 'type': 'user', ...}]}  # noqa: E501</span>
+</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="sd">        """</span>
+</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a>        <span class="n">body</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"attendees"</span><span class="p">:</span> <span class="n">attendees</span><span class="p">}</span>
 </span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a>        <span class="k">if</span> <span class="n">need_notification</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a>            <span class="n">body</span><span class="p">[</span><span class="s2">&quot;need_notification&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">need_notification</span>
-</span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>        <span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;json&quot;</span><span class="p">:</span> <span class="n">body</span><span class="p">}</span>
+</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a>            <span class="n">body</span><span class="p">[</span><span class="s2">"need_notification"</span><span class="p">]</span> <span class="o">=</span> <span class="n">need_notification</span>
+</span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>        <span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"json"</span><span class="p">:</span> <span class="n">body</span><span class="p">}</span>
 </span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a>        <span class="k">if</span> <span class="n">user_id_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a>            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;user_id_type&quot;</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span>
+</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a>            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"params"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"user_id_type"</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span>
 </span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_data</span><span class="p">(</span>
-</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>            <span class="s2">&quot;POST&quot;</span><span class="p">,</span>
-</span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a>            <span class="sa">f</span><span class="s2">&quot;calendar/v4/calendars/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/events/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">event_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/attendees&quot;</span><span class="p">,</span>
+</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>            <span class="s2">"POST"</span><span class="p">,</span>
+</span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a>            <span class="sa">f</span><span class="s2">"calendar/v4/calendars/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/events/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">event_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/attendees"</span><span class="p">,</span>
 </span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a>            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 </span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a>        <span class="p">)</span>
 </span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a>
 </span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calendar_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">attendee_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NestedDict</span><span class="p">:</span>
-</span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 </span><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">        删除日程参与人。</span>
 </span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a>
 </span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">        `attendee_ids` 为待删除参与人的 ID 列表，原样作为请求体的 `attendee_ids` 字段发送。</span>
@@ -3741,14 +3825,14 @@
 </span><span id="__span-0-116"><a id="__codelineno-0-116" name="__codelineno-0-116"></a><span class="sd">            [删除日程参与人](https://open.feishu.cn/document/server-docs/calendar-v4/calendar-event-attendee/batch_delete)</span>
 </span><span id="__span-0-117"><a id="__codelineno-0-117" name="__codelineno-0-117"></a>
 </span><span id="__span-0-118"><a id="__codelineno-0-118" name="__codelineno-0-118"></a><span class="sd">        Examples:</span>
-</span><span id="__span-0-119"><a id="__codelineno-0-119" name="__codelineno-0-119"></a><span class="sd">            &gt;&gt;&gt; await client.calendar.attendees.delete(&quot;feishu.cn_xxx&quot;, &quot;evtxxx&quot;, [&quot;a1&quot;, &quot;a2&quot;])  # doctest:+SKIP</span>
+</span><span id="__span-0-119"><a id="__codelineno-0-119" name="__codelineno-0-119"></a><span class="sd">            &gt;&gt;&gt; await client.calendar.attendees.delete("feishu.cn_xxx", "evtxxx", ["a1", "a2"])  # doctest:+SKIP</span>
 </span><span id="__span-0-120"><a id="__codelineno-0-120" name="__codelineno-0-120"></a><span class="sd">            {}</span>
-</span><span id="__span-0-121"><a id="__codelineno-0-121" name="__codelineno-0-121"></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="__span-0-121"><a id="__codelineno-0-121" name="__codelineno-0-121"></a><span class="sd">        """</span>
 </span><span id="__span-0-122"><a id="__codelineno-0-122" name="__codelineno-0-122"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_data</span><span class="p">(</span>
-</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a>            <span class="s2">&quot;POST&quot;</span><span class="p">,</span>
-</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a>            <span class="sa">f</span><span class="s2">&quot;calendar/v4/calendars/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/events/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">event_id</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a>            <span class="sa">f</span><span class="s2">&quot;/attendees/batch_delete&quot;</span><span class="p">,</span>
-</span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a>            <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;attendee_ids&quot;</span><span class="p">:</span> <span class="n">attendee_ids</span><span class="p">},</span>
+</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a>            <span class="s2">"POST"</span><span class="p">,</span>
+</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a>            <span class="sa">f</span><span class="s2">"calendar/v4/calendars/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/events/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">event_id</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a>            <span class="sa">f</span><span class="s2">"/attendees/batch_delete"</span><span class="p">,</span>
+</span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a>            <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">"attendee_ids"</span><span class="p">:</span> <span class="n">attendee_ids</span><span class="p">},</span>
 </span><span id="__span-0-127"><a id="__codelineno-0-127" name="__codelineno-0-127"></a>        <span class="p">)</span>
 </span><span id="__span-0-128"><a id="__codelineno-0-128" name="__codelineno-0-128"></a>
 </span><span id="__span-0-129"><a id="__codelineno-0-129" name="__codelineno-0-129"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span>
@@ -3760,7 +3844,7 @@
 </span><span id="__span-0-135"><a id="__codelineno-0-135" name="__codelineno-0-135"></a>        <span class="n">max_items</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-136"><a id="__codelineno-0-136" name="__codelineno-0-136"></a>        <span class="n">user_id_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-137"><a id="__codelineno-0-137" name="__codelineno-0-137"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">NestedDict</span><span class="p">]:</span>
-</span><span id="__span-0-138"><a id="__codelineno-0-138" name="__codelineno-0-138"></a><span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-138"><a id="__codelineno-0-138" name="__codelineno-0-138"></a><span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 </span><span id="__span-0-139"><a id="__codelineno-0-139" name="__codelineno-0-139"></a><span class="sd">        获取日程参与人列表。</span>
 </span><span id="__span-0-140"><a id="__codelineno-0-140" name="__codelineno-0-140"></a>
 </span><span id="__span-0-141"><a id="__codelineno-0-141" name="__codelineno-0-141"></a><span class="sd">        自动翻页并将各页结果拼接为单个列表返回。`page_size` 会被限制在</span>
@@ -3783,12 +3867,12 @@
 </span><span id="__span-0-158"><a id="__codelineno-0-158" name="__codelineno-0-158"></a><span class="sd">            [获取日程参与人列表](https://open.feishu.cn/document/server-docs/calendar-v4/calendar-event-attendee/list)</span>
 </span><span id="__span-0-159"><a id="__codelineno-0-159" name="__codelineno-0-159"></a>
 </span><span id="__span-0-160"><a id="__codelineno-0-160" name="__codelineno-0-160"></a><span class="sd">        Examples:</span>
-</span><span id="__span-0-161"><a id="__codelineno-0-161" name="__codelineno-0-161"></a><span class="sd">            &gt;&gt;&gt; await client.calendar.attendees.list(&quot;feishu.cn_xxx&quot;, &quot;evtxxx&quot;)  # doctest:+SKIP</span>
-</span><span id="__span-0-162"><a id="__codelineno-0-162" name="__codelineno-0-162"></a><span class="sd">            [{&#39;attendee_id&#39;: &#39;axxx&#39;, &#39;type&#39;: &#39;user&#39;, ...}, ...]  # noqa: E501</span>
-</span><span id="__span-0-163"><a id="__codelineno-0-163" name="__codelineno-0-163"></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="__span-0-161"><a id="__codelineno-0-161" name="__codelineno-0-161"></a><span class="sd">            &gt;&gt;&gt; await client.calendar.attendees.list("feishu.cn_xxx", "evtxxx")  # doctest:+SKIP</span>
+</span><span id="__span-0-162"><a id="__codelineno-0-162" name="__codelineno-0-162"></a><span class="sd">            [{'attendee_id': 'axxx', 'type': 'user', ...}, ...]  # noqa: E501</span>
+</span><span id="__span-0-163"><a id="__codelineno-0-163" name="__codelineno-0-163"></a><span class="sd">        """</span>
 </span><span id="__span-0-164"><a id="__codelineno-0-164" name="__codelineno-0-164"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">paginate_get</span><span class="p">(</span>
-</span><span id="__span-0-165"><a id="__codelineno-0-165" name="__codelineno-0-165"></a>            <span class="sa">f</span><span class="s2">&quot;calendar/v4/calendars/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/events/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">event_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/attendees&quot;</span><span class="p">,</span>
-</span><span id="__span-0-166"><a id="__codelineno-0-166" name="__codelineno-0-166"></a>            <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;user_id_type&quot;</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span> <span class="k">if</span> <span class="n">user_id_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-165"><a id="__codelineno-0-165" name="__codelineno-0-165"></a>            <span class="sa">f</span><span class="s2">"calendar/v4/calendars/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/events/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">event_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/attendees"</span><span class="p">,</span>
+</span><span id="__span-0-166"><a id="__codelineno-0-166" name="__codelineno-0-166"></a>            <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">"user_id_type"</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span> <span class="k">if</span> <span class="n">user_id_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-167"><a id="__codelineno-0-167" name="__codelineno-0-167"></a>            <span class="n">page_size</span><span class="o">=</span><span class="n">page_size</span><span class="p">,</span>
 </span><span id="__span-0-168"><a id="__codelineno-0-168" name="__codelineno-0-168"></a>            <span class="n">max_items</span><span class="o">=</span><span class="n">max_items</span><span class="p">,</span>
 </span><span id="__span-0-169"><a id="__codelineno-0-169" name="__codelineno-0-169"></a>        <span class="p">)</span>
@@ -3820,7 +3904,7 @@
   </span>
 
 <a href="#feishu.calendar.attendees.AttendeesNamespace.add" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">add</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;calendar_id&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.add(calendar_id)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.add(calendar_id)">calendar_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;event_id&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.add(event_id)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.add(event_id)">event_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;attendees&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.add(attendees)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.add(attendees)">attendees</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;collections.abc.Sequence&lt;/code&gt;" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence">Sequence</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;collections.abc.Mapping&lt;/code&gt;" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping">Mapping</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;typing.Any&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;need_notification&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.add(need_notification)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.add(need_notification)">need_notification</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_type&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.add(user_id_type)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.add(user_id_type)">user_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">add</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;calendar_id&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.add(calendar_id)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.add(calendar_id)">calendar_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;event_id&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.add(event_id)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.add(event_id)">event_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;attendees&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.add(attendees)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.add(attendees)">attendees</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;collections.abc.Sequence&lt;/code&gt;" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence">Sequence</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;collections.abc.Mapping&lt;/code&gt;" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping">Mapping</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;typing.Any&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a></span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;need_notification&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.add(need_notification)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.add(need_notification)">need_notification</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/functions.html#bool">bool</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_type&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.add(user_id_type)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.add(user_id_type)">user_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3847,7 +3931,7 @@
 <h5 id="feishu.calendar.attendees.AttendeesNamespace.add(calendar_id)" class="doc doc-heading doc-heading-parameter">                  <code>calendar_id</code>
 <a href="#feishu.calendar.attendees.AttendeesNamespace.add(calendar_id)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3863,7 +3947,7 @@
 <h5 id="feishu.calendar.attendees.AttendeesNamespace.add(event_id)" class="doc doc-heading doc-heading-parameter">                  <code>event_id</code>
 <a href="#feishu.calendar.attendees.AttendeesNamespace.add(event_id)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3879,7 +3963,7 @@
 <h5 id="feishu.calendar.attendees.AttendeesNamespace.add(attendees)" class="doc doc-heading doc-heading-parameter">                  <code>attendees</code>
 <a href="#feishu.calendar.attendees.AttendeesNamespace.add(attendees)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" title="&lt;code&gt;collections.abc.Sequence&lt;/code&gt;" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence">Sequence</a>[<a class="autorefs autorefs-external" title="&lt;code&gt;collections.abc.Mapping&lt;/code&gt;" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping">Mapping</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="&lt;code&gt;typing.Any&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a>]]</code>
+                  <code><a class="autorefs autorefs-external" title="&lt;code&gt;collections.abc.Sequence&lt;/code&gt;" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence">Sequence</a>[<a class="autorefs autorefs-external" title="&lt;code&gt;collections.abc.Mapping&lt;/code&gt;" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping">Mapping</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a>, <a class="autorefs autorefs-external" title="&lt;code&gt;typing.Any&lt;/code&gt;" href="https://docs.python.org/3/library/typing.html#typing.Any">Any</a>]]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3895,7 +3979,7 @@
 <h5 id="feishu.calendar.attendees.AttendeesNamespace.add(need_notification)" class="doc doc-heading doc-heading-parameter">                  <code>need_notification</code>
 <a href="#feishu.calendar.attendees.AttendeesNamespace.add(need_notification)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a> | None</code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/functions.html#bool">bool</a> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3911,7 +3995,7 @@
 <h5 id="feishu.calendar.attendees.AttendeesNamespace.add(user_id_type)" class="doc doc-heading doc-heading-parameter">                  <code>user_id_type</code>
 <a href="#feishu.calendar.attendees.AttendeesNamespace.add(user_id_type)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | None</code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3992,9 +4076,9 @@
 <p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span>
-<span class="normal"><a href="#__codelineno-0-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">atts</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;ou_xxx&quot;</span><span class="p">}]</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">calendar</span><span class="o">.</span><span class="n">attendees</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;feishu.cn_xxx&quot;</span><span class="p">,</span> <span class="s2">&quot;evtxxx&quot;</span><span class="p">,</span> <span class="n">atts</span><span class="p">)</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="go">{&#39;attendees&#39;: [{&#39;attendee_id&#39;: &#39;axxx&#39;, &#39;type&#39;: &#39;user&#39;, ...}]}  # noqa: E501</span>
+<span class="normal"><a href="#__codelineno-0-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">atts</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"user_id"</span><span class="p">:</span> <span class="s2">"ou_xxx"</span><span class="p">}]</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">calendar</span><span class="o">.</span><span class="n">attendees</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"feishu.cn_xxx"</span><span class="p">,</span> <span class="s2">"evtxxx"</span><span class="p">,</span> <span class="n">atts</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="go">{'attendees': [{'attendee_id': 'axxx', 'type': 'user', ...}]}  # noqa: E501</span>
 </span></code></pre></div></td></tr></table></div>
 
 
@@ -4059,7 +4143,7 @@
 </span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="n">need_notification</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="n">user_id_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedDict</span><span class="p">:</span>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 </span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">    添加日程参与人。</span>
 </span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a>
 </span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">    `attendees` 是待添加的参与人列表，作为请求体的 `attendees` 字段发送，每个元素</span>
@@ -4069,7 +4153,7 @@
 </span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">    Args:</span>
 </span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">        calendar_id: 日历的 `calendar_id`。</span>
 </span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">        event_id: 日程的 `event_id`。</span>
-</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">        attendees: 待添加的参与人列表，例如 `[{&quot;type&quot;: &quot;user&quot;, &quot;user_id&quot;: &quot;ou_xxx&quot;}]`。</span>
+</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">        attendees: 待添加的参与人列表，例如 `[{"type": "user", "user_id": "ou_xxx"}]`。</span>
 </span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">        need_notification: 是否在添加后发送 Bot 通知；为空时省略该字段。</span>
 </span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">        user_id_type: 参与人 `user_id` 的类型（`open_id` / `union_id` / `user_id`）；为空时随接口默认</span>
 </span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">            （`open_id`）。当 `attendees` 用非 `open_id` 形式标识用户时必须显式指定，否则飞书按 `open_id`</span>
@@ -4086,19 +4170,19 @@
 </span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">        [添加日程参与人](https://open.feishu.cn/document/server-docs/calendar-v4/calendar-event-attendee/create)</span>
 </span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a>
 </span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">        &gt;&gt;&gt; atts = [{&quot;type&quot;: &quot;user&quot;, &quot;user_id&quot;: &quot;ou_xxx&quot;}]</span>
-</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">        &gt;&gt;&gt; await client.calendar.attendees.add(&quot;feishu.cn_xxx&quot;, &quot;evtxxx&quot;, atts)  # doctest:+SKIP</span>
-</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">        {&#39;attendees&#39;: [{&#39;attendee_id&#39;: &#39;axxx&#39;, &#39;type&#39;: &#39;user&#39;, ...}]}  # noqa: E501</span>
-</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="n">body</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;attendees&quot;</span><span class="p">:</span> <span class="n">attendees</span><span class="p">}</span>
+</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">        &gt;&gt;&gt; atts = [{"type": "user", "user_id": "ou_xxx"}]</span>
+</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">        &gt;&gt;&gt; await client.calendar.attendees.add("feishu.cn_xxx", "evtxxx", atts)  # doctest:+SKIP</span>
+</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">        {'attendees': [{'attendee_id': 'axxx', 'type': 'user', ...}]}  # noqa: E501</span>
+</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="sd">    """</span>
+</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="n">body</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"attendees"</span><span class="p">:</span> <span class="n">attendees</span><span class="p">}</span>
 </span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="k">if</span> <span class="n">need_notification</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a>        <span class="n">body</span><span class="p">[</span><span class="s2">&quot;need_notification&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">need_notification</span>
-</span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;json&quot;</span><span class="p">:</span> <span class="n">body</span><span class="p">}</span>
+</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a>        <span class="n">body</span><span class="p">[</span><span class="s2">"need_notification"</span><span class="p">]</span> <span class="o">=</span> <span class="n">need_notification</span>
+</span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"json"</span><span class="p">:</span> <span class="n">body</span><span class="p">}</span>
 </span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="k">if</span> <span class="n">user_id_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a>        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;user_id_type&quot;</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span>
+</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a>        <span class="n">kwargs</span><span class="p">[</span><span class="s2">"params"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"user_id_type"</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span>
 </span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_data</span><span class="p">(</span>
-</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="s2">&quot;POST&quot;</span><span class="p">,</span>
-</span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a>        <span class="sa">f</span><span class="s2">&quot;calendar/v4/calendars/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/events/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">event_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/attendees&quot;</span><span class="p">,</span>
+</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="s2">"POST"</span><span class="p">,</span>
+</span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a>        <span class="sa">f</span><span class="s2">"calendar/v4/calendars/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/events/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">event_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/attendees"</span><span class="p">,</span>
 </span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a>        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 </span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a>    <span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
@@ -4119,12 +4203,12 @@
   </span>
 
 <a href="#feishu.calendar.attendees.AttendeesNamespace.delete" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">delete</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;calendar_id&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.delete(calendar_id)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.delete(calendar_id)">calendar_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;event_id&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.delete(event_id)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.delete(event_id)">event_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;attendee_ids&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.delete(attendee_ids)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.delete(attendee_ids)">attendee_ids</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;list&lt;/span&gt;
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">delete</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;calendar_id&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.delete(calendar_id)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.delete(calendar_id)">calendar_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;event_id&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.delete(event_id)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.delete(event_id)">event_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;attendee_ids&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.delete(attendee_ids)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.delete(attendee_ids)">attendee_ids</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;list&lt;/span&gt;
 
 
   &lt;span class=&quot;doc doc-labels&quot;&gt;
       &lt;small class=&quot;doc doc-label doc-label-async&quot;&gt;&lt;code&gt;async&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.list&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.list">list</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
+  &lt;/span&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.list&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.list">list</a></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-external" title="&lt;code&gt;chanfig.NestedDict&lt;/code&gt;" href="https://chanfig.danling.org/zh/nested_dict/#chanfig.NestedDict">NestedDict</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4149,7 +4233,7 @@
 <h5 id="feishu.calendar.attendees.AttendeesNamespace.delete(calendar_id)" class="doc doc-heading doc-heading-parameter">                  <code>calendar_id</code>
 <a href="#feishu.calendar.attendees.AttendeesNamespace.delete(calendar_id)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4165,7 +4249,7 @@
 <h5 id="feishu.calendar.attendees.AttendeesNamespace.delete(event_id)" class="doc doc-heading doc-heading-parameter">                  <code>event_id</code>
 <a href="#feishu.calendar.attendees.AttendeesNamespace.delete(event_id)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4186,7 +4270,7 @@
 
   &lt;span class=&quot;doc doc-labels&quot;&gt;
       &lt;small class=&quot;doc doc-label doc-label-async&quot;&gt;&lt;code&gt;async&lt;/code&gt;&lt;/small&gt;
-  &lt;/span&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.list&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.list">list</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a>]</code>
+  &lt;/span&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.list&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.list">list</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4254,7 +4338,7 @@
 
 <p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
-<span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">calendar</span><span class="o">.</span><span class="n">attendees</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;feishu.cn_xxx&quot;</span><span class="p">,</span> <span class="s2">&quot;evtxxx&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;a1&quot;</span><span class="p">,</span> <span class="s2">&quot;a2&quot;</span><span class="p">])</span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">calendar</span><span class="o">.</span><span class="n">attendees</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"feishu.cn_xxx"</span><span class="p">,</span> <span class="s2">"evtxxx"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"a1"</span><span class="p">,</span> <span class="s2">"a2"</span><span class="p">])</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">{}</span>
 </span></code></pre></div></td></tr></table></div>
 
@@ -4291,7 +4375,7 @@
 <span class="normal"><a href="#__codelineno-0-125">125</a></span>
 <span class="normal"><a href="#__codelineno-0-126">126</a></span>
 <span class="normal"><a href="#__codelineno-0-127">127</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calendar_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">attendee_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NestedDict</span><span class="p">:</span>
-</span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 </span><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">    删除日程参与人。</span>
 </span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a>
 </span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">    `attendee_ids` 为待删除参与人的 ID 列表，原样作为请求体的 `attendee_ids` 字段发送。</span>
@@ -4311,14 +4395,14 @@
 </span><span id="__span-0-116"><a id="__codelineno-0-116" name="__codelineno-0-116"></a><span class="sd">        [删除日程参与人](https://open.feishu.cn/document/server-docs/calendar-v4/calendar-event-attendee/batch_delete)</span>
 </span><span id="__span-0-117"><a id="__codelineno-0-117" name="__codelineno-0-117"></a>
 </span><span id="__span-0-118"><a id="__codelineno-0-118" name="__codelineno-0-118"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-119"><a id="__codelineno-0-119" name="__codelineno-0-119"></a><span class="sd">        &gt;&gt;&gt; await client.calendar.attendees.delete(&quot;feishu.cn_xxx&quot;, &quot;evtxxx&quot;, [&quot;a1&quot;, &quot;a2&quot;])  # doctest:+SKIP</span>
+</span><span id="__span-0-119"><a id="__codelineno-0-119" name="__codelineno-0-119"></a><span class="sd">        &gt;&gt;&gt; await client.calendar.attendees.delete("feishu.cn_xxx", "evtxxx", ["a1", "a2"])  # doctest:+SKIP</span>
 </span><span id="__span-0-120"><a id="__codelineno-0-120" name="__codelineno-0-120"></a><span class="sd">        {}</span>
-</span><span id="__span-0-121"><a id="__codelineno-0-121" name="__codelineno-0-121"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-121"><a id="__codelineno-0-121" name="__codelineno-0-121"></a><span class="sd">    """</span>
 </span><span id="__span-0-122"><a id="__codelineno-0-122" name="__codelineno-0-122"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_data</span><span class="p">(</span>
-</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a>        <span class="s2">&quot;POST&quot;</span><span class="p">,</span>
-</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a>        <span class="sa">f</span><span class="s2">&quot;calendar/v4/calendars/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/events/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">event_id</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a>        <span class="sa">f</span><span class="s2">&quot;/attendees/batch_delete&quot;</span><span class="p">,</span>
-</span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a>        <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;attendee_ids&quot;</span><span class="p">:</span> <span class="n">attendee_ids</span><span class="p">},</span>
+</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a>        <span class="s2">"POST"</span><span class="p">,</span>
+</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a>        <span class="sa">f</span><span class="s2">"calendar/v4/calendars/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/events/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">event_id</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a>        <span class="sa">f</span><span class="s2">"/attendees/batch_delete"</span><span class="p">,</span>
+</span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a>        <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">"attendee_ids"</span><span class="p">:</span> <span class="n">attendee_ids</span><span class="p">},</span>
 </span><span id="__span-0-127"><a id="__codelineno-0-127" name="__codelineno-0-127"></a>    <span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
@@ -4338,7 +4422,7 @@
   </span>
 
 <a href="#feishu.calendar.attendees.AttendeesNamespace.list" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">list</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;calendar_id&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.list(calendar_id)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.list(calendar_id)">calendar_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;event_id&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.list(event_id)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.list(event_id)">event_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;page_size&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.list(page_size)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.list(page_size)">page_size</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;max_items&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.list(max_items)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.list(max_items)">max_items</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_type&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.list(user_id_type)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.list(user_id_type)">user_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;list&lt;/span&gt;
+<div class="language-python doc-signature highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">list</span><span class="p">(</span><span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;calendar_id&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.list(calendar_id)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.list(calendar_id)">calendar_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;event_id&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.list(event_id)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.list(event_id)">event_id</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;page_size&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.list(page_size)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.list(page_size)">page_size</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/functions.html#int">int</a></span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;max_items&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.list(max_items)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.list(max_items)">max_items</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/functions.html#int">int</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code&gt;user_id_type&lt;/code&gt; (&lt;code&gt;feishu.calendar.attendees.AttendeesNamespace.list(user_id_type)&lt;/code&gt;)" href="#feishu.calendar.attendees.AttendeesNamespace.list(user_id_type)">user_id_type</a></span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-method&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;list&lt;/span&gt;
 
 
   &lt;span class=&quot;doc doc-labels&quot;&gt;
@@ -4374,7 +4458,7 @@
 <h5 id="feishu.calendar.attendees.AttendeesNamespace.list(calendar_id)" class="doc doc-heading doc-heading-parameter">                  <code>calendar_id</code>
 <a href="#feishu.calendar.attendees.AttendeesNamespace.list(calendar_id)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4390,7 +4474,7 @@
 <h5 id="feishu.calendar.attendees.AttendeesNamespace.list(event_id)" class="doc doc-heading doc-heading-parameter">                  <code>event_id</code>
 <a href="#feishu.calendar.attendees.AttendeesNamespace.list(event_id)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4406,7 +4490,7 @@
 <h5 id="feishu.calendar.attendees.AttendeesNamespace.list(page_size)" class="doc doc-heading doc-heading-parameter">                  <code>page_size</code>
 <a href="#feishu.calendar.attendees.AttendeesNamespace.list(page_size)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a></code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/functions.html#int">int</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4422,7 +4506,7 @@
 <h5 id="feishu.calendar.attendees.AttendeesNamespace.list(max_items)" class="doc doc-heading doc-heading-parameter">                  <code>max_items</code>
 <a href="#feishu.calendar.attendees.AttendeesNamespace.list(max_items)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#int">int</a> | None</code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/functions.html#int">int</a> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4438,7 +4522,7 @@
 <h5 id="feishu.calendar.attendees.AttendeesNamespace.list(user_id_type)" class="doc doc-heading doc-heading-parameter">                  <code>user_id_type</code>
 <a href="#feishu.calendar.attendees.AttendeesNamespace.list(user_id_type)" class="headerlink" title="Permanent link">&para;</a></h5>            </td>
             <td>
-                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | None</code>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4511,8 +4595,8 @@
 
 <p><span class="doc-section-title">示例：</span></p>
     <div class="language-pycon highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python Console Session</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
-<span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">calendar</span><span class="o">.</span><span class="n">attendees</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="s2">&quot;feishu.cn_xxx&quot;</span><span class="p">,</span> <span class="s2">&quot;evtxxx&quot;</span><span class="p">)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">[{&#39;attendee_id&#39;: &#39;axxx&#39;, &#39;type&#39;: &#39;user&#39;, ...}, ...]  # noqa: E501</span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">calendar</span><span class="o">.</span><span class="n">attendees</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="s2">"feishu.cn_xxx"</span><span class="p">,</span> <span class="s2">"evtxxx"</span><span class="p">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="go">[{'attendee_id': 'axxx', 'type': 'user', ...}, ...]  # noqa: E501</span>
 </span></code></pre></div></td></tr></table></div>
 
 
@@ -4567,7 +4651,7 @@
 </span><span id="__span-0-135"><a id="__codelineno-0-135" name="__codelineno-0-135"></a>    <span class="n">max_items</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-136"><a id="__codelineno-0-136" name="__codelineno-0-136"></a>    <span class="n">user_id_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-137"><a id="__codelineno-0-137" name="__codelineno-0-137"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">NestedDict</span><span class="p">]:</span>
-</span><span id="__span-0-138"><a id="__codelineno-0-138" name="__codelineno-0-138"></a><span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-0-138"><a id="__codelineno-0-138" name="__codelineno-0-138"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 </span><span id="__span-0-139"><a id="__codelineno-0-139" name="__codelineno-0-139"></a><span class="sd">    获取日程参与人列表。</span>
 </span><span id="__span-0-140"><a id="__codelineno-0-140" name="__codelineno-0-140"></a>
 </span><span id="__span-0-141"><a id="__codelineno-0-141" name="__codelineno-0-141"></a><span class="sd">    自动翻页并将各页结果拼接为单个列表返回。`page_size` 会被限制在</span>
@@ -4590,12 +4674,12 @@
 </span><span id="__span-0-158"><a id="__codelineno-0-158" name="__codelineno-0-158"></a><span class="sd">        [获取日程参与人列表](https://open.feishu.cn/document/server-docs/calendar-v4/calendar-event-attendee/list)</span>
 </span><span id="__span-0-159"><a id="__codelineno-0-159" name="__codelineno-0-159"></a>
 </span><span id="__span-0-160"><a id="__codelineno-0-160" name="__codelineno-0-160"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-161"><a id="__codelineno-0-161" name="__codelineno-0-161"></a><span class="sd">        &gt;&gt;&gt; await client.calendar.attendees.list(&quot;feishu.cn_xxx&quot;, &quot;evtxxx&quot;)  # doctest:+SKIP</span>
-</span><span id="__span-0-162"><a id="__codelineno-0-162" name="__codelineno-0-162"></a><span class="sd">        [{&#39;attendee_id&#39;: &#39;axxx&#39;, &#39;type&#39;: &#39;user&#39;, ...}, ...]  # noqa: E501</span>
-</span><span id="__span-0-163"><a id="__codelineno-0-163" name="__codelineno-0-163"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-161"><a id="__codelineno-0-161" name="__codelineno-0-161"></a><span class="sd">        &gt;&gt;&gt; await client.calendar.attendees.list("feishu.cn_xxx", "evtxxx")  # doctest:+SKIP</span>
+</span><span id="__span-0-162"><a id="__codelineno-0-162" name="__codelineno-0-162"></a><span class="sd">        [{'attendee_id': 'axxx', 'type': 'user', ...}, ...]  # noqa: E501</span>
+</span><span id="__span-0-163"><a id="__codelineno-0-163" name="__codelineno-0-163"></a><span class="sd">    """</span>
 </span><span id="__span-0-164"><a id="__codelineno-0-164" name="__codelineno-0-164"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">paginate_get</span><span class="p">(</span>
-</span><span id="__span-0-165"><a id="__codelineno-0-165" name="__codelineno-0-165"></a>        <span class="sa">f</span><span class="s2">&quot;calendar/v4/calendars/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/events/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">event_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/attendees&quot;</span><span class="p">,</span>
-</span><span id="__span-0-166"><a id="__codelineno-0-166" name="__codelineno-0-166"></a>        <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;user_id_type&quot;</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span> <span class="k">if</span> <span class="n">user_id_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-165"><a id="__codelineno-0-165" name="__codelineno-0-165"></a>        <span class="sa">f</span><span class="s2">"calendar/v4/calendars/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/events/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">event_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/attendees"</span><span class="p">,</span>
+</span><span id="__span-0-166"><a id="__codelineno-0-166" name="__codelineno-0-166"></a>        <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">"user_id_type"</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span> <span class="k">if</span> <span class="n">user_id_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-167"><a id="__codelineno-0-167" name="__codelineno-0-167"></a>        <span class="n">page_size</span><span class="o">=</span><span class="n">page_size</span><span class="p">,</span>
 </span><span id="__span-0-168"><a id="__codelineno-0-168" name="__codelineno-0-168"></a>        <span class="n">max_items</span><span class="o">=</span><span class="n">max_items</span><span class="p">,</span>
 </span><span id="__span-0-169"><a id="__codelineno-0-169" name="__codelineno-0-169"></a>    <span class="p">)</span>
@@ -4641,7 +4725,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年7月16日 18:54:08 UTC">2026-07-16 18:54:08</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年9月14日 14:58:20 UTC">2026-09-14 14:58:20</span>
   </span>
 
     
@@ -4851,7 +4935,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       
