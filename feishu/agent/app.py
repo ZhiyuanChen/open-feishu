@@ -33,7 +33,6 @@ from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
 from typing import Any, Literal
-from urllib.parse import urlparse
 
 from ..attachments import SandboxedAttachmentExtractor, analyze_attachment
 from ..auth import (
@@ -46,7 +45,7 @@ from ..auth import (
 from ..client import FeishuClient
 from ..events.receiver import create_event_route
 from ..ws.client import WsClient
-from .adapters.openai import OpenAIBackend
+from .adapters.openai import create_openai_backend, create_openai_client
 from .approval import DefaultApprovalEngine
 from .bundles import BundleContext, build_tool_registry
 from .loop import AgentEngine
@@ -385,32 +384,19 @@ class Agent:
         base_url = model.get("base_url")
         if not (api_key and base_url):
             raise RuntimeError("model.api_key / model.base_url are required for the OpenAI-compatible backend")
-        import openai
-
-        return openai.AsyncOpenAI(api_key=str(api_key), base_url=str(base_url).rstrip("/"))
+        return create_openai_client(str(api_key), str(base_url))
 
     def _model_backend_from_config(self, client: Any) -> Any:
         model = self._section("model")
         model_name = model.get("model") or model.get("name")
         if not model_name:
             raise RuntimeError("model.model is required")
-        defaults: dict[str, Any] = {}
-        extra_body: dict[str, Any] = {}
-        if _uses_deepseek_thinking_protocol(model.get("base_url")):
-            if model.get("thinking_enabled") is not None:
-                extra_body["thinking"] = {"type": "enabled" if model.get("thinking_enabled") else "disabled"}
-        else:
-            if model.get("thinking_enabled") is not None:
-                extra_body["enable_thinking"] = bool(model.get("thinking_enabled"))
-            if model.get("thinking_budget") is not None:
-                extra_body["thinking_budget"] = int(model["thinking_budget"])
-        if extra_body:
-            defaults["extra_body"] = extra_body
-        return OpenAIBackend(
+        return create_openai_backend(
             client=client,
             model=str(model_name),
-            replay_reasoning_content=_uses_deepseek_thinking_protocol(model.get("base_url")),
-            **defaults,
+            base_url=model.get("base_url"),
+            thinking_enabled=model.get("thinking_enabled"),
+            thinking_budget=model.get("thinking_budget"),
         )
 
     def _fast_backend_from_config(self) -> Any | None:
@@ -423,15 +409,13 @@ class Agent:
         base_url = fast.get("base_url") or model.get("base_url")
         if not (api_key and base_url):
             raise RuntimeError("fast_model.model requires fast_model.api_key/base_url or model fallback values")
-        import openai
-
-        client = openai.AsyncOpenAI(api_key=str(api_key), base_url=str(base_url).rstrip("/"))
-        extra_body: dict[str, Any] = (
-            {"thinking": {"type": "disabled"}}
-            if _uses_deepseek_thinking_protocol(base_url)
-            else {"enable_thinking": False}
+        client = create_openai_client(str(api_key), str(base_url))
+        return create_openai_backend(
+            client=client,
+            model=str(model_name),
+            base_url=str(base_url),
+            force_non_thinking=True,
         )
-        return OpenAIBackend(client=client, model=str(model_name), extra_body=extra_body)
 
     def _progress_summarizer_from_config(self) -> Any | None:
         backend = self._fast_backend_from_config()
@@ -537,10 +521,6 @@ def _string_tuple(value: Any) -> tuple[str, ...]:
     if isinstance(value, Sequence):
         return tuple(str(item).strip() for item in value if str(item).strip())
     return (str(value),)
-
-
-def _uses_deepseek_thinking_protocol(base_url: Any) -> bool:
-    return urlparse(str(base_url or "")).hostname == "api.deepseek.com"
 
 
 __all__ = ["Agent"]

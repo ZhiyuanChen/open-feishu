@@ -26,7 +26,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from feishu.agent.adapters.openai import OpenAIBackend
+from feishu.agent.adapters.openai import OpenAIBackend, create_openai_backend
 from feishu.agent.llm import (
     LlmBackend,
     Message,
@@ -173,3 +173,22 @@ def test_satisfies_protocol():
     pytest.importorskip("openai")
     backend = OpenAIBackend(client=object(), model="gpt-4o")
     assert isinstance(backend, LlmBackend)
+
+
+def test_factory_uses_deepseek_thinking_protocol() -> None:
+    main = create_openai_backend(
+        client=object(),
+        model="deepseek-flash",
+        base_url="https://api.deepseek.com",
+        thinking_enabled=True,
+    )
+    fast = create_openai_backend(
+        client=object(),
+        model="deepseek-flash",
+        base_url="https://api.deepseek.com",
+        force_non_thinking=True,
+    )
+
+    assert main._defaults["extra_body"] == {"thinking": {"type": "enabled"}}
+    assert main._replay_reasoning_content is True
+    assert fast._defaults["extra_body"] == {"thinking": {"type": "disabled"}}

@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 from typing import Any, AsyncIterator, Sequence
+from urllib.parse import urlparse
 
 from ..llm import (
     Message,
@@ -215,3 +216,50 @@ class OpenAIBackend:
                 yield chunk
 
         return _gen()
+
+
+def create_openai_client(api_key: str, base_url: str) -> Any:
+    r"""Create an OpenAI-compatible client for an explicitly configured provider endpoint."""
+    import openai
+
+    return openai.AsyncOpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
+
+
+def create_openai_backend(
+    *,
+    client: Any,
+    model: str,
+    base_url: str | None,
+    thinking_enabled: bool | None = None,
+    thinking_budget: int | None = None,
+    force_non_thinking: bool = False,
+) -> OpenAIBackend:
+    r"""Build a backend with the configured provider's thinking protocol.
+
+    DeepSeek uses the OpenAI-compatible ``thinking`` object and requires
+    ``reasoning_content`` replay across tool-result turns. Qwen-compatible
+    endpoints retain their ``enable_thinking`` / ``thinking_budget`` contract.
+    """
+    deepseek = _uses_deepseek_thinking_protocol(base_url)
+    extra_body: dict[str, Any] = {}
+    if force_non_thinking:
+        extra_body = {"thinking": {"type": "disabled"}} if deepseek else {"enable_thinking": False}
+    elif deepseek:
+        if thinking_enabled is not None:
+            extra_body["thinking"] = {"type": "enabled" if thinking_enabled else "disabled"}
+    else:
+        if thinking_enabled is not None:
+            extra_body["enable_thinking"] = thinking_enabled
+        if thinking_budget is not None:
+            extra_body["thinking_budget"] = thinking_budget
+    defaults = {"extra_body": extra_body} if extra_body else {}
+    return OpenAIBackend(
+        client=client,
+        model=model,
+        replay_reasoning_content=deepseek,
+        **defaults,
+    )
+
+
+def _uses_deepseek_thinking_protocol(base_url: str | None) -> bool:
+    return urlparse(base_url or "").hostname == "api.deepseek.com"
