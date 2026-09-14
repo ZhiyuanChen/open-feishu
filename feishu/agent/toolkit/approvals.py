@@ -129,6 +129,39 @@ def _account_fields_in_form(index: Mapping[str, Mapping[str, Any]], values: Mapp
     return problems
 
 
+def _configured_required_field_problems(
+    index: Mapping[str, Mapping[str, Any]],
+    values: Mapping[str, Any],
+    required_fields_by_approval_code: Mapping[str, Sequence[str]],
+    approval_code: str,
+) -> list[str]:
+    r"""Validate product-required fields that the Feishu definition marks optional."""
+    field_names = required_fields_by_approval_code.get(approval_code) or required_fields_by_approval_code.get("*") or ()
+    if not field_names:
+        return []
+    aliases = _widget_key_aliases(index)
+    problems: list[str] = []
+    for field in field_names:
+        key = str(field)
+        widget_id = key if key in index else aliases.get(key, key)
+        entry = index.get(widget_id)
+        name = entry.get("name") if entry else key
+        widget_type = entry.get("type") if entry else "unknown"
+        if widget_id not in values or _is_empty_tool_value(values.get(widget_id)):
+            problems.append(f"missing configured required field '{name}' ({widget_type})")
+    return problems
+
+
+def _is_empty_tool_value(value: Any) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return not value.strip()
+    if isinstance(value, Mapping | Sequence) and not isinstance(value, str | bytes | bytearray):
+        return len(value) == 0
+    return False
+
+
 def _redact_account_values(value: Any) -> Any:
     r"""递归脱敏审批实例中的账户对象，确保模型只看到 label，不看到完整银行卡号。"""
     if isinstance(value, Mapping):
@@ -269,6 +302,7 @@ def create_approval_instance(
     requires_approval: bool = True,
     as_user: bool = False,  # the create-instance endpoint is tenant-token-only; applicant is forced below
     auth_scopes: Sequence[str] = (),
+    required_fields_by_approval_code: Mapping[str, Sequence[str]] | None = None,
 ) -> Tool:
     r"""
     写类工厂：基于 `approval_code` 与模型构造的 `form` 创建审批实例，返回一个需审批的 [feishu.agent.tools.Tool][]。
@@ -286,6 +320,8 @@ def create_approval_instance(
         as_user: 是否以请求用户身份写入。默认为 `False`——创建审批实例接口仅接受租户令牌（用户令牌会返回
             99991668）；申请人身份在处理函数中强制为请求用户本人，零信任不受影响。
         auth_scopes: 缺少授权时申请的飞书权限范围。
+        required_fields_by_approval_code: 产品额外要求的字段名或 widget id，按审批 code 映射；用于补足
+            飞书定义中标记可选、但产品流程实际必填的控件。
 
     Returns:
         可注册到 [feishu.agent.tools.ToolRegistry][] 的需审批 [feishu.agent.tools.Tool][]。
@@ -406,6 +442,14 @@ def create_approval_instance(
             index,
             form_mapping,
             resolved_account_widget_ids=resolved_account_widget_ids,
+        )
+        problems.extend(
+            _configured_required_field_problems(
+                index,
+                form_mapping,
+                required_fields_by_approval_code or {},
+                str(approval_code),
+            )
         )
         if problems:
             return ToolResult(

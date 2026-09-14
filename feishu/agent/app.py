@@ -33,6 +33,7 @@ from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
 from typing import Any, Literal
+from urllib.parse import urlparse
 
 from ..attachments import SandboxedAttachmentExtractor, analyze_attachment
 from ..auth import (
@@ -221,15 +222,27 @@ class Agent:
         async def health(_request: Any) -> Any:
             return JSONResponse({"ok": True, "service": str(server.get("service") or "feishu-agent")})
 
+        dispatcher = self.dispatcher()
+        event_path = str(server.get("event_path") or "/feishu/event")
         routes = [
             Route(str(server.get("health_path") or "/health"), health, methods=["GET"]),
             create_event_route(
-                self.dispatcher(),
-                path=str(server.get("event_path") or "/feishu/event"),
+                dispatcher,
+                path=event_path,
                 encrypt_key=self._get("feishu.encrypt_key"),
                 verification_token=self._get("feishu.verification_token"),
             ),
         ]
+        card_path = server.get("card_path", "/feishu/card")
+        if card_path and str(card_path) != event_path:
+            routes.append(
+                create_event_route(
+                    dispatcher,
+                    path=str(card_path),
+                    encrypt_key=self._get("feishu.encrypt_key"),
+                    verification_token=self._get("feishu.verification_token"),
+                )
+            )
         routes.extend(self.extra_routes())
         if self.signer is not None and self.oauth_redirect_uri and self.provider is not None:
             handler = oauth_callback_handler(
@@ -382,13 +395,22 @@ class Agent:
             raise RuntimeError("model.model is required")
         defaults: dict[str, Any] = {}
         extra_body: dict[str, Any] = {}
-        if model.get("thinking_enabled") is not None:
-            extra_body["enable_thinking"] = bool(model.get("thinking_enabled"))
-        if model.get("thinking_budget") is not None:
-            extra_body["thinking_budget"] = int(model["thinking_budget"])
+        if _uses_deepseek_thinking_protocol(model.get("base_url")):
+            if model.get("thinking_enabled") is not None:
+                extra_body["thinking"] = {"type": "enabled" if model.get("thinking_enabled") else "disabled"}
+        else:
+            if model.get("thinking_enabled") is not None:
+                extra_body["enable_thinking"] = bool(model.get("thinking_enabled"))
+            if model.get("thinking_budget") is not None:
+                extra_body["thinking_budget"] = int(model["thinking_budget"])
         if extra_body:
             defaults["extra_body"] = extra_body
-        return OpenAIBackend(client=client, model=str(model_name), **defaults)
+        return OpenAIBackend(
+            client=client,
+            model=str(model_name),
+            replay_reasoning_content=_uses_deepseek_thinking_protocol(model.get("base_url")),
+            **defaults,
+        )
 
     def _fast_backend_from_config(self) -> Any | None:
         fast = self._section("fast_model")
@@ -403,7 +425,12 @@ class Agent:
         import openai
 
         client = openai.AsyncOpenAI(api_key=str(api_key), base_url=str(base_url).rstrip("/"))
-        return OpenAIBackend(client=client, model=str(model_name), extra_body={"enable_thinking": False})
+        extra_body: dict[str, Any] = (
+            {"thinking": {"type": "disabled"}}
+            if _uses_deepseek_thinking_protocol(base_url)
+            else {"enable_thinking": False}
+        )
+        return OpenAIBackend(client=client, model=str(model_name), extra_body=extra_body)
 
     def _progress_summarizer_from_config(self) -> Any | None:
         backend = self._fast_backend_from_config()
@@ -509,6 +536,10 @@ def _string_tuple(value: Any) -> tuple[str, ...]:
     if isinstance(value, Sequence):
         return tuple(str(item).strip() for item in value if str(item).strip())
     return (str(value),)
+
+
+def _uses_deepseek_thinking_protocol(base_url: Any) -> bool:
+    return urlparse(str(base_url or "")).hostname == "api.deepseek.com"
 
 
 __all__ = ["Agent"]

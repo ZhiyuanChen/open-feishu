@@ -45,10 +45,12 @@ from ._flow import tool_calls_after as _tool_calls_after
 from .approval import ApprovalEngine, ApprovalOutcome, DefaultApprovalEngine
 from .context import ToolContext, current_tool_context, use_tool_context
 from .llm import (
+    ContentPart,
     LlmBackend,
     Message,
     MessageStop,
     ReasoningDelta,
+    ReasoningPart,
     StopReason,
     StreamChunk,
     TextDelta,
@@ -713,6 +715,8 @@ class AgentEngine:
 
     def _assistant_tool_message(self, result: StreamResult) -> Message:
         content: list = []
+        if result.reasoning:
+            content.append(ReasoningPart(text=result.reasoning))
         if result.text:
             content.append(TextPart(text=result.text))
         for call in result.tool_calls:
@@ -958,7 +962,7 @@ class AgentEngine:
             for part in msg.content
             if isinstance(part, ToolResultPart)
         }
-        placeholders: list[TextPart | ToolUsePart | ToolResultPart] = [
+        placeholders: list[ContentPart] = [
             ToolResultPart(tool_call_id=call.id, content=note, is_error=is_error)
             for call in tool_calls
             if call.id not in answered

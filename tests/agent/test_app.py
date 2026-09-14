@@ -59,3 +59,47 @@ def test_agent_facade_passes_idle_session_timeout(tmp_path: Path) -> None:
     )
 
     assert agent.engine.idle_session_timeout_seconds == 7200
+
+
+def test_agent_uses_deepseek_thinking_protocol_for_main_and_fast_models(tmp_path: Path) -> None:
+    agent = Agent(
+        {
+            "storage": {"path": str(tmp_path / "agent.db")},
+            "model": {
+                "model": "deepseek-flash",
+                "api_key": "key",
+                "base_url": "https://api.deepseek.com",
+                "thinking_enabled": True,
+            },
+            "fast_model": {
+                "model": "deepseek-flash",
+                "api_key": "key",
+                "base_url": "https://api.deepseek.com",
+            },
+            "toolkits": [],
+        },
+        client=_Client(),
+        backend=FakeLlmBackend([]),
+        registry=ToolRegistry(),
+        progress_summarizer=lambda _snapshot: None,
+        text_summarizer=lambda _messages, **_kwargs: "",
+    )
+
+    main = agent._model_backend_from_config(object())
+    fast = agent._fast_backend_from_config()
+
+    assert main._defaults["extra_body"] == {"thinking": {"type": "enabled"}}
+    assert main._replay_reasoning_content is True
+    assert fast is not None
+    assert fast._defaults["extra_body"] == {"thinking": {"type": "disabled"}}
+
+
+def test_agent_asgi_app_exposes_card_callback_route(tmp_path: Path) -> None:
+    agent = Agent(
+        {"storage": {"path": str(tmp_path / "agent.db")}, "toolkits": []},
+        client=_Client(),
+        backend=FakeLlmBackend([]),
+        registry=ToolRegistry(),
+    )
+
+    assert "/feishu/card" in {route.path for route in agent.asgi_app().routes}

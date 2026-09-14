@@ -43,6 +43,13 @@ class TextPart:
 
 
 @dataclass(slots=True)
+class ReasoningPart:
+    r"""Assistant reasoning retained only when a provider requires it for a later tool-result turn."""
+
+    text: str
+
+
+@dataclass(slots=True)
 class ToolUsePart:
     r"""
     模型发起的一次工具调用，作为助手消息的一个内容块。
@@ -85,7 +92,7 @@ class ToolResultPart:
     is_error: bool = False
 
 
-ContentPart = Union[TextPart, ToolUsePart, ToolResultPart]
+ContentPart = Union[TextPart, ReasoningPart, ToolUsePart, ToolResultPart]
 
 
 @dataclass(slots=True)

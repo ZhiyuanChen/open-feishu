@@ -21,7 +21,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from ..toolkit._base import reauth_on_permission_error
@@ -129,6 +129,7 @@ def _build_workplace_tool_registry(
     mail_summary_max_messages: int = 10,
     mail_summary_max_body_chars: int = 4000,
     mail_summary_max_chars: int = 2000,
+    approval_required_fields: Mapping[str, Sequence[str]] | None = None,
 ) -> ToolRegistry:
     r"""把由原子飞书工具工厂组成的默认办公 bundle 注册进工具表。"""
     registry = registry or ToolRegistry()
@@ -266,6 +267,7 @@ def _build_workplace_tool_registry(
     )
 
     # Approvals
+    required_approval_fields = approval_required_fields or {}
     add(list_approval_definitions(description="列出你可以发起的审批类型。", auth_scopes=APPROVAL_SCOPES, locale=locale))
     add(get_approval_definition(description="读取某个审批类型的表单结构。", auth_scopes=APPROVAL_SCOPES, locale=locale))
     add(
@@ -273,6 +275,7 @@ def _build_workplace_tool_registry(
             description="发起一个审批；执行前我会先发确认卡片。",
             auth_scopes=APPROVAL_SCOPES,
             locale=locale,
+            required_fields_by_approval_code=required_approval_fields,
         )
     )
     add(
@@ -509,6 +512,7 @@ class FeishuWorkplaceBundle:
             mail_summary_max_messages=context.mail_summary_max_messages,
             mail_summary_max_body_chars=context.mail_summary_max_body_chars,
             mail_summary_max_chars=context.mail_summary_max_chars,
+            approval_required_fields=context.extra.get("approval_required_fields"),
         )
 
 

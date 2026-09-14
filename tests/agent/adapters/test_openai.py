@@ -31,6 +31,7 @@ from feishu.agent.llm import (
     LlmBackend,
     Message,
     MessageStop,
+    ReasoningPart,
     StopReason,
     TextDelta,
     TextPart,
@@ -135,11 +136,17 @@ class TestRequestPayload:
 
     async def test_tools_and_messages(self):
         client = _FakeOpenAIClient([_chunk(finish_reason="stop")])
-        backend = OpenAIBackend(client=client, model="gpt-4o")
+        backend = OpenAIBackend(client=client, model="gpt-4o", replay_reasoning_content=True)
         specs = [ToolSpec(name="weather", description="d", input_schema={"type": "object"})]
         msgs = [
             Message(role="user", content=[TextPart(text="hi")]),
-            Message(role="assistant", content=[ToolUsePart(id="t1", name="weather", arguments={"city": "sh"})]),
+            Message(
+                role="assistant",
+                content=[
+                    ReasoningPart(text="Need the weather tool."),
+                    ToolUsePart(id="t1", name="weather", arguments={"city": "sh"}),
+                ],
+            ),
             Message(role="tool", content=[ToolResultPart(tool_call_id="t1", content="sunny")]),
         ]
         [c async for c in backend.stream(messages=msgs, tools=specs, system="be nice")]
@@ -157,6 +164,7 @@ class TestRequestPayload:
         tc = assistant["tool_calls"][0]
         assert tc["id"] == "t1" and tc["type"] == "function" and tc["function"]["name"] == "weather"
         assert json.loads(tc["function"]["arguments"]) == {"city": "sh"}
+        assert assistant["reasoning_content"] == "Need the weather tool."
         # provider wire fact: a tool result is sent as a tool-role message
         assert tool == {"role": "tool", "tool_call_id": "t1", "content": "sunny"}
 

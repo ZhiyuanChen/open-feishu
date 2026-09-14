@@ -107,6 +107,35 @@ class TestApprovalToolkit:
 
         assert tool.input_schema["properties"]["accounts"]["additionalProperties"] == {"type": "string"}
 
+    async def test_requires_product_configured_optional_fields(self):
+        class _OptionalDefinitions:
+            async def get(self, approval_code, *, locale=None):
+                return {
+                    "form": json.dumps(
+                        [
+                            {"id": "reason", "type": "textarea", "name": "事由", "required": True},
+                            {"id": "bank", "type": "account", "name": "收款账户", "required": False},
+                            {"id": "proof", "type": "attachmentV2", "name": "附件", "required": False},
+                        ],
+                        ensure_ascii=False,
+                    )
+                }
+
+        client = _Client()
+        client.approval.definitions = _OptionalDefinitions()
+        tool = create_approval_instance(
+            description="create",
+            required_fields_by_approval_code={"APPROVAL": ("收款账户", "附件")},
+        )
+
+        with use_tool_context(ToolContext(client=client, user={"open_id": "ou_1"})):
+            result = await tool.handler(approval_code="APPROVAL", form={"事由": "合同预付款"})
+
+        assert result.outcome is ToolOutcome.FAILED
+        assert "missing configured required field '收款账户' (account)" in result.content
+        assert "missing configured required field '附件' (attachmentV2)" in result.content
+        assert client.approval.instances.create_calls == []
+
     @pytest.mark.parametrize(
         ("form", "accounts"),
         (

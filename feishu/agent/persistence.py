@@ -44,7 +44,7 @@ from pathlib import Path
 from typing import Any, Callable, TypeVar
 
 from .integrity import payload_summary
-from .llm import Message, TextPart, ToolResultPart, ToolUsePart
+from .llm import Message, ReasoningPart, TextPart, ToolResultPart, ToolUsePart
 from .session import ClaimResult, PendingApproval, PendingAuthorization
 
 T = TypeVar("T")
@@ -75,6 +75,8 @@ def _connect(db_path: str | Path) -> sqlite3.Connection:
 def _part_to_dict(part: Any) -> dict[str, Any]:
     if isinstance(part, TextPart):
         return {"k": "text", "text": part.text}
+    if isinstance(part, ReasoningPart):
+        return {"k": "reasoning", "text": part.text}
     if isinstance(part, ToolUsePart):
         return {"k": "tool_use", "id": part.id, "name": part.name, "arguments": part.arguments}
     if isinstance(part, ToolResultPart):
@@ -91,6 +93,8 @@ def _part_from_dict(data: dict[str, Any]) -> Any:
     kind = data.get("k")
     if kind == "text":
         return TextPart(text=data.get("text", ""))
+    if kind == "reasoning":
+        return ReasoningPart(text=data.get("text", ""))
     if kind == "tool_use":
         return ToolUsePart(id=data["id"], name=data["name"], arguments=data.get("arguments") or {})
     if kind == "tool_result":

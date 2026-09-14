@@ -28,6 +28,7 @@ from ..llm import (
     Message,
     MessageStop,
     ReasoningDelta,
+    ReasoningPart,
     StopReason,
     StreamChunk,
     TextDelta,
@@ -61,7 +62,9 @@ def _to_openai_tools(tools: Sequence[ToolSpec]) -> list[dict]:
     ]
 
 
-def _to_openai_messages(messages: Sequence[Message], system: str | None) -> list[dict]:
+def _to_openai_messages(
+    messages: Sequence[Message], system: str | None, *, replay_reasoning_content: bool = False
+) -> list[dict]:
     out: list[dict] = []
     if system is not None:
         out.append({"role": "system", "content": system})
@@ -72,22 +75,24 @@ def _to_openai_messages(messages: Sequence[Message], system: str | None) -> list
                     out.append({"role": "tool", "tool_call_id": p.tool_call_id, "content": p.content})
             continue
         text_parts = [p.text for p in msg.content if isinstance(p, TextPart)]
+        reasoning_parts = [p.text for p in msg.content if isinstance(p, ReasoningPart)]
         tool_uses = [p for p in msg.content if isinstance(p, ToolUsePart)]
         if msg.role == "assistant" and tool_uses:
-            out.append(
-                {
-                    "role": "assistant",
-                    "content": "".join(text_parts) or None,
-                    "tool_calls": [
-                        {
-                            "id": p.id,
-                            "type": "function",
-                            "function": {"name": p.name, "arguments": json.dumps(p.arguments)},
-                        }
-                        for p in tool_uses
-                    ],
-                }
-            )
+            assistant: dict[str, Any] = {
+                "role": "assistant",
+                "content": "".join(text_parts) or None,
+                "tool_calls": [
+                    {
+                        "id": p.id,
+                        "type": "function",
+                        "function": {"name": p.name, "arguments": json.dumps(p.arguments)},
+                    }
+                    for p in tool_uses
+                ],
+            }
+            if replay_reasoning_content and reasoning_parts:
+                assistant["reasoning_content"] = "".join(reasoning_parts)
+            out.append(assistant)
         else:
             out.append({"role": msg.role, "content": "".join(text_parts)})
     return out
@@ -154,13 +159,14 @@ class OpenAIBackend:
         >>> backend = OpenAIBackend(model="gpt-4o", temperature=0.7)  # doctest:+SKIP
     """
 
-    def __init__(self, client: Any = None, *, model: str, **defaults: Any):
+    def __init__(self, client: Any = None, *, model: str, replay_reasoning_content: bool = False, **defaults: Any):
         if client is None:
             import openai  # imported lazily; core never imports the SDK
 
             client = openai.AsyncOpenAI()
         self._client = client
         self._model = model
+        self._replay_reasoning_content = replay_reasoning_content
         self._defaults = defaults
 
     def stream(
@@ -194,7 +200,7 @@ class OpenAIBackend:
         """
         params: dict[str, Any] = {
             "model": kwargs.pop("model", self._model),
-            "messages": _to_openai_messages(messages, system),
+            "messages": _to_openai_messages(messages, system, replay_reasoning_content=self._replay_reasoning_content),
             "stream": True,
             "stream_options": {"include_usage": True},
             **self._defaults,

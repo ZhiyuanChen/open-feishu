@@ -31,6 +31,7 @@ from __future__ import annotations
 import asyncio
 import json
 from types import SimpleNamespace
+from typing import cast
 
 import pytest
 
@@ -42,6 +43,7 @@ from feishu.agent.llm import (
     Message,
     MessageStop,
     ReasoningDelta,
+    ReasoningPart,
     StopReason,
     TextDelta,
     TextPart,
@@ -67,6 +69,22 @@ from tests._fakes import FakeLlmBackend, text_turn, tool_turn
 
 SCHEMA = {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}
 DEPLOY_SCHEMA = {"type": "object", "properties": {"env": {"type": "string"}}, "required": ["env"]}
+
+
+def test_assistant_tool_message_retains_reasoning_for_provider_replay() -> None:
+    result = StreamResult(
+        text="",
+        tool_calls=[ToolCall(id="call_1", name="weather", arguments='{"city":"Shanghai"}')],
+        stop_reason=StopReason.TOOL_USE,
+        reasoning="Need the current weather.",
+    )
+
+    message = Agent._assistant_tool_message(cast(Agent, object()), result)
+
+    assert message.content == [
+        ReasoningPart(text="Need the current weather."),
+        ToolUsePart(id="call_1", name="weather", arguments={"city": "Shanghai"}),
+    ]
 
 
 def _ns(**kw):

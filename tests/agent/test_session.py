@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from feishu.agent.llm import Message, TextPart
+from feishu.agent.llm import Message, ReasoningPart, TextPart, ToolUsePart
 from feishu.agent.persistence import SqliteSessionStore
 from feishu.agent.session import (
     InMemoryPendingApprovalStore,
@@ -82,6 +82,21 @@ async def test_sqlite_session_store_tracks_updated_at(tmp_path):
     assert await store.updated_at("s") is not None
     await store.clear("s")
     assert await store.updated_at("s") is None
+
+
+async def test_sqlite_session_store_preserves_assistant_reasoning_for_tool_replay(tmp_path):
+    store = SqliteSessionStore(tmp_path / "agent.db")
+    message = Message(
+        role="assistant",
+        content=[
+            ReasoningPart(text="Need current weather."),
+            ToolUsePart(id="call_1", name="weather", arguments={"city": "Shanghai"}),
+        ],
+    )
+
+    await store.append("s", message)
+
+    assert await store.get("s") == [message]
 
 
 class TestPendingApprovalStore:
