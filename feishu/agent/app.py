@@ -339,6 +339,7 @@ class Agent:
                 ),
             ),
             progress_summarizer=self.progress_summarizer,
+            progress_summary_interval_seconds=float(self._get("reply.progress_summary_interval_seconds", 2.0) or 0),
             user_tokens=self.provider,
             authorize_url_builder=self.authorize_url_builder,
             shared_files=shared_files,

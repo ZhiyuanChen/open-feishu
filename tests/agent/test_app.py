@@ -61,6 +61,21 @@ def test_agent_facade_passes_idle_session_timeout(tmp_path: Path) -> None:
     assert agent.engine.idle_session_timeout_seconds == 7200
 
 
+def test_agent_facade_passes_progress_summary_interval(tmp_path: Path) -> None:
+    agent = Agent(
+        {
+            "storage": {"path": str(tmp_path / "agent.db")},
+            "reply": {"progress_summary_interval_seconds": 5},
+            "toolkits": [],
+        },
+        client=_Client(),
+        backend=FakeLlmBackend([]),
+        registry=ToolRegistry(),
+    )
+
+    assert agent.engine._progress_summary_interval_seconds == 5
+
+
 def test_agent_uses_deepseek_thinking_protocol_for_main_and_fast_models(tmp_path: Path) -> None:
     agent = Agent(
         {
