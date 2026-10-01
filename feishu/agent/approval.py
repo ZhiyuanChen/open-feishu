@@ -58,9 +58,9 @@ from ._flow import (
     suspension_progress_note,
 )
 from .context import current_tool_context, use_tool_context
-from .integrity import derive_idempotency_key, payload_sha256
-from .llm import Message, ToolCall, ToolResultPart, parse_tool_arguments
-from .progress import _pending_progress_extra, _progress_message_id, _ProgressCard
+from .integrity import derive_idempotency_key, payload_sha256, stable_hash
+from .llm import Message, ToolCall, ToolResultPart, ToolUsePart, parse_tool_arguments
+from .progress import _message_id_from_response, _pending_progress_extra, _progress_message_id, _ProgressCard
 from .result import ToolOutcome, ToolResult, coerce_tool_result
 from .session import ClaimResult, PendingApproval, PendingApprovalStore
 from .shared_files import collect_shared_file_ids
@@ -269,6 +269,12 @@ class DefaultApprovalEngine:
                 message_id=approval.created_message_id,
                 payload_sha256=approval.payload_sha256,
                 namespace=self.idempotency_namespace,
+                tool_name=approval.tool_name,
+                tool_call_id=(
+                    stable_hash([approval.tool_call_id, approval.extra["origin_continuation_id"]])
+                    if approval.extra.get("origin_continuation_id")
+                    else approval.tool_call_id
+                ),
             )
         await self.approvals.put(approval)
         await self._record("write_request", approval)
@@ -278,13 +284,17 @@ class DefaultApprovalEngine:
         撤销一次尚未决策的挂起审批：移除记录并写入 `cancel` 审计事件。
 
         用于确认卡片下发失败等「审批已落库但永远不会被决策」的情形清理，避免留下用户无法确认的悬挂审批。
-        无需先 `claim`：调用方场景下卡片从未送达，不存在并发确认与之竞争（与 `on_decision` 的 reject 分支不同）。
-        审批不存在时为无操作。
+        通过原子认领只取消仍在等待的审批；卡片可能已经送达，执行中或结果未知的记录必须保留。
+        审批不存在或已被认领时为无操作。
         """
         approval = await self.approvals.get(approval_id)
+        if approval is None:
+            return
+        claim = await self.approvals.claim(approval_id, expected_payload_sha256=approval.payload_sha256)
+        if claim is not ClaimResult.CLAIMED:
+            return
         await self.approvals.complete(approval_id, outcome="cancelled")
-        if approval is not None:
-            await self._record("cancel", approval)
+        await self._record("cancel", approval)
 
     async def on_decision(
         self,
@@ -320,18 +330,28 @@ class DefaultApprovalEngine:
             await self._record("cancel", approval)
             return ApprovalOutcome(ApprovalStatus.REJECTED, content=self._text(ApprovalStatus.REJECTED), is_error=True)
 
-        # Idempotent replay: a prior execution with a MATCHING payload hash returns its cached
+        claim = await self.approvals.claim(approval_id, expected_payload_sha256=expected_payload_sha256)
+        if claim is not ClaimResult.CLAIMED:
+            return self._claim_failure(claim)
+
+        # Idempotent replay uses the same hash and lifecycle claim gate as a fresh dispatch.
+        # A prior execution with a MATCHING payload hash returns its cached
         # result without re-running. A missing/mismatched hash never replays (fail closed).
         if self.executions is not None and approval.idempotency_key and approval.payload_sha256 is not None:
-            cached = await asyncio.to_thread(self.executions.get, approval.idempotency_key)
+            try:
+                cached = await asyncio.to_thread(self.executions.get, _execution_lookup_key(approval))
+            except Exception as exc:  # noqa: BLE001 - dedup could not be checked; this attempt did not dispatch
+                await self.approvals.complete(approval_id, outcome="failed")
+                await self._record(
+                    "execute_failed", approval, error=f"replay-cache lookup failed: {type(exc).__name__}"
+                )
+                self._log.exception("approval %s: replay-cache lookup failed; tool was not dispatched", approval_id)
+                return ApprovalOutcome(ApprovalStatus.FAILED, content=self._text(ApprovalStatus.FAILED), is_error=True)
             if cached is not None and cached.get("payload_sha256") == approval.payload_sha256:
                 await self.approvals.complete(approval_id, outcome="replayed")
                 await self._record("replay", approval)
                 return ApprovalOutcome(ApprovalStatus.REPLAYED, content=cached.get("result"))
 
-        claim = await self.approvals.claim(approval_id, expected_payload_sha256=expected_payload_sha256)
-        if claim is not ClaimResult.CLAIMED:
-            return self._claim_failure(claim)
         await self._record("confirm", approval)
 
         try:
@@ -374,7 +394,7 @@ class DefaultApprovalEngine:
             try:
                 await asyncio.to_thread(
                     self.executions.put,
-                    approval.idempotency_key,
+                    _execution_lookup_key(approval),
                     execution_status="executed",
                     result=content,
                     payload_sha256=approval.payload_sha256,
@@ -414,6 +434,68 @@ class DefaultApprovalEngine:
             )
         except Exception:  # noqa: BLE001 — auditing must never break the decision path
             self._log.exception("approval audit append failed for %s", approval.approval_id)
+
+
+def _execution_lookup_key(approval: PendingApproval) -> str:
+    # Explicit keys keep their same-tool deduplication semantics across call ids. The new namespace
+    # excludes legacy rows, whose argument hash cannot prove which tool produced their result.
+    return "feishu-execution-v2:" + stable_hash([approval.idempotency_key, approval.tool_name])
+
+
+def has_original_tool_call(history: list[Message], pending: Any) -> bool:
+    r"""A continuation may resume only its matching assistant tool call still present in this session."""
+    origin = pending.extra.get("origin_continuation_id")
+    if not origin:
+        return False
+    return any(
+        message.role == "assistant"
+        and message.continuation_id == origin
+        and isinstance(part, ToolUsePart)
+        and part.id == pending.tool_call_id
+        and part.name == pending.tool_name
+        and payload_sha256(part.arguments) == payload_sha256(pending.arguments)
+        for message in history
+        for part in message.content
+    )
+
+
+def original_continuation_id(history: list[Message], call: ToolCall) -> str | None:
+    r"""Bind an initial request to its current batch; resumed callbacks carry the exact saved origin."""
+    origin = current_tool_context().continuation_id
+    if origin:
+        return origin
+    for message in reversed(history):
+        if message.role == "assistant" and any(
+            isinstance(part, ToolUsePart)
+            and part.id == call.id
+            and part.name == call.name
+            and payload_sha256(part.arguments) == payload_sha256(parse_tool_arguments(call.arguments))
+            for part in message.content
+        ):
+            return message.continuation_id
+    return None
+
+
+async def persist_approval_card_message_id(agent: Any, approval: PendingApproval, message_id: str) -> None:
+    r"""Update card metadata atomically without restoring a consumed or stale pending state."""
+    approval.extra = {**approval.extra, "progress_message_id": message_id}
+
+    def mutator(current: PendingApproval) -> tuple[None, PendingApproval]:
+        current.extra = {**current.extra, "progress_message_id": message_id}
+        return None, current
+
+    try:
+        await agent.approvals.update(approval.approval_id, mutator)
+    except KeyError:
+        logging.getLogger("feishu").debug("approval %s gone before card id update", approval.approval_id)
+
+
+async def cancel_approval_after_delivery_failure(agent: Any, approval_id: str) -> None:
+    r"""Best-effort cancellation, shielded by the caller when its turn was interrupted."""
+    try:
+        await agent.approval_engine.on_cancel(approval_id)
+    except Exception:  # noqa: BLE001 - failed cleanup must not mask delivery failure or cancellation
+        logging.getLogger("feishu").warning("failed to cancel pending approval %s", approval_id, exc_info=True)
 
 
 def action_value(event: Event) -> dict[str, Any]:
@@ -471,9 +553,15 @@ async def request_approval(
         created_at=int(time.time()),
         extra=_pending_progress_extra(progress),
     )
+    origin = original_continuation_id(history, call)
+    if origin:
+        approval.extra["origin_continuation_id"] = origin
     card = agent._approval_card_builder(approval)
     try:
         await agent.approval_engine.on_request(approval)
+    except asyncio.CancelledError:
+        await asyncio.shield(cancel_approval_after_delivery_failure(agent, approval.approval_id))
+        raise
     except Exception:  # noqa: BLE001 — could not record the pending → no confirmable write
         logging.getLogger("feishu").warning("failed to persist pending approval; write not started", exc_info=True)
         await agent._record_tool_error(
@@ -484,25 +572,26 @@ async def request_approval(
         approval_message_id = await progress.replace_with_card(card)
         if approval_message_id is None:
             response = await agent.client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
-            approval_message_id = response.get("message_id") if isinstance(response, Mapping) else None
+            approval_message_id = _message_id_from_response(response)
         if approval_message_id:
-            approval.extra = {**(approval.extra or {}), "progress_message_id": approval_message_id}
-            await agent.approvals.put(approval)
+            await persist_approval_card_message_id(agent, approval, approval_message_id)
+    except asyncio.CancelledError:
+        await asyncio.shield(cancel_approval_after_delivery_failure(agent, approval.approval_id))
+        raise
     except Exception:  # noqa: BLE001 — undeliverable card → cancel the pending, then let the model respond
         logging.getLogger("feishu").warning(
             "failed to send approval card; cancelling pending %s", approval.approval_id, exc_info=True
         )
-        try:
-            await agent.approval_engine.on_cancel(approval.approval_id)
-        except Exception:  # noqa: BLE001 — best-effort cleanup; an uncancelled pending will TTL-expire
-            logging.getLogger("feishu").warning(
-                "failed to cancel pending %s after card send failure", approval.approval_id, exc_info=True
-            )
+        await cancel_approval_after_delivery_failure(agent, approval.approval_id)
         await agent._record_tool_error(
             history, session_id, call.id, "failed to send the confirmation card; the write was not started"
         )
         return False
-    await pin_referenced_files(agent, arguments)
+    try:
+        await pin_referenced_files(agent, arguments)
+    except asyncio.CancelledError:
+        await asyncio.shield(cancel_approval_after_delivery_failure(agent, approval.approval_id))
+        raise
     return True
 
 
@@ -567,6 +656,45 @@ async def decide_and_resume(
     value: dict[str, Any],
     card_message_id: str | None,
 ) -> None:
+    r"""Serialize provenance validation, execution, and history continuation with session resets."""
+    async with agent._session_lock(approval.session_id):
+        history = await agent.store.get(approval.session_id)
+        if not has_original_tool_call(history, approval):
+            await agent.approval_engine.on_cancel(approval.approval_id)
+            current = await agent.approvals.get(approval.approval_id)
+            if current is not None and current.state in ("executing", "execution_unknown"):
+                # Losing history does not prove an already submitted write failed. Preserve uncertainty
+                # feedback rather than telling the user to submit the same operation again.
+                status = (
+                    ApprovalStatus.FROZEN if current.state == "execution_unknown" else ApprovalStatus.ALREADY_DECIDED
+                )
+                outcome = ApprovalOutcome(status, content=_DEFAULT_STATUS_TEXT[status.value], is_error=True)
+            else:
+                outcome = ApprovalOutcome(
+                    ApprovalStatus.SUPERSEDED,
+                    content="The original request context is no longer available; please send a new request.",
+                    is_error=True,
+                )
+            if card_message_id and agent.client is not None:
+                try:
+                    await agent.client.im.patch(
+                        card_message_id, agent._decided_card_builder(approval, decision, outcome)
+                    )
+                except Exception:  # noqa: BLE001 - stale UI cleanup must not resume the old tool
+                    logging.getLogger("feishu").debug("could not patch the stale approval card", exc_info=True)
+            return
+        await _decide_and_resume_locked(agent, event, approval, decision, value, card_message_id, history)
+
+
+async def _decide_and_resume_locked(
+    agent: Any,
+    event: Event,
+    approval: PendingApproval,
+    decision: Literal["approve", "reject"],
+    value: dict[str, Any],
+    card_message_id: str | None,
+    history: list[Message],
+) -> None:
     r"""
     后台执行审批决定，并在需要时恢复原模型轮次。
 
@@ -579,6 +707,7 @@ async def decide_and_resume(
         }
     )
     context = agent._tool_context(resume_event)
+    context.continuation_id = approval.extra.get("origin_continuation_id")
     if approval.owner_user_keys:
         context.user = user_from_identity_keys(approval.owner_user_keys)
     with use_tool_context(context):
@@ -614,7 +743,7 @@ async def decide_and_resume(
                         agent,
                         resume_event,
                         approval.session_id,
-                        [],
+                        history,
                         call,
                         auth_result,
                         progress,
@@ -627,9 +756,7 @@ async def decide_and_resume(
                             content=AWAITING_AUTHORIZATION_NOTE,
                             is_error=False,
                         )
-                        async with agent._session_lock(approval.session_id):
-                            history = await agent.store.get(approval.session_id)
-                            await agent._record_tool_result_part(approval.session_id, history, result_part)
+                        await agent._record_tool_result_part(approval.session_id, history, result_part)
                         await progress.finalize(suspension_progress_note("authorization"))
                         return
                 content, tr_is_error, _ = coerce_tool_result(outcome.content)
@@ -643,16 +770,14 @@ async def decide_and_resume(
                     content=content,
                     is_error=outcome.is_error or tr_is_error,
                 )
-                async with agent._session_lock(approval.session_id):
-                    history = await agent.store.get(approval.session_id)
-                    await agent._record_tool_result_part(approval.session_id, history, result_part)
-                    suspension = await agent._continue_tool_calls_after(
-                        resume_event, approval.session_id, history, approval.tool_call_id, progress
-                    )
-                    if suspension:
-                        await progress.finalize(suspension_progress_note(suspension))
-                    else:
-                        await agent._loop(resume_event, approval.session_id, history, progress=progress)
+                await agent._record_tool_result_part(approval.session_id, history, result_part)
+                suspension = await agent._continue_tool_calls_after(
+                    resume_event, approval.session_id, history, approval.tool_call_id, progress
+                )
+                if suspension:
+                    await progress.finalize(suspension_progress_note(suspension))
+                else:
+                    await agent._loop(resume_event, approval.session_id, history, progress=progress)
         except Exception:  # noqa: BLE001 - background failure must not surface as an unhandled task error
             logging.getLogger("feishu").exception(
                 "handle_card_action: error deciding/resuming %s of %s (approval=%s)",

@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from dataclasses import replace
 from types import SimpleNamespace
 from typing import cast
 
@@ -1468,12 +1469,16 @@ class TestApprovalFlow:
 
         await agent.run(_text_event("deploy prod", chat_id="oc_1"))
         pending = next(iter(approvals._store.values()))
-        executions.put(
-            pending.idempotency_key,
-            execution_status="executed",
-            result="cached deployment result",
-            payload_sha256=pending.payload_sha256,
+        previous = replace(pending, approval_id="previous_confirmation")
+        await agent.approval_engine.on_request(previous)
+        previous_outcome = await agent.approval_engine.on_decision(
+            previous.approval_id,
+            "approve",
+            expected_payload_sha256=previous.payload_sha256,
+            dispatch=agent.registry.dispatch,
         )
+        assert previous_outcome.status is ApprovalStatus.EXECUTED
+        assert ran == ["prod"]
 
         card, _ = client.cards[0]
         approval_id = _extract_approval_id(card)
@@ -1481,7 +1486,7 @@ class TestApprovalFlow:
         await agent.handle_card_action(_action_event(approval_id, "approve", chat_id="oc_1", payload_sha256=sha))
         await _drain(agent)
 
-        assert ran == []
+        assert ran == ["prod"]  # The retry uses the real prior execution without dispatching again.
         history = await store.get("oc_1")
         results = [
             part
@@ -1491,7 +1496,7 @@ class TestApprovalFlow:
             if isinstance(part, ToolResultPart) and part.tool_call_id == "c1"
         ]
         assert len(results) == 1
-        assert results[0].content == "cached deployment result"
+        assert results[0].content == "deployed to prod"
         assert "Awaiting your confirmation" not in str(results[0].content)
         assert len(backend.calls) == 2
         assert client.replies[-1][1] == "deployment complete"
@@ -1859,26 +1864,23 @@ class TestApprovalFlow:
         )
         assert await resumed.resume_authorization(authorization_ids[0], user={"open_id": "ou_other"}) == "forbidden"
         assert writes == []
-        assert await resumed.resume_authorization(authorization_ids[0], user={"open_id": "ou_tester"}) == "resumed"
+        status = await resumed.resume_authorization(authorization_ids[0], user={"open_id": "ou_tester"})
         if changed_payload:
-            assert writes == []  # The earlier approval covers prod, not the changed arguments.
+            assert status == "superseded"
+            assert writes == []  # The pending payload no longer matches its original assistant call.
             assert attempts == ["prod"]
-            assert len(approvals._store) == 1
-            confirmation = next(iter(approvals._store.values()))
-            assert confirmation.arguments == {"env": "staging"}
-            await resumed.handle_card_action(
-                _action_event(confirmation.approval_id, "approve", payload_sha256=confirmation.payload_sha256)
-            )
-            await _drain(resumed)
-            assert writes == ["staging"]
+            assert approvals._store == {}
+            assert resumed.backend.calls == []
+            assert client.replies  # The owner receives feedback about the stale request.
         else:
+            assert status == "resumed"
             assert writes == ["prod"]
             assert approvals._store == {}  # The exact same write was already confirmed before OAuth.
             assert len(client.cards) == 2  # Original confirmation and authorization, without a second confirmation.
+            assert client.replies[-1][1] == "deployment complete"
 
         assert await resumed.resume_authorization(authorization_ids[0], user={"open_id": "ou_tester"}) == "missing"
-        assert len(writes) == 1
-        assert client.replies[-1][1] == "deployment complete"
+        assert len(writes) == (0 if changed_payload else 1)
 
     async def test_resume_raises_still_responds(self):
         """handle_card_action must ACK immediately and the background resume must swallow its own errors."""

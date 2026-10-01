@@ -29,6 +29,7 @@ import time
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, AsyncIterator, Literal
+from uuid import uuid4
 
 from ..events.envelope import Event
 from . import approval as approval_flow
@@ -671,6 +672,7 @@ class AgentEngine:
                         )
                 if result.tool_calls and result.stop_reason == StopReason.TOOL_USE:
                     assistant = self._assistant_tool_message(result)
+                    current_tool_context().continuation_id = assistant.continuation_id
                     history.append(assistant)
                     await self.store.append(session_id, assistant)
                     active_tool_calls = result.tool_calls
@@ -736,7 +738,7 @@ class AgentEngine:
             content.append(TextPart(text=result.text))
         for call in result.tool_calls:
             content.append(ToolUsePart(id=call.id, name=call.name, arguments=parse_tool_arguments(call.arguments)))
-        return Message(role="assistant", content=content)
+        return Message(role="assistant", content=content, continuation_id=uuid4().hex)
 
     async def _dispatch_tool_calls(
         self, event: Event, session_id: str, history: list[Message], tool_calls: list[ToolCall], progress: _ProgressCard
@@ -824,7 +826,7 @@ class AgentEngine:
     async def _record_tool_result_part(
         self, session_id: str, history: list[Message], result_part: ToolResultPart
     ) -> None:
-        if _replace_tool_result(history, result_part.tool_call_id, result_part):
+        if _replace_tool_result(_originating_tool_messages(history), result_part.tool_call_id, result_part):
             await self.store.set(session_id, history)
             return
         tool_msg = Message(role="tool", content=[result_part])
@@ -839,7 +841,7 @@ class AgentEngine:
         tool_call_id: str,
         progress: _ProgressCard,
     ) -> str | None:
-        remaining = _tool_calls_after(history, tool_call_id)
+        remaining = _tool_calls_after(_originating_tool_messages(history), tool_call_id)
         if not remaining:
             return None
         return await self._dispatch_tool_calls(event, session_id, history, remaining, progress)
@@ -974,7 +976,7 @@ class AgentEngine:
         r"""为尚未写入 tool_result 的 tool_use 追加占位结果，保持历史符合工具调用协议。"""
         answered = {
             part.tool_call_id
-            for msg in history
+            for msg in _originating_tool_messages(history)
             if msg.role == "tool"
             for part in msg.content
             if isinstance(part, ToolResultPart)
@@ -1060,6 +1062,22 @@ class AgentEngine:
             yield text
 
         await self.client.stream_card(_one_token(), reply_to_message_id=message_id)  # type: ignore[union-attr]
+
+
+def _originating_tool_messages(history: list[Message]) -> list[Message]:
+    r"""Restrict reused tool ids to the current or persisted originating assistant batch."""
+    origin = current_tool_context().continuation_id
+    if not origin:
+        return history
+    for start, message in enumerate(history):
+        if message.role == "assistant" and message.continuation_id == origin:
+            end = start + 1
+            while end < len(history) and history[end].role == "tool":
+                end += 1
+            # The slice retains the same Message objects; result-part replacement mutates those objects,
+            # and the caller persists the full history, not this lookup slice.
+            return history[start:end]
+    return []
 
 
 def _message_text(message: Message) -> str:

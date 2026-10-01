@@ -144,12 +144,22 @@ async def request_authorization(
         created_at=int(time.time()),
         extra=_pending_progress_extra(progress),
     )
+    from .approval import original_continuation_id
+
+    origin = (
+        approved.extra.get("origin_continuation_id")
+        if approved is not None
+        else original_continuation_id(history, call)
+    )
+    if origin:
+        authorization.extra["origin_continuation_id"] = origin
     if approved is not None:
         # Only the approval decision path supplies this provenance. Persist it before delivering the OAuth card.
         authorization.extra["approved_tool_call"] = {
             "approval_id": approved.approval_id,
             "tool_name": approved.tool_name,
             "tool_call_id": approved.tool_call_id,
+            "origin_continuation_id": approved.extra.get("origin_continuation_id"),
             "payload_sha256": approved.payload_sha256,
             "owner_user_keys": list(approved.owner_user_keys),
         }
@@ -163,30 +173,36 @@ async def request_authorization(
         return False
     try:
         await agent.authorizations.put(authorization)
+    except asyncio.CancelledError:
+        await asyncio.shield(cancel_pending_authorization(agent, authorization.authorization_id))
+        raise
     except Exception:  # noqa: BLE001 - no persisted pending means callback cannot resume safely
         logger.warning("failed to persist pending authorization", exc_info=True)
         return False
-    auth_card_message_id = await progress.replace_with_card(card) if progress is not None else None
-    if not auth_card_message_id:
-        try:
+    try:
+        auth_card_message_id = await progress.replace_with_card(card) if progress is not None else None
+        if not auth_card_message_id:
             response = await agent.client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
-        except Exception:  # noqa: BLE001 - undeliverable card -> cancel the pending, then fall back
-            logger.warning(
-                "failed to send auth card; cancelling pending %s", authorization.authorization_id, exc_info=True
-            )
-            try:
-                await agent.authorizations.complete(authorization.authorization_id, outcome="cancelled")
-            except Exception:  # noqa: BLE001 - best-effort cleanup; an uncancelled pending will TTL-expire
-                logger.warning(
-                    "failed to cancel pending authorization %s after card send failure",
-                    authorization.authorization_id,
-                    exc_info=True,
-                )
-            return False
-        auth_card_message_id = _message_id_from_response(response)
-    if auth_card_message_id:
-        await persist_authorization_card_message_id(agent, authorization, auth_card_message_id)
+            auth_card_message_id = _message_id_from_response(response)
+        if auth_card_message_id:
+            await persist_authorization_card_message_id(agent, authorization, auth_card_message_id)
+    except asyncio.CancelledError:
+        await asyncio.shield(cancel_pending_authorization(agent, authorization.authorization_id))
+        raise
+    except Exception:  # noqa: BLE001 - undeliverable card -> cancel the pending, then fall back
+        logger.warning("failed to send auth card; cancelling pending %s", authorization.authorization_id, exc_info=True)
+        await cancel_pending_authorization(agent, authorization.authorization_id)
+        return False
     return True
+
+
+async def cancel_pending_authorization(agent: Any, authorization_id: str) -> None:
+    r"""Cancel only an awaiting authorization, preserving already claimed or unknown executions."""
+    try:
+        if await agent.authorizations.claim(authorization_id) is ClaimResult.CLAIMED:
+            await agent.authorizations.complete(authorization_id, outcome="cancelled")
+    except Exception:  # noqa: BLE001 - cleanup should not mask delivery failure or turn cancellation
+        logger.warning("failed to cancel pending authorization %s", authorization_id, exc_info=True)
 
 
 async def persist_authorization_card_message_id(
@@ -245,6 +261,17 @@ async def try_send_auth_card(
 
 
 async def resume_authorization(agent: Any, authorization_id: str, *, user: Mapping[str, Any] | None = None) -> str:
+    r"""Serialize OAuth provenance validation, tool execution, and history continuation with session resets."""
+    authorization = await agent.authorizations.get(authorization_id)
+    if authorization is None:
+        return "missing"
+    async with agent._session_lock(authorization.session_id):
+        return await _resume_authorization_locked(agent, authorization_id, user=user)
+
+
+async def _resume_authorization_locked(
+    agent: Any, authorization_id: str, *, user: Mapping[str, Any] | None = None
+) -> str:
     r"""
     OAuth callback 成功保存用户 token 后，恢复一次挂起授权对应的原工具调用。
 
@@ -274,10 +301,23 @@ async def resume_authorization(agent: Any, authorization_id: str, *, user: Mappi
             )
         return claim.value
 
+    from .approval import has_original_tool_call
+
+    history = await agent.store.get(authorization.session_id)
+    if not has_original_tool_call(history, authorization):
+        # This callback owns the claim and has not dispatched anything, so discarding it is safe.
+        await agent.authorizations.complete(authorization_id, outcome="cancelled")
+        await remove_authorization_card(agent, authorization, card=authorization_expired_card())
+        await notify_authorization_resume_problem(
+            agent, authorization, "授权已完成，但原请求的上下文已过期或被替代。请重新发起请求。"
+        )
+        return "superseded"
+
     await remove_authorization_card(agent, authorization)
 
     resume_event = event_from_pending_authorization(authorization)
     context = agent._tool_context(resume_event)
+    context.continuation_id = authorization.extra.get("origin_continuation_id")
     if authorization.owner_user_keys:
         context.user = user_from_identity_keys(authorization.owner_user_keys)
     with use_tool_context(context):
@@ -291,33 +331,29 @@ async def resume_authorization(agent: Any, authorization_id: str, *, user: Mappi
                     name=authorization.tool_name,
                     arguments=json.dumps(authorization.arguments, ensure_ascii=False),
                 )
-                async with agent._session_lock(authorization.session_id):
-                    history = await agent.store.get(authorization.session_id)
-                    pending = await agent._request_approval(
-                        resume_event, authorization.session_id, history, call, progress
+                pending = await agent._request_approval(resume_event, authorization.session_id, history, call, progress)
+                if pending:
+                    await agent._record_tool_result_part(
+                        authorization.session_id,
+                        history,
+                        ToolResultPart(
+                            tool_call_id=authorization.tool_call_id,
+                            content=AWAITING_APPROVAL_NOTE,
+                        ),
                     )
-                    if pending:
-                        await agent._record_tool_result_part(
-                            authorization.session_id,
-                            history,
-                            ToolResultPart(
-                                tool_call_id=authorization.tool_call_id,
-                                content=AWAITING_APPROVAL_NOTE,
-                            ),
-                        )
+                else:
+                    # The ordinary approval path records a tool error and continues the turn on delivery failure.
+                    suspension = await agent._continue_tool_calls_after(
+                        resume_event,
+                        authorization.session_id,
+                        history,
+                        authorization.tool_call_id,
+                        progress,
+                    )
+                    if suspension:
+                        await progress.finalize(suspension_progress_note(suspension))
                     else:
-                        # The ordinary approval path records a tool error and continues the turn on delivery failure.
-                        suspension = await agent._continue_tool_calls_after(
-                            resume_event,
-                            authorization.session_id,
-                            history,
-                            authorization.tool_call_id,
-                            progress,
-                        )
-                        if suspension:
-                            await progress.finalize(suspension_progress_note(suspension))
-                        else:
-                            await agent._loop(resume_event, authorization.session_id, history, progress=progress)
+                        await agent._loop(resume_event, authorization.session_id, history, progress=progress)
                 await agent.authorizations.complete(authorization_id, outcome="resumed" if pending else "failed")
                 if pending:
                     await progress.finalize(suspension_progress_note("approval"))
@@ -349,20 +385,18 @@ async def resume_authorization(agent: Any, authorization_id: str, *, user: Mappi
                 content=content,
                 is_error=is_error,
             )
-            async with agent._session_lock(authorization.session_id):
-                history = await agent.store.get(authorization.session_id)
-                await agent._record_tool_result_part(authorization.session_id, history, result_part)
-                suspension = await agent._continue_tool_calls_after(
-                    resume_event,
-                    authorization.session_id,
-                    history,
-                    authorization.tool_call_id,
-                    progress,
-                )
-                if suspension:
-                    await progress.finalize(suspension_progress_note(suspension))
-                else:
-                    await agent._loop(resume_event, authorization.session_id, history, progress=progress)
+            await agent._record_tool_result_part(authorization.session_id, history, result_part)
+            suspension = await agent._continue_tool_calls_after(
+                resume_event,
+                authorization.session_id,
+                history,
+                authorization.tool_call_id,
+                progress,
+            )
+            if suspension:
+                await progress.finalize(suspension_progress_note(suspension))
+            else:
+                await agent._loop(resume_event, authorization.session_id, history, progress=progress)
             await agent.authorizations.complete(authorization_id, outcome="failed" if is_error else "executed")
             return "resumed"
         except Exception:  # noqa: BLE001 - callback background failures should be reported in chat and logged
@@ -390,6 +424,8 @@ def _has_prior_approval(authorization: PendingAuthorization) -> bool:
         and bool(approved.get("approval_id"))
         and approved.get("tool_name") == authorization.tool_name
         and approved.get("tool_call_id") == authorization.tool_call_id
+        and bool(authorization.extra.get("origin_continuation_id"))
+        and approved.get("origin_continuation_id") == authorization.extra.get("origin_continuation_id")
         and approved.get("payload_sha256") == payload_sha256(authorization.arguments)
         and approved.get("owner_user_keys") == list(authorization.owner_user_keys)
     )

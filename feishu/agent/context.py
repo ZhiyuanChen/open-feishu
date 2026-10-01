@@ -68,6 +68,7 @@ class ToolContext:
     memory_store: Any | None = None
     memory_namespace: str | None = None
     timezone: str | Callable[..., Any] | None = None
+    continuation_id: str | None = None
 
     async def as_user(self) -> Any | None:
         r"""解析当前请求用户的用户态飞书客户端；无提供方 / 无授权时返回 `None`。"""

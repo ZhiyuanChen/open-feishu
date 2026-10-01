@@ -269,12 +269,19 @@ def _part_from_dict(data: dict[str, Any]) -> Any:
 
 def message_to_dict(message: Message) -> dict[str, Any]:
     r"""将 [feishu.agent.llm.Message][] 序列化为可 JSON 化的字典。"""
-    return {"role": message.role, "content": [_part_to_dict(part) for part in message.content]}
+    data: dict[str, Any] = {"role": message.role, "content": [_part_to_dict(part) for part in message.content]}
+    if message.continuation_id is not None:
+        data["continuation_id"] = message.continuation_id
+    return data
 
 
 def message_from_dict(data: dict[str, Any]) -> Message:
     r"""从 [feishu.agent.persistence.message_to_dict][] 的产物还原 [feishu.agent.llm.Message][]。"""
-    return Message(role=data["role"], content=[_part_from_dict(part) for part in data.get("content", [])])
+    return Message(
+        role=data["role"],
+        content=[_part_from_dict(part) for part in data.get("content", [])],
+        continuation_id=data.get("continuation_id"),
+    )
 
 
 def approval_to_dict(approval: PendingApproval) -> dict[str, Any]:
@@ -551,23 +558,25 @@ class SqlitePendingApprovalStore:
     async def update(self, approval_id: str, mutator: Callable[[PendingApproval], tuple[T, PendingApproval]]) -> T:
         r"""以 compare-and-swap 方式原子更新一次审批：`mutator(旧值)` 返回 `(返回值, 新值)`。"""
         async with self._lock:
-            approval = self._load_locked(approval_id)
-            if approval is None:
-                raise KeyError(approval_id)
-            value, updated = mutator(approval)
-            created_at = updated.created_at if updated.created_at is not None else _now()
-            self._db.execute(
-                "UPDATE approvals SET state = ?, payload_sha256 = ?, created_at = ?, data = ? WHERE approval_id = ?",
-                (
-                    updated.state,
-                    updated.payload_sha256,
-                    created_at,
-                    json.dumps(approval_to_dict(updated), ensure_ascii=False),
-                    approval_id,
-                ),
-            )
-            self._db.commit()
-            return value
+            with self._db:
+                self._db.execute("BEGIN IMMEDIATE")
+                approval = self._load_locked(approval_id)
+                if approval is None:
+                    raise KeyError(approval_id)
+                value, updated = mutator(approval)
+                created_at = updated.created_at if updated.created_at is not None else _now()
+                self._db.execute(
+                    "UPDATE approvals SET state = ?, payload_sha256 = ?, created_at = ?, data = ? "
+                    "WHERE approval_id = ?",
+                    (
+                        updated.state,
+                        updated.payload_sha256,
+                        created_at,
+                        json.dumps(approval_to_dict(updated), ensure_ascii=False),
+                        approval_id,
+                    ),
+                )
+                return value
 
     async def purge_expired(self) -> int:
         r"""删除所有已过期的审批记录，返回删除数量。"""
@@ -716,22 +725,23 @@ class SqlitePendingAuthorizationStore:
     ) -> T:
         r"""以 compare-and-swap 方式原子更新一次授权：`mutator(旧值)` 返回 `(返回值, 新值)`。"""
         async with self._lock:
-            authorization = self._load_locked(authorization_id)
-            if authorization is None:
-                raise KeyError(authorization_id)
-            value, updated = mutator(authorization)
-            created_at = updated.created_at if updated.created_at is not None else _now()
-            self._db.execute(
-                "UPDATE authorizations SET state = ?, created_at = ?, data = ? WHERE authorization_id = ?",
-                (
-                    updated.state,
-                    created_at,
-                    json.dumps(authorization_to_dict(updated), ensure_ascii=False),
-                    authorization_id,
-                ),
-            )
-            self._db.commit()
-            return value
+            with self._db:
+                self._db.execute("BEGIN IMMEDIATE")
+                authorization = self._load_locked(authorization_id)
+                if authorization is None:
+                    raise KeyError(authorization_id)
+                value, updated = mutator(authorization)
+                created_at = updated.created_at if updated.created_at is not None else _now()
+                self._db.execute(
+                    "UPDATE authorizations SET state = ?, created_at = ?, data = ? WHERE authorization_id = ?",
+                    (
+                        updated.state,
+                        created_at,
+                        json.dumps(authorization_to_dict(updated), ensure_ascii=False),
+                        authorization_id,
+                    ),
+                )
+                return value
 
     async def purge_expired(self) -> int:
         r"""删除所有已过期的授权记录，返回删除数量。"""

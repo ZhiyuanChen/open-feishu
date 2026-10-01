@@ -146,17 +146,26 @@ def derive_approval_id(*, scope: str, operation: str, idempotency_key: str, name
     return str(uuid.uuid5(_ID_NAMESPACE, seed))
 
 
-def derive_idempotency_key(*, message_id: str, payload_sha256: str, namespace: str = "feishu") -> str:
+def derive_idempotency_key(
+    *,
+    message_id: str,
+    payload_sha256: str,
+    namespace: str = "feishu",
+    tool_name: str | None = None,
+    tool_call_id: str | None = None,
+) -> str:
     r"""
     由触发消息 id 与负载摘要确定性地派生幂等键。
 
-    将「哪条消息」与「何种负载」绑定为一个稳定键：同一条消息重复触发同一负载只会产生一次执行，而负载一旦
-    变化幂等键随之改变。`namespace` 同样由调用方提供以隔离产品 id 空间。
+    将「哪条消息」与「何种负载」绑定为一个稳定键。提供工具名与调用 id 时进一步隔离同一消息里的不同工具和
+    不同逻辑调用。负载一旦变化幂等键随之改变。`namespace` 同样由调用方提供以隔离产品 id 空间。
 
     Args:
         message_id: 触发该写操作的飞书消息 id。
         payload_sha256: 负载的稳定摘要，见 [feishu.agent.integrity.payload_sha256][]。
         namespace: 调用方命名空间。默认为 `"feishu"`。
+        tool_name: 可选的工具身份，避免不同工具的相同参数互相重放。
+        tool_call_id: 可选的逻辑调用身份，允许同一消息有多个相同工具调用。
 
     Returns:
         确定性的 UUID5 字符串。
@@ -167,4 +176,6 @@ def derive_idempotency_key(*, message_id: str, payload_sha256: str, namespace: s
         True
     """
     seed = f"{namespace}:idempotency:{message_id}:{payload_sha256}"
+    if tool_name is not None or tool_call_id is not None:
+        seed = f"{namespace}:idempotency:v2:{stable_hash([message_id, tool_name, tool_call_id, payload_sha256])}"
     return str(uuid.uuid5(_ID_NAMESPACE, seed))

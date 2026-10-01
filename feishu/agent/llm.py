@@ -22,7 +22,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, AsyncIterator, Literal, Protocol, Sequence, Union, runtime_checkable
 
@@ -113,6 +113,8 @@ class Message:
 
     role: Role
     content: list[ContentPart]
+    # Internal durable identity for an assistant tool batch; never forwarded to a model provider.
+    continuation_id: str | None = field(default=None, compare=False, repr=False)
 
 
 @dataclass(slots=True)
