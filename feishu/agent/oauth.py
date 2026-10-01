@@ -24,6 +24,7 @@ from __future__ import annotations
 import asyncio
 import html
 import inspect
+import json
 import logging
 import time
 from collections.abc import Callable, Mapping, Sequence
@@ -34,16 +35,18 @@ from ..auth import OAuthStateSigner, UserTokenProvider, user_from_identity_keys,
 from ..events.envelope import Event
 from ._callbacks import accepts_positional_arguments
 from ._flow import (
+    AWAITING_APPROVAL_NOTE,
     authorization_card_message_id,
     authorization_complete_card,
     authorization_expired_card,
     suspension_progress_note,
 )
 from .context import current_tool_context, use_tool_context
+from .integrity import payload_sha256
 from .llm import Message, ToolCall, ToolResultPart, parse_tool_arguments
 from .progress import _message_id_from_response, _pending_progress_extra, _progress_message_id, _ProgressCard
 from .result import ToolOutcome, ToolResult, coerce_tool_result
-from .session import ClaimResult, PendingAuthorization
+from .session import ClaimResult, PendingApproval, PendingAuthorization
 from .tools import Tool
 
 logger = logging.getLogger("feishu")
@@ -112,6 +115,8 @@ async def request_authorization(
     call: ToolCall,
     result: ToolResult,
     progress: _ProgressCard | None = None,
+    *,
+    approved: PendingApproval | None = None,
 ) -> bool:
     r"""
     为缺少用户授权的工具创建挂起授权并发送授权卡片；返回是否已挂起本轮。
@@ -139,6 +144,15 @@ async def request_authorization(
         created_at=int(time.time()),
         extra=_pending_progress_extra(progress),
     )
+    if approved is not None:
+        # Only the approval decision path supplies this provenance. Persist it before delivering the OAuth card.
+        authorization.extra["approved_tool_call"] = {
+            "approval_id": approved.approval_id,
+            "tool_name": approved.tool_name,
+            "tool_call_id": approved.tool_call_id,
+            "payload_sha256": approved.payload_sha256,
+            "owner_user_keys": list(approved.owner_user_keys),
+        }
     authorize_url = build_authorize_url(agent, initiator, authorization.scopes, authorization)
     if not authorize_url:
         return False
@@ -270,6 +284,44 @@ async def resume_authorization(agent: Any, authorization_id: str, *, user: Mappi
         try:
             progress = _ProgressCard(agent, resume_event)
             progress.reuse(_progress_message_id(authorization.extra))
+            tool = agent.registry.get(authorization.tool_name)
+            if tool.requires_approval and not _has_prior_approval(authorization):
+                call = ToolCall(
+                    id=authorization.tool_call_id,
+                    name=authorization.tool_name,
+                    arguments=json.dumps(authorization.arguments, ensure_ascii=False),
+                )
+                async with agent._session_lock(authorization.session_id):
+                    history = await agent.store.get(authorization.session_id)
+                    pending = await agent._request_approval(
+                        resume_event, authorization.session_id, history, call, progress
+                    )
+                    if pending:
+                        await agent._record_tool_result_part(
+                            authorization.session_id,
+                            history,
+                            ToolResultPart(
+                                tool_call_id=authorization.tool_call_id,
+                                content=AWAITING_APPROVAL_NOTE,
+                            ),
+                        )
+                    else:
+                        # The ordinary approval path records a tool error and continues the turn on delivery failure.
+                        suspension = await agent._continue_tool_calls_after(
+                            resume_event,
+                            authorization.session_id,
+                            history,
+                            authorization.tool_call_id,
+                            progress,
+                        )
+                        if suspension:
+                            await progress.finalize(suspension_progress_note(suspension))
+                        else:
+                            await agent._loop(resume_event, authorization.session_id, history, progress=progress)
+                await agent.authorizations.complete(authorization_id, outcome="resumed" if pending else "failed")
+                if pending:
+                    await progress.finalize(suspension_progress_note("approval"))
+                return "resumed"
             await progress.step(
                 authorization.tool_name,
                 description=agent._tool_description(authorization.tool_name),
@@ -328,6 +380,19 @@ async def resume_authorization(agent: Any, authorization_id: str, *, user: Mappi
             except Exception:  # noqa: BLE001 - nothing more to do; logs already have the underlying failure
                 logger.debug("could not send authorization resume failure", exc_info=True)
             return "failed"
+
+
+def _has_prior_approval(authorization: PendingAuthorization) -> bool:
+    r"""An OAuth continuation may reuse only its persisted owner's approval of this exact tool call and payload."""
+    approved = authorization.extra.get("approved_tool_call")
+    return (
+        isinstance(approved, Mapping)
+        and bool(approved.get("approval_id"))
+        and approved.get("tool_name") == authorization.tool_name
+        and approved.get("tool_call_id") == authorization.tool_call_id
+        and approved.get("payload_sha256") == payload_sha256(authorization.arguments)
+        and approved.get("owner_user_keys") == list(authorization.owner_user_keys)
+    )
 
 
 async def notify_authorization_resume_problem(agent: Any, authorization: PendingAuthorization, text: str) -> None:

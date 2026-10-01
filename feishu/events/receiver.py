@@ -154,8 +154,9 @@ def create_event_route(
     5. 其余正常事件：当配置了 `encrypt_key` 时，签名必须存在、时间戳在
        `max_age_seconds` 时间窗内且校验通过；缺失签名或时间戳过期将返回 401
        （防止 Webhook 注入与重放攻击绕过）。
-    6. 通过 `seen_store` 去重（默认即开启），其余事件以后台任务（BackgroundTask）
-       异步分发，端点立即返回 `200 {}`。
+    6. 通过 `seen_store` 去重（默认即开启）。`card.action.trigger` 同步分发并返回
+       处理函数的 `{toast, card}`；其余事件以后台任务（BackgroundTask）异步分发，
+       端点立即返回 `200 {}`。
 
     Args:
         dispatcher: 事件分发器。
@@ -214,6 +215,10 @@ def create_event_route(
         if store is not None and not await claim(store, event.event_id):
             return JSONResponse({})
 
+        if event.event_type == "card.action.trigger":
+            handler_result = await dispatcher.dispatch(event)
+            return JSONResponse(handler_result if handler_result is not None else {})
+
         return JSONResponse({}, background=BackgroundTask(dispatcher.dispatch, event))
 
     return Route(path, endpoint, methods=["POST"])
@@ -232,8 +237,8 @@ def create_card_route(
     r"""
     创建处理飞书卡片交互回调的 Starlette POST 路由。
 
-    与 [create_event_route][feishu.events.receiver.create_event_route] 不同，本路由会
-    **同步**等待分发器执行（不使用后台任务），并将处理函数返回的 `{toast, card}` 字典
+    本路由专用于卡片交互，始终**同步**等待分发器执行（不使用后台任务），
+    并将处理函数返回的 `{toast, card}` 字典
     作为同步 JSON 响应返回，以满足飞书对卡片交互约 3 秒的响应时限。当处理函数返回 `None` 时，
     响应为 `200 {}`。
 

@@ -5,6 +5,9 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 
+import pytest
+from starlette.testclient import TestClient
+
 from feishu.agent import Agent
 from feishu.agent.loop import AgentEngine
 from feishu.agent.tools import ToolRegistry
@@ -118,3 +121,30 @@ def test_agent_asgi_app_exposes_card_callback_route(tmp_path: Path) -> None:
     )
 
     assert "/feishu/card" in {route.path for route in agent.asgi_app().routes}
+
+
+@pytest.mark.parametrize(
+    ("server", "callback_path"),
+    [
+        ({}, "/feishu/card"),
+        ({}, "/feishu/event"),
+        ({"card_path": "/callbacks/card"}, "/callbacks/card"),
+        ({"card_path": "/feishu/event"}, "/feishu/event"),
+    ],
+)
+def test_agent_http_card_callback_returns_toast(server: dict[str, str], callback_path: str) -> None:
+    agent = Agent(
+        {"server": server},
+        engine=AgentEngine(backend=FakeLlmBackend([]), registry=ToolRegistry()),
+    )
+    payload = {
+        "schema": "2.0",
+        "header": {"event_type": "card.action.trigger", "event_id": "card_1"},
+        "event": {"action": {"value": {"decision": "approve"}}},
+    }
+
+    with TestClient(agent.asgi_app()) as client:
+        response = client.post(callback_path, json=payload)
+
+    assert response.status_code == 200
+    assert response.json() == {"toast": {"type": "info", "content": "没有待处理的确认请求"}}

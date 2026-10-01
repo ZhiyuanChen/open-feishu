@@ -788,6 +788,7 @@ class TestAgentLoop:
         reg = ToolRegistry()
         user_tokens = _DenyingScopeProvider()
         store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
         authorizations = InMemoryPendingAuthorizationStore()
         calls = []
 
@@ -803,7 +804,12 @@ class TestAgentLoop:
             requires_approval=True,
             auth_scopes=("calendar:calendar",),
         )
-        backend = FakeLlmBackend([tool_turn(index=0, id="c1", name="create_event", arguments_json="{}")])
+        backend = FakeLlmBackend(
+            [
+                tool_turn(index=0, id="c1", name="create_event", arguments_json="{}"),
+                text_turn("event created"),
+            ]
+        )
         seen_authorizations = []
 
         def authorize_url_builder(user, scopes, authorization=None):
@@ -815,8 +821,8 @@ class TestAgentLoop:
             registry=reg,
             store=store,
             client=client,
+            approvals=approvals,
             authorizations=authorizations,
-            approval_card_builder=lambda _approval: {"approval": True},
             auth_card_builder=lambda url: {"auth": url},
             authorize_url_builder=authorize_url_builder,
             user_tokens=user_tokens,
@@ -831,6 +837,112 @@ class TestAgentLoop:
         assert "approval" not in client.sent_cards[0][1]
         pending = next(iter(authorizations._store.values()))
         assert seen_authorizations == [({"open_id": "ou_tester"}, ("calendar:calendar",), pending.authorization_id)]
+
+        assert await agent.resume_authorization(pending.authorization_id, user={"open_id": "ou_other"}) == "forbidden"
+        assert calls == []
+        assert await agent.resume_authorization(pending.authorization_id, user={"open_id": "ou_tester"}) == "resumed"
+
+        assert calls == []  # OAuth consent does not confirm this write.
+        assert len(backend.calls) == 1
+        assert len(approvals._store) == 1
+        confirmation = next(iter(approvals._store.values()))
+        assert confirmation.tool_name == "create_event"
+        assert confirmation.owner_user_keys == ("open_id:ou_tester",)
+        history = await store.get("oc_1")
+        results = [p for m in history if m.role == "tool" for p in m.content if isinstance(p, ToolResultPart)]
+        assert len(results) == 1
+        assert "Awaiting your confirmation" in results[0].content
+
+        assert await agent.resume_authorization(pending.authorization_id, user={"open_id": "ou_tester"}) == "missing"
+        assert len(approvals._store) == 1
+        await agent.handle_card_action(
+            _action_event(
+                confirmation.approval_id,
+                "approve",
+                open_id="ou_other",
+                payload_sha256=confirmation.payload_sha256,
+            )
+        )
+        await _drain(agent)
+        assert calls == []
+
+        action = _action_event(confirmation.approval_id, "approve", payload_sha256=confirmation.payload_sha256)
+        await agent.handle_card_action(action)
+        await agent.handle_card_action(action)
+        await _drain(agent)
+        assert calls == ["create_event"]
+        assert client.replies[-1][1] == "event created"
+
+    async def test_authorization_resume_reports_confirmation_delivery_failure(self):
+        client = _LoopRecordingClient()
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        authorizations = InMemoryPendingAuthorizationStore()
+        registry = ToolRegistry()
+        writes = []
+        reads = []
+
+        async def create_event():
+            writes.append("created")
+            return "created"
+
+        async def check_calendar():
+            reads.append("checked")
+            return "calendar checked"
+
+        registry.register(
+            "create_event",
+            create_event,
+            input_schema={"type": "object"},
+            description="create event",
+            requires_approval=True,
+            auth_scopes=("calendar:calendar",),
+        )
+        registry.register(
+            "check_calendar", check_calendar, input_schema={"type": "object"}, description="check calendar"
+        )
+        backend = FakeLlmBackend(
+            [
+                tool_turn(index=0, id="c1", name="create_event", arguments_json="{}")[:-1]
+                + tool_turn(index=1, id="c2", name="check_calendar", arguments_json="{}"),
+                text_turn("I could not send the confirmation, so the event was not created."),
+            ]
+        )
+        agent = Agent(
+            backend=backend,
+            registry=registry,
+            client=client,
+            store=store,
+            approvals=approvals,
+            authorizations=authorizations,
+            user_tokens=_DenyingScopeProvider(),
+            auth_card_builder=lambda url: {"auth": url},
+            authorize_url_builder=lambda user, scopes, authorization: "https://auth.example/authorize",
+        )
+        await agent.run(_text_event("create an event", chat_id="oc_1", open_id="ou_tester"))
+        pending = next(iter(authorizations._store.values()))
+
+        async def fail_confirmation_send(*args, **kwargs):
+            raise RuntimeError("confirmation delivery failed")
+
+        client.im.send = fail_confirmation_send
+        status = await agent.resume_authorization(pending.authorization_id, user={"open_id": "ou_tester"})
+
+        assert client.replies == [("om_in", "I could not send the confirmation, so the event was not created.", "text")]
+        assert status == "resumed"
+        assert writes == []
+        assert reads == ["checked"]
+        assert approvals._store == {}
+        assert authorizations._store == {}
+        results = {
+            part.tool_call_id: part
+            for message in backend.calls[-1]["messages"]
+            for part in message.content
+            if isinstance(part, ToolResultPart)
+        }
+        assert results["c1"].is_error
+        assert "Awaiting" not in results["c1"].content
+        assert results["c2"].content == "calendar checked"
 
     async def test_authorization_resume_requires_callback_user(self):
         client = _LoopRecordingClient()
@@ -1668,6 +1780,105 @@ class TestApprovalFlow:
         history = await store.get("oc_1")
         results = [p for m in history if m.role == "tool" for p in m.content if isinstance(p, ToolResultPart)]
         assert any("Awaiting user authorization" in p.content for p in results)
+
+    @pytest.mark.parametrize("changed_payload", (False, True))
+    async def test_authorization_resume_keeps_prior_confirmation_bound_to_payload(
+        self, tmp_path, request, changed_payload
+    ):
+        client = _ApprovalRecordingClient()
+        store = InMemorySessionStore()
+        approvals = InMemoryPendingApprovalStore()
+        db_path = tmp_path / "auth.db"
+        authorizations = SqlitePendingAuthorizationStore(db_path)
+        request.addfinalizer(authorizations._db.close)
+        reg = ToolRegistry()
+        authorized = False
+        attempts = []
+        writes = []
+        authorization_ids = []
+
+        async def deploy(env):
+            attempts.append(env)
+            if not authorized:
+                return ToolResult(
+                    ToolOutcome.NEEDS_USER_AUTH,
+                    content="auth required",
+                    auth_scopes=("calendar:calendar",),
+                    is_error=True,
+                )
+            writes.append(env)
+            return f"deployed to {env}"
+
+        def authorize_url_builder(user, scopes, authorization):
+            authorization_ids.append(authorization.authorization_id)
+            return "https://auth.example/authorize"
+
+        reg.register("deploy", deploy, input_schema=DEPLOY_SCHEMA, description="deploy", requires_approval=True)
+        agent = Agent(
+            backend=FakeLlmBackend([tool_turn(index=0, id="c1", name="deploy", arguments_json='{"env":"prod"}')]),
+            registry=reg,
+            store=store,
+            client=client,
+            approvals=approvals,
+            authorizations=authorizations,
+            auth_card_builder=lambda url: {"auth": url},
+            authorize_url_builder=authorize_url_builder,
+        )
+        await agent.run(_text_event("deploy prod", chat_id="oc_1"))
+        approval_card = client.cards[0][0]
+        action = _action_event(
+            _extract_approval_id(approval_card),
+            "approve",
+            payload_sha256=_extract_payload_sha256(approval_card),
+        )
+        await agent.handle_card_action(action)
+        await _drain(agent)
+        assert attempts == ["prod"]
+        assert writes == []
+        assert approvals._store == {}
+        assert len(authorization_ids) == 1
+
+        # A fresh engine and store connection must recover the prior owner's confirmation from persisted state.
+        authorized = True
+        restored_authorizations = SqlitePendingAuthorizationStore(db_path)
+        request.addfinalizer(restored_authorizations._db.close)
+        if changed_payload:
+
+            def change_arguments(pending):
+                pending.arguments = {"env": "staging"}
+                return None, pending
+
+            await restored_authorizations.update(authorization_ids[0], change_arguments)
+        resumed = Agent(
+            backend=FakeLlmBackend([text_turn("deployment complete")]),
+            registry=reg,
+            store=store,
+            client=client,
+            approvals=approvals,
+            authorizations=restored_authorizations,
+        )
+        assert await resumed.resume_authorization(authorization_ids[0], user={"open_id": "ou_other"}) == "forbidden"
+        assert writes == []
+        assert await resumed.resume_authorization(authorization_ids[0], user={"open_id": "ou_tester"}) == "resumed"
+        if changed_payload:
+            assert writes == []  # The earlier approval covers prod, not the changed arguments.
+            assert attempts == ["prod"]
+            assert len(approvals._store) == 1
+            confirmation = next(iter(approvals._store.values()))
+            assert confirmation.arguments == {"env": "staging"}
+            await resumed.handle_card_action(
+                _action_event(confirmation.approval_id, "approve", payload_sha256=confirmation.payload_sha256)
+            )
+            await _drain(resumed)
+            assert writes == ["staging"]
+        else:
+            assert writes == ["prod"]
+            assert approvals._store == {}  # The exact same write was already confirmed before OAuth.
+            assert len(client.cards) == 2  # Original confirmation and authorization, without a second confirmation.
+
+        assert await resumed.resume_authorization(authorization_ids[0], user={"open_id": "ou_tester"}) == "missing"
+        assert len(writes) == 1
+        assert client.replies[-1][1] == "deployment complete"
 
     async def test_resume_raises_still_responds(self):
         """handle_card_action must ACK immediately and the background resume must swallow its own errors."""

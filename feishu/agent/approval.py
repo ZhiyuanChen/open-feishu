@@ -608,8 +608,19 @@ async def decide_and_resume(
                         auth_scopes=tuple(outcome.auth_scopes),
                         is_error=True,
                     )
-                    if await agent._request_authorization(
-                        resume_event, approval.session_id, [], call, auth_result, progress
+                    from .oauth import request_authorization
+
+                    if await request_authorization(
+                        agent,
+                        resume_event,
+                        approval.session_id,
+                        [],
+                        call,
+                        auth_result,
+                        progress,
+                        approved=(
+                            approval if decision == "approve" and outcome.status == ApprovalStatus.FAILED else None
+                        ),
                     ):
                         result_part = ToolResultPart(
                             tool_call_id=approval.tool_call_id,

@@ -89,6 +89,7 @@ HTTP 后端会暴露：
 | 路径 | 用途 |
 | --- | --- |
 | `/feishu/event` | 飞书事件 Request URL，处理消息事件与卡片回调。 |
+| `/feishu/card` | 独立卡片回调 URL，同步返回处理函数的 toast/card。 |
 | `/health` | 健康检查。 |
 | `/oauth/callback` | 用户 OAuth 回调；配置 `oauth.public_url` 后启用。 |
 
@@ -108,6 +109,8 @@ async def query_status(service: str) -> dict:
 ```
 
 注册表传给 `Agent(config, registry=registry)` 后，模型即可在对话中调用这些工具。写操作如果需要人工确认，应使用底层 [feishu.agent.tools.Tool][] 的审批能力，或复用内置工具 bundle 中已经标记审批语义的工具。
+
+OAuth 授权与工具审批是独立步骤：取得用户授权不会自动批准写操作；要求审批的工具仍须经过确认。
 
 内置办公工具通过 `toolkits` 启用：
 
