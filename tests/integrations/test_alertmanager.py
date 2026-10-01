@@ -293,6 +293,19 @@ def test_webhook_requires_alertmanager_capability(gateway_client) -> None:
     assert allowed.status_code == 200
 
 
+def test_empty_revision_file_does_not_break_the_store(tmp_path) -> None:
+    path = tmp_path / "messages.json"
+    alerts = tmp_path / "messages.json.alerts"
+    alerts.write_text("")
+
+    store = JsonFileAlertmanagerStore(path)
+    assert store.get_alert_revisions("event") == {}
+    store.set_alert_revisions("event", {"fp": (1.5, 0)})
+
+    assert JsonFileAlertmanagerStore(path).get_alert_revisions("event") == {"fp": (1.5, 0)}
+    assert alerts.read_text().strip()
+
+
 def test_group_status_does_not_regress(gateway_client, tmp_path) -> None:
     config = GatewayConfig(
         app_id="cli_test",

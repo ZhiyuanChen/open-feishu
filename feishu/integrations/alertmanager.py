@@ -43,6 +43,8 @@ from ..gateway.notifications import (
     EventMessageStore,
     InMemoryEventMessageStore,
     JsonFileEventMessageStore,
+    _read_json_object,
+    _write_json,
     upsert_interactive_card,
 )
 
@@ -107,17 +109,14 @@ class JsonFileAlertmanagerStore(JsonFileEventMessageStore):
         with self._lock:
             state = self._read_alert_revisions()
             state[event_id] = dict(revisions)
-            self._alerts_path.parent.mkdir(parents=True, exist_ok=True)
             serializable = {
                 group: {fingerprint: [revision[0], revision[1]] for fingerprint, revision in alerts.items()}
                 for group, alerts in state.items()
             }
-            self._alerts_path.write_text(json.dumps(serializable, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+            _write_json(self._alerts_path, serializable)
 
     def _read_alert_revisions(self) -> dict[str, _AlertRevisions]:
-        if not self._alerts_path.exists():
-            return {}
-        data = json.loads(self._alerts_path.read_text())
+        data = _read_json_object(self._alerts_path)
         if not isinstance(data, Mapping):
             return {}
         state: dict[str, _AlertRevisions] = {}

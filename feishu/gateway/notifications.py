@@ -23,11 +23,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import threading
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
+
+from ..errors import FeishuError
 
 
 class EventMessageStore(Protocol):
@@ -69,14 +72,11 @@ class JsonFileEventMessageStore:
         with self._lock:
             data = self._read()
             data[event_id] = message_id
-            self.path.parent.mkdir(parents=True, exist_ok=True)
-            self.path.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+            _write_json(self.path, data)
 
     def _read(self) -> dict[str, str]:
         with self._lock:
-            if not self.path.exists():
-                return {}
-            data = json.loads(self.path.read_text())
+            data = _read_json_object(self.path)
             if not isinstance(data, dict):
                 return {}
             return {str(key): str(value) for key, value in data.items() if isinstance(value, str)}
@@ -89,6 +89,27 @@ class InteractiveCardDelivery:
     action: str
     event_id: str
     message_id: str | None
+
+
+def _read_json_object(path: Path) -> object | None:
+    r"""Load a JSON value, treating a missing or blank file as absent state."""
+    if not path.exists():
+        return None
+    text = path.read_text()
+    if not text.strip():
+        return None
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return None
+
+
+def _write_json(path: Path, payload: object) -> None:
+    r"""Replace ``path`` with JSON without leaving a truncated file behind."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+    temporary.replace(path)
 
 
 def deterministic_uuid(event_id: str, *, prefix: str = "event-") -> str:
@@ -114,8 +135,15 @@ async def upsert_interactive_card(
     """
     message_id = store.get(event_id)
     if message_id:
-        data = await client.im.patch(message_id, card)
-        return InteractiveCardDelivery("updated", event_id, _message_id(data) or message_id)
+        try:
+            data = await client.im.patch(message_id, card)
+        except FeishuError as error:
+            # Feishu rejects edits to cards older than 14 days. Send a new card
+            # instead of failing the webhook and pinning the notification.
+            if error.code != 230031:
+                raise
+        else:
+            return InteractiveCardDelivery("updated", event_id, _message_id(data) or message_id)
 
     data = await client.im.send(
         receive_id,
