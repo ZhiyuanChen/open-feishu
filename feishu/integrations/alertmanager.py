@@ -43,6 +43,7 @@ from ..gateway.notifications import (
     EventMessageStore,
     InMemoryEventMessageStore,
     JsonFileEventMessageStore,
+    _json_path_lock,
     _read_json_object,
     _write_json,
     upsert_interactive_card,
@@ -95,10 +96,11 @@ class JsonFileAlertmanagerStore(JsonFileEventMessageStore):
 
     def __init__(self, path: str | Path) -> None:
         super().__init__(path)
-        self._alerts_path = Path(f"{self.path}.alerts")
+        self._alerts_path = Path(f"{self.path}.alerts").resolve()
+        self._alerts_lock = _json_path_lock(self._alerts_path)
 
     def get_alert_revisions(self, event_id: str) -> _AlertRevisions:
-        with self._lock:
+        with self._alerts_lock:
             return dict(self._read_alert_revisions().get(event_id, {}))
 
     def set_alert_revisions(
@@ -106,7 +108,7 @@ class JsonFileAlertmanagerStore(JsonFileEventMessageStore):
         event_id: str,
         revisions: _AlertRevisions,
     ) -> None:
-        with self._lock:
+        with self._alerts_lock:
             state = self._read_alert_revisions()
             state[event_id] = dict(revisions)
             serializable = {

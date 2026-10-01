@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import json
+import threading
+import unicodedata
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -304,6 +309,90 @@ def test_empty_revision_file_does_not_break_the_store(tmp_path) -> None:
 
     assert JsonFileAlertmanagerStore(path).get_alert_revisions("event") == {"fp": (1.5, 0)}
     assert alerts.read_text().strip()
+
+
+@pytest.mark.parametrize("spelling", ("same", "relative", "symlink", "case", "case_initial", "unicode"))
+def test_file_stores_preserve_concurrent_alert_revisions(tmp_path, monkeypatch, spelling: str) -> None:
+    if spelling in ("case", "case_initial"):
+        directory_alias = tmp_path.with_name(tmp_path.name.upper())
+        if not directory_alias.exists() or not directory_alias.samefile(tmp_path):
+            pytest.skip("filesystem does not support case aliases")
+    path = tmp_path / ("messagés.json" if spelling == "unicode" else "messages.json")
+    first = JsonFileAlertmanagerStore(path)
+    if spelling != "case_initial":
+        first.set("initial", "om_initial")
+        first.set_alert_revisions("initial", {"fp_initial": (1.5, 0)})
+    if spelling == "relative":
+        monkeypatch.chdir(tmp_path)
+        other_path = Path("messages.json")
+    elif spelling == "symlink":
+        other_path = tmp_path / "alias.json"
+        other_path.symlink_to(path)
+    elif spelling in ("case", "case_initial"):
+        other_path = path.with_name(path.name.upper())
+    elif spelling == "unicode":
+        other_path = path.with_name(unicodedata.normalize("NFD", path.name))
+        if not other_path.exists() or not other_path.samefile(path):
+            pytest.skip("filesystem does not support Unicode normalization aliases")
+    else:
+        other_path = path
+    second = JsonFileAlertmanagerStore(other_path)
+    first_read = threading.Event()
+    release_first = threading.Event()
+    second_started = threading.Event()
+    second_finished = threading.Event()
+    read = first._read_alert_revisions
+
+    def paused_read():
+        data = read()
+        first_read.set()
+        assert release_first.wait(timeout=5)
+        return data
+
+    def update_second() -> None:
+        second_started.set()
+        try:
+            second.set_alert_revisions("second", {"fp_second": (3.5, 0)})
+        finally:
+            second_finished.set()
+
+    monkeypatch.setattr(first, "_read_alert_revisions", paused_read)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first_update = pool.submit(first.set_alert_revisions, "first", {"fp_first": (2.5, 1)})
+        try:
+            assert first_read.wait(timeout=5)
+            second_update = pool.submit(update_second)
+            assert second_started.wait(timeout=5)
+            second_finished.wait(timeout=0.2)
+        finally:
+            release_first.set()
+        first_update.result(timeout=5)
+        second_update.result(timeout=5)
+
+    expected = {
+        "first": {"fp_first": [2.5, 1]},
+        "second": {"fp_second": [3.5, 0]},
+    }
+    if spelling != "case_initial":
+        expected["initial"] = {"fp_initial": [1.5, 0]}
+    assert json.loads(Path(f"{path}.alerts").read_text()) == expected
+    assert JsonFileAlertmanagerStore(other_path).get_alert_revisions("first") == {"fp_first": (2.5, 1)}
+
+
+def test_file_store_preserves_revision_sidecar_symlink(tmp_path) -> None:
+    path = tmp_path / "messages.json"
+    target = tmp_path / "revisions.json"
+    target.write_text('{"initial": {"fp_initial": [1.5, 0]}}')
+    sidecar = tmp_path / "messages.json.alerts"
+    sidecar.symlink_to(target)
+
+    JsonFileAlertmanagerStore(path).set_alert_revisions("first", {"fp_first": (2.5, 1)})
+
+    assert json.loads(target.read_text()) == {
+        "initial": {"fp_initial": [1.5, 0]},
+        "first": {"fp_first": [2.5, 1]},
+    }
+    assert sidecar.is_symlink()
 
 
 def test_group_status_does_not_regress(gateway_client, tmp_path) -> None:

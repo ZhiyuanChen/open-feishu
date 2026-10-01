@@ -23,14 +23,33 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
+import tempfile
 import threading
+import unicodedata
+from _thread import RLock
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
+from weakref import WeakValueDictionary
 
 from ..errors import FeishuError
+
+_JSON_PATH_LOCKS: WeakValueDictionary[str, RLock] = WeakValueDictionary()
+_JSON_PATH_LOCKS_LOCK = threading.Lock()
+
+
+def _json_path_lock(path: Path) -> RLock:
+    r"""Share a process-local lock across case and Unicode aliases of a resolved path."""
+    # Filesystem aliases must share a lock even before creation or after atomic replacement.
+    # Conservatively serializing distinct paths on case-sensitive filesystems is safe.
+    key = unicodedata.normalize("NFD", unicodedata.normalize("NFD", str(path)).casefold())
+    with _JSON_PATH_LOCKS_LOCK:
+        lock = _JSON_PATH_LOCKS.get(key)
+        if lock is None:
+            lock = RLock()
+            _JSON_PATH_LOCKS[key] = lock
+        return lock
 
 
 class EventMessageStore(Protocol):
@@ -59,11 +78,11 @@ class InMemoryEventMessageStore:
 
 
 class JsonFileEventMessageStore:
-    r"""Small JSON-file store for ``event_id -> message_id`` state."""
+    r"""JSON-file state with per-path serialization within one process."""
 
     def __init__(self, path: str | Path) -> None:
-        self.path = Path(path)
-        self._lock = threading.RLock()
+        self.path = Path(path).resolve()
+        self._lock = _json_path_lock(self.path)
 
     def get(self, event_id: str) -> str | None:
         return self._read().get(event_id)
@@ -107,9 +126,23 @@ def _read_json_object(path: Path) -> object | None:
 def _write_json(path: Path, payload: object) -> None:
     r"""Replace ``path`` with JSON without leaving a truncated file behind."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
-    temporary.replace(path)
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as stream:
+            temporary = Path(stream.name)
+            json.dump(payload, stream, ensure_ascii=False, indent=2, sort_keys=True)
+            stream.write("\n")
+        temporary.replace(path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 def deterministic_uuid(event_id: str, *, prefix: str = "event-") -> str:
