@@ -143,6 +143,10 @@ config["toolkits"] = ["feishu.workplace", "memory"]
 `user` scope 只对当前 Feishu 用户可见；`project` scope 由同一 `memory.namespace` 内的用户共享。保存由现有审批机制
 确认后才落库。
 
+内置 SQLite 存储会持久化同一用户的 `user_id`、`open_id` 和 `union_id` 关联，保持记忆在身份字段变化和重启后可检索。
+自定义存储可实现 [feishu.agent.memory.MemoryIdentityStore][] 扩展，持久化同一用户的身份关联。
+`recall_memory` 的查询最长为 200 个字符，每次检索数量为 1–50 条，超出范围会返回工具错误。
+
 ### Profiles
 
 当不同聊天需要不同 prompt、模型、toolkit 或 memory namespace 时，显式装配一个 engine 之后再用

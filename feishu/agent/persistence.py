@@ -47,7 +47,7 @@ from uuid import uuid4
 
 from .integrity import payload_summary
 from .llm import Message, ReasoningPart, TextPart, ToolResultPart, ToolUsePart
-from .memory import MemoryRecord, MemoryScope
+from .memory import MemoryIdentityConflict, MemoryRecord, MemoryScope
 from .session import ClaimResult, PendingApproval, PendingAuthorization
 
 T = TypeVar("T")
@@ -82,9 +82,52 @@ class SqliteMemoryStore:
             "expires_at INTEGER NOT NULL)"
         )
         self._db.execute("CREATE INDEX IF NOT EXISTS memories_lookup ON memories(namespace, scope, owner_key)")
+        self._db.execute(
+            "CREATE TABLE IF NOT EXISTS memory_owner_aliases ("
+            "namespace TEXT NOT NULL, alias TEXT NOT NULL, owner_key TEXT NOT NULL, "
+            "PRIMARY KEY (namespace, alias))"
+        )
+        self._db.execute(
+            "CREATE INDEX IF NOT EXISTS memory_owner_aliases_lookup ON memory_owner_aliases(namespace, owner_key)"
+        )
         self._db.commit()
         self._now = now
         self._lock = asyncio.Lock()
+
+    async def resolve_owner(self, *, namespace: str, owner_keys: tuple[str, ...]) -> str | None:
+        """Persist links supplied by trusted caller identity, never by model tool arguments."""
+        if not namespace.strip():
+            raise ValueError("memory namespace must not be empty")
+        aliases = tuple(dict.fromkeys(owner_keys))
+        if not aliases:
+            return None
+        async with self._lock:
+            # Serialize linking across store instances before reading existing aliases.
+            with self._db:
+                self._db.execute("BEGIN IMMEDIATE")
+                known_owners: set[str] = set()
+                for alias in aliases:
+                    row = self._db.execute(
+                        "SELECT owner_key FROM memory_owner_aliases WHERE namespace = ? AND alias = ?",
+                        (namespace, alias),
+                    ).fetchone()
+                    if row is not None:
+                        known_owners.add(row[0])
+                if len(known_owners) > 1:
+                    raise MemoryIdentityConflict("requesting user identity aliases conflict")
+                owner_key = next(iter(known_owners)) if known_owners else aliases[0]
+                self._db.executemany(
+                    "INSERT INTO memory_owner_aliases (namespace, alias, owner_key) VALUES (?, ?, ?) "
+                    "ON CONFLICT (namespace, alias) DO UPDATE SET owner_key = excluded.owner_key",
+                    ((namespace, alias, owner_key) for alias in aliases),
+                )
+        return owner_key
+
+    def _canonical_owner(self, namespace: str, owner_key: str) -> str:
+        row = self._db.execute(
+            "SELECT owner_key FROM memory_owner_aliases WHERE namespace = ? AND alias = ?", (namespace, owner_key)
+        ).fetchone()
+        return row[0] if row is not None else owner_key
 
     async def remember(
         self,
@@ -143,10 +186,18 @@ class SqliteMemoryStore:
             self._purge_expired(now)
             rows = self._db.execute(
                 "SELECT memory_id, namespace, scope, owner_key, content, created_at, updated_at, expires_at "
-                "FROM memories WHERE namespace = ? AND (scope = 'project' OR (scope = 'user' AND owner_key = ?)) "
+                "FROM memories WHERE namespace = ? AND (scope = 'project' OR (scope = 'user' AND (owner_key = ? "
+                "OR owner_key IN (SELECT alias FROM memory_owner_aliases WHERE namespace = ? AND owner_key = ?)))) "
                 f"AND ({predicates}) "
                 "ORDER BY CASE scope WHEN 'user' THEN 0 ELSE 1 END, updated_at DESC LIMIT ?",
-                (namespace, owner_key, *terms, max(1, limit)),
+                (
+                    namespace,
+                    owner_key,
+                    namespace,
+                    self._canonical_owner(namespace, owner_key) if owner_key is not None else None,
+                    *terms,
+                    max(1, limit),
+                ),
             ).fetchall()
             self._db.commit()
         return [
