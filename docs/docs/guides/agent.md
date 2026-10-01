@@ -126,6 +126,44 @@ config["oauth"] = {
 
 bundle 构建逻辑见 [feishu.agent.bundles.build_tool_registry][] 与 [feishu.agent.bundles.BundleContext][]。
 
+### 持久记忆
+
+启用 `memory` bundle 后，Agent 只会获得两个工具：`recall_memory(query)` 和需要确认的
+`remember_memory(scope, content)`。持久记忆不会在会话开始或每次模型调用前自动加入 prompt；模型只有在需要过去的
+偏好或决定时，才应使用带关键词的检索工具。检索结果和普通工具结果一样，只在该次显式调用后进入会话。
+
+```python
+config["memory"] = {"enabled": True, "namespace": "support"}
+config["toolkits"] = ["feishu.workplace", "memory"]
+```
+
+`user` scope 只对当前 Feishu 用户可见；`project` scope 由同一 `memory.namespace` 内的用户共享。保存由现有审批机制
+确认后才落库。
+
+### Profiles
+
+当不同聊天需要不同 prompt、模型、toolkit 或 memory namespace 时，显式装配一个 engine 之后再用
+[feishu.agent.ProfiledAgent][] 路由。profile 不是用户身份：OAuth、审批和授权仍然按发起用户处理。每个 engine 的
+`session_namespace` 必须等于 profile ID，使会话及后续卡片/OAuth 恢复始终回到创建它的 profile。
+
+```python
+from feishu.agent import AgentProfile, ProfiledAgent, ProfileRouter
+from feishu.agent.registration import create_agent_dispatcher
+
+router = ProfileRouter(
+    profiles=(AgentProfile("default"), AgentProfile("oncall", chat_ids=("oc_oncall",))),
+    default_profile="default",
+)
+runtime = ProfiledAgent(
+    {
+        "default": default_engine,  # AgentEngine(..., session_namespace="default")
+        "oncall": oncall_engine,  # AgentEngine(..., session_namespace="oncall")
+    },
+    router,
+)
+dispatcher = create_agent_dispatcher(runtime)
+```
+
 ## 状态与会话
 
 `storage.path` 指向 Agent 的 SQLite 数据库，默认保存：
@@ -136,6 +174,7 @@ bundle 构建逻辑见 [feishu.agent.bundles.build_tool_registry][] 与 [feishu.
 - 用户 OAuth token。
 - 已共享文件索引。
 - 事件去重状态（当 `server.seen_store = "sqlite"` 时）。
+- 已确认的 user/project memory（当 `memory.enabled = true` 时）。
 
 常用会话配置：
 
@@ -160,6 +199,7 @@ bundle 构建逻辑见 [feishu.agent.bundles.build_tool_registry][] 与 [feishu.
 | `ws` | 长连接卡片回调同步 ack 超时等参数。 |
 | `oauth` | 用户 OAuth 回调地址、state 密钥和授权恢复 TTL。 |
 | `shared_files` | 用户共享文件的缓存大小与 TTL。 |
+| `memory` | 持久记忆开关与项目 namespace；通过 `memory` bundle 显式检索和确认写入。 |
 | `bundle` | 内置工具 bundle 的本地化和摘要限制。 |
 | `toolkits` | 要启用的工具 bundle 名称；传空列表时，运行时工具来自自定义 registry。 |
 

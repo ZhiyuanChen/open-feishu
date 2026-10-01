@@ -26,12 +26,12 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..events.dispatcher import EventDispatcher
     from ..events.idempotency import SeenStore
-    from .loop import AgentEngine
+    from .profiles import AgentRuntime
 
 
 def register_agent(
     dispatcher: EventDispatcher,
-    agent: AgentEngine,
+    agent: AgentRuntime,
     *,
     message_event: str = "im.message.receive_v1",
     card_event: str = "card.action.trigger",
@@ -45,7 +45,7 @@ def register_agent(
 
     Args:
         dispatcher: 事件分发器，须提供 `on(event_type)` 装饰器接口。
-        agent: 已构造的 [feishu.agent.loop.AgentEngine][]。
+        agent: 已构造的 [feishu.agent.loop.AgentEngine][] 或 [feishu.agent.profiles.ProfiledAgent][]。
         message_event: 消息事件类型。默认为 `im.message.receive_v1`。
         card_event: 卡片回调事件类型。默认为 `card.action.trigger`。
 
@@ -62,7 +62,7 @@ def register_agent(
 
 
 def create_agent_dispatcher(
-    agent: AgentEngine,
+    agent: AgentRuntime,
     *,
     seen_store: SeenStore | None = None,
     message_event: str = "im.message.receive_v1",
@@ -72,7 +72,7 @@ def create_agent_dispatcher(
     创建 [feishu.events.dispatcher.EventDispatcher][] 并把 agent 绑定到消息与卡片事件上。
 
     Args:
-        agent: 接收消息与卡片事件的 [feishu.agent.loop.AgentEngine][]。
+        agent: 接收消息与卡片事件的 [feishu.agent.loop.AgentEngine][] 或 profile router。
         seen_store: 事件幂等存储；为空时不去重。
         message_event: 路由到 [feishu.agent.loop.AgentEngine.run][] 的消息事件类型。
         card_event: 路由到 [feishu.agent.loop.AgentEngine.handle_card_action][] 的卡片回调事件类型。

@@ -65,6 +65,7 @@ from feishu.agent.session import (
     PendingAuthorization,
 )
 from feishu.agent.tools import ToolRegistry
+from feishu.events.envelope import Event
 from tests._fakes import FakeLlmBackend, text_turn, tool_turn
 
 SCHEMA = {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}
@@ -85,6 +86,20 @@ def test_assistant_tool_message_retains_reasoning_for_provider_replay() -> None:
         ReasoningPart(text="Need the current weather."),
         ToolUsePart(id="call_1", name="weather", arguments={"city": "Shanghai"}),
     ]
+
+
+def test_agent_engine_namespaces_profile_sessions() -> None:
+    agent = Agent(backend=FakeLlmBackend([]), registry=ToolRegistry(), session_namespace="oncall")
+
+    event = Event.from_payload(
+        {
+            "schema": "2.0",
+            "header": {"event_type": "im.message.receive_v1", "event_id": "profile_1"},
+            "event": {"message": {"chat_id": "oc_1"}},
+        }
+    )
+
+    assert agent._session_id_for_event(event) == "oncall::oc_1"
 
 
 def _ns(**kw):

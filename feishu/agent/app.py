@@ -54,6 +54,7 @@ from .payment_accounts import PaymentAccountResolver
 from .persistence import (
     JsonlAuditLog,
     SqliteExecutionResultStore,
+    SqliteMemoryStore,
     SqlitePendingApprovalStore,
     SqlitePendingAuthorizationStore,
     SqliteSessionStore,
@@ -314,6 +315,10 @@ class Agent:
             self.client,
             max_materialize_bytes=int(self._get("shared_files.max_bytes", 20 * 1024 * 1024) or 20 * 1024 * 1024),
         )
+        memory = self._section("memory")
+        memory_store = overrides.pop("memory_store", None)
+        if memory_store is None and bool(memory.get("enabled", False)):
+            memory_store = SqliteMemoryStore(self.db_path)
         timezone_resolver = overrides.pop("timezone", None) or self._timezone_resolver()
         if self.backend is None:
             raise RuntimeError("agent backend is not configured")
@@ -345,6 +350,8 @@ class Agent:
             shared_files_store=shared_files_store,
             shared_file_ttl_seconds=int(self._get("shared_files.ttl_seconds", 7 * 24 * 3600) or 7 * 24 * 3600),
             payment_accounts=overrides.pop("payment_accounts", None) or PaymentAccountResolver(self.client),
+            memory_store=memory_store,
+            memory_namespace=str(memory.get("namespace") or "default") if memory_store is not None else None,
             system=overrides.pop("system", None) or self._system_prompt(timezone_resolver),
             turn_context=overrides.pop("turn_context", None) or self._turn_context(timezone_resolver),
             timezone=timezone_resolver,

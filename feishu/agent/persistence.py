@@ -37,14 +37,17 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import sqlite3
 import threading
 import time
 from pathlib import Path
 from typing import Any, Callable, TypeVar
+from uuid import uuid4
 
 from .integrity import payload_summary
 from .llm import Message, ReasoningPart, TextPart, ToolResultPart, ToolUsePart
+from .memory import MemoryRecord, MemoryScope
 from .session import ClaimResult, PendingApproval, PendingAuthorization
 
 T = TypeVar("T")
@@ -65,6 +68,115 @@ def _connect(db_path: str | Path) -> sqlite3.Connection:
     from .._sqlite import connect
 
     return connect(db_path)
+
+
+class SqliteMemoryStore:
+    """SQLite-backed memory store partitioned by namespace and user/project scope."""
+
+    def __init__(self, db_path: str | Path, *, now: Callable[[], int] = _now) -> None:
+        self._db = _connect(db_path)
+        self._db.execute(
+            "CREATE TABLE IF NOT EXISTS memories ("
+            "memory_id TEXT PRIMARY KEY, namespace TEXT NOT NULL, scope TEXT NOT NULL, owner_key TEXT, "
+            "content TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, "
+            "expires_at INTEGER NOT NULL)"
+        )
+        self._db.execute("CREATE INDEX IF NOT EXISTS memories_lookup ON memories(namespace, scope, owner_key)")
+        self._db.commit()
+        self._now = now
+        self._lock = asyncio.Lock()
+
+    async def remember(
+        self,
+        *,
+        namespace: str,
+        scope: MemoryScope,
+        owner_key: str | None,
+        content: str,
+        expires_at: int = 0,
+    ) -> MemoryRecord:
+        if not namespace.strip():
+            raise ValueError("memory namespace must not be empty")
+        if scope == "user" and not (owner_key and owner_key.strip()):
+            raise ValueError("user memory requires an owner key")
+        if scope not in ("project", "user"):
+            raise ValueError(f"unknown memory scope: {scope!r}")
+        now = self._now()
+        record = MemoryRecord(
+            memory_id=uuid4().hex,
+            namespace=namespace,
+            scope=scope,
+            owner_key=owner_key if scope == "user" else None,
+            content=content,
+            created_at=now,
+            updated_at=now,
+            expires_at=expires_at,
+        )
+        async with self._lock:
+            self._purge_expired(now)
+            self._db.execute(
+                "INSERT INTO memories "
+                "(memory_id, namespace, scope, owner_key, content, created_at, updated_at, expires_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    record.memory_id,
+                    record.namespace,
+                    record.scope,
+                    record.owner_key,
+                    record.content,
+                    record.created_at,
+                    record.updated_at,
+                    record.expires_at,
+                ),
+            )
+            self._db.commit()
+        return record
+
+    async def recall(self, *, namespace: str, owner_key: str | None, query: str, limit: int = 12) -> list[MemoryRecord]:
+        """Search the caller-visible memories without making them part of a model prompt."""
+        terms = _memory_search_terms(query)
+        if not terms:
+            raise ValueError("memory query must not be empty")
+        now = self._now()
+        predicates = " OR ".join("instr(lower(content), lower(?)) > 0" for _ in terms)
+        async with self._lock:
+            self._purge_expired(now)
+            rows = self._db.execute(
+                "SELECT memory_id, namespace, scope, owner_key, content, created_at, updated_at, expires_at "
+                "FROM memories WHERE namespace = ? AND (scope = 'project' OR (scope = 'user' AND owner_key = ?)) "
+                f"AND ({predicates}) "
+                "ORDER BY CASE scope WHEN 'user' THEN 0 ELSE 1 END, updated_at DESC LIMIT ?",
+                (namespace, owner_key, *terms, max(1, limit)),
+            ).fetchall()
+            self._db.commit()
+        return [
+            MemoryRecord(
+                memory_id=row[0],
+                namespace=row[1],
+                scope=row[2],
+                owner_key=row[3],
+                content=row[4],
+                created_at=row[5],
+                updated_at=row[6],
+                expires_at=row[7],
+            )
+            for row in rows
+        ]
+
+    def _purge_expired(self, now: int) -> None:
+        self._db.execute("DELETE FROM memories WHERE expires_at > 0 AND expires_at <= ?", (now,))
+
+
+def _memory_search_terms(query: str) -> tuple[str, ...]:
+    """Make short keyword probes useful for both spaced and Chinese text."""
+    text = query.strip()
+    if not text:
+        return ()
+    terms = [text]
+    terms.extend(re.findall(r"[A-Za-z0-9_]{2,}", text))
+    for run in re.findall(r"[\u3400-\u9fff]{2,}", text):
+        terms.extend(run[index : index + 2] for index in range(len(run) - 1))
+    return tuple(dict.fromkeys(term.lower() for term in terms if term))
 
 
 # --------------------------------------------------------------------------- #

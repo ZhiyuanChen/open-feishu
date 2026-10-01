@@ -65,6 +65,8 @@ class ToolContext:
     authorize_url_builder: Any | None = None
     shared_files: Any | None = None  # a SharedFileResolver: the only path from a file_id to bytes
     payment_accounts: Any | None = None  # a PaymentAccountResolver: account_id handle -> account value
+    memory_store: Any | None = None
+    memory_namespace: str | None = None
     timezone: str | Callable[..., Any] | None = None
 
     async def as_user(self) -> Any | None:

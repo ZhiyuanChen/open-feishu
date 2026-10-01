@@ -61,10 +61,8 @@ from .llm import (
     ToolUsePart,
     parse_tool_arguments,
 )
-from .progress import (
-    ProgressSnapshot,
-    _ProgressCard,
-)
+from .profiles import namespaced_session_id
+from .progress import ProgressSnapshot, _ProgressCard
 from .result import ToolOutcome, ToolResult, coerce_tool_result
 from .session import (
     InMemoryPendingApprovalStore,
@@ -437,6 +435,8 @@ class AgentEngine:
         shared_file_ttl_seconds: int = 7 * 24 * 3600,
         shared_files_private_only: bool = True,
         payment_accounts: Any = None,
+        memory_store: Any = None,
+        memory_namespace: str | None = None,
         clear_command: Callable[[str], bool] | None = None,
         clear_reply: str = "会话历史已清空。",
         compact_command: Callable[[str], bool] | None = None,
@@ -453,6 +453,7 @@ class AgentEngine:
         system: str | Callable[..., Any] | None = None,
         turn_context: str | Callable[..., Any] | None = None,
         idle_session_timeout_seconds: float = 0.0,
+        session_namespace: str | None = None,
         now: Callable[[], float] | None = None,
         timezone: str | Callable[..., Any] | None = None,
         interrupted_progress_text: str = "已被更新的消息打断。",
@@ -461,6 +462,8 @@ class AgentEngine:
     ) -> None:
         if max_iterations < 1:
             raise ValueError(f"max_iterations must be >= 1, got {max_iterations}")
+        if session_namespace is not None and "::" in session_namespace:
+            raise ValueError("session namespace cannot contain '::'")
         self.backend = backend
         self.registry = registry
         self.store: SessionStore = store or InMemorySessionStore()
@@ -483,6 +486,8 @@ class AgentEngine:
         self._shared_file_ttl_seconds = shared_file_ttl_seconds
         self._shared_files_private_only = shared_files_private_only  # only capture files in 1:1 chats by default
         self.payment_accounts = payment_accounts  # a PaymentAccountResolver (account handle -> value), or None
+        self.memory_store = memory_store
+        self.memory_namespace = memory_namespace
         self._clear_command = clear_command  # predicate on the user's text: True -> reset this session
         self._clear_reply = clear_reply
         self._compact_command = compact_command  # predicate on the user's text: True -> compact this session now
@@ -496,6 +501,7 @@ class AgentEngine:
         self.system = system
         self.turn_context = turn_context
         self.idle_session_timeout_seconds = max(0.0, float(idle_session_timeout_seconds or 0.0))
+        self._session_namespace = session_namespace or ""
         self._now = now or _default_now
         self.timezone = timezone
         self._interrupted_progress_text = interrupted_progress_text
@@ -514,6 +520,15 @@ class AgentEngine:
         if lock is None:
             lock = self._session_locks.setdefault(session_id, asyncio.Lock())
         return lock
+
+    def _session_id_for_event(self, event: Event) -> str:
+        session_id = session_id_for(event)
+        return namespaced_session_id(self._session_namespace, session_id) if self._session_namespace else session_id
+
+    @property
+    def session_namespace(self) -> str:
+        """The stable profile prefix applied to every persisted session ID."""
+        return self._session_namespace
 
     def _begin_session_turn(
         self, session_id: str, progress: _ProgressCard, *, interrupt_previous: bool = False
@@ -576,7 +591,7 @@ class AgentEngine:
         if _sender_type_for(event) == "app":
             logging.getLogger("feishu").debug("ignore app-sent message event")
             return
-        session_id = session_id_for(event)
+        session_id = self._session_id_for_event(event)
         user_msg = user_message_from_event(event)
         progress = _ProgressCard(self, event)
         active_task = self._begin_session_turn(session_id, progress, interrupt_previous=True)
@@ -837,6 +852,8 @@ class AgentEngine:
             authorize_url_builder=self.authorize_url_builder,
             shared_files=self.shared_files,
             payment_accounts=self.payment_accounts,
+            memory_store=self.memory_store,
+            memory_namespace=self.memory_namespace,
             timezone=self.timezone,
         )
 

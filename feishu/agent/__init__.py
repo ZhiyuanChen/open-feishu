@@ -30,11 +30,16 @@ toolkit 工厂与 bundle 装配器仍从各自概念模块导入。
 from __future__ import annotations
 
 from .app import Agent
+from .profiles import AgentProfile, AgentRuntime, ProfiledAgent, ProfileRouter
 from .result import ToolOutcome, ToolResult
 from .tools import Tool, ToolRegistry, ToolValidationError
 
 __all__ = [
     "Agent",
+    "AgentProfile",
+    "AgentRuntime",
+    "ProfiledAgent",
+    "ProfileRouter",
     "Tool",
     "ToolRegistry",
     "ToolValidationError",
