@@ -26,7 +26,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from .llm import Message, TextPart
+from .llm import Message, TextPart, ToolResultPart, ToolUsePart
 
 logger = logging.getLogger("feishu")
 
@@ -99,10 +99,21 @@ async def maybe_summarize(agent: Any, session_id: str, history: list[Message]) -
 
 
 async def summarize_history(agent: Any, session_id: str, history: list[Message]) -> list[Message]:
-    r"""把较早轮次压缩为一条摘要消息、保留最近 N 条原样，并持久化压缩后的历史。"""
+    r"""把较早轮次压缩为一条摘要；保留最近 N 条及其完整工具调用组合，并持久化历史。"""
     keep = max(0, agent._summarize_keep_recent)
-    old = history[:-keep] if keep else list(history)
-    recent = history[-keep:] if keep else []
+    target = max(0, len(history) - keep)
+    pending: set[str] = set()
+    boundary = 0
+    for index, message in enumerate(history[:target], 1):
+        for part in message.content:
+            if isinstance(part, ToolUsePart):
+                pending.add(part.id)
+            elif isinstance(part, ToolResultPart):
+                pending.discard(part.tool_call_id)
+        if not pending:
+            boundary = index
+    old = history[:boundary]
+    recent = history[boundary:]
     if not old:
         return history
     try:

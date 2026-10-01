@@ -189,7 +189,7 @@ dispatcher = create_agent_dispatcher(runtime)
 | --- | --- |
 | `session.max_messages` | 每个会话最多保留的消息数。`0` 表示不按条数裁剪。 |
 | `session.summarize_threshold_tokens` | 超过阈值后触发历史摘要；`0` 表示关闭。 |
-| `session.summarize_keep_recent` | 摘要后保留的最近消息数。 |
+| `session.summarize_keep_recent` | 摘要后至少保留的最近消息数；必要时保留更多消息以保持完整工具调用与结果。 |
 | `session.idle_session_timeout_seconds` | 会话空闲超过该秒数后清空普通历史；`0` 表示关闭。 |
 
 `reply.stream = true` 时，Agent 会优先用流式卡片展示模型输出；如果正在执行工具，进度卡片会随工具状态更新。
