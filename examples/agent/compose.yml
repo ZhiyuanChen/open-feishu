@@ -1,8 +1,26 @@
 services:
   agent:
-    build: .
+    image: open-feishu-agent:local
+    build:
+      context: ../..
+      dockerfile: examples/agent/Dockerfile
     env_file:
       - .env
+    environment:
+      AGENT_BACKEND: http
     restart: unless-stopped
+    stop_grace_period: 70s
+    ports:
+      - "${PORT:-5654}:${PORT:-5654}"
     volumes:
       - ./data:/data/agent
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:' + os.getenv('PORT', '5654') + '/ready', timeout=3).read()"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

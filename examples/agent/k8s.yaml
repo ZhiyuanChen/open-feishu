@@ -1,0 +1,127 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: open-feishu-agent
+data:
+  AGENT_BACKEND: http
+  AGENT_DB_PATH: /data/agent/agent.db
+  AGENT_TIMEZONE: Asia/Shanghai
+  AGENT_SHUTDOWN_TIMEOUT_SECONDS: "30"
+  AGENT_PUBLIC_URL: ""
+  FEISHU_REGION: feishu
+  OPENAI_BASE_URL: https://api.openai.com/v1
+  OPENAI_MODEL: gpt-4o-mini
+  HOST: 0.0.0.0
+  PORT: "5654"
+  AGENT_SYSTEM_PROMPT: 你是一个简洁的飞书助手。必要时使用工具。
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: open-feishu-agent-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-feishu-agent
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: open-feishu-agent
+  template:
+    metadata:
+      labels:
+        app: open-feishu-agent
+    spec:
+      terminationGracePeriodSeconds: 70
+      containers:
+        - name: agent
+          image: open-feishu-agent:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: open-feishu-agent
+          env:
+            - name: FEISHU_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: open-feishu-agent-secrets
+                  key: FEISHU_APP_ID
+            - name: FEISHU_APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: open-feishu-agent-secrets
+                  key: FEISHU_APP_SECRET
+            - name: FEISHU_ENCRYPT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: open-feishu-agent-secrets
+                  key: FEISHU_ENCRYPT_KEY
+            - name: FEISHU_VERIFICATION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: open-feishu-agent-secrets
+                  key: FEISHU_VERIFICATION_TOKEN
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: open-feishu-agent-secrets
+                  key: OPENAI_API_KEY
+            - name: AGENT_OAUTH_STATE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: open-feishu-agent-secrets
+                  key: AGENT_OAUTH_STATE_SECRET
+                  optional: true
+          ports:
+            - name: http
+              containerPort: 5654
+          startupProbe:
+            httpGet:
+              path: /ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: agent-data
+              mountPath: /data/agent
+      volumes:
+        - name: agent-data
+          persistentVolumeClaim:
+            claimName: open-feishu-agent-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: open-feishu-agent
+spec:
+  selector:
+    app: open-feishu-agent
+  ports:
+    - name: http
+      port: 5654
+      targetPort: http

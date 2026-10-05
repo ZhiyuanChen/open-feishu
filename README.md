@@ -120,7 +120,9 @@ config = {
 Agent(config, registry=registry).run(backend="ws")
 ```
 
-`backend="ws"` 通过飞书长连接收事件，适合本地、内网和容器常驻部署；`backend="http"` 暴露 `/feishu/event`、`/health` 和 OAuth 回调路由，适合公网 Webhook、用户授权工具和统一健康检查。`Agent(config)` 接收已加载的 mapping；YAML、TOML、`.env` 或密钥服务由应用层读取后组装进配置。
+`backend="ws"` 通过飞书长连接收事件，适合本地、内网和容器常驻部署；`backend="http"` 暴露 `/feishu/event`、`/health`、`/ready` 和 OAuth 回调路由，适合公网 Webhook、用户授权工具和统一健康检查。`/health` 是存活探针；`/ready` 在 ASGI startup 完成且退出尚未开始时返回 200，否则返回 503。`Agent(config)` 接收已加载的 mapping；YAML、TOML、`.env` 或密钥服务由应用层读取后组装进配置。
+
+`Agent.validate_config(config)` 可在创建客户端和存储前检查已知字段，构造 `Agent` 时也会执行同一校验。ASGI lifespan 和 WS runner 会调用统一的 `start()` / `aclose()` 生命周期；`async with agent:` 可用于手动管理。Agent 只关闭自己创建的客户端和存储，注入的 engine、client、backend 由调用方管理。
 
 ## 安装
 

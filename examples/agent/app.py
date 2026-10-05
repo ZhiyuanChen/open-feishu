@@ -48,6 +48,17 @@ def backend_name() -> BackendName:
     return cast(BackendName, value)
 
 
+def env_int(name: str, default: int) -> int | str:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        # Preserve malformed text so Agent's pre-construction validator can name the field.
+        return value
+
+
 registry = ToolRegistry()
 
 
@@ -73,8 +84,8 @@ def config() -> dict:
         "feishu": {
             "app_id": env("FEISHU_APP_ID"),
             "app_secret": env("FEISHU_APP_SECRET"),
-            "encrypt_key": os.environ.get("FEISHU_ENCRYPT_KEY"),
-            "verification_token": os.environ.get("FEISHU_VERIFICATION_TOKEN"),
+            "encrypt_key": os.environ.get("FEISHU_ENCRYPT_KEY") or None,
+            "verification_token": os.environ.get("FEISHU_VERIFICATION_TOKEN") or None,
             "region": env("FEISHU_REGION", "feishu"),
         },
         "model": {
@@ -83,15 +94,20 @@ def config() -> dict:
             "base_url": env("OPENAI_BASE_URL", "https://api.openai.com/v1"),
         },
         "storage": {"path": db_path},
+        "oauth": {
+            "public_url": os.environ.get("AGENT_PUBLIC_URL") or None,
+            "state_secret": os.environ.get("AGENT_OAUTH_STATE_SECRET") or None,
+        },
         "server": {
             "host": env("HOST", "0.0.0.0"),
-            "port": int(env("PORT", "5654")),
+            "port": env_int("PORT", 5654),
             "seen_store": "sqlite",
             "seen_db_path": db_path,
         },
         "reply": {"stream": True},
         "toolkits": [],
         "timezone": env("AGENT_TIMEZONE", "Asia/Shanghai"),
+        "runtime": {"shutdown_timeout_seconds": env_int("AGENT_SHUTDOWN_TIMEOUT_SECONDS", 30)},
         "system": env(
             "AGENT_SYSTEM_PROMPT",
             "你是一个简洁的飞书助手。必要时使用工具。",

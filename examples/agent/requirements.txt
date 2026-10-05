@@ -1,1 +1,1 @@
-open-feishu[gateway,openai,ws]
+-e ../..[gateway,openai,ws]
