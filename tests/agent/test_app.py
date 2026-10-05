@@ -29,6 +29,22 @@ def test_agent_facade(tmp_path: Path) -> None:
     assert isinstance(agent.engine, AgentEngine)
 
 
+def test_empty_injected_registry_overrides_configured_toolkits(tmp_path: Path) -> None:
+    registry = ToolRegistry()
+    agent = Agent(
+        {
+            "storage": {"path": str(tmp_path / "agent.db")},
+            "toolkits": ["feishu.workplace"],
+        },
+        client=_Client(),
+        backend=FakeLlmBackend([]),
+        registry=registry,
+    )
+
+    assert agent.engine.registry is registry
+    assert agent.engine.registry.specs() == []
+
+
 def test_agent_facade_keeps_time_context_out_of_system_prompt(tmp_path: Path) -> None:
     agent = Agent(
         {

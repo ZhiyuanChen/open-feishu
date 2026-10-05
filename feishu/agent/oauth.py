@@ -482,6 +482,7 @@ def oauth_callback_handler(
     redirect_uri: str,
     *,
     on_authorized: AuthorizationResumeCallback | None = None,
+    track_task: Callable[[asyncio.Task[Any]], None] | None = None,
     success_message: str = "授权成功，正在回到飞书继续处理。",
     success_title: str = "授权完成",
     invalid_state_message: str = "授权校验失败：state 无效或已过期，请重新发起授权。",
@@ -511,14 +512,18 @@ def oauth_callback_handler(
         await provider.store.save(token_data, user_info=dict(info))
         authorization_id = str(state.extra.get("authorization_id") or "")
         if on_authorized is not None and authorization_id:
-            _spawn_authorization_resume(on_authorized, authorization_id, dict(info))
+            _spawn_authorization_resume(on_authorized, authorization_id, dict(info), track_task=track_task)
         return _auto_close_response(success_message, title=success_title)
 
     return handle
 
 
 def _spawn_authorization_resume(
-    callback: AuthorizationResumeCallback, authorization_id: str, user: Mapping[str, Any]
+    callback: AuthorizationResumeCallback,
+    authorization_id: str,
+    user: Mapping[str, Any],
+    *,
+    track_task: Callable[[asyncio.Task[Any]], None] | None = None,
 ) -> None:
     async def run() -> None:
         try:
@@ -530,8 +535,11 @@ def _spawn_authorization_resume(
             logger.exception("oauth callback: failed to resume authorization %s", authorization_id)
 
     task = asyncio.create_task(run())
-    _RESUME_TASKS.add(task)
-    task.add_done_callback(_RESUME_TASKS.discard)
+    if track_task is None:
+        _RESUME_TASKS.add(task)
+        task.add_done_callback(_RESUME_TASKS.discard)
+    else:
+        track_task(task)
 
 
 def _auto_close_response(message: str, *, title: str = "授权完成") -> Any:

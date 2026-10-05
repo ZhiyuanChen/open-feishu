@@ -26,11 +26,13 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import hmac
+import inspect
 import json
 import logging
+import math
 import signal
-from collections.abc import Mapping, Sequence
-from contextlib import suppress
+from collections.abc import AsyncIterator, Iterable, Mapping, Sequence
+from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 from typing import Any, Literal
 
@@ -48,6 +50,7 @@ from ..ws.client import WsClient
 from .adapters.openai import create_openai_backend, create_openai_client
 from .approval import DefaultApprovalEngine
 from .bundles import BundleContext, build_tool_registry
+from .configuration import AgentConfigurationError, ConfigurationIssue, validate_agent_config
 from .loop import AgentEngine
 from .oauth import build_authorize_url_builder, oauth_callback_handler
 from .payment_accounts import PaymentAccountResolver
@@ -98,7 +101,33 @@ class Agent:
         text_summarizer: Any | None = None,
         **engine_overrides: Any,
     ) -> None:
+        injected = {
+            name
+            for name, dependency in (
+                ("engine", engine),
+                ("client", client),
+                ("backend", backend),
+                ("model_client", model_client),
+                ("progress_summarizer", progress_summarizer),
+                ("text_summarizer", text_summarizer),
+            )
+            if dependency is not None
+        }
+        if registry is not None:
+            injected.add("registry")
+        if engine_overrides.get("memory_store") is not None:
+            injected.add("memory_store")
+        issues = self.validate_config(config, injected=injected)
+        if issues:
+            raise AgentConfigurationError(issues)
         self.config = config or {}
+        self._lifecycle_state = "created"
+        self._shutdown_deadline: float | None = None
+        self._owns_engine = engine is None
+        self._owned_resources: list[Any] = []
+        self._owned_resource_ids: set[int] = set()
+        self._closed_resource_ids: set[int] = set()
+        self._asgi_application: Any | None = None
         if engine is not None:
             self.client = client
             self.model_client = model_client
@@ -116,7 +145,7 @@ class Agent:
             self.describe_analyzer = describe_analyzer
             self.engine = engine
             return
-        self.client = client if client is not None else self._client_from_config()
+        self.client = client if client is not None else self._own_resource(self._client_from_config())
         self.model_client = model_client
         self.backend = backend
         self.progress_summarizer = progress_summarizer
@@ -135,7 +164,7 @@ class Agent:
             self.engine = engine
             return
         if self.backend is None and self.model_client is None:
-            self.model_client = self._openai_client_from_config()
+            self.model_client = self._own_resource(self._openai_client_from_config())
         if self.backend is None:
             self.backend = self._model_backend_from_config(self.model_client)
         if self.progress_summarizer is None:
@@ -145,6 +174,15 @@ class Agent:
         if self.describe_analyzer is None and self.model_client is not None:
             self.describe_analyzer = self._describe_analyzer()
         self.engine = self._engine(registry=registry, **engine_overrides)
+
+    @staticmethod
+    def validate_config(
+        config: Mapping[str, Any] | None,
+        *,
+        injected: Iterable[str] = (),
+    ) -> tuple[ConfigurationIssue, ...]:
+        """Check known config fields and default assembly requirements without creating resources."""
+        return validate_agent_config(config, injected=injected)
 
     @property
     def db_path(self) -> str:
@@ -156,6 +194,105 @@ class Agent:
     def audit_path(self) -> str:
         storage = self._section("storage")
         return str(storage.get("audit_path") or str(Path(self.db_path).with_name("audit.jsonl")))
+
+    @property
+    def status(self) -> str:
+        """Current runtime state: created, ready, draining, or stopped."""
+        return self._lifecycle_state
+
+    @property
+    def is_ready(self) -> bool:
+        """Whether startup completed and the runtime is accepting new work."""
+        return self._lifecycle_state == "ready"
+
+    async def start(self) -> None:
+        """Mark the assembled runtime ready; ASGI and WebSocket runners share this lifecycle."""
+        if self._lifecycle_state == "ready":
+            return
+        if self._lifecycle_state != "created":
+            raise RuntimeError(f"cannot start agent while runtime is {self._lifecycle_state}")
+        self._lifecycle_state = "ready"
+
+    def _begin_shutdown(self, *, stop_engine: bool = True) -> float:
+        if self._shutdown_deadline is None:
+            loop = asyncio.get_running_loop()
+            timeout = float(self._get("runtime.shutdown_timeout_seconds", 30.0))
+            self._shutdown_deadline = loop.time() + timeout
+        if self._lifecycle_state != "stopped":
+            self._lifecycle_state = "draining"
+        if stop_engine and self._owns_engine and hasattr(self.engine, "stop_accepting_events"):
+            self.engine.stop_accepting_events()
+        return self._shutdown_deadline
+
+    def _on_ws_connection_state(self, connected: bool) -> None:
+        if self._lifecycle_state in {"draining", "stopped"}:
+            return
+        self._lifecycle_state = "ready" if connected else "reconnecting"
+
+    async def aclose(self) -> None:
+        """Drain active work and close only resources created by this Agent."""
+        if self._lifecycle_state == "stopped":
+            return
+        deadline = self._begin_shutdown()
+        drained = True
+        if self._owns_engine and hasattr(self.engine, "aclose"):
+            drained = await self.engine.aclose(deadline=deadline)
+        if not drained:
+            logger.error("agent shutdown timed out; leaving resources open while work is still running")
+            return
+        resources_closed = await self._close_owned_resources(deadline)
+        if not resources_closed:
+            logger.error("agent shutdown did not close every owned resource before its deadline")
+            return
+        self._lifecycle_state = "stopped"
+
+    async def __aenter__(self) -> Agent:
+        await self.start()
+        return self
+
+    async def __aexit__(self, *_exc: Any) -> None:
+        await self.aclose()
+
+    def _own_resource(self, resource: Any) -> Any:
+        if resource is not None and id(resource) not in self._owned_resource_ids:
+            self._owned_resource_ids.add(id(resource))
+            self._owned_resources.append(resource)
+        return resource
+
+    def _own_sqlite_store(self, store: Any) -> Any:
+        connection = getattr(store, "_db", None)
+        if connection is not None:
+            self._own_resource(connection)
+        return store
+
+    async def _close_owned_resources(self, deadline: float) -> bool:
+        loop = asyncio.get_running_loop()
+        closed = True
+        for resource in reversed(self._owned_resources):
+            resource_id = id(resource)
+            if resource_id in self._closed_resource_ids:
+                continue
+            close = getattr(resource, "aclose", None) or getattr(resource, "close", None)
+            if not callable(close):
+                self._closed_resource_ids.add(resource_id)
+                continue
+            try:
+                result = close()
+                if inspect.isawaitable(result):
+                    remaining = deadline - loop.time()
+                    if remaining <= 0:
+                        logger.error("agent shutdown deadline expired before all resources closed")
+                        return False
+                    await asyncio.wait_for(result, timeout=remaining)
+            except asyncio.TimeoutError:
+                logger.error("timed out closing an Agent-owned resource")
+                return False
+            except Exception:  # noqa: BLE001 - close every owned resource even if one close fails
+                logger.exception("failed to close an Agent-owned resource")
+                closed = False
+            else:
+                self._closed_resource_ids.add(resource_id)
+        return closed
 
     def run(self, *, backend: Literal["ws", "http"] = "ws") -> None:
         r"""启动 agent。`backend="ws"` 运行飞书长连接，`backend="http"` 运行 HTTP webhook 服务。"""
@@ -184,31 +321,52 @@ class Agent:
             self.dispatcher(),
             region=str(feishu.get("region") or "feishu"),
             card_ack_timeout=self._card_ack_timeout_seconds(),
+            background_dispatch_drain_timeout=float(self._get("runtime.shutdown_timeout_seconds", 30.0)),
+            shutdown_deadline=lambda: self._shutdown_deadline,
+            on_connection_state=self._on_ws_connection_state,
         )
+        await self.start()
+        self._lifecycle_state = "starting"
         loop = asyncio.get_running_loop()
+        stop_task: asyncio.Task[Any] | None = None
 
         def stop() -> None:
+            nonlocal stop_task
             logger.info("shutdown signal received; closing the ws connection gracefully")
-            asyncio.ensure_future(ws.aclose())
+            self._begin_shutdown(stop_engine=False)
+            if stop_task is None:
+                stop_task = asyncio.create_task(ws.aclose())
 
-        for sig in (signal.SIGTERM, signal.SIGINT):
-            with suppress(NotImplementedError):
-                loop.add_signal_handler(sig, stop)
+        installed_signals: list[signal.Signals] = []
         try:
+            for sig in (signal.SIGTERM, signal.SIGINT):
+                with suppress(NotImplementedError, RuntimeError, ValueError):
+                    loop.add_signal_handler(sig, stop)
+                    installed_signals.append(sig)
             await ws.start()
         finally:
-            await ws.aclose()
+            for sig in installed_signals:
+                with suppress(NotImplementedError, RuntimeError, ValueError):
+                    loop.remove_signal_handler(sig)
+            try:
+                if stop_task is not None:
+                    await stop_task
+            finally:
+                await self.aclose()
 
     def run_http(self) -> None:
         r"""运行 HTTP webhook 服务。"""
         import uvicorn
 
         server = self._section("server")
+        shutdown_timeout = float(self._get("runtime.shutdown_timeout_seconds", 30.0))
         uvicorn.run(
             self.asgi_app(),
             host=str(server.get("host") or "127.0.0.1"),
             port=int(server.get("port") or 5654),
             log_level=str(server.get("log_level") or "info").lower(),
+            lifespan="on",
+            timeout_graceful_shutdown=max(1, math.ceil(shutdown_timeout)),
         )
 
     def asgi_app(self) -> Any:
@@ -217,15 +375,34 @@ class Agent:
         from starlette.responses import JSONResponse
         from starlette.routing import Route
 
+        if self._asgi_application is not None:
+            return self._asgi_application
+
         server = self._section("server")
 
         async def health(_request: Any) -> Any:
             return JSONResponse({"ok": True, "service": str(server.get("service") or "feishu-agent")})
 
+        async def ready(_request: Any) -> Any:
+            is_ready = self.is_ready
+            return JSONResponse(
+                {"ready": is_ready, "status": self.status},
+                status_code=200 if is_ready else 503,
+            )
+
+        @asynccontextmanager
+        async def lifespan(_app: Any) -> AsyncIterator[None]:
+            await self.start()
+            try:
+                yield
+            finally:
+                await self.aclose()
+
         dispatcher = self.dispatcher()
         event_path = str(server.get("event_path") or "/feishu/event")
         routes = [
             Route(str(server.get("health_path") or "/health"), health, methods=["GET"]),
+            Route(str(server.get("ready_path") or "/ready"), ready, methods=["GET"]),
             create_event_route(
                 dispatcher,
                 path=event_path,
@@ -250,11 +427,13 @@ class Agent:
                 self.signer,
                 self.oauth_redirect_uri,
                 on_authorized=self.engine.resume_authorization,
+                track_task=getattr(self.engine, "track_background_task", None),
                 success_message=self.oauth_success_message(),
                 success_title=self.oauth_success_title(),
             )
             routes.append(Route(self.oauth_callback_path, handler, methods=["GET"]))
-        return Starlette(routes=routes)
+        self._asgi_application = Starlette(routes=routes, lifespan=lifespan)
+        return self._asgi_application
 
     def extra_routes(self) -> list[Any]:
         r"""返回产品层追加的 Starlette routes。"""
@@ -304,44 +483,56 @@ class Agent:
         return await self.engine.resume_authorization(authorization_id, user=user)
 
     def _engine(self, *, registry: ToolRegistry | None = None, **overrides: Any) -> AgentEngine:
-        approvals = overrides.pop("approvals", None) or SqlitePendingApprovalStore(self.db_path)
-        authorizations = overrides.pop("authorizations", None) or SqlitePendingAuthorizationStore(
-            self.db_path,
-            ttl_seconds=int(self._get("oauth.authorization_ttl_seconds", 3600) or 3600),
-        )
-        shared_files_store = overrides.pop("shared_files_store", None) or SqliteSharedFileStore(self.db_path)
-        shared_files = overrides.pop("shared_files", None) or SharedFileResolver(
-            shared_files_store,
-            self.client,
-            max_materialize_bytes=int(self._get("shared_files.max_bytes", 20 * 1024 * 1024) or 20 * 1024 * 1024),
-        )
+        approvals = overrides.pop("approvals", None)
+        if approvals is None:
+            approvals = self._own_sqlite_store(SqlitePendingApprovalStore(self.db_path))
+        authorizations = overrides.pop("authorizations", None)
+        if authorizations is None:
+            authorizations = self._own_sqlite_store(
+                SqlitePendingAuthorizationStore(
+                    self.db_path,
+                    ttl_seconds=int(self._get("oauth.authorization_ttl_seconds", 3600) or 3600),
+                )
+            )
+        shared_files_store = overrides.pop("shared_files_store", None)
+        if shared_files_store is None:
+            shared_files_store = self._own_sqlite_store(SqliteSharedFileStore(self.db_path))
+        shared_files = overrides.pop("shared_files", None)
+        if shared_files is None:
+            shared_files = SharedFileResolver(
+                shared_files_store,
+                self.client,
+                max_materialize_bytes=int(self._get("shared_files.max_bytes", 20 * 1024 * 1024) or 20 * 1024 * 1024),
+            )
         memory = self._section("memory")
         memory_store = overrides.pop("memory_store", None)
         if memory_store is None and bool(memory.get("enabled", False)):
-            memory_store = SqliteMemoryStore(self.db_path)
+            memory_store = self._own_sqlite_store(SqliteMemoryStore(self.db_path))
         timezone_resolver = overrides.pop("timezone", None) or self._timezone_resolver()
         if self.backend is None:
             raise RuntimeError("agent backend is not configured")
+        store = overrides.pop("store", None)
+        if store is None:
+            store = self._own_sqlite_store(
+                SqliteSessionStore(self.db_path, max_messages=int(self._get("session.max_messages", 0) or 0))
+            )
+        approval_engine = overrides.pop("approval_engine", None)
+        if approval_engine is None:
+            approval_engine = DefaultApprovalEngine(
+                approvals=approvals,
+                executions=self._own_sqlite_store(SqliteExecutionResultStore(self.db_path)),
+                audit=JsonlAuditLog(self.audit_path),
+                outcome_status=overrides.pop("outcome_status", None),
+                idempotency_namespace=str(self._get("approval.idempotency_namespace", "agent") or "agent"),
+            )
         return AgentEngine(
             backend=self.backend,
             registry=registry or self._registry(),
             client=self.client,
-            store=overrides.pop(
-                "store",
-                SqliteSessionStore(self.db_path, max_messages=int(self._get("session.max_messages", 0) or 0)),
-            ),
+            store=store,
             approvals=approvals,
             authorizations=authorizations,
-            approval_engine=overrides.pop(
-                "approval_engine",
-                DefaultApprovalEngine(
-                    approvals=approvals,
-                    executions=SqliteExecutionResultStore(self.db_path),
-                    audit=JsonlAuditLog(self.audit_path),
-                    outcome_status=overrides.pop("outcome_status", None),
-                    idempotency_namespace=str(self._get("approval.idempotency_namespace", "agent") or "agent"),
-                ),
-            ),
+            approval_engine=approval_engine,
             progress_summarizer=self.progress_summarizer,
             progress_summary_interval_seconds=float(self._get("reply.progress_summary_interval_seconds", 2.0) or 0),
             user_tokens=self.provider,
@@ -417,6 +608,7 @@ class Agent:
         if not (api_key and base_url):
             raise RuntimeError("fast_model.model requires fast_model.api_key/base_url or model fallback values")
         client = create_openai_client(str(api_key), str(base_url))
+        self._own_resource(client)
         return create_openai_backend(
             client=client,
             model=str(model_name),

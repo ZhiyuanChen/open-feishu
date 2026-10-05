@@ -20,7 +20,7 @@ from feishu.agent.loop import AgentEngine
 from feishu.agent.oauth import persist_authorization_card_message_id
 from feishu.agent.persistence import SqlitePendingApprovalStore, SqlitePendingAuthorizationStore, SqliteSessionStore
 from feishu.agent.result import ToolOutcome, ToolResult
-from feishu.agent.session import ClaimResult, PendingApproval, PendingAuthorization
+from feishu.agent.session import ClaimResult, InMemoryPendingApprovalStore, PendingApproval, PendingAuthorization
 from feishu.agent.tools import ToolRegistry
 from tests._fakes import FakeLlmBackend, text_turn, tool_turn
 from tests.agent import test_continuation_integrity as continuation_tests
@@ -528,6 +528,112 @@ async def test_cache_read_failure_finishes_claim_without_dispatch_and_settles_ca
     assert "ProgrammingError" not in str(results[0].content)
     assert client.patches and "执行失败" in str(client.patches[-1][1])
     assert len(backend.calls) == 2
+
+
+async def test_cancellation_during_approved_write_freezes_result_as_unknown():
+    approvals = InMemoryPendingApprovalStore()
+    engine = DefaultApprovalEngine(approvals=approvals)
+    approval = PendingApproval("cancelled_write", "oc_1", "call", "deploy", {}, payload_sha256="hash")
+    await engine.on_request(approval)
+    dispatch_started = asyncio.Event()
+    writes = 0
+
+    async def dispatch(_name, _arguments):
+        nonlocal writes
+        writes += 1
+        dispatch_started.set()
+        await asyncio.Event().wait()
+
+    task = asyncio.create_task(
+        engine.on_decision(
+            approval.approval_id,
+            "approve",
+            expected_payload_sha256=approval.payload_sha256,
+            dispatch=dispatch,
+        )
+    )
+    await dispatch_started.wait()
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    stored = await approvals.get(approval.approval_id)
+    assert stored is not None and stored.state == "execution_unknown"
+    repeated = await engine.on_decision(
+        approval.approval_id,
+        "approve",
+        expected_payload_sha256=approval.payload_sha256,
+        dispatch=dispatch,
+    )
+    assert repeated.status == ApprovalStatus.ALREADY_DECIDED
+    assert writes == 1
+
+
+async def test_cancellation_during_replay_lookup_reopens_approval_without_dispatch():
+    started = threading.Event()
+    release = threading.Event()
+
+    class BlockingExecutions:
+        def __init__(self):
+            self.cache = {}
+
+        def get(self, _key):
+            started.set()
+            release.wait(timeout=2)
+            return self.cache.get(_key)
+
+        def put(self, key, *, execution_status, result, payload_sha256):
+            self.cache[key] = {
+                "execution_status": execution_status,
+                "result": result,
+                "payload_sha256": payload_sha256,
+            }
+
+    approvals = InMemoryPendingApprovalStore()
+    executions = BlockingExecutions()
+    engine = DefaultApprovalEngine(approvals=approvals, executions=executions)
+    approval = PendingApproval(
+        "cancelled_lookup",
+        "oc_1",
+        "call",
+        "deploy",
+        {},
+        payload_sha256="hash",
+        idempotency_key="write-key",
+    )
+    await engine.on_request(approval)
+    writes = []
+
+    async def dispatch(_name, arguments):
+        writes.append(arguments)
+        return ToolResult(ToolOutcome.COMPLETED, "done")
+
+    task = asyncio.create_task(
+        engine.on_decision(
+            approval.approval_id,
+            "approve",
+            expected_payload_sha256=approval.payload_sha256,
+            dispatch=dispatch,
+        )
+    )
+    assert await asyncio.to_thread(started.wait, 1)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    release.set()
+
+    stored = await approvals.get(approval.approval_id)
+    assert stored is not None and stored.state == "awaiting_confirmation"
+    assert writes == []
+
+    repeated = await engine.on_decision(
+        approval.approval_id,
+        "approve",
+        expected_payload_sha256=approval.payload_sha256,
+        dispatch=dispatch,
+    )
+    assert repeated.status == ApprovalStatus.EXECUTED
+    assert writes == [{}]
 
 
 @pytest.mark.parametrize("state,label", [("executing", "已处理"), ("execution_unknown", "结果未知")])

@@ -53,7 +53,7 @@ class Bundle(Protocol):
 BUNDLES = Registry()
 
 
-def _available_bundle_names() -> tuple[str, ...]:
+def available_bundle_names() -> tuple[str, ...]:
     names: list[str] = []
 
     def collect(prefix: str, registry: Registry) -> None:
@@ -82,10 +82,13 @@ def build_tool_registry(
         try:
             bundle = BUNDLES.build(name)
         except ValueError as exc:
-            available = ", ".join(_available_bundle_names()) or "<none>"
+            available = ", ".join(available_bundle_names()) or "<none>"
             raise ValueError(f"unknown bundle {name!r}; registered bundles: {available}") from exc
         register = getattr(bundle, "register", None)
         if register is None:
             raise TypeError(f"bundle {name!r} does not define register(registry, context)")
         register(target, bundle_context)
     return target
+
+
+__all__ = ["BUNDLES", "Bundle", "BundleContext", "available_bundle_names", "build_tool_registry"]

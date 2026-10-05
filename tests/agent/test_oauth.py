@@ -113,6 +113,35 @@ def test_oauth_callback_auto_closes_and_resumes_pending_authorization() -> None:
     asyncio.run(run())
 
 
+async def test_oauth_callback_registers_resume_task_with_agent_runtime() -> None:
+    provider = _Provider()
+    signer = OAuthStateSigner("secret")
+    state = signer.issue(user_keys=("open_id:ou_1",), extra={"authorization_id": "az_1"})
+    request = SimpleNamespace(query_params={"code": "code_1", "state": state})
+    tracked: set[asyncio.Task[Any]] = set()
+    release = asyncio.Event()
+
+    async def on_authorized(_authorization_id: str, *, user: dict[str, Any]) -> str:
+        await release.wait()
+        return str(user["open_id"])
+
+    handler = oauth_callback_handler(
+        cast(UserTokenProvider, provider),
+        signer,
+        "https://agent.example/oauth/callback",
+        on_authorized=on_authorized,
+        track_task=tracked.add,
+    )
+    await handler(request)
+    await asyncio.sleep(0)
+
+    assert len(tracked) == 1
+    assert not _RESUME_TASKS
+    release.set()
+    await asyncio.gather(*tracked)
+    assert all(task.done() for task in tracked)
+
+
 @pytest.mark.parametrize(("fail_patch", "recalls"), ((False, []), (True, ["om_auth"])))
 async def test_finishes_authorization_card(fail_patch: bool, recalls: list[str]) -> None:
     client = _CleanupClient(fail_patch=fail_patch)

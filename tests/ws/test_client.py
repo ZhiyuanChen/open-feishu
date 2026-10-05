@@ -12,6 +12,7 @@ from feishu.errors import FeishuError
 from feishu.events.dispatcher import EventDispatcher
 from feishu.ws._frame import FRAME_TYPE_CONTROL, FRAME_TYPE_DATA, Frame, Header, decode_frame, encode_frame
 from feishu.ws.client import WsClient
+from feishu.ws.model import ClientConfig
 
 APP_ID = "cli_app"
 APP_SECRET = "secret"
@@ -111,6 +112,100 @@ class TestInit:
 
 
 class TestStart:
+    async def test_start_reports_connected_then_disconnected(self):
+        states = []
+        client = _make_client(
+            _endpoint_handler,
+            connect=lambda url: _FakeConn(FakeWebSocket([])),
+            auto_reconnect=False,
+            on_connection_state=states.append,
+        )
+
+        await client.start()
+
+        assert states == [True, False]
+
+    async def test_close_interrupts_an_inflight_handshake(self, monkeypatch):
+        client = _make_client(_endpoint_handler)
+        started = asyncio.Event()
+
+        async def blocking_handshake():
+            started.set()
+            await asyncio.Event().wait()
+
+        monkeypatch.setattr(client, "_handshake", blocking_handshake)
+        task = asyncio.create_task(client.start())
+        await started.wait()
+        await client.aclose()
+
+        await asyncio.wait_for(task, timeout=0.5)
+        await client._http_client.aclose()
+
+    async def test_close_interrupts_reconnect_backoff(self):
+        backoff_started = asyncio.Event()
+
+        async def sleeper(delay):
+            if delay > 10:
+                backoff_started.set()
+                await asyncio.Event().wait()
+            else:
+                await asyncio.sleep(0)
+
+        client = _make_client(
+            _endpoint_handler,
+            auto_reconnect=True,
+            sleep=sleeper,
+        )
+        connected = asyncio.Event()
+
+        def connect(url):
+            connected.set()
+            return _FakeConn(FakeWebSocket([]))
+
+        client._connect = connect
+        client._handshake = lambda: asyncio.sleep(
+            0,
+            result=(
+                ENDPOINT_URL,
+                ClientConfig(reconnect_count=-1, reconnect_interval=120, reconnect_nonce=0, ping_interval=5),
+            ),
+        )
+        task = asyncio.create_task(client.start())
+        await asyncio.wait_for(connected.wait(), timeout=0.5)
+        await asyncio.wait_for(backoff_started.wait(), timeout=0.5)
+        await client.aclose()
+
+        await asyncio.wait_for(task, timeout=0.5)
+        await client._http_client.aclose()
+
+    async def test_inflight_message_dispatch_is_cancelled_after_drain_deadline(self):
+        dispatcher = EventDispatcher()
+        started = asyncio.Event()
+        cancelled = asyncio.Event()
+
+        @dispatcher.on("im.message.receive_v1")
+        async def on_message(_event):
+            started.set()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                cancelled.set()
+                raise
+
+        ws = FakeWebSocket([_event_frame()])
+        client = _make_client(
+            _endpoint_handler,
+            dispatcher=dispatcher,
+            connect=lambda url: _FakeConn(ws),
+            auto_reconnect=False,
+            background_dispatch_drain_timeout=0.02,
+        )
+
+        await asyncio.wait_for(client.start(), timeout=0.5)
+
+        assert started.is_set()
+        assert cancelled.is_set()
+
     async def test_handshake_url_reaches_connect(self):
         # The wss URL returned by the handshake must reach the connect factory verbatim.
         seen = {}

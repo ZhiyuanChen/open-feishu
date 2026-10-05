@@ -74,6 +74,15 @@ def _log_background_dispatch_error(logger: logging.Logger, event_id: str) -> Cal
     return callback
 
 
+def _consume_task_result(task: asyncio.Task[Any]) -> None:
+    try:
+        task.result()
+    except asyncio.CancelledError:
+        pass
+    except Exception:  # noqa: BLE001 - detached shutdown cleanup must not leave an unobserved exception
+        logging.getLogger("feishu").debug("cancelled ws task failed during cleanup", exc_info=True)
+
+
 def _default_connect(url: str) -> AbstractAsyncContextManager[Any]:
     r"""默认 websocket 连接器：懒加载 `websockets`，缺失时给出明确的安装提示。"""
     try:
@@ -148,6 +157,8 @@ class WsClient:
         max_partial_messages: int = _MAX_PARTIAL_MESSAGES,
         card_ack_timeout: float | None = _CARD_ACK_TIMEOUT_SECONDS,
         background_dispatch_drain_timeout: float | None = _BACKGROUND_DISPATCH_DRAIN_TIMEOUT_SECONDS,
+        shutdown_deadline: Callable[[], float | None] | None = None,
+        on_connection_state: Callable[[bool], None] | None = None,
     ) -> None:
         if not app_id:
             raise ValueError("app_id must not be empty")
@@ -171,6 +182,9 @@ class WsClient:
         self._max_partial_messages = max_partial_messages
         self._card_ack_timeout = card_ack_timeout
         self._background_dispatch_drain_timeout = background_dispatch_drain_timeout
+        self._shutdown_deadline = shutdown_deadline
+        self._on_connection_state = on_connection_state
+        self._connected = False
         self._background_dispatches: set[asyncio.Task[Any]] = set()
 
         # Populated after the handshake: service frame field comes from the wss URL's service_id query param.
@@ -181,7 +195,24 @@ class WsClient:
         self._fragments: dict[str, dict[int, bytes]] = {}
         # Runtime control.
         self._stopped = False
+        self._stopped_event = asyncio.Event()
         self._websocket: Any = None
+
+    @property
+    def connected(self) -> bool:
+        """Whether a Feishu WebSocket connection is currently serving events."""
+        return self._connected
+
+    def _set_connected(self, connected: bool) -> None:
+        if self._connected == connected:
+            return
+        self._connected = connected
+        if self._on_connection_state is None:
+            return
+        try:
+            self._on_connection_state(connected)
+        except Exception:  # noqa: BLE001 - observers must not interrupt frame handling
+            self.logger.exception("ws connection-state callback failed")
 
     async def _handshake(self) -> tuple[str, ClientConfig]:
         r"""
@@ -309,6 +340,7 @@ class WsClient:
         import websockets
 
         self._websocket = websocket
+        self._set_connected(True)
         send_lock = asyncio.Lock()
         ping_task = asyncio.ensure_future(self._ping_loop(websocket, send_lock))
         pending: set[asyncio.Task[None]] = set()
@@ -336,24 +368,82 @@ class WsClient:
                 task.add_done_callback(pending.discard)
         finally:
             ping_task.cancel()
-            # Wait for in-flight dispatch tasks after close; their ACKs may fail on the closed connection.
-            if pending:
-                await asyncio.gather(*pending, return_exceptions=True)
-            await self._drain_background_dispatches()
+            await asyncio.gather(ping_task, return_exceptions=True)
+            # ACK-detached card work and regular event handlers share one bounded drain budget.
+            deadline = self._drain_deadline()
+            await self._drain_tasks(pending, deadline=deadline, description="message dispatch")
+            await self._drain_background_dispatches(deadline=deadline)
+            self._set_connected(False)
             self._websocket = None
 
-    async def _drain_background_dispatches(self) -> None:
-        r"""On connection shutdown, give ACK-detached card handlers a bounded chance to finish."""
+    def _drain_deadline(self) -> float | None:
+        if self._shutdown_deadline is not None:
+            deadline = self._shutdown_deadline()
+            if deadline is not None:
+                return deadline
+        if self._background_dispatch_drain_timeout is None:
+            return None
+        return asyncio.get_running_loop().time() + self._background_dispatch_drain_timeout
+
+    async def _drain_tasks(self, tasks: set[asyncio.Task[Any]], *, deadline: float | None, description: str) -> None:
+        tasks = {task for task in tasks if not task.done()}
+        if not tasks:
+            return
+        loop = asyncio.get_running_loop()
+        timeout = None if deadline is None else max(0.0, deadline - loop.time())
+        _done, pending = await asyncio.wait(tasks, timeout=timeout)
+        if not pending:
+            return
+        self.logger.warning("ws %s drain timed out; cancelling %d pending task(s)", description, len(pending))
+        for task in pending:
+            task.cancel()
+        await asyncio.sleep(0)
+        if deadline is None:
+            await asyncio.gather(*pending, return_exceptions=True)
+            return
+        remaining = max(0.0, deadline - loop.time())
+        if remaining:
+            _done, pending = await asyncio.wait(pending, timeout=remaining)
+        if pending:
+            self.logger.error(
+                "ws shutdown deadline expired with %d %s task(s) still running", len(pending), description
+            )
+
+    async def _drain_background_dispatches(self, *, deadline: float | None) -> None:
+        r"""Drain ACK-detached card handlers using the shared connection shutdown deadline."""
         tasks = {task for task in self._background_dispatches if not task.done()}
         if not tasks:
             return
-        _done, pending = await asyncio.wait(tasks, timeout=self._background_dispatch_drain_timeout)
-        if not pending:
-            return
-        self.logger.warning("ws background dispatch drain timed out; cancelling %d pending task(s)", len(pending))
-        for task in pending:
-            task.cancel()
-        await asyncio.gather(*pending, return_exceptions=True)
+        await self._drain_tasks(tasks, deadline=deadline, description="background dispatch")
+
+    async def _await_or_stop(self, operation: Awaitable[Any]) -> tuple[bool, Any]:
+        operation_task = asyncio.ensure_future(operation)
+        stop_task = asyncio.create_task(self._stopped_event.wait())
+        done, _pending = await asyncio.wait(
+            (operation_task, stop_task),
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        if operation_task in done:
+            stop_task.cancel()
+            await asyncio.gather(stop_task, return_exceptions=True)
+            return True, await operation_task
+
+        operation_task.cancel()
+        loop = asyncio.get_running_loop()
+        grace = 0.05
+        if self._shutdown_deadline is not None:
+            deadline = self._shutdown_deadline()
+            if deadline is not None:
+                grace = min(grace, max(0.0, deadline - loop.time()))
+        if grace:
+            _done, pending = await asyncio.wait((operation_task,), timeout=grace)
+        else:
+            pending = {operation_task} if not operation_task.done() else set()
+        if pending:
+            operation_task.add_done_callback(_consume_task_result)
+        else:
+            await asyncio.gather(operation_task, return_exceptions=True)
+        return False, None
 
     async def _handle_frame(self, websocket: Any, frame: Frame, payload: bytes, send_lock: asyncio.Lock) -> None:
         r"""
@@ -369,6 +459,8 @@ class WsClient:
         """
         try:
             event = Event.from_payload(json.loads(payload.decode("utf-8")))
+            if self._stopped:
+                return
             if event.event_type in _SYNC_ACK_EVENT_TYPES:
                 if self._card_ack_timeout == 0:
                     await self._send_frame(websocket, _build_ack(frame, _CARD_ACK_TIMEOUT_RESULT), send_lock)
@@ -435,7 +527,10 @@ class WsClient:
         config = ClientConfig()  # defaults until the first successful handshake (drives early backoff)
         while not self._stopped:
             try:
-                url, config = await self._handshake()
+                active, handshake = await self._await_or_stop(self._handshake())
+                if not active:
+                    return
+                url, config = handshake
             except (httpx.RequestError, FeishuServerError) as exc:
                 # Transient handshake failure (network blip / 5xx): back off and retry rather than
                 # aborting the whole connection loop. Non-transient errors (auth/config) propagate.
@@ -446,7 +541,8 @@ class WsClient:
                     raise
                 attempts += 1
                 self.logger.warning("ws handshake failed (%s); retrying", exc)
-                await self._sleep(self._reconnect_delay(config))
+                if not await self._wait_reconnect_delay(self._reconnect_delay(config)):
+                    return
                 continue
             try:
                 async with self._connect(url) as websocket:
@@ -465,7 +561,14 @@ class WsClient:
                 self.logger.warning("ws reconnect attempts exhausted (%d)", config.reconnect_count)
                 return
             attempts += 1
-            await self._sleep(self._reconnect_delay(config))
+            if not await self._wait_reconnect_delay(self._reconnect_delay(config)):
+                return
+
+    async def _wait_reconnect_delay(self, delay: float) -> bool:
+        if self._stopped:
+            return False
+        active, _result = await self._await_or_stop(self._sleep(delay))
+        return active and not self._stopped
 
     def _reconnect_delay(self, config: ClientConfig) -> float:
         r"""重连等待时长：在 `reconnect_interval` 之上叠加 `[0, reconnect_nonce)` 的随机抖动，避免雪崩式重连。"""
@@ -476,6 +579,7 @@ class WsClient:
         请求停止：置位停止标志使 [start][feishu.ws.client.WsClient.start] 的循环退出，并关闭活动连接。
         """
         self._stopped = True
+        self._stopped_event.set()
         websocket = self._websocket
         if websocket is not None:
             await websocket.close()

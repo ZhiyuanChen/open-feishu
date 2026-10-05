@@ -22,7 +22,7 @@
 from __future__ import annotations
 
 from .memory import MemoryBundle
-from .registry import BUNDLES, Bundle, BundleContext, build_tool_registry
+from .registry import BUNDLES, Bundle, BundleContext, available_bundle_names, build_tool_registry
 from .workplace import (
     APPROVAL_SCOPES,
     BITABLE_SCOPES,
@@ -51,6 +51,7 @@ __all__ = [
     "BUNDLES",
     "Bundle",
     "BundleContext",
+    "available_bundle_names",
     "build_tool_registry",
     "FeishuWorkplaceBundle",
     "MemoryBundle",

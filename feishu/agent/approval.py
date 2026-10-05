@@ -334,6 +334,25 @@ class DefaultApprovalEngine:
         if claim is not ClaimResult.CLAIMED:
             return self._claim_failure(claim)
 
+        execution_started = False
+
+        async def tracked_dispatch(tool_name: str, arguments: dict[str, Any]) -> ToolResult:
+            nonlocal execution_started
+            execution_started = True
+            return await dispatch(tool_name, arguments)
+
+        try:
+            return await self._on_claimed_decision(approval, tracked_dispatch)
+        except asyncio.CancelledError:
+            # Once claimed, cancellation can happen during replay lookup, remote dispatch, or
+            # local result recording. Reopen only if dispatch never began; otherwise freeze it
+            # so a restart can never silently submit the operation again.
+            await self._settle_cancelled_decision(approval, execution_started=execution_started)
+            raise
+
+    async def _on_claimed_decision(self, approval: PendingApproval, dispatch: DispatchTool) -> ApprovalOutcome:
+        approval_id = approval.approval_id
+
         # Idempotent replay uses the same hash and lifecycle claim gate as a fresh dispatch.
         # A prior execution with a MATCHING payload hash returns its cached
         # result without re-running. A missing/mismatched hash never replays (fail closed).
@@ -407,6 +426,19 @@ class DefaultApprovalEngine:
         await self.approvals.complete(approval_id, outcome="executed")
         await self._record("execute", approval)
         return ApprovalOutcome(ApprovalStatus.EXECUTED, content=content)
+
+    async def _settle_cancelled_decision(self, approval: PendingApproval, *, execution_started: bool) -> None:
+        try:
+            current = await self.approvals.get(approval.approval_id)
+            if current is None or current.state != "executing":
+                return
+            if not execution_started:
+                await self.approvals.complete(approval.approval_id, outcome="retry")
+                return
+            await self.approvals.complete(approval.approval_id, outcome="frozen")
+            await self._record("execute_unknown", approval, error="execution cancelled before its result was recorded")
+        except Exception:  # noqa: BLE001 - cancellation cleanup must not mask task cancellation
+            self._log.exception("approval %s: failed to settle cancelled execution", approval.approval_id)
 
     def _claim_failure(self, claim: ClaimResult) -> ApprovalOutcome:
         status = {

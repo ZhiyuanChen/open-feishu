@@ -508,9 +508,10 @@ class AgentEngine:
         self._interrupted_progress_text = interrupted_progress_text
         self.stream = stream
         self.backend_kwargs = backend_kwargs
-        self._bg_tasks: set[asyncio.Task[None]] = set()
+        self._bg_tasks: set[asyncio.Task[Any]] = set()
         self._active_turns: dict[str, _ActiveTurn] = {}
         self._superseded_turns: set[asyncio.Task[Any]] = set()
+        self._accepting_events = True
         # Per-session lock: serialize each session's history read-modify-write (a new message and a background
         # approval-resume for the same chat must not interleave and clobber each other's turns).
         self._session_locks: dict[str, asyncio.Lock] = {}
@@ -521,6 +522,61 @@ class AgentEngine:
         if lock is None:
             lock = self._session_locks.setdefault(session_id, asyncio.Lock())
         return lock
+
+    @property
+    def accepting_events(self) -> bool:
+        """Whether new message, card, and authorization work may be accepted."""
+        return self._accepting_events
+
+    def stop_accepting_events(self) -> None:
+        """Prevent new work from starting while existing turns drain."""
+        self._accepting_events = False
+
+    def track_background_task(self, task: asyncio.Task[Any]) -> None:
+        """Register a task whose work uses this engine's stores or client."""
+        if not self._accepting_events:
+            task.cancel()
+            return
+        self._bg_tasks.add(task)
+        task.add_done_callback(self._bg_tasks.discard)
+
+    async def aclose(self, *, deadline: float | None = None) -> bool:
+        """Stop accepting work, wait for active work, and cancel it if the deadline expires.
+
+        ``deadline`` is an absolute ``asyncio`` loop time so an application runtime can share
+        one shutdown budget across its server, engine, and owned resources.
+        """
+        self.stop_accepting_events()
+        current = asyncio.current_task()
+        tasks = set(self._bg_tasks)
+        tasks.update(turn.task for turn in self._active_turns.values())
+        tasks.update(self._superseded_turns)
+        if current is not None:
+            tasks.discard(current)
+        tasks = {task for task in tasks if not task.done()}
+        if not tasks:
+            return True
+
+        loop = asyncio.get_running_loop()
+        timeout = None if deadline is None else max(0.0, deadline - loop.time())
+        _done, pending = await asyncio.wait(tasks, timeout=timeout)
+        if not pending:
+            return True
+
+        for task in pending:
+            task.cancel()
+        if deadline is None:
+            await asyncio.gather(*pending, return_exceptions=True)
+            return True
+
+        remaining = max(0.0, deadline - loop.time())
+        _done, pending = await asyncio.wait(pending, timeout=remaining)
+        if pending:
+            logging.getLogger("feishu").error(
+                "agent shutdown deadline expired with %d task(s) still running", len(pending)
+            )
+            return False
+        return True
 
     def _session_id_for_event(self, event: Event) -> str:
         session_id = session_id_for(event)
@@ -589,6 +645,8 @@ class AgentEngine:
         Examples:
             >>> await agent.run(event)  # doctest:+SKIP
         """
+        if not self._accepting_events:
+            raise RuntimeError("agent is shutting down and is not accepting events")
         if _sender_type_for(event) == "app":
             logging.getLogger("feishu").debug("ignore app-sent message event")
             return
@@ -994,10 +1052,14 @@ class AgentEngine:
 
     async def handle_card_action(self, event: Event) -> dict[str, Any]:
         r"""处理审批卡片回传：同步 ACK，后台完成决策、工具执行、历史续跑与卡片更新。"""
+        if not self._accepting_events:
+            return {"toast": {"type": "info", "content": "Agent is shutting down. Please retry shortly."}}
         return await approval_flow.handle_card_action(self, event)
 
     async def resume_authorization(self, authorization_id: str, *, user: Mapping[str, Any] | None = None) -> str:
         r"""在 OAuth 回调成功保存用户 token 后，恢复一次挂起授权对应的原工具调用。"""
+        if not self._accepting_events:
+            raise RuntimeError("agent is shutting down and cannot resume authorization")
         return await oauth_flow.resume_authorization(self, authorization_id, user=user)
 
     async def _notify_authorization_resume_problem(self, authorization: PendingAuthorization, text: str) -> None:
@@ -1019,9 +1081,13 @@ class AgentEngine:
 
     def _spawn_background(self, coro: Any) -> None:
         r"""把协程作为后台任务运行（保留引用以防被 GC）；其异常已在任务内部自行捕获。"""
+        if not self._accepting_events:
+            close = getattr(coro, "close", None)
+            if callable(close):
+                close()
+            return
         task = asyncio.ensure_future(coro)
-        self._bg_tasks.add(task)
-        task.add_done_callback(self._bg_tasks.discard)
+        self.track_background_task(task)
 
     async def _decide_and_resume(
         self,
