@@ -26,6 +26,19 @@ from .crypto import decrypt
 from .dispatcher import EventDispatcher
 from .envelope import Event
 from .idempotency import InMemorySeenStore, SeenStore, SqliteSeenStore
+from .job_runner import EventJobRunner
+from .jobs import (
+    EventJob,
+    EventJobContext,
+    EventJobLeaseError,
+    EventJobStatus,
+    EventJobStore,
+    EventJobStoreError,
+    InMemoryEventJobStore,
+    SqliteEventJobStore,
+    current_event_job,
+    mark_current_event_side_effect_started,
+)
 from .receiver import create_card_route, create_event_app, create_event_route
 
 __all__ = [
@@ -34,6 +47,17 @@ __all__ = [
     "SeenStore",
     "InMemorySeenStore",
     "SqliteSeenStore",
+    "EventJob",
+    "EventJobContext",
+    "EventJobLeaseError",
+    "EventJobRunner",
+    "EventJobStatus",
+    "EventJobStore",
+    "EventJobStoreError",
+    "InMemoryEventJobStore",
+    "SqliteEventJobStore",
+    "current_event_job",
+    "mark_current_event_side_effect_started",
     "verify_signature",
     "decrypt",
     "create_event_route",

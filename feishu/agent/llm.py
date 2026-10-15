@@ -115,6 +115,8 @@ class Message:
     content: list[ContentPart]
     # Internal durable identity for an assistant tool batch; never forwarded to a model provider.
     continuation_id: str | None = field(default=None, compare=False, repr=False)
+    # Internal webhook identity used to avoid appending the same user turn after a safe job retry.
+    source_event_id: str | None = field(default=None, compare=False, repr=False)
 
 
 @dataclass(slots=True)

@@ -11,6 +11,7 @@ from starlette.testclient import TestClient
 from feishu.agent import Agent
 from feishu.agent.loop import AgentEngine
 from feishu.agent.tools import ToolRegistry
+from feishu.events.jobs import EventJobStatus, InMemoryEventJobStore
 from tests._fakes import FakeLlmBackend
 
 
@@ -27,6 +28,30 @@ def test_agent_facade(tmp_path: Path) -> None:
     )
 
     assert isinstance(agent.engine, AgentEngine)
+
+
+async def test_agent_asgi_app_persists_message_before_ack() -> None:
+    jobs = InMemoryEventJobStore()
+    engine = AgentEngine(backend=FakeLlmBackend([]), registry=ToolRegistry())
+    agent = Agent(
+        engine=engine,
+        event_job_store=jobs,
+        event_partition_key=lambda _event: "chat-1",
+    )
+
+    with TestClient(agent.asgi_app()) as client:
+        response = client.post(
+            "/feishu/event",
+            json={
+                "schema": "2.0",
+                "header": {"event_type": "im.message.receive_v1", "event_id": "evt-agent"},
+                "event": {"message": {"chat_id": "chat-1", "message_id": "msg-1"}},
+            },
+        )
+        assert response.status_code == 200
+
+    job = await jobs.get("evt-agent")
+    assert job is not None and job.status is EventJobStatus.QUEUED
 
 
 def test_empty_injected_registry_overrides_configured_toolkits(tmp_path: Path) -> None:

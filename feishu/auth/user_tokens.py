@@ -43,6 +43,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
+from .._sqlite import run_transaction
+
 _USER_ID_KEYS = ("open_id", "union_id", "user_id")
 
 
@@ -251,8 +253,8 @@ class SqliteOAuthTokenStore:
         >>> store = SqliteOAuthTokenStore(":memory:")  # doctest:+SKIP
     """
 
-    def __init__(self, db_path: str | Path) -> None:
-        self._db = _connect(db_path)
+    def __init__(self, db_path: str | Path, *, connection: Any | None = None) -> None:
+        self._db = connection if connection is not None else _connect(db_path)
         self._db.execute(
             "CREATE TABLE IF NOT EXISTS oauth_tokens "
             "(user_key TEXT PRIMARY KEY, record TEXT NOT NULL, updated_at INTEGER)"
@@ -286,20 +288,23 @@ class SqliteOAuthTokenStore:
             # Reconcile aliases: collect every alias of any existing row that shares a key with the
             # new identity, then delete them all and re-insert only the current key set — so a re-auth
             # with fewer aliases cannot leave a stale row pointing at the dead old record.
-            placeholders = ",".join("?" * len(keys))
-            rows = self._db.execute(
-                f"SELECT record FROM oauth_tokens WHERE user_key IN ({placeholders})", tuple(keys)
-            ).fetchall()
-            stale: set[str] = set(keys)
-            for (record_json,) in rows:
-                stale.update(TokenRecord.from_dict(json.loads(record_json)).user_keys)
-            delete_placeholders = ",".join("?" * len(stale))
-            self._db.execute(f"DELETE FROM oauth_tokens WHERE user_key IN ({delete_placeholders})", tuple(stale))
-            self._db.executemany(
-                "INSERT INTO oauth_tokens (user_key, record, updated_at) VALUES (?, ?, ?)",
-                [(key, payload, now) for key in keys],
-            )
-            self._db.commit()
+
+            def reconcile_aliases() -> None:
+                placeholders = ",".join("?" * len(keys))
+                rows = self._db.execute(
+                    f"SELECT record FROM oauth_tokens WHERE user_key IN ({placeholders})", tuple(keys)
+                ).fetchall()
+                stale: set[str] = set(keys)
+                for (record_json,) in rows:
+                    stale.update(TokenRecord.from_dict(json.loads(record_json)).user_keys)
+                delete_placeholders = ",".join("?" * len(stale))
+                self._db.execute(f"DELETE FROM oauth_tokens WHERE user_key IN ({delete_placeholders})", tuple(stale))
+                self._db.executemany(
+                    "INSERT INTO oauth_tokens (user_key, record, updated_at) VALUES (?, ?, ?)",
+                    [(key, payload, now) for key in keys],
+                )
+
+            run_transaction(self._db, reconcile_aliases)
         return keys
 
 

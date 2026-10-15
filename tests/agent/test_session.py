@@ -1,4 +1,5 @@
 import asyncio
+import sqlite3
 
 import pytest
 
@@ -82,6 +83,16 @@ async def test_sqlite_session_store_tracks_updated_at(tmp_path):
     assert await store.updated_at("s") is not None
     await store.clear("s")
     assert await store.updated_at("s") is None
+
+
+async def test_sqlite_session_store_accepts_shared_connection():
+    connection = sqlite3.connect(":memory:")
+    first = SqliteSessionStore(":memory:", connection=connection)
+    await first.append("s", msg("one"))
+
+    second = SqliteSessionStore(":memory:", connection=connection)
+
+    assert await second.get("s") == [msg("one")]
 
 
 async def test_sqlite_session_store_preserves_assistant_reasoning_for_tool_replay(tmp_path):

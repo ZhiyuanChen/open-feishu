@@ -1,0 +1,9 @@
+AGENT_LOCAL_SMOKE=1
+FEISHU_APP_ID=local-smoke-app-id
+FEISHU_APP_SECRET=local-smoke-app-secret
+FEISHU_ENCRYPT_KEY=cf-encrypt
+FEISHU_VERIFICATION_TOKEN=cf-smoke
+FEISHU_REGION=feishu
+OPENAI_API_KEY=local-smoke-no-network
+OPENAI_MODEL=gpt-4o-mini
+OPENAI_BASE_URL=https://api.openai.com/v1

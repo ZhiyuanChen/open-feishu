@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Literal
 from uuid import uuid4
 
 from ..events.envelope import Event
+from ..events.jobs import current_event_job, mark_current_event_side_effect_started
 from . import approval as approval_flow
 from . import oauth as oauth_flow
 from . import summarization as summarization_flow
@@ -652,6 +653,8 @@ class AgentEngine:
             return
         session_id = self._session_id_for_event(event)
         user_msg = user_message_from_event(event)
+        event_id = str(getattr(event, "event_id", "") or "")
+        user_msg.source_event_id = event_id or None
         progress = _ProgressCard(self, event)
         active_task = self._begin_session_turn(session_id, progress, interrupt_previous=True)
         try:
@@ -678,12 +681,17 @@ class AgentEngine:
                         return
                     await self._clear_idle_session(session_id)
                     history = await self.store.get(session_id)
-                    shared = await self._register_inbound_files(event)
-                    if shared:
-                        # Make the model aware of the just-shared files (by opaque handle only — never bytes).
-                        user_msg.content.append(TextPart(text=shared_files_note(shared)))
-                    history.append(user_msg)
-                    await self.store.set(session_id, history)
+                    await self._recover_interrupted_tool_calls(session_id, history)
+                    already_recorded = bool(event_id) and any(
+                        message.role == "user" and message.source_event_id == event_id for message in history
+                    )
+                    if not already_recorded:
+                        shared = await self._register_inbound_files(event)
+                        if shared:
+                            # Make the model aware of the just-shared files (by opaque handle only — never bytes).
+                            user_msg.content.append(TextPart(text=shared_files_note(shared)))
+                        history.append(user_msg)
+                        await self.store.set(session_id, history)
                     await self._loop(event, session_id, history, progress=progress)
         except asyncio.CancelledError:
             if self._turn_was_superseded(active_task):
@@ -703,6 +711,8 @@ class AgentEngine:
         # model call, so a long session keeps a stable, cacheable prefix instead of paying a growing prompt.
         try:
             history = await self._maybe_summarize(session_id, history)
+            if progress.will_start:
+                await mark_current_event_side_effect_started()
             await progress.start()
             timezone = await self._timezone_for_event(event)
             for _ in range(self.max_iterations):
@@ -731,6 +741,7 @@ class AgentEngine:
                 if result.tool_calls and result.stop_reason == StopReason.TOOL_USE:
                     assistant = self._assistant_tool_message(result)
                     current_tool_context().continuation_id = assistant.continuation_id
+                    await mark_current_event_side_effect_started()
                     history.append(assistant)
                     await self.store.append(session_id, assistant)
                     active_tool_calls = result.tool_calls
@@ -743,6 +754,7 @@ class AgentEngine:
                         return  # authorization / approval suspended the turn
                     continue
                 assistant = Message(role="assistant", content=[TextPart(text=result.text)])
+                await mark_current_event_side_effect_started()
                 history.append(assistant)
                 await self.store.append(session_id, assistant)
                 # Replace the progress card in place with the answer; only send a separate reply if there was none.
@@ -779,6 +791,56 @@ class AgentEngine:
     async def _maybe_summarize(self, session_id: str, history: list[Message]) -> list[Message]:
         r"""历史超过 token 阈值时自动压缩；未配置阈值或未超阈值时原样返回。"""
         return await summarization_flow.maybe_summarize(self, session_id, history)
+
+    async def _recover_interrupted_tool_calls(self, session_id: str, history: list[Message]) -> None:
+        """Close tool calls left without results by a process that ended mid-effect."""
+        repaired: list[Message] = []
+        pending_tool_ids: set[str] = set()
+        changed = False
+
+        def close_pending_batch() -> None:
+            nonlocal changed
+            if not pending_tool_ids:
+                return
+            repaired.append(
+                Message(
+                    role="tool",
+                    content=[
+                        ToolResultPart(
+                            tool_call_id=tool_id,
+                            content=(
+                                "The previous execution outcome is unknown. The tool was not replayed; "
+                                "check the external system before trying again."
+                            ),
+                            is_error=True,
+                        )
+                        for tool_id in sorted(pending_tool_ids)
+                    ],
+                )
+            )
+            pending_tool_ids.clear()
+            changed = True
+
+        for message in history:
+            if message.role == "assistant":
+                close_pending_batch()
+                pending_tool_ids = {part.id for part in message.content if isinstance(part, ToolUsePart)}
+                repaired.append(message)
+                continue
+            if message.role == "tool" and pending_tool_ids:
+                repaired.append(message)
+                answered = {part.tool_call_id for part in message.content if isinstance(part, ToolResultPart)}
+                pending_tool_ids.difference_update(answered)
+                continue
+            if pending_tool_ids:
+                close_pending_batch()
+            repaired.append(message)
+
+        close_pending_batch()
+        if not changed:
+            return
+        history[:] = repaired
+        await self.store.set(session_id, history)
 
     async def _summarize_history(self, session_id: str, history: list[Message]) -> list[Message]:
         r"""把较早轮次压缩为一条摘要消息、保留最近 N 条原样，并持久化压缩后的历史。"""
@@ -862,6 +924,8 @@ class AgentEngine:
         try:
             result = await self.registry.dispatch(call.name, parse_tool_arguments(call.arguments))
         except Exception as exc:  # noqa: BLE001 - a tool error must never crash the turn; report it back
+            if current_event_job() is not None:
+                raise
             logging.getLogger("feishu").warning(
                 "agent: tool %s raised %s; feeding a sanitized error back to the model",
                 call.name,
@@ -1112,9 +1176,11 @@ class AgentEngine:
         message = event.body.get("message") or {}
         message_id = message.get("message_id")
         if self.stream and self.client is not None:
+            await mark_current_event_side_effect_started()
             await self._finalize_stream(event, text)
             return
         if self.client is not None and message_id:
+            await mark_current_event_side_effect_started()
             await self.client.im.reply(message_id, text, msg_type="text")
 
     async def _finalize_stream(self, event: Event, text: str) -> None:
@@ -1127,6 +1193,7 @@ class AgentEngine:
         async def _one_token() -> AsyncIterator[str]:
             yield text
 
+        await mark_current_event_side_effect_started()
         await self.client.stream_card(_one_token(), reply_to_message_id=message_id)  # type: ignore[union-attr]
 
 

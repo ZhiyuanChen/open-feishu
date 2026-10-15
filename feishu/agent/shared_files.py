@@ -46,6 +46,7 @@ from pathlib import Path
 from typing import Any, Mapping, Protocol, runtime_checkable
 from uuid import uuid4
 
+from .._sqlite import run_transaction
 from ..auth import user_identity_keys
 
 
@@ -367,8 +368,8 @@ class SqliteSharedFileStore:
         >>> store = SqliteSharedFileStore(":memory:")  # doctest:+SKIP
     """
 
-    def __init__(self, db_path: str | Path) -> None:
-        self._db = _connect(db_path)
+    def __init__(self, db_path: str | Path, *, connection: Any | None = None) -> None:
+        self._db = connection if connection is not None else _connect(db_path)
         self._db.execute(
             "CREATE TABLE IF NOT EXISTS shared_files ("
             "file_id TEXT PRIMARY KEY, message_id TEXT, file_key TEXT, recipe TEXT NOT NULL, "
@@ -393,36 +394,41 @@ class SqliteSharedFileStore:
         message_id = str(message.get("message_id") or "")
         file_key = str(resource.get("key") or "")
         async with self._lock:
-            self._purge(now)
-            placeholders = ",".join("?" * len(keys))
-            row = self._db.execute(
-                f"SELECT f.recipe FROM shared_files f JOIN shared_file_owners o ON f.file_id = o.file_id "
-                f"WHERE o.user_key IN ({placeholders}) AND f.message_id = ? AND f.file_key = ? "
-                f"AND (f.expires_at = 0 OR f.expires_at > ?) LIMIT 1",
-                (*keys, message_id, file_key, now),
-            ).fetchone()
-            if row is not None:
-                return SharedFile.from_dict(json.loads(row[0]))  # idempotent: same file re-sent
-            sf = SharedFile.from_resource(resource, user_keys=keys, message=message, ttl_seconds=ttl_seconds, now=now)
-            self._db.execute(
-                "INSERT INTO shared_files "
-                "(file_id, message_id, file_key, recipe, cached_blob, created_at, expires_at, pinned) "
-                "VALUES (?, ?, ?, ?, NULL, ?, ?, 0)",
-                (
-                    sf.file_id,
-                    sf.message_id,
-                    sf.file_key,
-                    json.dumps(sf.to_dict(), ensure_ascii=False),
-                    sf.created_at,
-                    sf.expires_at,
-                ),
-            )
-            self._db.executemany(
-                "INSERT OR REPLACE INTO shared_file_owners (user_key, file_id) VALUES (?, ?)",
-                [(key, sf.file_id) for key in keys],
-            )
-            self._db.commit()
-            return sf
+
+            def register_file() -> SharedFile:
+                self._purge(now)
+                placeholders = ",".join("?" * len(keys))
+                row = self._db.execute(
+                    f"SELECT f.recipe FROM shared_files f JOIN shared_file_owners o ON f.file_id = o.file_id "
+                    f"WHERE o.user_key IN ({placeholders}) AND f.message_id = ? AND f.file_key = ? "
+                    f"AND (f.expires_at = 0 OR f.expires_at > ?) LIMIT 1",
+                    (*keys, message_id, file_key, now),
+                ).fetchone()
+                if row is not None:
+                    return SharedFile.from_dict(json.loads(row[0]))  # idempotent: same file re-sent
+                sf = SharedFile.from_resource(
+                    resource, user_keys=keys, message=message, ttl_seconds=ttl_seconds, now=now
+                )
+                self._db.execute(
+                    "INSERT INTO shared_files "
+                    "(file_id, message_id, file_key, recipe, cached_blob, created_at, expires_at, pinned) "
+                    "VALUES (?, ?, ?, ?, NULL, ?, ?, 0)",
+                    (
+                        sf.file_id,
+                        sf.message_id,
+                        sf.file_key,
+                        json.dumps(sf.to_dict(), ensure_ascii=False),
+                        sf.created_at,
+                        sf.expires_at,
+                    ),
+                )
+                self._db.executemany(
+                    "INSERT OR REPLACE INTO shared_file_owners (user_key, file_id) VALUES (?, ?)",
+                    [(key, sf.file_id) for key in keys],
+                )
+                return sf
+
+            return run_transaction(self._db, register_file)
 
     async def get(self, user: Mapping[str, Any], file_id: str) -> SharedFile | None:
         keys = shared_file_keys(user)

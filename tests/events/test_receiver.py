@@ -9,6 +9,7 @@ from feishu.events import (
     InMemorySeenStore,
     create_event_app,
 )
+from feishu.events.jobs import EventJobStatus, InMemoryEventJobStore
 from feishu.events.receiver import create_card_route, create_event_route
 from tests.conftest import encrypt_event, signed_event
 
@@ -117,6 +118,21 @@ class TestEventRoute:
         client = event_client(d, seen_store=None)
         assert client.post("/feishu/event", json=event_payload("plain1")).status_code == 200
         assert calls == ["plain1"]
+
+    def test_route_and_dispatcher_do_not_claim_the_same_seen_store_twice(self):
+        seen_store = InMemorySeenStore()
+        dispatcher = EventDispatcher(seen_store=seen_store)
+        received = []
+
+        @dispatcher.on("im.message.receive_v1")
+        async def handle(event):
+            received.append(event.event_id)
+
+        client = event_client(dispatcher, seen_store=seen_store)
+        response = client.post("/feishu/event", json=event_payload("evt_once"))
+
+        assert response.status_code == 200
+        assert received == ["evt_once"]
 
     def test_normal_event_requires_matching_verification_token_when_configured(self):
         d, calls = recording_dispatcher("im.message.receive_v1")
@@ -233,6 +249,96 @@ class TestEventRoute:
         resp = client.post("/feishu/event", content=raw, headers=headers)
         assert resp.status_code == 400
         assert "msg" in resp.json()
+
+
+class TestDurableEventHandoff:
+    async def test_message_is_persisted_before_ack_and_not_dispatched_inline(self):
+        dispatcher = EventDispatcher()
+        handled = []
+        jobs = InMemoryEventJobStore()
+
+        @dispatcher.on("im.message.receive_v1")
+        async def handle(event):
+            handled.append(event.event_id)
+
+        client = TestClient(
+            Starlette(routes=[create_event_route(dispatcher, job_store=jobs, partition_key=lambda _event: "oc_1")])
+        )
+        response = client.post("/feishu/event", json=event_payload("evt_durable"))
+
+        assert response.status_code == 200
+        assert response.json() == {}
+        assert handled == []
+        job = await jobs.get("evt_durable")
+        assert job is not None
+        assert job.status is EventJobStatus.QUEUED
+        assert job.partition_key == "oc_1"
+
+    async def test_duplicate_delivery_is_acked_without_adding_a_second_job(self):
+        jobs = InMemoryEventJobStore()
+        client = TestClient(
+            Starlette(
+                routes=[create_event_route(EventDispatcher(), job_store=jobs, partition_key=lambda _event: "oc_1")]
+            )
+        )
+
+        first = client.post("/feishu/event", json=event_payload("evt_durable"))
+        second = client.post("/feishu/event", json=event_payload("evt_durable"))
+
+        assert first.status_code == second.status_code == 200
+        job = await jobs.get("evt_durable")
+        assert job is not None
+        assert job.attempt == 0
+
+    async def test_enqueue_failure_returns_retryable_response(self):
+        class BrokenStore:
+            async def enqueue(self, *_args, **_kwargs):
+                raise OSError("storage unavailable")
+
+        client = TestClient(
+            Starlette(
+                routes=[
+                    create_event_route(EventDispatcher(), job_store=BrokenStore(), partition_key=lambda _event: "oc_1")
+                ]
+            ),
+            raise_server_exceptions=False,
+        )
+
+        response = client.post("/feishu/event", json=event_payload("evt_unstored"))
+        assert response.status_code == 503
+
+    async def test_url_verification_remains_synchronous(self):
+        jobs = InMemoryEventJobStore()
+        client = TestClient(
+            Starlette(routes=[create_event_route(EventDispatcher(), job_store=jobs, partition_key=lambda _event: "p")])
+        )
+
+        response = client.post(
+            "/feishu/event",
+            json={"type": "url_verification", "challenge": "durable-challenge", "token": VTOKEN},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {"challenge": "durable-challenge"}
+        assert await jobs.get("durable-challenge") is None
+
+    async def test_card_action_stays_synchronous_and_outside_message_inbox(self):
+        jobs = InMemoryEventJobStore()
+        dispatcher = EventDispatcher()
+        reply = {"toast": {"type": "success", "content": "ok"}}
+
+        @dispatcher.on("card.action.trigger")
+        async def handle(_event):
+            return reply
+
+        client = TestClient(
+            Starlette(routes=[create_event_route(dispatcher, job_store=jobs, partition_key=lambda _event: "oc_1")])
+        )
+        response = client.post("/feishu/event", json=event_payload("card-1", "card.action.trigger"))
+
+        assert response.status_code == 200
+        assert response.json() == reply
+        assert await jobs.get("card-1") is None
 
 
 class TestCardRoute:

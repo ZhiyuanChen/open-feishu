@@ -31,7 +31,7 @@ import json
 import logging
 import math
 import signal
-from collections.abc import AsyncIterator, Iterable, Mapping, Sequence
+from collections.abc import AsyncIterator, Callable, Iterable, Mapping, Sequence
 from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 from typing import Any, Literal
@@ -45,6 +45,9 @@ from ..auth import (
     normalize_oauth_callback_path,
 )
 from ..client import FeishuClient
+from ..events.envelope import Event
+from ..events.idempotency import SeenStore
+from ..events.jobs import EventJobStore
 from ..events.receiver import create_event_route
 from ..ws.client import WsClient
 from .adapters.openai import create_openai_backend, create_openai_client
@@ -70,6 +73,7 @@ from .summarization import build_fast_text_summarizer
 from .tools import ToolRegistry
 
 logger = logging.getLogger("feishu")
+_UNSET = object()
 
 
 class Agent:
@@ -78,6 +82,10 @@ class Agent:
 
     `Agent(config)` 只接收已经加载好的 mapping / config object，不负责读取 yaml、toml 或环境变量。产品层可以用
     `chanfig.load(...)`、环境变量或自己的配置系统得到配置后传入。
+
+    `seen_store` 可注入共享的事件去重存储；`event_job_store` 可将已验证的普通 Webhook 事件在 ACK 前持久化，
+    并由 [EventJobRunner][feishu.events.job_runner.EventJobRunner] 在后台执行。设置持久事件收件箱时，使用
+    `event_partition_key` 为每条事件返回会话分区键，以保持同一会话的 FIFO 顺序。
 
     Examples:
         >>> config = {"model": {"model": "gpt-4o", "api_key": "k", "base_url": "https://api.example/v1"}}
@@ -94,6 +102,9 @@ class Agent:
         model_client: Any | None = None,
         backend: Any | None = None,
         registry: ToolRegistry | None = None,
+        seen_store: SeenStore | None = None,
+        event_job_store: EventJobStore | None = None,
+        event_partition_key: Callable[[Event], str] | None = None,
         user_tokens: Any | None = None,
         authorize_url_builder: Any | None = None,
         describe_analyzer: Any | None = None,
@@ -128,6 +139,10 @@ class Agent:
         self._owned_resource_ids: set[int] = set()
         self._closed_resource_ids: set[int] = set()
         self._asgi_application: Any | None = None
+        self._injected_seen_store = seen_store
+        self._resolved_seen_store: Any = _UNSET
+        self._event_job_store = event_job_store
+        self._event_partition_key = event_partition_key
         if engine is not None:
             self.client = client
             self.model_client = model_client
@@ -408,6 +423,7 @@ class Agent:
                 path=event_path,
                 encrypt_key=self._get("feishu.encrypt_key"),
                 verification_token=self._get("feishu.verification_token"),
+                **self._event_route_options(),
             ),
         ]
         card_path = server.get("card_path", "/feishu/card")
@@ -418,6 +434,7 @@ class Agent:
                     path=str(card_path),
                     encrypt_key=self._get("feishu.encrypt_key"),
                     verification_token=self._get("feishu.verification_token"),
+                    **self._event_route_options(),
                 )
             )
         routes.extend(self.extra_routes())
@@ -452,19 +469,37 @@ class Agent:
         return create_agent_dispatcher(self.engine, seen_store=self._seen_store_config())
 
     def _seen_store_config(self) -> Any | None:
+        if self._injected_seen_store is not None:
+            return self._injected_seen_store
+        if self._resolved_seen_store is not _UNSET:
+            return self._resolved_seen_store
         mode_value = self._get("server.seen_store")
         if mode_value is None:
+            self._resolved_seen_store = None
             return None
         mode = str(mode_value).strip().lower()
         if mode in {"", "none", "off", "false", "0", "disabled"}:
+            self._resolved_seen_store = None
             return None
         if mode == "sqlite":
             from ..events.idempotency import SqliteSeenStore
 
             path = self._get("server.seen_db_path") or self.db_path
             ttl = float(self._get("server.seen_ttl_seconds", 7 * 24 * 3600) or 7 * 24 * 3600)
-            return SqliteSeenStore(str(path), ttl=ttl)
+            self._resolved_seen_store = SqliteSeenStore(str(path), ttl=ttl)
+            return self._resolved_seen_store
         raise ValueError(f"unknown server.seen_store mode: {mode_value!r}")
+
+    def _event_route_options(self) -> dict[str, Any]:
+        options: dict[str, Any] = {}
+        seen_store = self._seen_store_config()
+        if seen_store is not None:
+            options["seen_store"] = seen_store
+        if self._event_job_store is not None:
+            options["job_store"] = self._event_job_store
+        if self._event_partition_key is not None:
+            options["partition_key"] = self._event_partition_key
+        return options
 
     def _card_ack_timeout_seconds(self) -> float | None:
         value = self._get("ws.card_ack_timeout_seconds", self._get("server.card_ack_timeout_seconds", 1.5))

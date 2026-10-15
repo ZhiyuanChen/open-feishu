@@ -45,6 +45,7 @@ from pathlib import Path
 from typing import Any, Callable, TypeVar
 from uuid import uuid4
 
+from .._sqlite import run_transaction
 from .integrity import payload_summary
 from .llm import Message, ReasoningPart, TextPart, ToolResultPart, ToolUsePart
 from .memory import MemoryIdentityConflict, MemoryRecord, MemoryScope
@@ -73,8 +74,8 @@ def _connect(db_path: str | Path) -> sqlite3.Connection:
 class SqliteMemoryStore:
     """SQLite-backed memory store partitioned by namespace and user/project scope."""
 
-    def __init__(self, db_path: str | Path, *, now: Callable[[], int] = _now) -> None:
-        self._db = _connect(db_path)
+    def __init__(self, db_path: str | Path, *, now: Callable[[], int] = _now, connection: Any | None = None) -> None:
+        self._db = connection if connection is not None else _connect(db_path)
         self._db.execute(
             "CREATE TABLE IF NOT EXISTS memories ("
             "memory_id TEXT PRIMARY KEY, namespace TEXT NOT NULL, scope TEXT NOT NULL, owner_key TEXT, "
@@ -103,8 +104,7 @@ class SqliteMemoryStore:
             return None
         async with self._lock:
             # Serialize linking across store instances before reading existing aliases.
-            with self._db:
-                self._db.execute("BEGIN IMMEDIATE")
+            def link_aliases() -> str:
                 known_owners: set[str] = set()
                 for alias in aliases:
                     row = self._db.execute(
@@ -121,7 +121,9 @@ class SqliteMemoryStore:
                     "ON CONFLICT (namespace, alias) DO UPDATE SET owner_key = excluded.owner_key",
                     ((namespace, alias, owner_key) for alias in aliases),
                 )
-        return owner_key
+                return owner_key
+
+            return run_transaction(self._db, link_aliases)
 
     def _canonical_owner(self, namespace: str, owner_key: str) -> str:
         row = self._db.execute(
@@ -272,6 +274,8 @@ def message_to_dict(message: Message) -> dict[str, Any]:
     data: dict[str, Any] = {"role": message.role, "content": [_part_to_dict(part) for part in message.content]}
     if message.continuation_id is not None:
         data["continuation_id"] = message.continuation_id
+    if message.source_event_id is not None:
+        data["source_event_id"] = message.source_event_id
     return data
 
 
@@ -281,6 +285,7 @@ def message_from_dict(data: dict[str, Any]) -> Message:
         role=data["role"],
         content=[_part_from_dict(part) for part in data.get("content", [])],
         continuation_id=data.get("continuation_id"),
+        source_event_id=data.get("source_event_id"),
     )
 
 
@@ -385,8 +390,8 @@ class SqliteSessionStore:
         >>> store = SqliteSessionStore(":memory:")  # doctest:+SKIP
     """
 
-    def __init__(self, db_path: str | Path, *, max_messages: int = 400) -> None:
-        self._db = _connect(db_path)
+    def __init__(self, db_path: str | Path, *, max_messages: int = 400, connection: Any | None = None) -> None:
+        self._db = connection if connection is not None else _connect(db_path)
         self._db.execute(
             "CREATE TABLE IF NOT EXISTS sessions ("
             "session_id TEXT PRIMARY KEY, messages TEXT NOT NULL, updated_at REAL)"
@@ -467,8 +472,9 @@ class SqlitePendingApprovalStore:
         *,
         ttl_seconds: int = _DEFAULT_TTL_SECONDS,
         execution_unknown_ttl_seconds: int = _DEFAULT_EXECUTION_UNKNOWN_TTL_SECONDS,
+        connection: Any | None = None,
     ) -> None:
-        self._db = _connect(db_path)
+        self._db = connection if connection is not None else _connect(db_path)
         self._db.execute(
             "CREATE TABLE IF NOT EXISTS approvals ("
             "approval_id TEXT PRIMARY KEY, state TEXT NOT NULL, payload_sha256 TEXT, "
@@ -514,31 +520,36 @@ class SqlitePendingApprovalStore:
     async def claim(self, approval_id: str, *, expected_payload_sha256: str | None = None) -> ClaimResult:
         r"""原子认领一次审批，返回 [feishu.agent.session.ClaimResult][]；仅 `CLAIMED` 可继续执行。"""
         async with self._lock:
-            row = self._db.execute(
-                "SELECT state, payload_sha256, created_at FROM approvals WHERE approval_id = ?", (approval_id,)
-            ).fetchone()
-            if row is None:
-                return ClaimResult.MISSING
-            state, stored_sha, created_at = row
-            if self._is_expired(state, created_at):
-                self._db.execute("DELETE FROM approvals WHERE approval_id = ?", (approval_id,))
-                self._db.commit()
-                return ClaimResult.EXPIRED
-            # Fail closed on tampering: when EITHER side has a payload hash, both must match. A stored hash with a
-            # missing/None callback hash is a mismatch (so a callback that omits payload_sha256 can't skip the
-            # check); a callback hash with no stored hash is also a mismatch. Only when neither exists is there
-            # nothing to verify.
-            stored_sha = stored_sha or ""
-            if (stored_sha or expected_payload_sha256 is not None) and expected_payload_sha256 != stored_sha:
-                return ClaimResult.TAMPERED
-            if state != "awaiting_confirmation":
-                return ClaimResult.ALREADY_CLAIMED
-            cursor = self._db.execute(
-                "UPDATE approvals SET state = 'executing' WHERE approval_id = ? AND state = 'awaiting_confirmation'",
-                (approval_id,),
-            )
-            self._db.commit()
-            return ClaimResult.CLAIMED if cursor.rowcount == 1 else ClaimResult.ALREADY_CLAIMED
+
+            def claim_approval() -> ClaimResult:
+                row = self._db.execute(
+                    "SELECT state, payload_sha256, created_at, data FROM approvals WHERE approval_id = ?",
+                    (approval_id,),
+                ).fetchone()
+                if row is None:
+                    return ClaimResult.MISSING
+                state, stored_sha, created_at, data = row
+                if self._is_expired(state, created_at):
+                    self._db.execute("DELETE FROM approvals WHERE approval_id = ?", (approval_id,))
+                    return ClaimResult.EXPIRED
+                # Fail closed on tampering: when EITHER side has a payload hash, both must match. A stored hash with a
+                # missing/None callback hash is a mismatch (so a callback that omits payload_sha256 can't skip the
+                # check); a callback hash with no stored hash is also a mismatch. Only when neither exists is there
+                # nothing to verify.
+                stored_sha_value = stored_sha
+                stored_sha = stored_sha_value or ""
+                if (stored_sha or expected_payload_sha256 is not None) and expected_payload_sha256 != stored_sha:
+                    return ClaimResult.TAMPERED
+                if state != "awaiting_confirmation":
+                    return ClaimResult.ALREADY_CLAIMED
+                cursor = self._db.execute(
+                    "UPDATE approvals SET state = 'executing' WHERE approval_id = ? "
+                    "AND state = 'awaiting_confirmation' AND payload_sha256 IS ? AND created_at IS ? AND data = ?",
+                    (approval_id, stored_sha_value, created_at, data),
+                )
+                return ClaimResult.CLAIMED if cursor.rowcount == 1 else ClaimResult.ALREADY_CLAIMED
+
+            return run_transaction(self._db, claim_approval)
 
     async def complete(self, approval_id: str, *, outcome: str) -> None:
         r"""标记最终处置：成功/拒绝/取消即移除，结果未知则冻结为 `execution_unknown`。"""
@@ -558,8 +569,8 @@ class SqlitePendingApprovalStore:
     async def update(self, approval_id: str, mutator: Callable[[PendingApproval], tuple[T, PendingApproval]]) -> T:
         r"""以 compare-and-swap 方式原子更新一次审批：`mutator(旧值)` 返回 `(返回值, 新值)`。"""
         async with self._lock:
-            with self._db:
-                self._db.execute("BEGIN IMMEDIATE")
+
+            def update_approval() -> T:
                 approval = self._load_locked(approval_id)
                 if approval is None:
                     raise KeyError(approval_id)
@@ -578,6 +589,8 @@ class SqlitePendingApprovalStore:
                 )
                 return value
 
+            return run_transaction(self._db, update_approval)
+
     async def purge_expired(self) -> int:
         r"""删除所有已过期的审批记录，返回删除数量。"""
         now = _now()
@@ -589,8 +602,9 @@ class SqlitePendingApprovalStore:
                 "OR (state NOT IN ('execution_unknown', 'executing') AND created_at < ?)",
                 (now - self._frozen_ttl, now - self._ttl),
             )
+            deleted = cursor.rowcount
             self._db.commit()
-            return cursor.rowcount
+            return deleted
 
     def _load_locked(self, approval_id: str) -> PendingApproval | None:
         row = self._db.execute(
@@ -636,8 +650,9 @@ class SqlitePendingAuthorizationStore:
         *,
         ttl_seconds: int = _DEFAULT_AUTHORIZATION_TTL_SECONDS,
         execution_unknown_ttl_seconds: int = _DEFAULT_EXECUTION_UNKNOWN_TTL_SECONDS,
+        connection: Any | None = None,
     ) -> None:
-        self._db = _connect(db_path)
+        self._db = connection if connection is not None else _connect(db_path)
         self._db.execute(
             "CREATE TABLE IF NOT EXISTS authorizations ("
             "authorization_id TEXT PRIMARY KEY, state TEXT NOT NULL, created_at INTEGER, data TEXT NOT NULL)"
@@ -681,25 +696,28 @@ class SqlitePendingAuthorizationStore:
     async def claim(self, authorization_id: str) -> ClaimResult:
         r"""原子认领一次授权，返回 [feishu.agent.session.ClaimResult][]；仅 `CLAIMED` 可恢复工具。"""
         async with self._lock:
-            row = self._db.execute(
-                "SELECT state, created_at FROM authorizations WHERE authorization_id = ?", (authorization_id,)
-            ).fetchone()
-            if row is None:
-                return ClaimResult.MISSING
-            state, created_at = row
-            if self._is_expired(state, created_at):
-                self._db.execute("DELETE FROM authorizations WHERE authorization_id = ?", (authorization_id,))
-                self._db.commit()
-                return ClaimResult.EXPIRED
-            if state != "awaiting_authorization":
-                return ClaimResult.ALREADY_CLAIMED
-            cursor = self._db.execute(
-                "UPDATE authorizations SET state = 'executing' "
-                "WHERE authorization_id = ? AND state = 'awaiting_authorization'",
-                (authorization_id,),
-            )
-            self._db.commit()
-            return ClaimResult.CLAIMED if cursor.rowcount == 1 else ClaimResult.ALREADY_CLAIMED
+
+            def claim_authorization() -> ClaimResult:
+                row = self._db.execute(
+                    "SELECT state, created_at, data FROM authorizations WHERE authorization_id = ?",
+                    (authorization_id,),
+                ).fetchone()
+                if row is None:
+                    return ClaimResult.MISSING
+                state, created_at, data = row
+                if self._is_expired(state, created_at):
+                    self._db.execute("DELETE FROM authorizations WHERE authorization_id = ?", (authorization_id,))
+                    return ClaimResult.EXPIRED
+                if state != "awaiting_authorization":
+                    return ClaimResult.ALREADY_CLAIMED
+                cursor = self._db.execute(
+                    "UPDATE authorizations SET state = 'executing' WHERE authorization_id = ? "
+                    "AND state = 'awaiting_authorization' AND created_at IS ? AND data = ?",
+                    (authorization_id, created_at, data),
+                )
+                return ClaimResult.CLAIMED if cursor.rowcount == 1 else ClaimResult.ALREADY_CLAIMED
+
+            return run_transaction(self._db, claim_authorization)
 
     async def complete(self, authorization_id: str, *, outcome: str) -> None:
         r"""标记最终处置：`retry` 重开，`unknown`/`frozen` 冻结，其余终态移除。"""
@@ -725,8 +743,8 @@ class SqlitePendingAuthorizationStore:
     ) -> T:
         r"""以 compare-and-swap 方式原子更新一次授权：`mutator(旧值)` 返回 `(返回值, 新值)`。"""
         async with self._lock:
-            with self._db:
-                self._db.execute("BEGIN IMMEDIATE")
+
+            def update_authorization() -> T:
                 authorization = self._load_locked(authorization_id)
                 if authorization is None:
                     raise KeyError(authorization_id)
@@ -743,6 +761,8 @@ class SqlitePendingAuthorizationStore:
                 )
                 return value
 
+            return run_transaction(self._db, update_authorization)
+
     async def purge_expired(self) -> int:
         r"""删除所有已过期的授权记录，返回删除数量。"""
         now = _now()
@@ -752,8 +772,9 @@ class SqlitePendingAuthorizationStore:
                 "OR (state NOT IN ('execution_unknown', 'executing') AND created_at < ?)",
                 (now - self._frozen_ttl, now - self._ttl),
             )
+            deleted = cursor.rowcount
             self._db.commit()
-            return cursor.rowcount
+            return deleted
 
     def _load_locked(self, authorization_id: str) -> PendingAuthorization | None:
         row = self._db.execute(
@@ -785,8 +806,8 @@ class SqliteExecutionResultStore:
         >>> store = SqliteExecutionResultStore(":memory:")  # doctest:+SKIP
     """
 
-    def __init__(self, db_path: str | Path) -> None:
-        self._db = _connect(db_path)
+    def __init__(self, db_path: str | Path, *, connection: Any | None = None) -> None:
+        self._db = connection if connection is not None else _connect(db_path)
         self._db.execute(
             "CREATE TABLE IF NOT EXISTS executions ("
             "lookup_key TEXT PRIMARY KEY, payload_sha256 TEXT, execution_status TEXT, result TEXT, created_at INTEGER)"

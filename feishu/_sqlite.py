@@ -33,6 +33,9 @@ import contextlib
 import os
 import sqlite3
 from pathlib import Path
+from typing import Any, Callable, TypeVar
+
+T = TypeVar("T")
 
 
 def secure(db_path: str | Path) -> None:
@@ -78,3 +81,18 @@ def connect(db_path: str | Path) -> sqlite3.Connection:
     conn.execute("PRAGMA busy_timeout=5000")  # wait, don't fail, when another connection holds the write lock
     secure(path)
     return conn
+
+
+def run_transaction(connection: Any, callback: Callable[[], T]) -> T:
+    """Run a synchronous sequence of connection operations as one transaction.
+
+    Cloudflare's SQLite-backed Durable Objects expose ``transactionSync`` rather than a Python
+    ``sqlite3.Connection`` transaction context manager. This helper keeps store code explicit and
+    maps the same atomic boundary to either backend.
+    """
+    transaction_sync = getattr(connection, "transaction_sync", None)
+    if callable(transaction_sync):
+        return transaction_sync(callback)
+    with connection:
+        connection.execute("BEGIN IMMEDIATE")
+        return callback()

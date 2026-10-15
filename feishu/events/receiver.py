@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import hmac
 import json
+import logging
 import time
 from typing import Any, Callable
 
@@ -38,11 +39,13 @@ from .crypto import decrypt
 from .dispatcher import EventDispatcher
 from .envelope import Event
 from .idempotency import InMemorySeenStore, SeenStore, claim
+from .jobs import EventJobStore
 
 # Sentinel distinguishing "argument not supplied" (-> default InMemorySeenStore,
 # so replay/idempotency protection is on out of the box) from an explicit
 # ``seen_store=None`` (-> caller deliberately disables deduplication).
 _DEFAULT_SEEN_STORE: Any = object()
+_logger = logging.getLogger("feishu.events")
 
 
 def _resolve_seen_store(seen_store: Any) -> SeenStore | None:
@@ -66,6 +69,16 @@ def _build_verifier(
     if encrypt_key is None:
         return None
     return SignatureVerifier(encrypt_key, max_age_seconds=max_age_seconds, now=now)
+
+
+def _default_partition_key(event: Event) -> str:
+    """Use the Feishu chat/thread identity for durable per-conversation ordering."""
+    message = event.body.get("message") or {}
+    chat_id = message.get("chat_id")
+    root_id = message.get("root_id")
+    if chat_id:
+        return f"{chat_id}:{root_id}" if root_id else str(chat_id)
+    return str(message.get("message_id") or event.event_id)
 
 
 async def _read_payload(
@@ -137,6 +150,8 @@ def create_event_route(
     encrypt_key: str | None = None,
     verification_token: str | None = None,
     seen_store: Any = _DEFAULT_SEEN_STORE,
+    job_store: EventJobStore | None = None,
+    partition_key: Callable[[Event], str] = _default_partition_key,
     max_age_seconds: float | None = 300,
     now: Callable[[], float] = time.time,
 ) -> Route:
@@ -167,6 +182,9 @@ def create_event_route(
             [InMemorySeenStore][feishu.events.idempotency.InMemorySeenStore]，
             从而开箱即用地提供去重/防重放保护；显式传入 `None` 可关闭去重，
             也可传入自定义实现（如基于 Redis 的共享存储）。
+        job_store: 可选的持久化事件收件箱。配置后，普通事件在 ACK 前先持久化并由
+            [EventJobRunner][feishu.events.job_runner.EventJobRunner] 执行；卡片回调仍同步处理。
+        partition_key: 用于同一会话 FIFO 的分区键；默认从 chat/thread identity 推导。
         max_age_seconds: 签名请求允许的最大时延（秒），默认 `300`；用于拒绝过期的
             重放请求。设为 `None` 可关闭新鲜度校验（但绝不会跳过 MAC 校验）。
         now: 返回当前 epoch 秒的可调用对象，默认 [time.time][]；可注入以编写确定性测试。
@@ -212,14 +230,32 @@ def create_event_route(
         id_error = _verify_event_id(event)
         if id_error is not None:
             return id_error
+
+        if event.event_type == "card.action.trigger":
+            if store is not None and not await claim(store, event.event_id):
+                return JSONResponse({})
+            handler_result = await dispatcher.dispatch(event, skip_seen_store=store is not None)
+            return JSONResponse(handler_result if handler_result is not None else {})
+
+        if job_store is not None:
+            try:
+                payload = json.loads(json.dumps(event.raw, ensure_ascii=False))
+                await job_store.enqueue(
+                    event.event_id,
+                    payload,
+                    partition_key=str(partition_key(event)),
+                )
+            except Exception:  # noqa: BLE001 - never ACK an event that did not reach durable storage
+                _logger.exception("failed to enqueue event %s", event.event_id)
+                return JSONResponse({"msg": "event enqueue failed"}, status_code=503)
+            return JSONResponse({})
+
         if store is not None and not await claim(store, event.event_id):
             return JSONResponse({})
 
-        if event.event_type == "card.action.trigger":
-            handler_result = await dispatcher.dispatch(event)
-            return JSONResponse(handler_result if handler_result is not None else {})
-
-        return JSONResponse({}, background=BackgroundTask(dispatcher.dispatch, event))
+        return JSONResponse(
+            {}, background=BackgroundTask(dispatcher.dispatch, event, skip_seen_store=store is not None)
+        )
 
     return Route(path, endpoint, methods=["POST"])
 
@@ -322,6 +358,8 @@ def create_event_app(
     encrypt_key: str | None = None,
     verification_token: str | None = None,
     seen_store: Any = _DEFAULT_SEEN_STORE,
+    job_store: EventJobStore | None = None,
+    partition_key: Callable[[Event], str] = _default_partition_key,
     card_seen_store: Any = _DEFAULT_SEEN_STORE,
     max_age_seconds: float | None = 300,
     now: Callable[[], float] = time.time,
@@ -364,6 +402,8 @@ def create_event_app(
             encrypt_key=encrypt_key,
             verification_token=verification_token,
             seen_store=seen_store,
+            job_store=job_store,
+            partition_key=partition_key,
             max_age_seconds=max_age_seconds,
             now=now,
         )

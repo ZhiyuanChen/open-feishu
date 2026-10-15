@@ -29,6 +29,8 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from ..events.jobs import mark_current_event_side_effect_started
+
 logger = logging.getLogger("feishu")
 
 PROGRESS_SUMMARY_INSTRUCTION = (
@@ -86,6 +88,11 @@ class _ProgressCard:
         r"""已发送进度卡片的飞书 message id；尚未发送时为 `None`。"""
         return self._message_id
 
+    @property
+    def will_start(self) -> bool:
+        """Whether starting this progress card would send a new external message."""
+        return self._message_id is None and self._ready() is not None
+
     def reuse(self, message_id: str | None) -> None:
         r"""复用已存在的进度卡片，使恢复后的工作继续原地 patch。"""
         if message_id and self._message_id is None:
@@ -108,6 +115,7 @@ class _ProgressCard:
         builder, client, chat_id = ready
         card = builder([], False, "")
         try:
+            await mark_current_event_side_effect_started()
             resp = await client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
             self._message_id = _message_id_from_response(resp)
         except Exception:  # noqa: BLE001 - the progress UI must never break the turn
@@ -170,6 +178,7 @@ class _ProgressCard:
         builder, client, chat_id = ready
         card = builder(list(self._steps), False, status_text)
         try:
+            await mark_current_event_side_effect_started()
             if self._message_id is None:
                 resp = await client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
                 self._message_id = _message_id_from_response(resp)
@@ -188,6 +197,7 @@ class _ProgressCard:
             return None
         _, client, _ = ready
         try:
+            await mark_current_event_side_effect_started()
             await client.im.patch(self._message_id, card)
             self._done = True
             return self._message_id
@@ -204,6 +214,7 @@ class _ProgressCard:
         self._steps.append(tool_name)
         card = builder(list(self._steps), False, "")
         try:
+            await mark_current_event_side_effect_started()
             if self._message_id is None:
                 resp = await client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
                 self._message_id = _message_id_from_response(resp)
@@ -238,6 +249,7 @@ class _ProgressCard:
         self._done = True
         try:
             card = builder(list(self._steps), True, result_text)
+            await mark_current_event_side_effect_started()
             await client.im.patch(self._message_id, card)
             return True
         except Exception:  # noqa: BLE001 - on failure, fall back to a normal reply

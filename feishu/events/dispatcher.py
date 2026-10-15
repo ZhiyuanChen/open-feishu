@@ -27,6 +27,7 @@ from typing import Any, cast
 
 from .envelope import Event
 from .idempotency import SeenStore, claim
+from .jobs import current_event_job
 
 Handler = Callable[[Event], Awaitable[object]]
 ErrorHandler = Callable[[Exception, Event], Awaitable[object]]
@@ -132,7 +133,9 @@ class EventDispatcher:
         self._error_handler = handler
         return handler
 
-    async def dispatch(self, event: Event) -> dict | None:
+    async def dispatch(
+        self, event: Event, *, propagate_errors: bool = False, skip_seen_store: bool = False
+    ) -> dict | None:
         r"""
         将事件分发给匹配的处理函数并返回结果。
 
@@ -165,7 +168,14 @@ class EventDispatcher:
             >>> asyncio.run(dispatcher.dispatch(event))
             {'toast': {'type': 'success', 'content': 'ok'}}
         """
-        if self._seen_store is not None and not await claim(self._seen_store, event.event_id):
+        job = current_event_job()
+        is_job_redelivery = job is not None and job.event_id == event.event_id
+        if (
+            self._seen_store is not None
+            and not skip_seen_store
+            and not is_job_redelivery
+            and not await claim(self._seen_store, event.event_id)
+        ):
             return None
 
         handlers = list(self._handlers.get(event.event_type, ()))
@@ -175,6 +185,9 @@ class EventDispatcher:
             try:
                 value = await handler(event)
             except Exception as exc:  # noqa: BLE001 - isolate: one failing handler must not abort the rest
+                if propagate_errors:
+                    await self._on_handler_error(exc, event)
+                    raise
                 value = await self._on_handler_error(exc, event)
             if value is not None and result is None:
                 result = cast(dict, value)

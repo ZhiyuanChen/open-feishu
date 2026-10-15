@@ -1,0 +1,27 @@
+[project]
+name = "open-feishu-cloudflare-agent"
+version = "0.1.0"
+description = "Deploy one OpenFeishu Agent to Cloudflare Workers"
+requires-python = ">=3.13"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+  "open-feishu[openai]",
+  "tzdata",
+  "workers-runtime-sdk",
+]
+
+[dependency-groups]
+dev = [
+  "workers-py",
+]
+
+[tool.uv]
+sources.open-feishu = { path = "../.." }
+
+[tool.pywrangler]
+# The local SDK derives its version with setuptools-scm, so PyWrangler must build it.
+allow-build = true

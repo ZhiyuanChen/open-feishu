@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "open-feishu-agent",
+  "main": "src/worker.py",
+  "base_dir": "src",
+  "compatibility_date": "2026-10-05",
+  "compatibility_flags": ["python_workers"],
+  "python_modules": {
+    "exclude": ["**/*.pyc", "**/__pycache__"]
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "AGENT", "class_name": "FeishuAgent" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["FeishuAgent"] }]
+}

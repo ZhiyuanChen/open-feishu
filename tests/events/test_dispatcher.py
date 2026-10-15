@@ -158,3 +158,20 @@ class TestErrorIsolation:
         result = await d.dispatch(_message_event())  # must not raise
         assert ran == ["fallback"]
         assert result is None
+
+    async def test_durable_dispatch_propagates_handler_error(self, dispatcher):
+        d = dispatcher
+        ran = []
+
+        @d.on("im.message.receive_v1")
+        async def boom(event):
+            raise RuntimeError("retry me")
+
+        @d.on("*")
+        async def fallback(event):
+            ran.append("fallback")
+
+        with pytest.raises(RuntimeError, match="retry me"):
+            await d.dispatch(_message_event(), propagate_errors=True)
+
+        assert ran == []

@@ -65,6 +65,8 @@ docker compose up --build
 
 Compose 从当前仓库源码构建 OpenFeishu，并把数据库保存到 `examples/agent/data`。`/health` 检查进程存活，`/ready` 在 ASGI 启动完成且尚未进入退出流程时返回成功。容器收到停止信号后会先停止接收请求、排空 Agent 任务，再关闭它创建的连接和 SQLite 存储；`stop_grace_period` 为这两个阶段留出时间。
 
+如果要把单个机器人部署到 Cloudflare Workers，可使用 [`examples/cloudflare`](../cloudflare/README.md) 中的 Python Worker + SQLite Durable Object 示例。它会在 webhook ACK 前持久化普通事件，再由 Durable Object alarm 处理；该拓扑适用于单机器人和适度流量，和本地 Docker/Kubernetes 示例采用不同的运行模型。
+
 Kubernetes 参考配置在 `k8s.yaml`：先构建并推送 `open-feishu-agent:local` 镜像，再创建名为 `open-feishu-agent-secrets` 的 Secret（至少包含飞书 App ID/Secret、事件加密与校验值、模型 API Key），然后应用 YAML。把 Service 接到你自己的 TLS Ingress，设置公开 HTTPS `AGENT_PUBLIC_URL`，并在飞书后台配置 `/feishu/event` 和 `/feishu/card`。
 
 存活探针访问 `/health`，启动与就绪探针访问 `/ready`。示例使用 SQLite 和 ReadWriteOnce 持久卷，Deployment 保持单副本并用 `Recreate` 避免两个 Pod 同时写同一数据库；退出宽限期为 70 秒，对应 Uvicorn 和 Agent 各自最多 30 秒的收尾窗口。扩副本前需要共享会话与任务协调存储。
