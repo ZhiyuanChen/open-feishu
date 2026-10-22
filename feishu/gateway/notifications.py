@@ -27,12 +27,13 @@ import tempfile
 import threading
 import unicodedata
 from _thread import RLock
-from collections.abc import Mapping
+from collections.abc import Awaitable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 from weakref import WeakValueDictionary
 
+from .._store_io import invoke_store
 from ..errors import FeishuError
 
 _JSON_PATH_LOCKS: WeakValueDictionary[str, RLock] = WeakValueDictionary()
@@ -55,11 +56,11 @@ def _json_path_lock(path: Path) -> RLock:
 class EventMessageStore(Protocol):
     r"""Stores the Feishu message ID associated with an event ID."""
 
-    def get(self, event_id: str) -> str | None:
+    def get(self, event_id: str) -> str | None | Awaitable[str | None]:
         r"""Return the Feishu message ID previously sent for ``event_id``."""
         ...
 
-    def set(self, event_id: str, message_id: str) -> None:
+    def set(self, event_id: str, message_id: str) -> None | Awaitable[None]:
         r"""Persist the Feishu message ID for ``event_id``."""
         ...
 
@@ -166,7 +167,7 @@ async def upsert_interactive_card(
     event patches the previously delivered Feishu card rather than posting a
     duplicate message.
     """
-    message_id = store.get(event_id)
+    message_id = await invoke_store(store.get, event_id)
     if message_id:
         try:
             data = await client.im.patch(message_id, card)
@@ -187,7 +188,7 @@ async def upsert_interactive_card(
     )
     message_id = _message_id(data)
     if message_id:
-        store.set(event_id, message_id)
+        await invoke_store(store.set, event_id, message_id)
     return InteractiveCardDelivery("created", event_id, message_id)
 
 

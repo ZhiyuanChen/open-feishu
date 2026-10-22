@@ -360,9 +360,9 @@ class Agent:
                     installed_signals.append(sig)
             await ws.start()
         finally:
-            for sig in installed_signals:
+            for installed_signal in installed_signals:
                 with suppress(NotImplementedError, RuntimeError, ValueError):
-                    loop.remove_signal_handler(sig)
+                    loop.remove_signal_handler(installed_signal)
             try:
                 if stop_task is not None:
                     await stop_task

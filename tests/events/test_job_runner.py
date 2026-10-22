@@ -121,20 +121,51 @@ async def test_safe_retry_bypasses_dispatcher_seen_store_claim() -> None:
 
 async def test_runner_renews_lease_while_handler_is_active() -> None:
     store = InMemoryEventJobStore()
-    await store.enqueue("evt-1", payload("evt-1"), partition_key="chat-1")
+    await store.enqueue("evt-1", payload("evt-1"), partition_key="chat-1", now=1)
+    clock = [1.0]
+    handler_started = asyncio.Event()
+    finish_handler = asyncio.Event()
+    heartbeat_waits: asyncio.Queue[float] = asyncio.Queue()
+    heartbeat_steps: asyncio.Queue[None] = asyncio.Queue()
 
-    async def slow(_event: Event) -> None:
-        await asyncio.sleep(0.12)
+    async def controlled_sleep(interval: float) -> None:
+        await heartbeat_waits.put(interval)
+        await heartbeat_steps.get()
+        clock[0] += interval
 
-    runner = EventJobRunner(store, slow, worker_id="worker-a", lease_seconds=0.06)
+    async def blocked(_event: Event) -> None:
+        handler_started.set()
+        await finish_handler.wait()
+
+    runner = EventJobRunner(
+        store,
+        blocked,
+        worker_id="worker-a",
+        lease_seconds=60,
+        now=lambda: clock[0],
+        sleep=controlled_sleep,
+    )
     task = asyncio.create_task(runner.run_once())
-    await asyncio.sleep(0.08)
+    try:
+        await asyncio.wait_for(handler_started.wait(), timeout=5)
+        await asyncio.wait_for(heartbeat_waits.get(), timeout=5)
+        for expected_lease in (81, 101):
+            await heartbeat_steps.put(None)
+            # Entering the following heartbeat wait proves renewal finished.
+            await asyncio.wait_for(heartbeat_waits.get(), timeout=5)
+            leased = await store.get("evt-1")
+            assert leased is not None and leased.lease_until == expected_lease
 
-    competing = await store.claim_next("worker-b", lease_seconds=1)
-    completed = await task
-
-    assert competing is None
-    assert completed is not None and completed.status is EventJobStatus.COMPLETED
+        # Past the original lease and first renewal, within the second renewal.
+        clock[0] = 91
+        assert await store.claim_next("worker-b", now=clock[0], lease_seconds=60) is None
+        finish_handler.set()
+        completed = await asyncio.wait_for(task, timeout=5)
+        assert completed is not None and completed.status is EventJobStatus.COMPLETED
+    finally:
+        if not task.done():
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
 
 
 async def test_runner_cancellation_after_effect_becomes_unknown() -> None:
@@ -156,3 +187,42 @@ async def test_runner_cancellation_after_effect_becomes_unknown() -> None:
 
     job = await store.get("evt-1")
     assert job is not None and job.status is EventJobStatus.UNKNOWN
+
+
+@pytest.mark.parametrize("cancel_runner", [False, True])
+async def test_runner_uses_and_cancels_injected_heartbeat_wait(cancel_runner) -> None:
+    store = InMemoryEventJobStore()
+    await store.enqueue("evt-1", payload("evt-1"), partition_key="chat-1", now=1)
+    waiting = asyncio.Event()
+    wait_closed = asyncio.Event()
+    intervals = []
+
+    async def sleep(interval: float) -> None:
+        intervals.append(interval)
+        waiting.set()
+        try:
+            await asyncio.Event().wait()
+        finally:
+            wait_closed.set()
+
+    async def handle(_event: Event) -> None:
+        await waiting.wait()
+        if cancel_runner:
+            await asyncio.Event().wait()
+
+    runner = EventJobRunner(store, handle, worker_id="worker-a", lease_seconds=120, now=lambda: 5, sleep=sleep)
+    task = asyncio.create_task(runner.run_once())
+    if cancel_runner:
+        await waiting.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+    else:
+        completed = await task
+        assert completed is not None and completed.status is EventJobStatus.COMPLETED
+
+    assert intervals == [40]
+    assert wait_closed.is_set()
+    job = await store.get("evt-1")
+    expected_status = EventJobStatus.RETRY_WAIT if cancel_runner else EventJobStatus.COMPLETED
+    assert job is not None and job.status is expected_status

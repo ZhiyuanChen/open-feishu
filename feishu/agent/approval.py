@@ -50,8 +50,10 @@ from enum import Enum
 from typing import Any, Literal, Protocol, runtime_checkable
 from uuid import uuid4
 
+from .._store_io import invoke_store
 from ..auth import user_from_identity_keys, user_identity_keys
 from ..events.envelope import Event
+from ..events.jobs import mark_current_event_side_effect_started
 from ._flow import (
     AUTH_CARD_SENT_NOTE,
     AWAITING_AUTHORIZATION_NOTE,
@@ -144,7 +146,7 @@ class ExecutionResultStore(Protocol):
     用于实现「已执行的写操作被再次确认时，返回先前结果而非二次提交」。纯机制，不含任何产品语义。
     """
 
-    def get(self, lookup_key: str) -> dict[str, Any] | None:
+    def get(self, lookup_key: str) -> dict[str, Any] | None | Awaitable[dict[str, Any] | None]:
         r"""按幂等键 / 别名键读取已缓存的执行结果记录，未命中返回 `None`。"""
         ...
 
@@ -156,7 +158,7 @@ class ExecutionResultStore(Protocol):
         result: Any,
         alias_lookup_keys: tuple[str, ...] = (),
         payload_sha256: str | None = None,
-    ) -> None:
+    ) -> None | Awaitable[None]:
         r"""写入一次执行结果，可附带用于去重的别名键与负载摘要。"""
         ...
 
@@ -179,7 +181,7 @@ class AuditLog(Protocol):
         message_id: str | None = None,
         outcome: str = "ok",
         error: str | None = None,
-    ) -> None:
+    ) -> None | Awaitable[None]:
         r"""追加一条审计事件。"""
         ...
 
@@ -358,7 +360,7 @@ class DefaultApprovalEngine:
         # result without re-running. A missing/mismatched hash never replays (fail closed).
         if self.executions is not None and approval.idempotency_key and approval.payload_sha256 is not None:
             try:
-                cached = await asyncio.to_thread(self.executions.get, _execution_lookup_key(approval))
+                cached = await invoke_store(self.executions.get, _execution_lookup_key(approval))
             except Exception as exc:  # noqa: BLE001 - dedup could not be checked; this attempt did not dispatch
                 await self.approvals.complete(approval_id, outcome="failed")
                 await self._record(
@@ -411,7 +413,7 @@ class DefaultApprovalEngine:
         # can no longer guarantee dedup, so a human reviews instead of risking a duplicate side effect.
         if self.executions is not None and approval.idempotency_key:
             try:
-                await asyncio.to_thread(
+                await invoke_store(
                     self.executions.put,
                     _execution_lookup_key(approval),
                     execution_status="executed",
@@ -454,7 +456,7 @@ class DefaultApprovalEngine:
         if self.audit is None:
             return
         try:
-            await asyncio.to_thread(
+            await invoke_store(
                 self.audit.append,
                 event_type,
                 key=approval.approval_id,
@@ -642,8 +644,19 @@ async def pin_referenced_files(agent: Any, arguments: Any) -> None:
             logging.getLogger("feishu").debug("pin-on-approval failed for %s", file_id, exc_info=True)
 
 
-async def handle_card_action(agent: Any, event: Event) -> dict[str, Any]:
-    r"""处理审批卡片回传：同步 ACK，后台完成决策、工具执行、历史续跑与卡片更新。"""
+async def handle_card_action(
+    agent: Any,
+    event: Event,
+    *,
+    decision_dispatcher: Callable[[Event, PendingApproval], Awaitable[None]] | None = None,
+) -> dict[str, Any]:
+    r"""ACK a card action after durable dispatch, or use the default background path.
+
+    An injected dispatcher receives the authenticated event and validated pending
+    approval, whose saved session identifies its execution partition. It must
+    persist the intent and arrange a reliable wakeup before returning. Dispatch
+    failures propagate; they never fall back to a detached background task.
+    """
     value = action_value(event)
     approval_id = value.get("__approval__")
     if not approval_id:
@@ -655,8 +668,69 @@ async def handle_card_action(agent: Any, event: Event) -> dict[str, Any]:
     from ..cards.callback import parse_action
 
     card_message_id = parse_action(event).message_id
+    if decision_dispatcher is not None:
+        approval = await _load_card_approval(agent, event, str(approval_id), value, card_message_id, strict=True)
+        if approval is None:
+            return {"toast": {"type": "error", "content": "无法处理该确认请求"}}
+        await decision_dispatcher(event, approval)
+        return {"toast": {"type": "info", "content": "处理中…"}}
     agent._spawn_background(load_and_decide(agent, event, str(approval_id), decision, value, card_message_id))
     return {"toast": {"type": "info", "content": "处理中…"}}
+
+
+async def process_card_action(agent: Any, event: Event) -> None:
+    """Await approval execution and its original continuation within this request.
+
+    Durable workers call this method rather than the ACK/dispatch handler. The
+    worker must own the pending approval's session partition. Infrastructure and
+    continuation errors propagate so its inbox can settle retry versus unknown;
+    an uncertain write is never automatically submitted again.
+    """
+    value = action_value(event)
+    approval_id = value.get("__approval__")
+    decision = value.get("decision")
+    if not approval_id or decision not in ("approve", "reject"):
+        return
+    from ..cards.callback import parse_action
+
+    await load_and_decide(
+        agent,
+        event,
+        str(approval_id),
+        decision,
+        value,
+        parse_action(event).message_id,
+        propagate_errors=True,
+    )
+
+
+async def _load_card_approval(
+    agent: Any,
+    event: Event,
+    approval_id: str,
+    value: dict[str, Any],
+    card_message_id: str | None,
+    *,
+    strict: bool,
+) -> PendingApproval | None:
+    """Resolve trusted ownership without claiming or mutating the pending row."""
+    approval = await agent.approvals.get(approval_id)
+    if approval is None:
+        return None
+    clicker_keys = set(user_identity_keys(agent._tool_context(event).requesting_user()))
+    if not approval.owner_user_keys or not (clicker_keys & set(approval.owner_user_keys)):
+        return None
+    if strict:
+        stored_sha = approval.payload_sha256 or ""
+        expected_sha = value.get("payload_sha256")
+        if (stored_sha or expected_sha is not None) and expected_sha != stored_sha:
+            return None
+        if approval.tenant_key and approval.tenant_key != getattr(event, "tenant_key", None):
+            return None
+        saved_card_id = _progress_message_id(approval.extra)
+        if saved_card_id and saved_card_id != card_message_id:
+            return None
+    return approval
 
 
 async def load_and_decide(
@@ -666,17 +740,20 @@ async def load_and_decide(
     decision: Literal["approve", "reject"],
     value: dict[str, Any],
     card_message_id: str | None,
+    *,
+    propagate_errors: bool = False,
 ) -> None:
-    r"""在卡片回调完成 ACK 之后，于后台加载并校验对应的待处理确认请求。"""
+    r"""Load and validate a decision, optionally propagating worker failures."""
     try:
-        approval = await agent.approvals.get(approval_id)
+        approval = await _load_card_approval(agent, event, approval_id, value, card_message_id, strict=propagate_errors)
         if approval is None:
             return
-        clicker_keys = set(user_identity_keys(agent._tool_context(event).requesting_user()))
-        if not approval.owner_user_keys or not (clicker_keys & set(approval.owner_user_keys)):
-            return
-        await decide_and_resume(agent, event, approval, decision, value, card_message_id)
+        await decide_and_resume(
+            agent, event, approval, decision, value, card_message_id, propagate_errors=propagate_errors
+        )
     except Exception:  # noqa: BLE001 - background preparation must not surface as an unhandled task error
+        if propagate_errors:
+            raise
         logging.getLogger("feishu").exception("handle_card_action: error loading approval %s", approval_id)
 
 
@@ -687,11 +764,15 @@ async def decide_and_resume(
     decision: Literal["approve", "reject"],
     value: dict[str, Any],
     card_message_id: str | None,
+    *,
+    propagate_errors: bool = False,
 ) -> None:
     r"""Serialize provenance validation, execution, and history continuation with session resets."""
     async with agent._session_lock(approval.session_id):
         history = await agent.store.get(approval.session_id)
         if not has_original_tool_call(history, approval):
+            if propagate_errors:
+                await mark_current_event_side_effect_started()
             await agent.approval_engine.on_cancel(approval.approval_id)
             current = await agent.approvals.get(approval.approval_id)
             if current is not None and current.state in ("executing", "execution_unknown"):
@@ -714,8 +795,12 @@ async def decide_and_resume(
                     )
                 except Exception:  # noqa: BLE001 - stale UI cleanup must not resume the old tool
                     logging.getLogger("feishu").debug("could not patch the stale approval card", exc_info=True)
+            if propagate_errors and current is not None and current.state in ("executing", "execution_unknown"):
+                raise RuntimeError("approval execution requires reconciliation")
             return
-        await _decide_and_resume_locked(agent, event, approval, decision, value, card_message_id, history)
+        await _decide_and_resume_locked(
+            agent, event, approval, decision, value, card_message_id, history, propagate_errors=propagate_errors
+        )
 
 
 async def _decide_and_resume_locked(
@@ -726,12 +811,19 @@ async def _decide_and_resume_locked(
     value: dict[str, Any],
     card_message_id: str | None,
     history: list[Message],
+    *,
+    propagate_errors: bool = False,
 ) -> None:
     r"""
     后台执行审批决定，并在需要时恢复原模型轮次。
 
     执行身份固定为审批发起人，点击事件只用于 ACK 与定位被点击卡片；续跑事件从原消息重建。
     """
+    if propagate_errors:
+        # Claim/completion consumes durable continuation state even without a
+        # visible progress card. Fence it before mutation so a hard termination
+        # cannot retry, see a missing/already-claimed row, and silently finish.
+        await mark_current_event_side_effect_started()
     resume_event = Event.from_payload(
         {
             "header": {"event_type": "im.message.receive_v1"},
@@ -755,6 +847,8 @@ async def _decide_and_resume_locked(
                 expected_payload_sha256=value.get("payload_sha256"),
                 dispatch=agent.registry.dispatch,
             )
+            if propagate_errors and outcome.status in (ApprovalStatus.FROZEN, ApprovalStatus.ALREADY_DECIDED):
+                raise RuntimeError("approval execution requires reconciliation")
             if _should_resume(outcome.status):
                 if outcome.auth_scopes:
                     call = ToolCall(
@@ -811,6 +905,8 @@ async def _decide_and_resume_locked(
                 else:
                     await agent._loop(resume_event, approval.session_id, history, progress=progress)
         except Exception:  # noqa: BLE001 - background failure must not surface as an unhandled task error
+            if propagate_errors:
+                raise
             logging.getLogger("feishu").exception(
                 "handle_card_action: error deciding/resuming %s of %s (approval=%s)",
                 decision,

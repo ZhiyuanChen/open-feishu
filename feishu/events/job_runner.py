@@ -49,6 +49,7 @@ class EventJobRunner:
         backoff_base_seconds: float = 1.0,
         backoff_max_seconds: float = 300.0,
         now: Callable[[], float] = time.time,
+        sleep: Callable[[float], Awaitable[Any]] = asyncio.sleep,
     ) -> None:
         if not worker_id:
             raise ValueError("worker_id must not be empty")
@@ -63,6 +64,7 @@ class EventJobRunner:
         self.backoff_base_seconds = backoff_base_seconds
         self.backoff_max_seconds = backoff_max_seconds
         self._now = now
+        self._sleep = sleep
 
     async def run_once(self, *, now: float | None = None) -> EventJob | None:
         """Claim and process one job, returning its resulting durable record."""
@@ -121,7 +123,7 @@ class EventJobRunner:
     async def _heartbeat(self, job: EventJob) -> None:
         interval = max(0.01, self.lease_seconds / 3)
         while True:
-            await asyncio.sleep(interval)
+            await self._sleep(interval)
             await self.store.renew(
                 job.job_id,
                 self.worker_id,

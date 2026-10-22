@@ -25,7 +25,7 @@ import hmac
 import json
 import logging
 import time
-from typing import Any, Callable
+from typing import Any, Awaitable, Callable
 
 from starlette.applications import Starlette
 from starlette.background import BackgroundTask
@@ -151,6 +151,7 @@ def create_event_route(
     verification_token: str | None = None,
     seen_store: Any = _DEFAULT_SEEN_STORE,
     job_store: EventJobStore | None = None,
+    card_handler: Callable[[Event], Awaitable[dict[str, Any] | None]] | None = None,
     partition_key: Callable[[Event], str] = _default_partition_key,
     max_age_seconds: float | None = 300,
     now: Callable[[], float] = time.time,
@@ -184,6 +185,8 @@ def create_event_route(
             也可传入自定义实现（如基于 Redis 的共享存储）。
         job_store: 可选的持久化事件收件箱。配置后，普通事件在 ACK 前先持久化并由
             [EventJobRunner][feishu.events.job_runner.EventJobRunner] 执行；卡片回调仍同步处理。
+        card_handler: 可选的持久卡片接收器，在来源校验后等待其返回，再发送 ACK。
+            接收器须负责原子持久化和去重；此路径不预先标记 `seen_store`，失败返回 503 允许重试。
         partition_key: 用于同一会话 FIFO 的分区键；默认从 chat/thread identity 推导。
         max_age_seconds: 签名请求允许的最大时延（秒），默认 `300`；用于拒绝过期的
             重放请求。设为 `None` 可关闭新鲜度校验（但绝不会跳过 MAC 校验）。
@@ -232,6 +235,8 @@ def create_event_route(
             return id_error
 
         if event.event_type == "card.action.trigger":
+            if card_handler is not None:
+                return await _receive_durable_card(card_handler, event)
             if store is not None and not await claim(store, event.event_id):
                 return JSONResponse({})
             handler_result = await dispatcher.dispatch(event, skip_seen_store=store is not None)
@@ -267,6 +272,7 @@ def create_card_route(
     encrypt_key: str | None = None,
     verification_token: str | None = None,
     seen_store: Any = _DEFAULT_SEEN_STORE,
+    card_handler: Callable[[Event], Awaitable[dict[str, Any] | None]] | None = None,
     max_age_seconds: float | None = 300,
     now: Callable[[], float] = time.time,
 ) -> Route:
@@ -340,6 +346,8 @@ def create_card_route(
         id_error = _verify_event_id(event)
         if id_error is not None:
             return id_error
+        if card_handler is not None and event.event_type == "card.action.trigger":
+            return await _receive_durable_card(card_handler, event)
         # Feishu retries card-action callbacks on timeout; returning {} prevents re-running side effects.
         if store is not None and not await claim(store, event.event_id):
             return JSONResponse({})
@@ -348,6 +356,15 @@ def create_card_route(
         return JSONResponse(handler_result if handler_result is not None else {})
 
     return Route(path, endpoint, methods=["POST"])
+
+
+async def _receive_durable_card(handler: Callable[[Event], Awaitable[dict[str, Any] | None]], event: Event) -> Response:
+    try:
+        result = await handler(event)
+    except Exception:  # noqa: BLE001 - an uncommitted decision must remain retryable
+        _logger.warning("failed to accept durable card action %s", event.event_id)
+        return JSONResponse({"msg": "card acceptance failed"}, status_code=503)
+    return JSONResponse(result if result is not None else {})
 
 
 def create_event_app(

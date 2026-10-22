@@ -234,10 +234,8 @@ class InMemoryEventJobStore:
                 if job.status is EventJobStatus.COMPLETED:
                     continue
                 current_first = first_unresolved.get(job.partition_key)
-                if current_first is None or (job.created_at, job.event_id) < (
-                    current_first.created_at,
-                    current_first.event_id,
-                ):
+                # Dict iteration retains receipt order when timestamps tie.
+                if current_first is None or job.created_at < current_first.created_at:
                     first_unresolved[job.partition_key] = job
             candidates = [
                 job
@@ -248,7 +246,7 @@ class InMemoryEventJobStore:
             ]
             if not candidates:
                 return None
-            job = min(candidates, key=lambda item: (item.created_at, item.event_id))
+            job = min(candidates, key=lambda item: item.created_at)
             job.status = EventJobStatus.RUNNING
             job.attempt += 1
             job.worker_id = worker_id
@@ -343,10 +341,7 @@ class InMemoryEventJobStore:
                 if job.status is EventJobStatus.COMPLETED:
                     continue
                 current_first = first_unresolved.get(job.partition_key)
-                if current_first is None or (job.created_at, job.event_id) < (
-                    current_first.created_at,
-                    current_first.event_id,
-                ):
+                if current_first is None or job.created_at < current_first.created_at:
                     first_unresolved[job.partition_key] = job
             times = []
             for job in first_unresolved.values():
@@ -469,8 +464,8 @@ class SqliteEventJobStore:
                     "AND NOT EXISTS (SELECT 1 FROM event_jobs AS prior "
                     "WHERE prior.partition_key = j.partition_key AND prior.status != ? "
                     "AND (prior.created_at < j.created_at OR "
-                    "(prior.created_at = j.created_at AND prior.event_id < j.event_id))) "
-                    "ORDER BY j.created_at, j.event_id LIMIT 1",
+                    "(prior.created_at = j.created_at AND prior.rowid < j.rowid))) "
+                    "ORDER BY j.created_at, j.rowid LIMIT 1",
                     (
                         EventJobStatus.QUEUED.value,
                         EventJobStatus.RETRY_WAIT.value,
@@ -604,7 +599,7 @@ class SqliteEventJobStore:
                 "WHERE j.status IN (?, ?, ?) AND NOT EXISTS ("
                 "SELECT 1 FROM event_jobs AS prior WHERE prior.partition_key = j.partition_key "
                 "AND prior.status != ? AND (prior.created_at < j.created_at "
-                "OR (prior.created_at = j.created_at AND prior.event_id < j.event_id)))",
+                "OR (prior.created_at = j.created_at AND prior.rowid < j.rowid)))",
                 (
                     EventJobStatus.QUEUED.value,
                     EventJobStatus.RETRY_WAIT.value,

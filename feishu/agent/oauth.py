@@ -33,6 +33,7 @@ from uuid import uuid4
 
 from ..auth import OAuthStateSigner, UserTokenProvider, user_from_identity_keys, user_identity_keys
 from ..events.envelope import Event
+from ..events.jobs import mark_current_event_side_effect_started
 from ._callbacks import accepts_positional_arguments
 from ._flow import (
     AWAITING_APPROVAL_NOTE,
@@ -260,17 +261,27 @@ async def try_send_auth_card(
         return False
 
 
-async def resume_authorization(agent: Any, authorization_id: str, *, user: Mapping[str, Any] | None = None) -> str:
-    r"""Serialize OAuth provenance validation, tool execution, and history continuation with session resets."""
+async def resume_authorization(
+    agent: Any,
+    authorization_id: str,
+    *,
+    user: Mapping[str, Any] | None = None,
+    propagate_errors: bool = False,
+) -> str:
+    r"""Resume under the session lock; durable consumers propagate failures and freeze uncertain work."""
     authorization = await agent.authorizations.get(authorization_id)
     if authorization is None:
         return "missing"
     async with agent._session_lock(authorization.session_id):
-        return await _resume_authorization_locked(agent, authorization_id, user=user)
+        return await _resume_authorization_locked(agent, authorization_id, user=user, propagate_errors=propagate_errors)
 
 
 async def _resume_authorization_locked(
-    agent: Any, authorization_id: str, *, user: Mapping[str, Any] | None = None
+    agent: Any,
+    authorization_id: str,
+    *,
+    user: Mapping[str, Any] | None = None,
+    propagate_errors: bool = False,
 ) -> str:
     r"""
     OAuth callback 成功保存用户 token 后，恢复一次挂起授权对应的原工具调用。
@@ -281,15 +292,36 @@ async def _resume_authorization_locked(
     if authorization is None:
         return "missing"
     if user is None:
-        await notify_authorization_resume_problem(
-            agent,
-            authorization,
-            "授权已完成，但无法确认完成授权的用户身份。请重新发起请求。",
-        )
+        if not propagate_errors:
+            await notify_authorization_resume_problem(
+                agent,
+                authorization,
+                "授权已完成，但无法确认完成授权的用户身份。请重新发起请求。",
+            )
         return "forbidden"
     callback_keys = set(user_identity_keys(user))
     if not authorization.owner_user_keys or not (callback_keys & set(authorization.owner_user_keys)):
         return "forbidden"
+    if propagate_errors:
+        # Claiming is a durable lifecycle mutation: losing the worker afterwards must never retry a
+        # claimed authorization as if no work happened. Persist the job fence before touching it.
+        await mark_current_event_side_effect_started()
+        try:
+            return await _claim_and_resume_authorization(agent, authorization, propagate_errors=True)
+        except (asyncio.CancelledError, Exception):
+            try:
+                await asyncio.shield(agent.authorizations.complete(authorization_id, outcome="frozen"))
+            except Exception:  # noqa: BLE001 - retain the original failure for the durable runner
+                logger.warning("failed to freeze authorization %s", authorization_id, exc_info=True)
+            raise
+    return await _claim_and_resume_authorization(agent, authorization)
+
+
+async def _claim_and_resume_authorization(
+    agent: Any, authorization: PendingAuthorization, *, propagate_errors: bool = False
+) -> str:
+    """Keep every operation after the fence within the durable caller's settlement boundary."""
+    authorization_id = authorization.authorization_id
     claim = await agent.authorizations.claim(authorization_id)
     if claim is not ClaimResult.CLAIMED:
         if claim in (ClaimResult.EXPIRED, ClaimResult.MISSING):
@@ -365,6 +397,8 @@ async def _resume_authorization_locked(
             try:
                 result = await agent.registry.dispatch(authorization.tool_name, authorization.arguments)
             except Exception as exc:  # noqa: BLE001 - report tool failure to the model, not the browser
+                if propagate_errors:
+                    raise
                 logger.warning(
                     "authorization %s: tool %s raised %s during resume",
                     authorization.authorization_id,
@@ -400,6 +434,8 @@ async def _resume_authorization_locked(
             await agent.authorizations.complete(authorization_id, outcome="failed" if is_error else "executed")
             return "resumed"
         except Exception:  # noqa: BLE001 - callback background failures should be reported in chat and logged
+            if propagate_errors:
+                raise
             await agent.authorizations.complete(authorization_id, outcome="frozen")
             logger.exception(
                 "authorization %s: error resuming tool %s",
