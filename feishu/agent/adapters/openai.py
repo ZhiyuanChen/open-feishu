@@ -212,8 +212,22 @@ class OpenAIBackend:
 
         async def _gen() -> AsyncIterator[StreamChunk]:
             stream = await self._client.chat.completions.create(**params)
-            async for chunk in _translate_chunks(stream):
-                yield chunk
+            failed = False
+            try:
+                async for chunk in _translate_chunks(stream):
+                    yield chunk
+            except BaseException:
+                failed = True
+                raise
+            finally:
+                close = getattr(stream, "close", None) or getattr(stream, "aclose", None)
+                if close is not None:
+                    try:
+                        await close()
+                    except Exception:
+                        # A cleanup failure must not replace the provider error or cancellation.
+                        if not failed:
+                            raise
 
         return _gen()
 

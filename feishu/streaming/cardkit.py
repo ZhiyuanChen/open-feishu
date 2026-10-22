@@ -52,7 +52,8 @@ import json
 import time
 import uuid as _uuid
 from collections.abc import AsyncIterator, Callable
-from typing import TYPE_CHECKING, Any
+from contextlib import suppress
+from typing import TYPE_CHECKING, Any, cast
 
 from ..cards.builder import Card
 from ..im import infer_receive_id_type
@@ -237,59 +238,90 @@ async def stream_card(
     if (receive_id is None) == (reply_to_message_id is None):
         raise ValueError("stream_card requires exactly one of receive_id or reply_to_message_id")
     counter = _SequenceCounter()
-
-    # 1) Create the card entity.
-    card_json = _build_streaming_card(element_id=element_id, header=header, template=template)
-    create = await client.request(
-        "POST",
-        spec.CREATE_CARD_PATH,
-        json={spec.CREATE_CARD_TYPE_FIELD: spec.CREATE_CARD_TYPE, spec.CREATE_CARD_DATA_FIELD: json.dumps(card_json)},
-    )
-    card_id = create["data"]["card_id"]
-
-    # 2) Send the interactive message referencing the entity — fresh, or in reply position.
-    content = json.dumps({"type": spec.SEND_CARD_CONTENT_TYPE, "data": {"card_id": card_id}})
-    if reply_to_message_id is not None:
-        await client.request(
-            "POST",
-            spec.reply_message_path(reply_to_message_id),
-            json={"msg_type": spec.SEND_MESSAGE_TYPE, "content": content},
-        )
-    else:
-        assert receive_id is not None  # guaranteed by the receive_id / reply_to_message_id XOR check above
-        rid_type = receive_id_type or infer_receive_id_type(receive_id)
-        await client.request(
-            "POST",
-            spec.SEND_MESSAGE_PATH,
-            params={"receive_id_type": rid_type},
-            json={"receive_id": receive_id, "msg_type": spec.SEND_MESSAGE_TYPE, "content": content},
-        )
-
-    # 3) Stream cumulative text. Finalize is mandatory -> try/finally.
-    flusher = _Flusher(
-        client,
-        card_id=card_id,
-        element_id=element_id,
-        counter=counter,
-        debounce_s=debounce_s,
-        now=_now,
-        new_uuid=_new_uuid,
-    )
+    card_id: str | None = None
+    flusher: _Flusher | None = None
     accumulated = ""
+
+    async def cleanup() -> None:
+        """Attempt every cleanup operation, preserving the first failure."""
+        error: BaseException | None = None
+        try:
+            close = getattr(tokens, "aclose", None)
+            if close is not None:
+                await close()
+        except (Exception, asyncio.CancelledError) as exc:
+            error = exc
+        try:
+            if accumulated and flusher is not None:
+                await flusher.write(accumulated, force=True)
+        except (Exception, asyncio.CancelledError) as exc:
+            if error is None:
+                error = exc
+        try:
+            if card_id is not None:
+                await client.request(
+                    "PATCH",
+                    spec.settings_path(card_id),
+                    json={
+                        spec.SETTINGS_FIELD: json.dumps({"config": {spec.STREAMING_MODE_KEY: False}}),
+                        spec.SEQUENCE_FIELD: await counter.next(),
+                    },
+                )
+        except (Exception, asyncio.CancelledError) as exc:
+            if error is None:
+                error = exc
+        if error is not None:
+            raise error
+
     try:
+        # 1) Create the card entity, keeping its identity for cleanup even when sending fails.
+        card_json = _build_streaming_card(element_id=element_id, header=header, template=template)
+        create = await client.request(
+            "POST",
+            spec.CREATE_CARD_PATH,
+            json={
+                spec.CREATE_CARD_TYPE_FIELD: spec.CREATE_CARD_TYPE,
+                spec.CREATE_CARD_DATA_FIELD: json.dumps(card_json),
+            },
+        )
+        card_id = cast(str, create["data"]["card_id"])
+
+        # 2) Send the interactive message once — fresh, or in reply position.
+        content = json.dumps({"type": spec.SEND_CARD_CONTENT_TYPE, "data": {"card_id": card_id}})
+        if reply_to_message_id is not None:
+            await client.request(
+                "POST",
+                spec.reply_message_path(reply_to_message_id),
+                json={"msg_type": spec.SEND_MESSAGE_TYPE, "content": content},
+            )
+        else:
+            assert receive_id is not None  # guaranteed by the receive_id / reply_to_message_id XOR check above
+            rid_type = receive_id_type or infer_receive_id_type(receive_id)
+            await client.request(
+                "POST",
+                spec.SEND_MESSAGE_PATH,
+                params={"receive_id_type": rid_type},
+                json={"receive_id": receive_id, "msg_type": spec.SEND_MESSAGE_TYPE, "content": content},
+            )
+
+        # 3) Stream cumulative text with one mandatory final flush and settings close.
+        flusher = _Flusher(
+            client,
+            card_id=card_id,
+            element_id=element_id,
+            counter=counter,
+            debounce_s=debounce_s,
+            now=_now,
+            new_uuid=_new_uuid,
+        )
         async for tok in tokens:
             accumulated += tok
             await flusher.write(accumulated)  # debounced; may skip
-    finally:
-        # One mandatory final flush of whatever we accumulated, then finalize.
-        if accumulated:
-            await flusher.write(accumulated, force=True)
-        await client.request(
-            "PATCH",
-            spec.settings_path(card_id),
-            json={
-                spec.SETTINGS_FIELD: json.dumps({"config": {spec.STREAMING_MODE_KEY: False}}),
-                spec.SEQUENCE_FIELD: await counter.next(),
-            },
-        )
-    return card_id
+    except BaseException:
+        # Preserve the original stream/delivery error or cancellation during cleanup.
+        with suppress(Exception, asyncio.CancelledError):
+            await cleanup()
+        raise
+    else:
+        await cleanup()
+        return card_id

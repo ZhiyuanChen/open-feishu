@@ -26,7 +26,7 @@ import inspect
 import logging
 import re
 import time
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import AsyncGenerator, Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, AsyncIterator, Literal
 from uuid import uuid4
@@ -120,6 +120,38 @@ class StreamResult:
     reasoning: str = ""
 
 
+class _StreamAccumulator:
+    """Collect model state while a single consumer forwards text to the reply."""
+
+    def __init__(self) -> None:
+        self.result = StreamResult(text="", tool_calls=[], stop_reason=StopReason.OTHER)
+        self._calls: dict[int, _Accum] = {}
+
+    def add(self, chunk: StreamChunk) -> None:
+        if isinstance(chunk, TextDelta):
+            self.result.text += chunk.text
+        elif isinstance(chunk, ReasoningDelta):
+            self.result.reasoning += chunk.text
+        elif isinstance(chunk, ToolCallDelta):
+            acc = self._calls.setdefault(chunk.index, _Accum())
+            if acc.id is None and chunk.id is not None:
+                acc.id = chunk.id
+            if acc.name is None and chunk.name is not None:
+                acc.name = chunk.name
+            acc.arguments += chunk.arguments
+        elif isinstance(chunk, MessageStop):
+            self.result.stop_reason = chunk.stop_reason
+            self.result.usage = chunk.usage
+
+    def finish(self) -> StreamResult:
+        self.result.tool_calls = [
+            ToolCall(id=call.id or "", name=call.name, arguments=call.arguments)
+            for _, call in sorted(self._calls.items())
+            if call.name
+        ]
+        return self.result
+
+
 async def accumulate_stream(
     chunks: AsyncIterator[StreamChunk],
     *,
@@ -153,42 +185,14 @@ async def accumulate_stream(
         >>> result.stop_reason
         <StopReason.TOOL_USE: 'tool_use'>
     """
-    text = ""
-    reasoning = ""
-    by_index: dict[int, _Accum] = {}
-    stop_reason = StopReason.OTHER
-    usage: dict[str, int] | None = None
+    accumulator = _StreamAccumulator()
     async for chunk in chunks:
-        if isinstance(chunk, TextDelta):
-            text += chunk.text
-        elif isinstance(chunk, ReasoningDelta):
-            reasoning += chunk.text
-            if on_reasoning is not None:
-                update = on_reasoning(reasoning, text)
-                if inspect.isawaitable(update):
-                    await update
-        elif isinstance(chunk, ToolCallDelta):
-            acc = by_index.setdefault(chunk.index, _Accum())
-            if acc.id is None and chunk.id is not None:
-                acc.id = chunk.id
-            if acc.name is None and chunk.name is not None:
-                acc.name = chunk.name
-            acc.arguments += chunk.arguments
-        elif isinstance(chunk, MessageStop):
-            stop_reason = chunk.stop_reason
-            usage = chunk.usage
-    tool_calls = [
-        ToolCall(id=acc.id or "", name=acc.name, arguments=acc.arguments)
-        for _, acc in sorted(by_index.items())
-        if acc.name  # drop malformed tool-call slots that never received a name (some models emit empties)
-    ]
-    return StreamResult(
-        text=text,
-        tool_calls=tool_calls,
-        stop_reason=stop_reason,
-        usage=usage,
-        reasoning=reasoning,
-    )
+        accumulator.add(chunk)
+        if isinstance(chunk, ReasoningDelta) and on_reasoning is not None:
+            update = on_reasoning(accumulator.result.reasoning, accumulator.result.text)
+            if inspect.isawaitable(update):
+                await update
+    return accumulator.finish()
 
 
 _MENTION_RE = re.compile(r"^@_user_\d+\s*")
@@ -706,6 +710,7 @@ class AgentEngine:
     ) -> None:
         progress = progress or _ProgressCard(self, event)
         result = None
+        streamed = False
         active_tool_calls: list[ToolCall] | None = None
         # Compact the history at a token threshold (collapse old turns into one summary message) BEFORE the
         # model call, so a long session keeps a stable, cacheable prefix instead of paying a growing prompt.
@@ -718,7 +723,8 @@ class AgentEngine:
             for _ in range(self.max_iterations):
                 system = await self._system_for_event(event, timezone)
                 messages = _messages_with_turn_context(history, await self._turn_context_for_event(event, timezone))
-                result = await self._accumulate_stream_with_progress(
+                result, streamed = await self._accumulate_stream_with_progress(
+                    event,
                     self.backend.stream(
                         messages=messages,
                         tools=self.registry.specs(),
@@ -758,7 +764,7 @@ class AgentEngine:
                 history.append(assistant)
                 await self.store.append(session_id, assistant)
                 # Replace the progress card in place with the answer; only send a separate reply if there was none.
-                if not await progress.finalize(result.text):
+                if not await progress.finalize(result.text) and not streamed:
                     await self._finalize(event, result.text)
                 return
             # Loop exhausted max_iterations without a final text turn — send a fallback reply.
@@ -771,7 +777,7 @@ class AgentEngine:
                 if result and result.text
                 else "[Reached the maximum number of steps without completing the request.]"
             )
-            if not await progress.finalize(fallback):
+            if not await progress.finalize(fallback) and not streamed:
                 await self._finalize(event, fallback)
         except asyncio.CancelledError:
             if active_tool_calls:
@@ -779,14 +785,58 @@ class AgentEngine:
             raise
 
     async def _accumulate_stream_with_progress(
-        self, chunks: AsyncIterator[StreamChunk], progress: _ProgressCard
-    ) -> StreamResult:
-        r"""归并一轮模型流；若配置了进度摘要器，则用近期 reasoning 原地更新进度卡片。"""
+        self, event: Event, chunks: AsyncIterator[StreamChunk], progress: _ProgressCard
+    ) -> tuple[StreamResult, bool]:
+        r"""消费一轮模型流，同时推送正文；推理内容只交给进度摘要器。"""
 
         async def on_reasoning(reasoning: str, text: str) -> None:
             await progress.thinking(reasoning=reasoning, text=text)
 
-        return await accumulate_stream(chunks, on_reasoning=on_reasoning)
+        message_id = (event.body.get("message") or {}).get("message_id")
+        if not self.stream or self.client is None or not message_id or progress.message_id:
+            return await accumulate_stream(chunks, on_reasoning=on_reasoning), False
+
+        accumulator = _StreamAccumulator()
+
+        async def text_tokens() -> AsyncGenerator[str, None]:
+            async for chunk in chunks:
+                accumulator.add(chunk)
+                if isinstance(chunk, ReasoningDelta):
+                    await on_reasoning(accumulator.result.reasoning, accumulator.result.text)
+                elif isinstance(chunk, TextDelta) and chunk.text:
+                    yield chunk.text
+
+        tokens = text_tokens()
+        failed = False
+        try:
+            # Tool-only turns must not create an empty visible card.
+            first = await anext(tokens, None)
+            if first is None:
+                return accumulator.finish(), False
+
+            async def replay() -> AsyncIterator[str]:
+                yield first
+                async for token in tokens:
+                    yield token
+
+            await mark_current_event_side_effect_started()
+            await self.client.stream_card(replay(), reply_to_message_id=message_id)
+            return accumulator.finish(), True
+        except BaseException:
+            failed = True
+            raise
+        finally:
+            cleanup_error: BaseException | None = None
+            for source in (tokens, chunks):
+                close = getattr(source, "aclose", None)
+                if close is not None:
+                    try:
+                        await close()
+                    except (Exception, asyncio.CancelledError) as exc:
+                        if cleanup_error is None:
+                            cleanup_error = exc
+            if cleanup_error is not None and not failed:
+                raise cleanup_error
 
     async def _maybe_summarize(self, session_id: str, history: list[Message]) -> list[Message]:
         r"""历史超过 token 阈值时自动压缩；未配置阈值或未超阈值时原样返回。"""

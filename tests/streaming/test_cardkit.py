@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json as _json
 
 import pytest
@@ -49,6 +50,19 @@ class LifecycleClient:
         if path == spec.CREATE_CARD_PATH and method == "POST":
             return NestedDict({"code": 0, "msg": "ok", "data": {"card_id": "card_42"}})
         return NestedDict({"code": 0, "msg": "ok", "data": {"message_id": "om_1"}})
+
+
+class FailingLifecycleClient(LifecycleClient):
+    def __init__(self):
+        super().__init__()
+        self.errors = {}
+
+    async def request(self, method, path, **kwargs):
+        response = await super().request(method, path, **kwargs)
+        error = self.errors.get((method, path))
+        if error is not None:
+            raise error
+        return response
 
 
 async def gen(items):
@@ -168,6 +182,117 @@ class TestStreamCardReply:
 
 
 class TestStreamCardFinalizeAlwaysRuns:
+    async def test_finalizes_created_entity_when_sending_fails(self):
+        client = FailingLifecycleClient()
+        error = RuntimeError("message delivery failed")
+        client.errors[("POST", spec.SEND_MESSAGE_PATH)] = error
+
+        with pytest.raises(RuntimeError) as caught:
+            await run(client, gen(["answer"]))
+
+        assert caught.value is error
+        assert [(call["method"], call["path"]) for call in client.calls] == [
+            ("POST", "cardkit/v1/cards"),
+            ("POST", "im/v1/messages"),
+            ("PATCH", "cardkit/v1/cards/card_42/settings"),
+        ]
+
+    async def test_finalizes_when_final_content_flush_fails(self):
+        client = FailingLifecycleClient()
+        error = RuntimeError("final content write failed")
+
+        async def tokens():
+            yield "first"
+            client.errors[("PUT", spec.content_path("card_42", "md"))] = error
+            yield " last"
+
+        with pytest.raises(RuntimeError) as caught:
+            await run(client, tokens(), debounce_s=1000.0)
+
+        assert caught.value is error
+        assert client.calls[-1]["method"] == "PATCH"
+        assert client.calls[-1]["path"] == "cardkit/v1/cards/card_42/settings"
+        assert puts(client)[-1]["json"]["content"] == "first last"
+
+    async def test_producer_error_is_preserved_when_cleanup_also_fails(self):
+        client = FailingLifecycleClient()
+        error = RuntimeError("model stream failed")
+        client.errors[("PATCH", spec.settings_path("card_42"))] = ValueError("settings update failed")
+
+        async def tokens():
+            yield "partial"
+            raise error
+
+        with pytest.raises(RuntimeError) as caught:
+            await run(client, tokens())
+
+        assert caught.value is error
+
+    async def test_content_failure_closes_token_generator(self):
+        client = FailingLifecycleClient()
+        error = RuntimeError("content write failed")
+        client.errors[("PUT", spec.content_path("card_42", "md"))] = error
+        closed = asyncio.Event()
+
+        async def tokens():
+            try:
+                yield "partial"
+                yield "unused"
+            finally:
+                closed.set()
+
+        source = tokens()
+        try:
+            with pytest.raises(RuntimeError) as caught:
+                await run(client, source)
+
+            assert caught.value is error
+            assert closed.is_set()
+            assert client.calls[-1]["method"] == "PATCH"
+        finally:
+            await source.aclose()
+
+    async def test_cancellation_closes_source_and_preserves_cancelled_error(self):
+        writing = asyncio.Event()
+        closed = asyncio.Event()
+        blocked = asyncio.Event()
+
+        class BlockingLifecycleClient(LifecycleClient):
+            async def request(self, method, path, **kwargs):
+                response = await super().request(method, path, **kwargs)
+                if method == "PUT":
+                    if not writing.is_set():
+                        writing.set()
+                        await blocked.wait()
+                    raise RuntimeError("cleanup content write failed")
+                return response
+
+        client = BlockingLifecycleClient()
+
+        async def tokens():
+            try:
+                yield "partial"
+                yield "unused"
+            finally:
+                closed.set()
+
+        source = tokens()
+        task = asyncio.create_task(run(client, source))
+        try:
+            await asyncio.wait_for(writing.wait(), timeout=1)
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await asyncio.wait_for(task, timeout=1)
+
+            assert closed.is_set()
+            assert client.calls[-1]["method"] == "PATCH"
+            assert client.calls[-1]["path"] == "cardkit/v1/cards/card_42/settings"
+        finally:
+            if not task.done():
+                task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+            await source.aclose()
+
     async def test_finalizes_on_empty_stream(self, fake):
         card_id = await run(fake, gen([]), debounce_s=0.0)
         assert card_id == "card_42"
