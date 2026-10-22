@@ -39,6 +39,7 @@ import re
 import sqlite3
 import time
 from collections.abc import Iterable, Mapping
+from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
@@ -335,6 +336,7 @@ class UserTokenProvider:
         self.store = store
         self.refresh_skew_seconds = refresh_skew_seconds
         self._log = logger or logging.getLogger("feishu")
+        self._refresh_locks: dict[tuple[str, ...], asyncio.Lock] = {}
 
     async def user_token(self, user: Mapping[str, Any]) -> str | None:
         r"""解析有效的用户态访问令牌；临近过期则刷新；无记录或已失效返回 `None`。"""
@@ -348,13 +350,29 @@ class UserTokenProvider:
             return None
         if record.refresh_token and record.is_expiring(self.refresh_skew_seconds, _now()):
             try:
-                token_data = await self.client.oauth.refresh(record.refresh_token)
-                if "scope" not in token_data and record.scope:
-                    token_data = {**token_data, "scope": record.scope}
-                await self.store.save(token_data, user_keys=record.user_keys)
-                record = await self.store.get(user)
+                key = tuple(sorted(record.user_keys or user_identity_keys(user)))
+                lock = self._refresh_locks.setdefault(key, asyncio.Lock())
+                async with lock:
+                    record = await self.store.get(user)
+                    if record and record.refresh_token and record.is_expiring(self.refresh_skew_seconds, _now()):
+                        guard = getattr(self.store, "refresh_guard", None)
+                        async with guard(user) if guard is not None else nullcontext():
+                            # Another process may have rotated the token while we
+                            # waited for the optional durable refresh guard.
+                            record = await self.store.get(user)
+                            if (
+                                record
+                                and record.refresh_token
+                                and record.is_expiring(self.refresh_skew_seconds, _now())
+                            ):
+                                token_data = await self.client.oauth.refresh(record.refresh_token)
+                                if "scope" not in token_data and record.scope:
+                                    token_data = {**token_data, "scope": record.scope}
+                                await self.store.save(token_data, user_keys=record.user_keys)
+                                record = await self.store.get(user)
             except Exception:  # noqa: BLE001 — fall back to the stored token; drop only if hard-expired
-                self._log.warning("user_token: refresh failed; falling back to the stored token", exc_info=True)
+                # Token endpoint and persistence errors may contain credentials.
+                self._log.warning("user_token: refresh failed; falling back to the stored token")
         if record is None or record.is_expired(_now()) or not record.user_access_token:
             return None
         return record
