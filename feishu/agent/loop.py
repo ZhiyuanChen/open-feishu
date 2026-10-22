@@ -30,7 +30,9 @@ from collections.abc import AsyncGenerator, Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, AsyncIterator, Literal
 from uuid import uuid4
+from weakref import WeakValueDictionary
 
+from ..events.conversations import is_group_message, session_id_for_message
 from ..events.envelope import Event
 from ..events.jobs import current_event_job, mark_current_event_side_effect_started
 from . import approval as approval_flow
@@ -202,8 +204,8 @@ def session_id_for(event: Event) -> str:
     r"""
     从消息事件推导会话标识，用于隔离不同会话的对话历史。
 
-    优先使用 `chat_id`；当消息属于话题（thread）回复时，附加 `root_id` 以将同一话题归为独立会话；
-    若事件中没有 `chat_id`，则回退为 `message_id`。
+    私聊使用 `chat_id`；群聊以 `chat_id` 和根消息标识隔离独立问题，回复沿用 `root_id`。
+    缺少 `chat_type` 的旧事件保留原来的 `chat_id` / `root_id` 路由。
 
     Args:
         event: 飞书消息事件，须具备 `.body` 属性。
@@ -226,12 +228,7 @@ def session_id_for(event: Event) -> str:
         >>> session_id_for(dm)
         'om_9'
     """
-    message = event.body.get("message") or {}
-    chat_id = message.get("chat_id")
-    root_id = message.get("root_id")
-    if chat_id:
-        return f"{chat_id}:{root_id}" if root_id else chat_id
-    return message.get("message_id") or ""
+    return session_id_for_message(event)
 
 
 def _sender_type_for(event: Event) -> str:
@@ -515,11 +512,14 @@ class AgentEngine:
         self.backend_kwargs = backend_kwargs
         self._bg_tasks: set[asyncio.Task[Any]] = set()
         self._active_turns: dict[str, _ActiveTurn] = {}
+        self._turn_tasks: set[asyncio.Task[Any]] = set()
         self._superseded_turns: set[asyncio.Task[Any]] = set()
         self._accepting_events = True
         # Per-session lock: serialize each session's history read-modify-write (a new message and a background
         # approval-resume for the same chat must not interleave and clobber each other's turns).
-        self._session_locks: dict[str, asyncio.Lock] = {}
+        # Running and queued turns retain their lock; completed group roots should not
+        # leave one lock behind for every message the long-lived engine has seen.
+        self._session_locks: WeakValueDictionary[str, asyncio.Lock] = WeakValueDictionary()
 
     def _session_lock(self, session_id: str) -> asyncio.Lock:
         r"""返回该会话的串行化锁（不存在则创建）。在单事件循环中 get/setdefault 之间无 await，故创建是安全的。"""
@@ -554,6 +554,7 @@ class AgentEngine:
         self.stop_accepting_events()
         current = asyncio.current_task()
         tasks = set(self._bg_tasks)
+        tasks.update(self._turn_tasks)
         tasks.update(turn.task for turn in self._active_turns.values())
         tasks.update(self._superseded_turns)
         if current is not None:
@@ -599,6 +600,7 @@ class AgentEngine:
         task = asyncio.current_task()
         if task is None:
             return None
+        self._turn_tasks.add(task)
         previous = self._active_turns.get(session_id)
         if interrupt_previous and previous is not None and previous.task is not task and not previous.task.done():
             self._superseded_turns.add(previous.task)
@@ -609,6 +611,7 @@ class AgentEngine:
     def _end_session_turn(self, session_id: str, task: asyncio.Task[Any] | None) -> None:
         if task is None:
             return
+        self._turn_tasks.discard(task)
         active = self._active_turns.get(session_id)
         if active is not None and active.task is task:
             self._active_turns.pop(session_id, None)
@@ -660,7 +663,7 @@ class AgentEngine:
         event_id = str(getattr(event, "event_id", "") or "")
         user_msg.source_event_id = event_id or None
         progress = _ProgressCard(self, event)
-        active_task = self._begin_session_turn(session_id, progress, interrupt_previous=True)
+        active_task = self._begin_session_turn(session_id, progress, interrupt_previous=not is_group_message(event))
         try:
             # Serialize per session: hold the session lock across the whole read-modify-write + loop so a
             # concurrent message (or a background approval-resume) for the same chat can't load stale history

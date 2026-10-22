@@ -63,6 +63,7 @@ from .context import current_tool_context, use_tool_context
 from .integrity import derive_idempotency_key, payload_sha256, stable_hash
 from .llm import Message, ToolCall, ToolResultPart, ToolUsePart, parse_tool_arguments
 from .progress import _message_id_from_response, _pending_progress_extra, _progress_message_id, _ProgressCard
+from .replies import event_from_pending, pending_message_extra, send_turn_card
 from .result import ToolOutcome, ToolResult, coerce_tool_result
 from .session import ClaimResult, PendingApproval, PendingApprovalStore
 from .shared_files import collect_shared_file_ids
@@ -585,7 +586,7 @@ async def request_approval(
         created_message_id=message.get("message_id"),
         created_event_id=getattr(event, "event_id", None) or None,
         created_at=int(time.time()),
-        extra=_pending_progress_extra(progress),
+        extra={**_pending_progress_extra(progress), **pending_message_extra(event)},
     )
     origin = original_continuation_id(history, call)
     if origin:
@@ -605,7 +606,7 @@ async def request_approval(
     try:
         approval_message_id = await progress.replace_with_card(card)
         if approval_message_id is None:
-            response = await agent.client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
+            response = await send_turn_card(agent.client, event, card)
             approval_message_id = _message_id_from_response(response)
         if approval_message_id:
             await persist_approval_card_message_id(agent, approval, approval_message_id)
@@ -824,12 +825,7 @@ async def _decide_and_resume_locked(
         # visible progress card. Fence it before mutation so a hard termination
         # cannot retry, see a missing/already-claimed row, and silently finish.
         await mark_current_event_side_effect_started()
-    resume_event = Event.from_payload(
-        {
-            "header": {"event_type": "im.message.receive_v1"},
-            "event": {"message": {"message_id": approval.created_message_id, "chat_id": approval.chat_id}},
-        }
-    )
+    resume_event = event_from_pending(approval)
     context = agent._tool_context(resume_event)
     context.continuation_id = approval.extra.get("origin_continuation_id")
     if approval.owner_user_keys:

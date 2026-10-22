@@ -35,6 +35,7 @@ from starlette.routing import Route
 
 from ..errors import FeishuCryptoError
 from ..signature import SignatureVerifier
+from .conversations import session_id_for_message
 from .crypto import decrypt
 from .dispatcher import EventDispatcher
 from .envelope import Event
@@ -73,12 +74,7 @@ def _build_verifier(
 
 def _default_partition_key(event: Event) -> str:
     """Use the Feishu chat/thread identity for durable per-conversation ordering."""
-    message = event.body.get("message") or {}
-    chat_id = message.get("chat_id")
-    root_id = message.get("root_id")
-    if chat_id:
-        return f"{chat_id}:{root_id}" if root_id else str(chat_id)
-    return str(message.get("message_id") or event.event_id)
+    return session_id_for_message(event)
 
 
 async def _read_payload(

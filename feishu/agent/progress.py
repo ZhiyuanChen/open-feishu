@@ -30,6 +30,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..events.jobs import mark_current_event_side_effect_started
+from .replies import send_turn_card
 
 logger = logging.getLogger("feishu")
 
@@ -74,6 +75,7 @@ class _ProgressCard:
 
     def __init__(self, agent: Any, event: Any) -> None:
         self._agent = agent
+        self._event = event
         message = event.body.get("message") or {}
         self._chat_id = message.get("chat_id")
         self._message_id: str | None = None
@@ -112,11 +114,11 @@ class _ProgressCard:
         ready = self._ready()
         if ready is None or self._message_id is not None:
             return
-        builder, client, chat_id = ready
+        builder, client, _ = ready
         card = builder([], False, "")
         try:
             await mark_current_event_side_effect_started()
-            resp = await client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
+            resp = await send_turn_card(client, self._event, card)
             self._message_id = _message_id_from_response(resp)
         except Exception:  # noqa: BLE001 - the progress UI must never break the turn
             logger.debug("progress card start failed", exc_info=True)
@@ -175,12 +177,12 @@ class _ProgressCard:
         ready = self._ready()
         if ready is None:
             return False
-        builder, client, chat_id = ready
+        builder, client, _ = ready
         card = builder(list(self._steps), False, status_text)
         try:
             await mark_current_event_side_effect_started()
             if self._message_id is None:
-                resp = await client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
+                resp = await send_turn_card(client, self._event, card)
                 self._message_id = _message_id_from_response(resp)
             else:
                 await client.im.patch(self._message_id, card)
@@ -210,13 +212,13 @@ class _ProgressCard:
         ready = self._ready()
         if ready is None:
             return
-        builder, client, chat_id = ready
+        builder, client, _ = ready
         self._steps.append(tool_name)
         card = builder(list(self._steps), False, "")
         try:
             await mark_current_event_side_effect_started()
             if self._message_id is None:
-                resp = await client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
+                resp = await send_turn_card(client, self._event, card)
                 self._message_id = _message_id_from_response(resp)
             else:
                 await client.im.patch(self._message_id, card)

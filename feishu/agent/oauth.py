@@ -46,6 +46,7 @@ from .context import current_tool_context, use_tool_context
 from .integrity import payload_sha256
 from .llm import Message, ToolCall, ToolResultPart, parse_tool_arguments
 from .progress import _message_id_from_response, _pending_progress_extra, _progress_message_id, _ProgressCard
+from .replies import event_from_pending, pending_message_extra, send_turn_card
 from .result import ToolOutcome, ToolResult, coerce_tool_result
 from .session import ClaimResult, PendingApproval, PendingAuthorization
 from .tools import Tool
@@ -143,7 +144,7 @@ async def request_authorization(
         created_message_id=message.get("message_id"),
         created_event_id=getattr(event, "event_id", None) or None,
         created_at=int(time.time()),
-        extra=_pending_progress_extra(progress),
+        extra={**_pending_progress_extra(progress), **pending_message_extra(event)},
     )
     from .approval import original_continuation_id
 
@@ -183,7 +184,7 @@ async def request_authorization(
     try:
         auth_card_message_id = await progress.replace_with_card(card) if progress is not None else None
         if not auth_card_message_id:
-            response = await agent.client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
+            response = await send_turn_card(agent.client, event, card)
             auth_card_message_id = _message_id_from_response(response)
         if auth_card_message_id:
             await persist_authorization_card_message_id(agent, authorization, auth_card_message_id)
@@ -246,7 +247,7 @@ async def send_auth_card(agent: Any, event: Event, authorize_url: str, progress:
     card = agent._auth_card_builder(authorize_url)
     if progress is not None and await progress.replace_with_card(card):
         return True
-    await agent.client.im.send(chat_id, card, msg_type="interactive", receive_id_type="chat_id")
+    await send_turn_card(agent.client, event, card)
     return True
 
 
@@ -499,17 +500,7 @@ async def remove_authorization_card(
 
 def event_from_pending_authorization(authorization: PendingAuthorization) -> Event:
     r"""从挂起授权记录重建原会话事件，供工具恢复与最终回复定位。"""
-    return Event.from_payload(
-        {
-            "header": {"event_type": "im.message.receive_v1"},
-            "event": {
-                "message": {
-                    "message_id": authorization.created_message_id,
-                    "chat_id": authorization.chat_id,
-                }
-            },
-        }
-    )
+    return event_from_pending(authorization)
 
 
 def oauth_callback_handler(
