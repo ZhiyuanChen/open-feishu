@@ -24,7 +24,6 @@ from __future__ import annotations
 import base64
 import hashlib
 
-from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 
 from ..errors import FeishuCryptoError
@@ -60,6 +59,9 @@ def decrypt(encrypt_key: str, b64_ciphertext: str) -> bytes:
         ...     print(type(exc).__name__)
         FeishuCryptoError
     """
+    # AES loads native-library handles, which must be created after a runtime snapshot is restored.
+    from Crypto.Cipher import AES
+
     key = hashlib.sha256(encrypt_key.encode("utf-8")).digest()
     try:
         blob = base64.b64decode(b64_ciphertext)

@@ -5,10 +5,21 @@ from __future__ import annotations
 import logging
 from uuid import uuid4
 
+from agent_app import create_runtime_agent, is_local_smoke
 from edge import inspect_url_verification_request
-from workers import DurableObject, Response, WorkerEntrypoint
+from starlette.responses import JSONResponse
+from starlette.routing import Route
+from storage import CloudflareEventJobStore, CloudflareSeenStore, CloudflareSqliteConnection
+from timers import sleep as cloudflare_sleep
+from workers import DurableObject, Response, WorkerEntrypoint, asgi
+
+from feishu.events.job_runner import EventJobRunner
 
 logger = logging.getLogger("feishu.cloudflare")
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    logger.addHandler(logging.StreamHandler())
+logger.propagate = False
 
 
 class _PersistentASGI:
@@ -26,7 +37,8 @@ class _PersistentASGI:
 class Default(WorkerEntrypoint):
     async def fetch(self, request):
         verification_token = getattr(self.env, "FEISHU_VERIFICATION_TOKEN", None) or None
-        verification = await inspect_url_verification_request(request, verification_token)
+        encrypt_key = getattr(self.env, "FEISHU_ENCRYPT_KEY", None) or None
+        verification = await inspect_url_verification_request(request, verification_token, encrypt_key)
         if verification is not None:
             status, body = verification
             return Response.from_json(body, status=status)
@@ -41,9 +53,6 @@ class FeishuAgent(DurableObject):
 
     def __init__(self, ctx, env) -> None:
         super().__init__(ctx, env)
-        from agent_app import create_runtime_agent, is_local_smoke
-        from storage import CloudflareEventJobStore, CloudflareSeenStore, CloudflareSqliteConnection
-
         self.ctx = ctx
         self.env = env
         self.connection = CloudflareSqliteConnection(ctx.storage)
@@ -58,32 +67,34 @@ class FeishuAgent(DurableObject):
         app = self.agent.asgi_app()
         self._local_smoke = is_local_smoke(env)
         if self._local_smoke:
-            from starlette.routing import Route
-
             app.routes.append(Route("/__smoke/jobs/{job_id}", self._smoke_job, methods=["GET"]))
         self.app = _PersistentASGI(app)
         self._started = False
 
     async def fetch(self, request):
         await self._ensure_started()
-        from workers import asgi
-
         if (request.headers.get("upgrade") or "").lower() == "websocket":
             return await asgi.websocket(self.app, request, self.env)
         return await asgi.fetch(self.app, request, self.env, self.ctx)
 
     async def alarm(self, _alarm_info=None) -> None:
         await self._ensure_started()
-        from feishu.events.job_runner import EventJobRunner
-
         runner = EventJobRunner(
             self.jobs,
             self.agent.handle_event,
             worker_id=uuid4().hex,
             lease_seconds=120,
+            sleep=cloudflare_sleep,
         )
         try:
-            await runner.drain(limit=8)
+            for job in await runner.drain(limit=8):
+                logger.info(
+                    "event job settled: id=%s status=%s attempt=%s error_type=%s",
+                    job.job_id,
+                    job.status.value,
+                    job.attempt,
+                    job.error_type,
+                )
         finally:
             await self.jobs.schedule_next()
 
@@ -93,8 +104,6 @@ class FeishuAgent(DurableObject):
             self._started = True
 
     async def _smoke_job(self, request):
-        from starlette.responses import JSONResponse
-
         if not self._local_smoke:
             return JSONResponse({"msg": "not found"}, status_code=404)
         job = await self.jobs.get(request.path_params["job_id"])

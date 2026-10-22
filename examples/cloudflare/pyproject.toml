@@ -9,7 +9,7 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "open-feishu[openai]",
+  "open-feishu",
   "tzdata",
   "workers-runtime-sdk",
 ]

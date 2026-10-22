@@ -22,6 +22,9 @@ from feishu.auth import SqliteOAuthTokenStore, UserTokenProvider
 from feishu.client import FeishuClient
 
 _storage = import_module(f"{__package__}.storage" if __package__ else "storage")
+ChatCompletionsClient = import_module(
+    f"{__package__}.model_client" if __package__ else "model_client"
+).ChatCompletionsClient
 CloudflareAuditLog = _storage.CloudflareAuditLog
 CloudflareEventJobStore = _storage.CloudflareEventJobStore
 CloudflareSeenStore = _storage.CloudflareSeenStore
@@ -102,9 +105,14 @@ def create_runtime_agent(
         region=config["feishu"]["region"],
     )
     token_provider = UserTokenProvider(client, SqliteOAuthTokenStore(":memory:", connection=connection))
+    model_client = ChatCompletionsClient(
+        api_key=config["model"]["api_key"],
+        base_url=config["model"]["base_url"],
+    )
     return Agent(
         config,
         client=client,
+        model_client=model_client,
         user_tokens=token_provider,
         store=sessions,
         approvals=approvals,
@@ -145,7 +153,7 @@ def _config(env: Any) -> dict[str, Any]:
         "storage": {"path": ":memory:"},
         "server": {"seen_store": "none", "event_path": "/feishu/event", "card_path": "/feishu/card"},
         "session": {"max_messages": 400},
-        "reply": {"stream": False},
+        "reply": {"stream": True},
         "memory": {
             "enabled": _binding(env, "AGENT_MEMORY_ENABLED", "false").lower() in {"1", "true", "yes"},
         },
