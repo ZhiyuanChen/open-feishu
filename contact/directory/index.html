@@ -43,7 +43,7 @@
         <link rel="alternate" type="application/rss+xml" title="已更新内容的 RSS 订阅" href="../../feed_rss_updated.xml">
       
       <link rel="icon" href="../../assets/images/logo.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -51,10 +51,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1094,6 +1094,20 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
       
         
       
@@ -2199,6 +2213,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2219,7 +2239,7 @@
   
   
   
-    <a href="../../events/crypto/" class="md-nav__link">
+    <a href="../../events/conversations/" class="md-nav__link">
       
   
   
@@ -2387,6 +2407,8 @@
   
     
     
+      
+        
       
         
       
@@ -2990,6 +3012,8 @@
       
         
       
+        
+      
     
     
     
@@ -3299,29 +3323,29 @@ derives account information from email addresses.</p>
 
               <details class="mkdocstrings-source">
                 <summary>源代码位于： <code>feishu/contact/directory.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-29">29</a></span>
-<span class="normal"><a href="#__codelineno-0-30">30</a></span>
-<span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span>
-<span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span>
-<span class="normal"><a href="#__codelineno-0-40">40</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="k">class</span><span class="w"> </span><span class="nc">OrganizationSnapshot</span><span class="p">:</span>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""Raw organization-directory facts returned by Feishu.</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">    ``departments`` contains the descendants returned from the root department;</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">    ``users`` contains one raw user record for each stable Feishu identity found</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    across the root and descendant departments.  The SDK neither filters nor</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">    derives account information from email addresses.</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">    """</span>
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a>
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="n">departments</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="n">users</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-40">40</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="feishu.contact.directory.OrganizationSnapshot--source--__span-0-29"><a id="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-29" name="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-29"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="feishu.contact.directory.OrganizationSnapshot--source--__span-0-30"><a id="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-30" name="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-30"></a><span class="k">class</span><span class="w"> </span><span class="nc">OrganizationSnapshot</span><span class="p">:</span>
+</span><span id="feishu.contact.directory.OrganizationSnapshot--source--__span-0-31"><a id="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-31" name="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-31"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""Raw organization-directory facts returned by Feishu.</span>
+</span><span id="feishu.contact.directory.OrganizationSnapshot--source--__span-0-32"><a id="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-32" name="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-32"></a>
+</span><span id="feishu.contact.directory.OrganizationSnapshot--source--__span-0-33"><a id="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-33" name="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-33"></a><span class="sd">    ``departments`` contains the descendants returned from the root department;</span>
+</span><span id="feishu.contact.directory.OrganizationSnapshot--source--__span-0-34"><a id="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-34" name="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-34"></a><span class="sd">    ``users`` contains one raw user record for each stable Feishu identity found</span>
+</span><span id="feishu.contact.directory.OrganizationSnapshot--source--__span-0-35"><a id="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-35" name="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-35"></a><span class="sd">    across the root and descendant departments.  The SDK neither filters nor</span>
+</span><span id="feishu.contact.directory.OrganizationSnapshot--source--__span-0-36"><a id="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-36" name="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-36"></a><span class="sd">    derives account information from email addresses.</span>
+</span><span id="feishu.contact.directory.OrganizationSnapshot--source--__span-0-37"><a id="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-37" name="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-37"></a><span class="sd">    """</span>
+</span><span id="feishu.contact.directory.OrganizationSnapshot--source--__span-0-38"><a id="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-38" name="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-38"></a>
+</span><span id="feishu.contact.directory.OrganizationSnapshot--source--__span-0-39"><a id="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-39" name="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-39"></a>    <span class="n">departments</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+</span><span id="feishu.contact.directory.OrganizationSnapshot--source--__span-0-40"><a id="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-40" name="feishu.contact.directory.OrganizationSnapshot--source--__codelineno-0-40"></a>    <span class="n">users</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
 </span></code></pre></div></td></tr></table></div>
               </details>
 
@@ -3502,119 +3526,119 @@ when an API response lacks <code>user_id</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>源代码位于： <code>feishu/contact/directory.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-55"> 55</a></span>
-<span class="normal"><a href="#__codelineno-0-56"> 56</a></span>
-<span class="normal"><a href="#__codelineno-0-57"> 57</a></span>
-<span class="normal"><a href="#__codelineno-0-58"> 58</a></span>
-<span class="normal"><a href="#__codelineno-0-59"> 59</a></span>
-<span class="normal"><a href="#__codelineno-0-60"> 60</a></span>
-<span class="normal"><a href="#__codelineno-0-61"> 61</a></span>
-<span class="normal"><a href="#__codelineno-0-62"> 62</a></span>
-<span class="normal"><a href="#__codelineno-0-63"> 63</a></span>
-<span class="normal"><a href="#__codelineno-0-64"> 64</a></span>
-<span class="normal"><a href="#__codelineno-0-65"> 65</a></span>
-<span class="normal"><a href="#__codelineno-0-66"> 66</a></span>
-<span class="normal"><a href="#__codelineno-0-67"> 67</a></span>
-<span class="normal"><a href="#__codelineno-0-68"> 68</a></span>
-<span class="normal"><a href="#__codelineno-0-69"> 69</a></span>
-<span class="normal"><a href="#__codelineno-0-70"> 70</a></span>
-<span class="normal"><a href="#__codelineno-0-71"> 71</a></span>
-<span class="normal"><a href="#__codelineno-0-72"> 72</a></span>
-<span class="normal"><a href="#__codelineno-0-73"> 73</a></span>
-<span class="normal"><a href="#__codelineno-0-74"> 74</a></span>
-<span class="normal"><a href="#__codelineno-0-75"> 75</a></span>
-<span class="normal"><a href="#__codelineno-0-76"> 76</a></span>
-<span class="normal"><a href="#__codelineno-0-77"> 77</a></span>
-<span class="normal"><a href="#__codelineno-0-78"> 78</a></span>
-<span class="normal"><a href="#__codelineno-0-79"> 79</a></span>
-<span class="normal"><a href="#__codelineno-0-80"> 80</a></span>
-<span class="normal"><a href="#__codelineno-0-81"> 81</a></span>
-<span class="normal"><a href="#__codelineno-0-82"> 82</a></span>
-<span class="normal"><a href="#__codelineno-0-83"> 83</a></span>
-<span class="normal"><a href="#__codelineno-0-84"> 84</a></span>
-<span class="normal"><a href="#__codelineno-0-85"> 85</a></span>
-<span class="normal"><a href="#__codelineno-0-86"> 86</a></span>
-<span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
-<span class="normal"><a href="#__codelineno-0-88"> 88</a></span>
-<span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
-<span class="normal"><a href="#__codelineno-0-90"> 90</a></span>
-<span class="normal"><a href="#__codelineno-0-91"> 91</a></span>
-<span class="normal"><a href="#__codelineno-0-92"> 92</a></span>
-<span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
-<span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
-<span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
-<span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
-<span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
-<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
-<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
-<span class="normal"><a href="#__codelineno-0-100">100</a></span>
-<span class="normal"><a href="#__codelineno-0-101">101</a></span>
-<span class="normal"><a href="#__codelineno-0-102">102</a></span>
-<span class="normal"><a href="#__codelineno-0-103">103</a></span>
-<span class="normal"><a href="#__codelineno-0-104">104</a></span>
-<span class="normal"><a href="#__codelineno-0-105">105</a></span>
-<span class="normal"><a href="#__codelineno-0-106">106</a></span>
-<span class="normal"><a href="#__codelineno-0-107">107</a></span>
-<span class="normal"><a href="#__codelineno-0-108">108</a></span>
-<span class="normal"><a href="#__codelineno-0-109">109</a></span>
-<span class="normal"><a href="#__codelineno-0-110">110</a></span>
-<span class="normal"><a href="#__codelineno-0-111">111</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch_organization_snapshot</span><span class="p">(</span>
-</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="n">client</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="n">root_department_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0"</span><span class="p">,</span>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="n">page_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="n">max_items</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OrganizationSnapshot</span><span class="p">:</span>
-</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""Fetch raw departments and de-duplicated user facts for an organization.</span>
-</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a>
-</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">    The root department's descendants are fetched once through</span>
-</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">    ``client.contact.departments.list``.  Users are then listed for the root and</span>
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">    every discovered department.  ``user_id`` is requested and used as the</span>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">    canonical stable identity; ``open_id`` and ``union_id`` are only fallbacks</span>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">    when an API response lacks ``user_id``.</span>
-</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">        client: A Feishu client exposing the existing contact namespaces.</span>
-</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="sd">        root_department_id: Root department ID. Defaults to the Feishu root,</span>
-</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a><span class="sd">            ``"0"``.</span>
-</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="sd">        page_size: Page size passed to the existing contact APIs.</span>
-</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="sd">        max_items: Optional maximum passed to the existing contact APIs.</span>
-</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a>
-</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">        An [OrganizationSnapshot][] containing raw Feishu department and user</span>
-</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">        facts. User records are ordered by their stable Feishu identity.</span>
-</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="sd">    """</span>
-</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="n">departments</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a>        <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">contact</span><span class="o">.</span><span class="n">departments</span><span class="o">.</span><span class="n">list</span><span class="p">(</span>
-</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a>            <span class="n">root_department_id</span><span class="p">,</span>
-</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a>            <span class="n">department_id_type</span><span class="o">=</span><span class="s2">"open_department_id"</span><span class="p">,</span>
-</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a>            <span class="n">fetch_child</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a>            <span class="n">page_size</span><span class="o">=</span><span class="n">page_size</span><span class="p">,</span>
-</span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a>            <span class="n">max_items</span><span class="o">=</span><span class="n">max_items</span><span class="p">,</span>
-</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a>        <span class="p">)</span>
-</span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="p">)</span>
-</span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="n">department_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a>        <span class="p">{</span><span class="n">department_id</span> <span class="k">for</span> <span class="n">department</span> <span class="ow">in</span> <span class="n">departments</span> <span class="k">if</span> <span class="p">(</span><span class="n">department_id</span> <span class="o">:=</span> <span class="n">_department_id</span><span class="p">(</span><span class="n">department</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
-</span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="p">)</span>
-</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>
-</span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="n">users_by_identity</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a>    <span class="k">for</span> <span class="n">department_id</span> <span class="ow">in</span> <span class="p">(</span><span class="n">root_department_id</span><span class="p">,</span> <span class="o">*</span><span class="n">department_ids</span><span class="p">):</span>
-</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a>        <span class="n">users</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">contact</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">list</span><span class="p">(</span>
-</span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a>            <span class="n">department_id</span><span class="p">,</span>
-</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a>            <span class="n">user_id_type</span><span class="o">=</span><span class="s2">"user_id"</span><span class="p">,</span>
-</span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99"></a>            <span class="n">department_id_type</span><span class="o">=</span><span class="s2">"open_department_id"</span><span class="p">,</span>
-</span><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100"></a>            <span class="n">page_size</span><span class="o">=</span><span class="n">page_size</span><span class="p">,</span>
-</span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a>            <span class="n">max_items</span><span class="o">=</span><span class="n">max_items</span><span class="p">,</span>
-</span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a>        <span class="p">)</span>
-</span><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103"></a>        <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">users</span><span class="p">:</span>
-</span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104"></a>            <span class="n">identity</span> <span class="o">=</span> <span class="n">_user_identity</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
-</span><span id="__span-0-105"><a id="__codelineno-0-105" name="__codelineno-0-105"></a>            <span class="k">if</span> <span class="n">identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-106"><a id="__codelineno-0-106" name="__codelineno-0-106"></a>                <span class="n">users_by_identity</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">identity</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
-</span><span id="__span-0-107"><a id="__codelineno-0-107" name="__codelineno-0-107"></a>
-</span><span id="__span-0-108"><a id="__codelineno-0-108" name="__codelineno-0-108"></a>    <span class="k">return</span> <span class="n">OrganizationSnapshot</span><span class="p">(</span>
-</span><span id="__span-0-109"><a id="__codelineno-0-109" name="__codelineno-0-109"></a>        <span class="n">departments</span><span class="o">=</span><span class="n">departments</span><span class="p">,</span>
-</span><span id="__span-0-110"><a id="__codelineno-0-110" name="__codelineno-0-110"></a>        <span class="n">users</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">users_by_identity</span><span class="p">[</span><span class="n">identity</span><span class="p">]</span> <span class="k">for</span> <span class="n">identity</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">users_by_identity</span><span class="p">)),</span>
-</span><span id="__span-0-111"><a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="p">)</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-55"> 55</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-56"> 56</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-57"> 57</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-58"> 58</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-59"> 59</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-60"> 60</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-61"> 61</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-62"> 62</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-63"> 63</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-64"> 64</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-65"> 65</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-66"> 66</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-67"> 67</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-68"> 68</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-69"> 69</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-70"> 70</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-71"> 71</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-72"> 72</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-73"> 73</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-74"> 74</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-75"> 75</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-76"> 76</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-77"> 77</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-78"> 78</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-79"> 79</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-80"> 80</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-81"> 81</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-82"> 82</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-83"> 83</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-84"> 84</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-85"> 85</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-86"> 86</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-87"> 87</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-88"> 88</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-89"> 89</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-90"> 90</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-91"> 91</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-92"> 92</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-93"> 93</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-94"> 94</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-95"> 95</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-96"> 96</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-97"> 97</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-98"> 98</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-99"> 99</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-100">100</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-101">101</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-102">102</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-106">106</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-107">107</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-108">108</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-109">109</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-111">111</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-55"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-55" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-55"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch_organization_snapshot</span><span class="p">(</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-56"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-56" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-56"></a>    <span class="n">client</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-57"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-57" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-57"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-58"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-58" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-58"></a>    <span class="n">root_department_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0"</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-59"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-59" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-59"></a>    <span class="n">page_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-60"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-60" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-60"></a>    <span class="n">max_items</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-61"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-61" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-61"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OrganizationSnapshot</span><span class="p">:</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-62"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-62" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-62"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""Fetch raw departments and de-duplicated user facts for an organization.</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-63"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-63" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-63"></a>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-64"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-64" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-64"></a><span class="sd">    The root department's descendants are fetched once through</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-65"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-65" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-65"></a><span class="sd">    ``client.contact.departments.list``.  Users are then listed for the root and</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-66"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-66" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-66"></a><span class="sd">    every discovered department.  ``user_id`` is requested and used as the</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-67"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-67" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-67"></a><span class="sd">    canonical stable identity; ``open_id`` and ``union_id`` are only fallbacks</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-68"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-68" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-68"></a><span class="sd">    when an API response lacks ``user_id``.</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-69"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-69" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-69"></a>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-70"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-70" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-70"></a><span class="sd">    Args:</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-71"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-71" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-71"></a><span class="sd">        client: A Feishu client exposing the existing contact namespaces.</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-72"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-72" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-72"></a><span class="sd">        root_department_id: Root department ID. Defaults to the Feishu root,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-73"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-73" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-73"></a><span class="sd">            ``"0"``.</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-74"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-74" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-74"></a><span class="sd">        page_size: Page size passed to the existing contact APIs.</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-75"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-75" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-75"></a><span class="sd">        max_items: Optional maximum passed to the existing contact APIs.</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-76"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-76" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-76"></a>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-77"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-77" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-77"></a><span class="sd">    Returns:</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-78"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-78" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-78"></a><span class="sd">        An [OrganizationSnapshot][] containing raw Feishu department and user</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-79"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-79" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-79"></a><span class="sd">        facts. User records are ordered by their stable Feishu identity.</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-80"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-80" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-80"></a><span class="sd">    """</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-81"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-81" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-81"></a>    <span class="n">departments</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-82"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-82" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-82"></a>        <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">contact</span><span class="o">.</span><span class="n">departments</span><span class="o">.</span><span class="n">list</span><span class="p">(</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-83"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-83" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-83"></a>            <span class="n">root_department_id</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-84"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-84" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-84"></a>            <span class="n">department_id_type</span><span class="o">=</span><span class="s2">"open_department_id"</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-85"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-85" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-85"></a>            <span class="n">fetch_child</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-86"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-86" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-86"></a>            <span class="n">page_size</span><span class="o">=</span><span class="n">page_size</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-87"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-87" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-87"></a>            <span class="n">max_items</span><span class="o">=</span><span class="n">max_items</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-88"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-88" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-88"></a>        <span class="p">)</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-89"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-89" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-89"></a>    <span class="p">)</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-90"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-90" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-90"></a>    <span class="n">department_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-91"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-91" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-91"></a>        <span class="p">{</span><span class="n">department_id</span> <span class="k">for</span> <span class="n">department</span> <span class="ow">in</span> <span class="n">departments</span> <span class="k">if</span> <span class="p">(</span><span class="n">department_id</span> <span class="o">:=</span> <span class="n">_department_id</span><span class="p">(</span><span class="n">department</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-92"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-92" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-92"></a>    <span class="p">)</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-93"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-93" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-93"></a>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-94"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-94" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-94"></a>    <span class="n">users_by_identity</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-95"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-95" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-95"></a>    <span class="k">for</span> <span class="n">department_id</span> <span class="ow">in</span> <span class="p">(</span><span class="n">root_department_id</span><span class="p">,</span> <span class="o">*</span><span class="n">department_ids</span><span class="p">):</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-96"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-96" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-96"></a>        <span class="n">users</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">contact</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">list</span><span class="p">(</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-97"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-97" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-97"></a>            <span class="n">department_id</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-98"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-98" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-98"></a>            <span class="n">user_id_type</span><span class="o">=</span><span class="s2">"user_id"</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-99"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-99" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-99"></a>            <span class="n">department_id_type</span><span class="o">=</span><span class="s2">"open_department_id"</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-100"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-100" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-100"></a>            <span class="n">page_size</span><span class="o">=</span><span class="n">page_size</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-101"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-101" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-101"></a>            <span class="n">max_items</span><span class="o">=</span><span class="n">max_items</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-102"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-102" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-102"></a>        <span class="p">)</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-103"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-103" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-103"></a>        <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">users</span><span class="p">:</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-104"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-104" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-104"></a>            <span class="n">identity</span> <span class="o">=</span> <span class="n">_user_identity</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-105"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-105" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-105"></a>            <span class="k">if</span> <span class="n">identity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-106"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-106" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-106"></a>                <span class="n">users_by_identity</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">identity</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-107"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-107" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-107"></a>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-108"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-108" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-108"></a>    <span class="k">return</span> <span class="n">OrganizationSnapshot</span><span class="p">(</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-109"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-109" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-109"></a>        <span class="n">departments</span><span class="o">=</span><span class="n">departments</span><span class="p">,</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-110"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-110" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-110"></a>        <span class="n">users</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">users_by_identity</span><span class="p">[</span><span class="n">identity</span><span class="p">]</span> <span class="k">for</span> <span class="n">identity</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">users_by_identity</span><span class="p">)),</span>
+</span><span id="feishu.contact.directory.fetch_organization_snapshot--source--__span-0-111"><a id="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-111" name="feishu.contact.directory.fetch_organization_snapshot--source--__codelineno-0-111"></a>    <span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3648,7 +3672,7 @@ when an API response lacks <code>user_id</code>.</p>
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年10月1日 15:29:10 UTC">2026-10-01 15:29:10</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年11月3日 16:40:51 UTC">2026-11-03 16:40:51</span>
   </span>
 
     
@@ -3855,10 +3879,10 @@ when an API response lacks <code>user_id</code>.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       

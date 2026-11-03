@@ -33,7 +33,7 @@
         <link rel="prev" href="../../ws/model/">
       
       
-        <link rel="next" href="../../about/">
+        <link rel="next" href="../external-events/">
       
       
         
@@ -43,7 +43,7 @@
         <link rel="alternate" type="application/rss+xml" title="已更新内容的 RSS 订阅" href="../../feed_rss_updated.xml">
       
       <link rel="icon" href="../../assets/images/logo.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -51,10 +51,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1143,6 +1143,20 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1907,6 +1921,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1927,7 +1947,7 @@
   
   
   
-    <a href="../../events/crypto/" class="md-nav__link">
+    <a href="../../events/conversations/" class="md-nav__link">
       
   
   
@@ -2095,6 +2115,8 @@
   
     
     
+      
+        
       
         
       
@@ -2700,6 +2722,8 @@
       
         
       
+        
+      
     
     
     
@@ -2925,10 +2949,49 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="状态与会话">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        并发和多 worker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        定时任务
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        持久化消息与回调
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
-  <a href="#_8" class="md-nav__link">
+  <a href="#_10" class="md-nav__link">
     <span class="md-ellipsis">
       
         配置速查
@@ -2939,7 +3002,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_9" class="md-nav__link">
+  <a href="#_11" class="md-nav__link">
     <span class="md-ellipsis">
       
         何时使用底层入口
@@ -2953,6 +3016,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../external-events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    external-events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -3163,10 +3254,49 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="状态与会话">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        并发和多 worker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        定时任务
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        持久化消息与回调
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
-  <a href="#_8" class="md-nav__link">
+  <a href="#_10" class="md-nav__link">
     <span class="md-ellipsis">
       
         配置速查
@@ -3177,7 +3307,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_9" class="md-nav__link">
+  <a href="#_11" class="md-nav__link">
     <span class="md-ellipsis">
       
         何时使用底层入口
@@ -3377,6 +3507,8 @@
       &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
   &lt;/span&gt;" href="../../agent/tools/#feishu.agent.tools.Tool">feishu.agent.tools.Tool</a> 的审批能力，或复用内置工具 bundle 中已经标记审批语义的工具。</p>
 <p>OAuth 授权与工具审批是独立步骤：取得用户授权不会自动批准写操作；要求审批的工具仍须经过确认。</p>
+<p>事件中的用户 OAuth 凭证按租户隔离。旧版没有租户标识的 token 不会自动迁移到任何租户；升级后，用户需要在该租户中重新授权。自定义 token provider 需要实现 <code>as_user_for_tenant(tenant_key, user)</code> 和 <code>has_scopes_for_tenant(tenant_key, user, scopes)</code>；缺少这些接口时不会回退读取旧 token。旧版事件未携带租户时，单租户部署可以显式配置可信的 <code>feishu.tenant_key</code>；若事件携带的租户与配置值冲突，处理会被拒绝。既没有事件租户也没有可信配置时，Agent 不读取用户 token。授权回调必须从飞书返回的用户信息验证相同租户；缺失租户时拒绝保存凭证。</p>
+<p>Agent 默认 OAuth state 有效期为一小时；直接构造 <code>OAuthStateSigner</code> 或自定义较短 <code>oauth.state_ttl_seconds</code> 时，授权链接可能先于待处理授权过期，需重新发起授权。</p>
 <p>内置办公工具通过 <code>toolkits</code> 启用：</p>
 <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><span class="n">config</span><span class="p">[</span><span class="s2">"toolkits"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"feishu.workplace"</span><span class="p">]</span>
 </span></code></pre></div></td></tr></table></div>
@@ -3481,7 +3613,72 @@
 </tbody>
 </table>
 <p><code>reply.stream = true</code> 时，Agent 会优先用流式卡片展示模型输出；如果正在执行工具，进度卡片会随工具状态更新。</p>
-<h2 id="_8">配置速查<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<h3 id="worker">并发和多 worker<a class="headerlink" href="#worker" title="Permanent link">&para;</a></h3>
+<p>同一个 <code>AgentEngine</code> 在私聊中会尝试用新消息取消正在处理的旧消息；群聊中的独立话题可以并发，同一话题的消息按顺序处理。会话锁和取消操作仅在该 engine 的进程内生效，不能跨 worker 协调。多个 worker 直接处理同一会话时，可能同时读取和更新会话历史；共享 SQLite 数据库或其他会话存储本身不提供跨进程的完整会话锁或取消信号。</p>
+<p>如果为 HTTP 事件注入 <code>event_job_store</code> 并按会话设置 <code>event_partition_key</code>，持久收件箱会按分区顺序认领消息；同一会话的前一任务完成之前，后一任务不会运行。这个顺序保护不等于私聊中断：新消息在队列中等待时不会取消正在其他 worker 上执行的旧消息。卡片和 OAuth 回调如果使用独立路径，也需要由部署方与消息处理协调。</p>
+<p>需要同一会话可靠串行的部署，应使用单 worker，或由部署方确保所有相关消息和回调按会话协调；不要把当前进程内锁当作分布式锁。使用下方的 SQLite 持久回调并显式启用 <code>interrupt_private=True</code> 时，SDK 可在同库的 worker 之间协作中断私聊；默认关闭，其他后端仍保持原有 FIFO 行为。</p>
+<p>协作中断只针对飞书明确标记为 <code>p2p</code> 的用户消息。此前已入队的审批或 OAuth 回调保持顺序，不会被后来的消息越过；群聊话题行为不变。正在执行的工具或飞书请求不会被强制取消，而是在结果确认并保存后于安全点退出；同步工具的后台线程同样会等待结束。租约失联、消息发送或外部写入结果不明确时作业进入 <code>UNKNOWN</code> 并阻塞该会话，必须由可信运维人员核对后处理，不能自动重放。使用该选项必须设置 <code>unknown_ttl_seconds=None</code>，并确保所有相关 worker 和存储使用同一个 SQLite 文件；不承诺不具备等价原子能力的其他存储或跨主机 SQLite 部署。</p>
+<h3 id="_8">定时任务<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
+<p>可选地启用持久调度器，让用户通过对话请求一次性、固定间隔或按本地时间每天／每周执行任务：</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-1">1</a></span>
+<span class="normal"><a href="#__codelineno-9-2">2</a></span>
+<span class="normal"><a href="#__codelineno-9-3">3</a></span>
+<span class="normal"><a href="#__codelineno-9-4">4</a></span>
+<span class="normal"><a href="#__codelineno-9-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1"></a><span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2"></a>    <span class="c1"># ... feishu、model 等配置 ...</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3"></a>    <span class="s2">"storage"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"path"</span><span class="p">:</span> <span class="s2">".agent/agent.db"</span><span class="p">},</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4"></a>    <span class="s2">"scheduling"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"enabled"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"poll_interval"</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5"></a><span class="p">}</span>
+</span></code></pre></div></td></tr></table></div>
+<p>启用后会注册创建、列出、暂停、恢复和删除任务的工具。创建或修改需由创建者确认；定时轮次使用独立会话，结果发往创建时的聊天。任务、审批和用户身份按租户隔离。间隔不得少于 60 秒；跳过已错过的执行，不在服务重启后批量补跑。</p>
+<p>调度器需要持久的会话、审批和授权存储。SQLite 调度数据必须与会话存储使用同一个数据库文件，以便在同一事务内校验执行租约并写入会话。调度器随 Agent 的 <code>start()</code> / <code>aclose()</code> 启动和排空。创建者身份必须来自经验证的飞书事件；不能由模型提供用户或租户标识。</p>
+<p>定时任务默认为只读。只有显式声明 <code>scheduled_effect="read"</code> 的工具可自动调用；未声明副作用的工具视为写操作。<code>confirm_writes</code> 策略下的每次写操作仍需创建者单独确认。确认或授权超时不会自动执行写操作。执行或消息投递结果不明确时，会保留状态供核对，不能假定已执行或未执行。</p>
+<p>执行租约过期后，run 会冻结为 <code>unknown</code>，不自动重放。可信运维程序可以用 <code>ScheduledTaskStore.unknown_runs(tenant_key=...)</code> 查看，再在确认旧执行者已停止、核对外部副作用之后，调用 <code>reconcile_unknown(run_id, tenant_key=..., actor=..., decision=..., reason=..., now=...)</code>。<code>decision</code> 是 <code>confirmed_succeeded</code>、<code>confirmed_failed</code> 或 <code>abandoned</code>；操作会保存审计记录，不重新执行任务。宿主必须先自行鉴权运维人员，不能直接把该接口暴露给任意聊天用户。</p>
+<p>目前应使用单 worker，或由宿主对同一任务的执行和回调提供可靠的跨 worker 协调。调度器不会自动重放执行结果未知的任务。每日／每周任务可从创建者的 OAuth 用户资料更新时区：资料须同时匹配已验证的租户和用户，查询失败或缺少这些字段时保留上次使用的时区；查询按用户缓存并限制频率。</p>
+<h3 id="_9">持久化消息与回调<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
+<p>HTTP 部署可以选择 <code>SqliteDurableCallbacks</code>，把飞书消息、审批与 OAuth 续接放入同一个会话分区。启用时必须使用同一个 SQLite 数据库保存会话、审批、授权、用户 token 和事件收件箱；必须配置飞书事件 <code>encrypt_key</code> 或 <code>verification_token</code>。创建前请停止旧版写入方和 worker，并先处理完旧格式的未完成事件；初始化会拒绝混入旧格式的队列。此模式目前只支持 HTTP，不支持 WS 接收。</p>
+<div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-10-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-10-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-10-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-10-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-10-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-10-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-10-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-10-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-10-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-10-10">10</a></span>
+<span class="normal"><a href="#__codelineno-10-11">11</a></span>
+<span class="normal"><a href="#__codelineno-10-12">12</a></span>
+<span class="normal"><a href="#__codelineno-10-13">13</a></span>
+<span class="normal"><a href="#__codelineno-10-14">14</a></span>
+<span class="normal"><a href="#__codelineno-10-15">15</a></span>
+<span class="normal"><a href="#__codelineno-10-16">16</a></span>
+<span class="normal"><a href="#__codelineno-10-17">17</a></span>
+<span class="normal"><a href="#__codelineno-10-18">18</a></span>
+<span class="normal"><a href="#__codelineno-10-19">19</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">feishu.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">feishu.agent.durable_callbacks</span><span class="w"> </span><span class="kn">import</span> <span class="n">SqliteDurableCallbacks</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">feishu.agent.persistence</span><span class="w"> </span><span class="kn">import</span> <span class="n">SqlitePendingApprovalStore</span><span class="p">,</span> <span class="n">SqlitePendingAuthorizationStore</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">feishu.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">SqliteOAuthTokenStore</span><span class="p">,</span> <span class="n">UserTokenProvider</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">feishu.events.jobs</span><span class="w"> </span><span class="kn">import</span> <span class="n">SqliteEventJobStore</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6"></a>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7"></a><span class="c1"># client 和 config 由宿主创建；config 应包括事件鉴权与 OAuth 公网回调。</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8"></a><span class="n">path</span> <span class="o">=</span> <span class="s2">".agent/agent.db"</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9"></a><span class="n">jobs</span> <span class="o">=</span> <span class="n">SqliteEventJobStore</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">unknown_ttl_seconds</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10"></a><span class="n">tokens</span> <span class="o">=</span> <span class="n">SqliteOAuthTokenStore</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11"></a><span class="n">approvals</span> <span class="o">=</span> <span class="n">SqlitePendingApprovalStore</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12"></a><span class="n">authorizations</span> <span class="o">=</span> <span class="n">SqlitePendingAuthorizationStore</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13"></a><span class="n">inbox</span> <span class="o">=</span> <span class="n">SqliteDurableCallbacks</span><span class="p">(</span><span class="n">jobs</span><span class="p">,</span> <span class="n">tokens</span><span class="p">,</span> <span class="n">authorizations</span><span class="p">,</span> <span class="n">approvals</span><span class="o">=</span><span class="n">approvals</span><span class="p">)</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15"></a>    <span class="n">config</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span> <span class="n">user_tokens</span><span class="o">=</span><span class="n">UserTokenProvider</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">tokens</span><span class="p">),</span>
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16"></a>    <span class="n">approvals</span><span class="o">=</span><span class="n">approvals</span><span class="p">,</span> <span class="n">authorizations</span><span class="o">=</span><span class="n">authorizations</span><span class="p">,</span> <span class="n">durable_callbacks</span><span class="o">=</span><span class="n">inbox</span><span class="p">,</span>
+</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17"></a><span class="p">)</span>
+</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18"></a><span class="n">asgi_app</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">asgi_app</span><span class="p">()</span>
+</span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19"></a><span class="n">runner</span> <span class="o">=</span> <span class="n">inbox</span><span class="o">.</span><span class="n">runner</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">worker_id</span><span class="o">=</span><span class="s2">"unique-worker-id"</span><span class="p">)</span>
+</span></code></pre></div></td></tr></table></div>
+<p>如果需要上述跨 worker 私聊中断，将 <code>interrupt_private=True</code> 传给 <code>SqliteDurableCallbacks</code>。该开关默认关闭，启用时要求事件存储的 <code>unknown_ttl_seconds=None</code>；旧版 worker 和写入方必须先全部停止，避免与新协议混用。</p>
+<p>宿主还须在同一事件循环中持续调用 <code>await runner.run_once()</code>；无可运行工作时可短暂等待。worker ID 在并发实例间必须唯一，注入的 client 和各存储由宿主关闭。事件成功入队只表示持久接收，不能证明消息或写操作已经完成。<code>UNKNOWN</code> 需要先核对外部结果，再由有权的操作人员处理；不要自动重放。</p>
+<p>OAuth 回调在兑换一次性 code 前持久记录接收状态；验证租户和用户后，在一个事务中保存用户 token 与授权续接任务。远程兑换和本地数据库不可能组成一个原子事务：如果进程在兑换后、提交前退出，同一授权请求不会自动再次兑换，用户需要重新发起授权。收件箱不保存 OAuth code、access token、事件验证 token 或卡片回调 token。</p>
+<h2 id="_10">配置速查<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -3527,6 +3724,10 @@
 <td>持久记忆开关与项目 namespace；通过 <code>memory</code> bundle 显式检索和确认写入。</td>
 </tr>
 <tr>
+<td><code>scheduling</code></td>
+<td>可选定时任务；<code>enabled</code>、SQLite <code>path</code> 和 <code>poll_interval</code>。</td>
+</tr>
+<tr>
 <td><code>bundle</code></td>
 <td>内置工具 bundle 的本地化和摘要限制。</td>
 </tr>
@@ -3536,7 +3737,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="_9">何时使用底层入口<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h2>
+<h2 id="_11">何时使用底层入口<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h2>
 <p>如果你已经有自己的事件系统、模型调度或持久化层，可以直接装配 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-class&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;AgentEngine&lt;/span&gt;" href="../../agent/loop/#feishu.agent.loop.AgentEngine">feishu.agent.loop.AgentEngine</a>，再用 <a class="autorefs autorefs-internal" title="&lt;code class=&quot;doc-symbol doc-symbol-heading doc-symbol-function&quot;&gt;&lt;/code&gt;            &lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;register_agent&lt;/span&gt;" href="../../agent/registration/#feishu.agent.registration.register_agent">feishu.agent.registration.register_agent</a> 挂到事件分发器。<code>Agent(config)</code> 适合“我想直接运行一个 Feishu agent 服务”的场景；<code>AgentEngine</code> 适合框架级集成。</p>
 
 
@@ -3558,7 +3759,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年10月1日 15:13:58 UTC">2026-10-01 15:13:58</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年11月3日 16:27:40 UTC">2026-11-03 16:27:40</span>
   </span>
 
     
@@ -3661,13 +3862,13 @@
         
         
           
-          <a href="../../about/" class="md-footer__link md-footer__link--next" aria-label="下一页: index">
+          <a href="../external-events/" class="md-footer__link md-footer__link--next" aria-label="下一页: external-events">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一页
               </span>
               <div class="md-ellipsis">
-                index
+                external-events
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -3765,10 +3966,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       

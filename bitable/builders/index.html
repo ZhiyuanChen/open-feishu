@@ -43,7 +43,7 @@
         <link rel="alternate" type="application/rss+xml" title="已更新内容的 RSS 订阅" href="../../feed_rss_updated.xml">
       
       <link rel="icon" href="../../assets/images/logo.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -51,10 +51,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1094,6 +1094,20 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
       
         
       
@@ -2205,6 +2219,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2225,7 +2245,7 @@
   
   
   
-    <a href="../../events/crypto/" class="md-nav__link">
+    <a href="../../events/conversations/" class="md-nav__link">
       
   
   
@@ -2393,6 +2413,8 @@
   
     
     
+      
+        
       
         
       
@@ -2996,6 +3018,8 @@
       
         
       
+        
+      
     
     
     
@@ -3391,65 +3415,65 @@
 
             <details class="mkdocstrings-source">
               <summary>源代码位于： <code>feishu/bitable/builders.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-29">29</a></span>
-<span class="normal"><a href="#__codelineno-0-30">30</a></span>
-<span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span>
-<span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span>
-<span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span>
-<span class="normal"><a href="#__codelineno-0-42">42</a></span>
-<span class="normal"><a href="#__codelineno-0-43">43</a></span>
-<span class="normal"><a href="#__codelineno-0-44">44</a></span>
-<span class="normal"><a href="#__codelineno-0-45">45</a></span>
-<span class="normal"><a href="#__codelineno-0-46">46</a></span>
-<span class="normal"><a href="#__codelineno-0-47">47</a></span>
-<span class="normal"><a href="#__codelineno-0-48">48</a></span>
-<span class="normal"><a href="#__codelineno-0-49">49</a></span>
-<span class="normal"><a href="#__codelineno-0-50">50</a></span>
-<span class="normal"><a href="#__codelineno-0-51">51</a></span>
-<span class="normal"><a href="#__codelineno-0-52">52</a></span>
-<span class="normal"><a href="#__codelineno-0-53">53</a></span>
-<span class="normal"><a href="#__codelineno-0-54">54</a></span>
-<span class="normal"><a href="#__codelineno-0-55">55</a></span>
-<span class="normal"><a href="#__codelineno-0-56">56</a></span>
-<span class="normal"><a href="#__codelineno-0-57">57</a></span>
-<span class="normal"><a href="#__codelineno-0-58">58</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="k">def</span><span class="w"> </span><span class="nf">bitable_record</span><span class="p">(</span>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a>    <span class="n">fields</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a>    <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedDict</span><span class="p">:</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">    构造飞书多维表格记录载荷。</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a>
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="sd">        fields: 记录字段值，键为多维表格字段名。</span>
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="sd">        record_id: 可选记录 ID，通常用于更新记录载荷。</span>
-</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="sd">        extra: 其他需要透传的记录字段；值为 `None` 时忽略。</span>
-</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a>
-</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">        形如 `{"fields": {...}}` 的记录载荷，可传给</span>
-</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">        [feishu.bitable.records.RecordsNamespace.create][] /</span>
-</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">        [feishu.bitable.records.RecordsNamespace.update][]。</span>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a>
-</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">        &gt;&gt;&gt; bitable_record({"Title": "hi"}).fields.Title</span>
-</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">        'hi'</span>
-</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">    """</span>
-</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="n">payload</span> <span class="o">=</span> <span class="n">NestedDict</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="n">NestedDict</span><span class="p">(</span><span class="n">fields</span><span class="p">))</span>
-</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="k">if</span> <span class="n">record_id</span><span class="p">:</span>
-</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a>        <span class="n">payload</span><span class="o">.</span><span class="n">record_id</span> <span class="o">=</span> <span class="n">record_id</span>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">extra</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a>        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a>            <span class="n">payload</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="k">return</span> <span class="n">payload</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#feishu.bitable.builders.bitable_record--source--__codelineno-0-58">58</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="feishu.bitable.builders.bitable_record--source--__span-0-29"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-29" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-29"></a><span class="k">def</span><span class="w"> </span><span class="nf">bitable_record</span><span class="p">(</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-30"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-30" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-30"></a>    <span class="n">fields</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-31"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-31" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-31"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-32"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-32" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-32"></a>    <span class="n">record_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-33"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-33" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-33"></a>    <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-34"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-34" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-34"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedDict</span><span class="p">:</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-35"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-35" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-35"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-36"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-36" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-36"></a><span class="sd">    构造飞书多维表格记录载荷。</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-37"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-37" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-37"></a>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-38"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-38" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-38"></a><span class="sd">    Args:</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-39"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-39" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-39"></a><span class="sd">        fields: 记录字段值，键为多维表格字段名。</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-40"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-40" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-40"></a><span class="sd">        record_id: 可选记录 ID，通常用于更新记录载荷。</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-41"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-41" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-41"></a><span class="sd">        extra: 其他需要透传的记录字段；值为 `None` 时忽略。</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-42"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-42" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-42"></a>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-43"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-43" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-43"></a><span class="sd">    Returns:</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-44"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-44" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-44"></a><span class="sd">        形如 `{"fields": {...}}` 的记录载荷，可传给</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-45"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-45" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-45"></a><span class="sd">        [feishu.bitable.records.RecordsNamespace.create][] /</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-46"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-46" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-46"></a><span class="sd">        [feishu.bitable.records.RecordsNamespace.update][]。</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-47"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-47" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-47"></a>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-48"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-48" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-48"></a><span class="sd">    Examples:</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-49"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-49" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-49"></a><span class="sd">        &gt;&gt;&gt; bitable_record({"Title": "hi"}).fields.Title</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-50"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-50" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-50"></a><span class="sd">        'hi'</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-51"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-51" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-51"></a><span class="sd">    """</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-52"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-52" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-52"></a>    <span class="n">payload</span> <span class="o">=</span> <span class="n">NestedDict</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="n">NestedDict</span><span class="p">(</span><span class="n">fields</span><span class="p">))</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-53"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-53" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-53"></a>    <span class="k">if</span> <span class="n">record_id</span><span class="p">:</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-54"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-54" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-54"></a>        <span class="n">payload</span><span class="o">.</span><span class="n">record_id</span> <span class="o">=</span> <span class="n">record_id</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-55"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-55" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-55"></a>    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">extra</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-56"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-56" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-56"></a>        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-57"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-57" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-57"></a>            <span class="n">payload</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</span><span id="feishu.bitable.builders.bitable_record--source--__span-0-58"><a id="feishu.bitable.builders.bitable_record--source--__codelineno-0-58" name="feishu.bitable.builders.bitable_record--source--__codelineno-0-58"></a>    <span class="k">return</span> <span class="n">payload</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3483,7 +3507,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年10月1日 15:29:09 UTC">2026-10-01 15:29:09</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年11月3日 16:40:50 UTC">2026-11-03 16:40:50</span>
   </span>
 
     
@@ -3690,10 +3714,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       

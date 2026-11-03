@@ -43,7 +43,7 @@
         <link rel="alternate" type="application/rss+xml" title="已更新内容的 RSS 订阅" href="../../feed_rss_updated.xml">
       
       <link rel="icon" href="../../assets/images/logo.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -51,10 +51,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1143,6 +1143,20 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1907,6 +1921,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1927,7 +1947,7 @@
   
   
   
-    <a href="../../events/crypto/" class="md-nav__link">
+    <a href="../../events/conversations/" class="md-nav__link">
       
   
   
@@ -2421,6 +2441,8 @@
   
     
     
+      
+        
       
         
       
@@ -3024,6 +3046,8 @@
       
         
       
+        
+      
     
     
     
@@ -3307,85 +3331,85 @@
 
               <details class="mkdocstrings-source">
                 <summary>源代码位于： <code>feishu/gateway/config.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-29">29</a></span>
-<span class="normal"><a href="#__codelineno-0-30">30</a></span>
-<span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span>
-<span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span>
-<span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span>
-<span class="normal"><a href="#__codelineno-0-42">42</a></span>
-<span class="normal"><a href="#__codelineno-0-43">43</a></span>
-<span class="normal"><a href="#__codelineno-0-44">44</a></span>
-<span class="normal"><a href="#__codelineno-0-45">45</a></span>
-<span class="normal"><a href="#__codelineno-0-46">46</a></span>
-<span class="normal"><a href="#__codelineno-0-47">47</a></span>
-<span class="normal"><a href="#__codelineno-0-48">48</a></span>
-<span class="normal"><a href="#__codelineno-0-49">49</a></span>
-<span class="normal"><a href="#__codelineno-0-50">50</a></span>
-<span class="normal"><a href="#__codelineno-0-51">51</a></span>
-<span class="normal"><a href="#__codelineno-0-52">52</a></span>
-<span class="normal"><a href="#__codelineno-0-53">53</a></span>
-<span class="normal"><a href="#__codelineno-0-54">54</a></span>
-<span class="normal"><a href="#__codelineno-0-55">55</a></span>
-<span class="normal"><a href="#__codelineno-0-56">56</a></span>
-<span class="normal"><a href="#__codelineno-0-57">57</a></span>
-<span class="normal"><a href="#__codelineno-0-58">58</a></span>
-<span class="normal"><a href="#__codelineno-0-59">59</a></span>
-<span class="normal"><a href="#__codelineno-0-60">60</a></span>
-<span class="normal"><a href="#__codelineno-0-61">61</a></span>
-<span class="normal"><a href="#__codelineno-0-62">62</a></span>
-<span class="normal"><a href="#__codelineno-0-63">63</a></span>
-<span class="normal"><a href="#__codelineno-0-64">64</a></span>
-<span class="normal"><a href="#__codelineno-0-65">65</a></span>
-<span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span>
-<span class="normal"><a href="#__codelineno-0-68">68</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="k">class</span><span class="w"> </span><span class="nc">GatewayConfig</span><span class="p">:</span>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""可部署飞书网关的配置对象。"""</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a>    <span class="n">app_id</span><span class="p">:</span> <span class="nb">str</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a>    <span class="n">app_secret</span><span class="p">:</span> <span class="nb">str</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a>    <span class="n">service_keys</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="n">service_capabilities</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="n">region</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"feishu"</span>
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="n">base_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="n">accounts_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="n">encrypt_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="n">verification_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="n">event_max_age_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mf">300.0</span>
-</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a>    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0.0.0.0"</span>
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8000</span>
-</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a>
-</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a>        <span class="n">_validate_service_capabilities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">service_keys</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">service_capabilities</span><span class="p">)</span>
-</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a>
-</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a>    <span class="nd">@classmethod</span>
-</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_env</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">environ</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GatewayConfig</span><span class="p">:</span>
-</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="w">        </span><span class="sa">r</span><span class="sd">"""从环境变量构建网关配置。"""</span>
-</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a>        <span class="n">env</span> <span class="o">=</span> <span class="n">environ</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span>
-</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a>        <span class="n">app_id</span> <span class="o">=</span> <span class="n">_required</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"FEISHU_APP_ID"</span><span class="p">)</span>
-</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a>        <span class="n">app_secret</span> <span class="o">=</span> <span class="n">_required</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"FEISHU_APP_SECRET"</span><span class="p">)</span>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a>            <span class="n">app_id</span><span class="o">=</span><span class="n">app_id</span><span class="p">,</span>
-</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a>            <span class="n">app_secret</span><span class="o">=</span><span class="n">app_secret</span><span class="p">,</span>
-</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a>            <span class="n">service_keys</span><span class="o">=</span><span class="n">parse_service_keys</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_SERVICE_KEYS"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)),</span>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a>            <span class="n">service_capabilities</span><span class="o">=</span><span class="n">parse_service_capabilities</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_SERVICE_CAPABILITIES"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)),</span>
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a>            <span class="n">region</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_REGION"</span><span class="p">,</span> <span class="s2">"feishu"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"feishu"</span><span class="p">,</span>
-</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a>            <span class="n">base_url</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_BASE_URL"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a>            <span class="n">accounts_url</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_ACCOUNTS_URL"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a>            <span class="n">encrypt_key</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_ENCRYPT_KEY"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a>            <span class="n">verification_token</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_VERIFICATION_TOKEN"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a>            <span class="n">event_max_age_seconds</span><span class="o">=</span><span class="n">_optional_float</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_EVENT_MAX_AGE_SECONDS"</span><span class="p">,</span> <span class="s2">"300"</span><span class="p">)),</span>
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a>            <span class="n">host</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_HOST"</span><span class="p">,</span> <span class="s2">"0.0.0.0"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"0.0.0.0"</span><span class="p">,</span>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a>            <span class="n">port</span><span class="o">=</span><span class="n">_optional_int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_PORT"</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mi">8000</span><span class="p">),</span>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="p">)</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig--source--__codelineno-0-68">68</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="feishu.gateway.config.GatewayConfig--source--__span-0-29"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-29" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-29"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-30"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-30" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-30"></a><span class="k">class</span><span class="w"> </span><span class="nc">GatewayConfig</span><span class="p">:</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-31"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-31" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-31"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""可部署飞书网关的配置对象。"""</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-32"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-32" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-32"></a>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-33"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-33" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-33"></a>    <span class="n">app_id</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-34"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-34" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-34"></a>    <span class="n">app_secret</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-35"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-35" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-35"></a>    <span class="n">service_keys</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-36"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-36" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-36"></a>    <span class="n">service_capabilities</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-37"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-37" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-37"></a>    <span class="n">region</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"feishu"</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-38"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-38" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-38"></a>    <span class="n">base_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-39"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-39" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-39"></a>    <span class="n">accounts_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-40"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-40" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-40"></a>    <span class="n">encrypt_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-41"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-41" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-41"></a>    <span class="n">verification_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-42"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-42" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-42"></a>    <span class="n">event_max_age_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mf">300.0</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-43"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-43" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-43"></a>    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0.0.0.0"</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-44"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-44" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-44"></a>    <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8000</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-45"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-45" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-45"></a>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-46"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-46" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-46"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-47"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-47" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-47"></a>        <span class="n">_validate_service_capabilities</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">service_keys</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">service_capabilities</span><span class="p">)</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-48"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-48" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-48"></a>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-49"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-49" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-49"></a>    <span class="nd">@classmethod</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-50"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-50" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-50"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_env</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">environ</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GatewayConfig</span><span class="p">:</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-51"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-51" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-51"></a><span class="w">        </span><span class="sa">r</span><span class="sd">"""从环境变量构建网关配置。"""</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-52"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-52" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-52"></a>        <span class="n">env</span> <span class="o">=</span> <span class="n">environ</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-53"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-53" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-53"></a>        <span class="n">app_id</span> <span class="o">=</span> <span class="n">_required</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"FEISHU_APP_ID"</span><span class="p">)</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-54"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-54" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-54"></a>        <span class="n">app_secret</span> <span class="o">=</span> <span class="n">_required</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"FEISHU_APP_SECRET"</span><span class="p">)</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-55"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-55" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-55"></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-56"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-56" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-56"></a>            <span class="n">app_id</span><span class="o">=</span><span class="n">app_id</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-57"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-57" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-57"></a>            <span class="n">app_secret</span><span class="o">=</span><span class="n">app_secret</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-58"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-58" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-58"></a>            <span class="n">service_keys</span><span class="o">=</span><span class="n">parse_service_keys</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_SERVICE_KEYS"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)),</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-59"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-59" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-59"></a>            <span class="n">service_capabilities</span><span class="o">=</span><span class="n">parse_service_capabilities</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_SERVICE_CAPABILITIES"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)),</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-60"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-60" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-60"></a>            <span class="n">region</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_REGION"</span><span class="p">,</span> <span class="s2">"feishu"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"feishu"</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-61"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-61" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-61"></a>            <span class="n">base_url</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_BASE_URL"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-62"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-62" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-62"></a>            <span class="n">accounts_url</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_ACCOUNTS_URL"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-63"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-63" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-63"></a>            <span class="n">encrypt_key</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_ENCRYPT_KEY"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-64"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-64" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-64"></a>            <span class="n">verification_token</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_VERIFICATION_TOKEN"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-65"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-65" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-65"></a>            <span class="n">event_max_age_seconds</span><span class="o">=</span><span class="n">_optional_float</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_EVENT_MAX_AGE_SECONDS"</span><span class="p">,</span> <span class="s2">"300"</span><span class="p">)),</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-66"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-66" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-66"></a>            <span class="n">host</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_HOST"</span><span class="p">,</span> <span class="s2">"0.0.0.0"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"0.0.0.0"</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-67"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-67" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-67"></a>            <span class="n">port</span><span class="o">=</span><span class="n">_optional_int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_PORT"</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mi">8000</span><span class="p">),</span>
+</span><span id="feishu.gateway.config.GatewayConfig--source--__span-0-68"><a id="feishu.gateway.config.GatewayConfig--source--__codelineno-0-68" name="feishu.gateway.config.GatewayConfig--source--__codelineno-0-68"></a>        <span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
               </details>
 
@@ -3429,45 +3453,45 @@
 
             <details class="mkdocstrings-source">
               <summary>源代码位于： <code>feishu/gateway/config.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-49">49</a></span>
-<span class="normal"><a href="#__codelineno-0-50">50</a></span>
-<span class="normal"><a href="#__codelineno-0-51">51</a></span>
-<span class="normal"><a href="#__codelineno-0-52">52</a></span>
-<span class="normal"><a href="#__codelineno-0-53">53</a></span>
-<span class="normal"><a href="#__codelineno-0-54">54</a></span>
-<span class="normal"><a href="#__codelineno-0-55">55</a></span>
-<span class="normal"><a href="#__codelineno-0-56">56</a></span>
-<span class="normal"><a href="#__codelineno-0-57">57</a></span>
-<span class="normal"><a href="#__codelineno-0-58">58</a></span>
-<span class="normal"><a href="#__codelineno-0-59">59</a></span>
-<span class="normal"><a href="#__codelineno-0-60">60</a></span>
-<span class="normal"><a href="#__codelineno-0-61">61</a></span>
-<span class="normal"><a href="#__codelineno-0-62">62</a></span>
-<span class="normal"><a href="#__codelineno-0-63">63</a></span>
-<span class="normal"><a href="#__codelineno-0-64">64</a></span>
-<span class="normal"><a href="#__codelineno-0-65">65</a></span>
-<span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span>
-<span class="normal"><a href="#__codelineno-0-68">68</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="nd">@classmethod</span>
-</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="k">def</span><span class="w"> </span><span class="nf">from_env</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">environ</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GatewayConfig</span><span class="p">:</span>
-</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""从环境变量构建网关配置。"""</span>
-</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="n">env</span> <span class="o">=</span> <span class="n">environ</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span>
-</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="n">app_id</span> <span class="o">=</span> <span class="n">_required</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"FEISHU_APP_ID"</span><span class="p">)</span>
-</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="n">app_secret</span> <span class="o">=</span> <span class="n">_required</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"FEISHU_APP_SECRET"</span><span class="p">)</span>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a>        <span class="n">app_id</span><span class="o">=</span><span class="n">app_id</span><span class="p">,</span>
-</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="n">app_secret</span><span class="o">=</span><span class="n">app_secret</span><span class="p">,</span>
-</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a>        <span class="n">service_keys</span><span class="o">=</span><span class="n">parse_service_keys</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_SERVICE_KEYS"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)),</span>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a>        <span class="n">service_capabilities</span><span class="o">=</span><span class="n">parse_service_capabilities</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_SERVICE_CAPABILITIES"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)),</span>
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="n">region</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_REGION"</span><span class="p">,</span> <span class="s2">"feishu"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"feishu"</span><span class="p">,</span>
-</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a>        <span class="n">base_url</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_BASE_URL"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="n">accounts_url</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_ACCOUNTS_URL"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="n">encrypt_key</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_ENCRYPT_KEY"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="n">verification_token</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_VERIFICATION_TOKEN"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a>        <span class="n">event_max_age_seconds</span><span class="o">=</span><span class="n">_optional_float</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_EVENT_MAX_AGE_SECONDS"</span><span class="p">,</span> <span class="s2">"300"</span><span class="p">)),</span>
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="n">host</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_HOST"</span><span class="p">,</span> <span class="s2">"0.0.0.0"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"0.0.0.0"</span><span class="p">,</span>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="n">port</span><span class="o">=</span><span class="n">_optional_int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_PORT"</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mi">8000</span><span class="p">),</span>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="p">)</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-68">68</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-49"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-49" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-49"></a><span class="nd">@classmethod</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-50"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-50" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-50"></a><span class="k">def</span><span class="w"> </span><span class="nf">from_env</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">environ</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GatewayConfig</span><span class="p">:</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-51"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-51" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-51"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""从环境变量构建网关配置。"""</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-52"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-52" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-52"></a>    <span class="n">env</span> <span class="o">=</span> <span class="n">environ</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-53"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-53" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-53"></a>    <span class="n">app_id</span> <span class="o">=</span> <span class="n">_required</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"FEISHU_APP_ID"</span><span class="p">)</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-54"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-54" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-54"></a>    <span class="n">app_secret</span> <span class="o">=</span> <span class="n">_required</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"FEISHU_APP_SECRET"</span><span class="p">)</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-55"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-55" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-55"></a>    <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-56"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-56" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-56"></a>        <span class="n">app_id</span><span class="o">=</span><span class="n">app_id</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-57"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-57" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-57"></a>        <span class="n">app_secret</span><span class="o">=</span><span class="n">app_secret</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-58"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-58" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-58"></a>        <span class="n">service_keys</span><span class="o">=</span><span class="n">parse_service_keys</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_SERVICE_KEYS"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)),</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-59"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-59" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-59"></a>        <span class="n">service_capabilities</span><span class="o">=</span><span class="n">parse_service_capabilities</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_SERVICE_CAPABILITIES"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)),</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-60"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-60" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-60"></a>        <span class="n">region</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_REGION"</span><span class="p">,</span> <span class="s2">"feishu"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"feishu"</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-61"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-61" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-61"></a>        <span class="n">base_url</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_BASE_URL"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-62"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-62" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-62"></a>        <span class="n">accounts_url</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_ACCOUNTS_URL"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-63"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-63" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-63"></a>        <span class="n">encrypt_key</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_ENCRYPT_KEY"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-64"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-64" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-64"></a>        <span class="n">verification_token</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_VERIFICATION_TOKEN"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-65"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-65" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-65"></a>        <span class="n">event_max_age_seconds</span><span class="o">=</span><span class="n">_optional_float</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_EVENT_MAX_AGE_SECONDS"</span><span class="p">,</span> <span class="s2">"300"</span><span class="p">)),</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-66"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-66" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-66"></a>        <span class="n">host</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_HOST"</span><span class="p">,</span> <span class="s2">"0.0.0.0"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"0.0.0.0"</span><span class="p">,</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-67"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-67" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-67"></a>        <span class="n">port</span><span class="o">=</span><span class="n">_optional_int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_PORT"</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mi">8000</span><span class="p">),</span>
+</span><span id="feishu.gateway.config.GatewayConfig.from_env--source--__span-0-68"><a id="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-68" name="feishu.gateway.config.GatewayConfig.from_env--source--__codelineno-0-68"></a>    <span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3501,29 +3525,29 @@
 
             <details class="mkdocstrings-source">
               <summary>源代码位于： <code>feishu/gateway/config.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-71">71</a></span>
-<span class="normal"><a href="#__codelineno-0-72">72</a></span>
-<span class="normal"><a href="#__codelineno-0-73">73</a></span>
-<span class="normal"><a href="#__codelineno-0-74">74</a></span>
-<span class="normal"><a href="#__codelineno-0-75">75</a></span>
-<span class="normal"><a href="#__codelineno-0-76">76</a></span>
-<span class="normal"><a href="#__codelineno-0-77">77</a></span>
-<span class="normal"><a href="#__codelineno-0-78">78</a></span>
-<span class="normal"><a href="#__codelineno-0-79">79</a></span>
-<span class="normal"><a href="#__codelineno-0-80">80</a></span>
-<span class="normal"><a href="#__codelineno-0-81">81</a></span>
-<span class="normal"><a href="#__codelineno-0-82">82</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="k">def</span><span class="w"> </span><span class="nf">parse_service_keys</span><span class="p">(</span><span class="n">raw</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""把 ``service:key`` 列表解析为网关使用的 ``{key: service}`` 映射。"""</span>
-</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="n">service_keys</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">raw</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">):</span>
-</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a>        <span class="n">item</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="p">:</span>
-</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a>            <span class="k">continue</span>
-</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="n">service_name</span><span class="p">,</span> <span class="n">separator</span><span class="p">,</span> <span class="n">api_key</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">":"</span><span class="p">)</span>
-</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">separator</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">service_name</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">api_key</span><span class="p">:</span>
-</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_SERVICE_KEYS entries must be service:key pairs"</span><span class="p">)</span>
-</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="n">service_keys</span><span class="p">[</span><span class="n">api_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">service_name</span>
-</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="k">return</span> <span class="n">service_keys</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#feishu.gateway.config.parse_service_keys--source--__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_keys--source--__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_keys--source--__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_keys--source--__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_keys--source--__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_keys--source--__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_keys--source--__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_keys--source--__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_keys--source--__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_keys--source--__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_keys--source--__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_keys--source--__codelineno-0-82">82</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="feishu.gateway.config.parse_service_keys--source--__span-0-71"><a id="feishu.gateway.config.parse_service_keys--source--__codelineno-0-71" name="feishu.gateway.config.parse_service_keys--source--__codelineno-0-71"></a><span class="k">def</span><span class="w"> </span><span class="nf">parse_service_keys</span><span class="p">(</span><span class="n">raw</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+</span><span id="feishu.gateway.config.parse_service_keys--source--__span-0-72"><a id="feishu.gateway.config.parse_service_keys--source--__codelineno-0-72" name="feishu.gateway.config.parse_service_keys--source--__codelineno-0-72"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""把 ``service:key`` 列表解析为网关使用的 ``{key: service}`` 映射。"""</span>
+</span><span id="feishu.gateway.config.parse_service_keys--source--__span-0-73"><a id="feishu.gateway.config.parse_service_keys--source--__codelineno-0-73" name="feishu.gateway.config.parse_service_keys--source--__codelineno-0-73"></a>    <span class="n">service_keys</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="feishu.gateway.config.parse_service_keys--source--__span-0-74"><a id="feishu.gateway.config.parse_service_keys--source--__codelineno-0-74" name="feishu.gateway.config.parse_service_keys--source--__codelineno-0-74"></a>    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">raw</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">):</span>
+</span><span id="feishu.gateway.config.parse_service_keys--source--__span-0-75"><a id="feishu.gateway.config.parse_service_keys--source--__codelineno-0-75" name="feishu.gateway.config.parse_service_keys--source--__codelineno-0-75"></a>        <span class="n">item</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span id="feishu.gateway.config.parse_service_keys--source--__span-0-76"><a id="feishu.gateway.config.parse_service_keys--source--__codelineno-0-76" name="feishu.gateway.config.parse_service_keys--source--__codelineno-0-76"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="p">:</span>
+</span><span id="feishu.gateway.config.parse_service_keys--source--__span-0-77"><a id="feishu.gateway.config.parse_service_keys--source--__codelineno-0-77" name="feishu.gateway.config.parse_service_keys--source--__codelineno-0-77"></a>            <span class="k">continue</span>
+</span><span id="feishu.gateway.config.parse_service_keys--source--__span-0-78"><a id="feishu.gateway.config.parse_service_keys--source--__codelineno-0-78" name="feishu.gateway.config.parse_service_keys--source--__codelineno-0-78"></a>        <span class="n">service_name</span><span class="p">,</span> <span class="n">separator</span><span class="p">,</span> <span class="n">api_key</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">":"</span><span class="p">)</span>
+</span><span id="feishu.gateway.config.parse_service_keys--source--__span-0-79"><a id="feishu.gateway.config.parse_service_keys--source--__codelineno-0-79" name="feishu.gateway.config.parse_service_keys--source--__codelineno-0-79"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">separator</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">service_name</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">api_key</span><span class="p">:</span>
+</span><span id="feishu.gateway.config.parse_service_keys--source--__span-0-80"><a id="feishu.gateway.config.parse_service_keys--source--__codelineno-0-80" name="feishu.gateway.config.parse_service_keys--source--__codelineno-0-80"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_SERVICE_KEYS entries must be service:key pairs"</span><span class="p">)</span>
+</span><span id="feishu.gateway.config.parse_service_keys--source--__span-0-81"><a id="feishu.gateway.config.parse_service_keys--source--__codelineno-0-81" name="feishu.gateway.config.parse_service_keys--source--__codelineno-0-81"></a>        <span class="n">service_keys</span><span class="p">[</span><span class="n">api_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">service_name</span>
+</span><span id="feishu.gateway.config.parse_service_keys--source--__span-0-82"><a id="feishu.gateway.config.parse_service_keys--source--__codelineno-0-82" name="feishu.gateway.config.parse_service_keys--source--__codelineno-0-82"></a>    <span class="k">return</span> <span class="n">service_keys</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3548,51 +3572,51 @@
 
             <details class="mkdocstrings-source">
               <summary>源代码位于： <code>feishu/gateway/config.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-85"> 85</a></span>
-<span class="normal"><a href="#__codelineno-0-86"> 86</a></span>
-<span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
-<span class="normal"><a href="#__codelineno-0-88"> 88</a></span>
-<span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
-<span class="normal"><a href="#__codelineno-0-90"> 90</a></span>
-<span class="normal"><a href="#__codelineno-0-91"> 91</a></span>
-<span class="normal"><a href="#__codelineno-0-92"> 92</a></span>
-<span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
-<span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
-<span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
-<span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
-<span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
-<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
-<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
-<span class="normal"><a href="#__codelineno-0-100">100</a></span>
-<span class="normal"><a href="#__codelineno-0-101">101</a></span>
-<span class="normal"><a href="#__codelineno-0-102">102</a></span>
-<span class="normal"><a href="#__codelineno-0-103">103</a></span>
-<span class="normal"><a href="#__codelineno-0-104">104</a></span>
-<span class="normal"><a href="#__codelineno-0-105">105</a></span>
-<span class="normal"><a href="#__codelineno-0-106">106</a></span>
-<span class="normal"><a href="#__codelineno-0-107">107</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="k">def</span><span class="w"> </span><span class="nf">parse_service_capabilities</span><span class="p">(</span><span class="n">raw</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
-</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""Parse ``service:capability|capability`` entries separated by semicolons."""</span>
-</span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="n">service_capabilities</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">raw</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">";"</span><span class="p">):</span>
-</span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>        <span class="n">item</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="p">:</span>
-</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a>            <span class="k">continue</span>
-</span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a>        <span class="n">service_name</span><span class="p">,</span> <span class="n">separator</span><span class="p">,</span> <span class="n">raw_capabilities</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">":"</span><span class="p">)</span>
-</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="n">service_name</span> <span class="o">=</span> <span class="n">service_name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">separator</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">service_name</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">raw_capabilities</span><span class="p">:</span>
-</span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a>                <span class="s2">"FEISHU_GATEWAY_SERVICE_CAPABILITIES entries must be "</span> <span class="s2">"service:capability|capability pairs"</span>
-</span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a>            <span class="p">)</span>
-</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a>        <span class="k">if</span> <span class="n">service_name</span> <span class="ow">in</span> <span class="n">service_capabilities</span><span class="p">:</span>
-</span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_SERVICE_CAPABILITIES cannot repeat a service"</span><span class="p">)</span>
-</span><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100"></a>
-</span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a>        <span class="n">capabilities</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">capability</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">capability</span> <span class="ow">in</span> <span class="n">raw_capabilities</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"|"</span><span class="p">)</span> <span class="k">if</span> <span class="n">capability</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-</span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">capabilities</span><span class="p">:</span>
-</span><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_SERVICE_CAPABILITIES entries require a capability"</span><span class="p">)</span>
-</span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104"></a>        <span class="k">for</span> <span class="n">capability</span> <span class="ow">in</span> <span class="n">capabilities</span><span class="p">:</span>
-</span><span id="__span-0-105"><a id="__codelineno-0-105" name="__codelineno-0-105"></a>            <span class="n">_validate_capability</span><span class="p">(</span><span class="n">capability</span><span class="p">)</span>
-</span><span id="__span-0-106"><a id="__codelineno-0-106" name="__codelineno-0-106"></a>        <span class="n">service_capabilities</span><span class="p">[</span><span class="n">service_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">capabilities</span>
-</span><span id="__span-0-107"><a id="__codelineno-0-107" name="__codelineno-0-107"></a>    <span class="k">return</span> <span class="n">service_capabilities</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-85"> 85</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-86"> 86</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-87"> 87</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-88"> 88</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-89"> 89</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-90"> 90</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-91"> 91</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-92"> 92</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-93"> 93</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-94"> 94</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-95"> 95</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-96"> 96</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-97"> 97</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-98"> 98</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-99"> 99</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-100">100</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-101">101</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-102">102</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-106">106</a></span>
+<span class="normal"><a href="#feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-107">107</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-85"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-85" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-85"></a><span class="k">def</span><span class="w"> </span><span class="nf">parse_service_capabilities</span><span class="p">(</span><span class="n">raw</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-86"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-86" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-86"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""Parse ``service:capability|capability`` entries separated by semicolons."""</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-87"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-87" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-87"></a>    <span class="n">service_capabilities</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-88"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-88" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-88"></a>    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">raw</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">";"</span><span class="p">):</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-89"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-89" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-89"></a>        <span class="n">item</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-90"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-90" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-90"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="p">:</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-91"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-91" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-91"></a>            <span class="k">continue</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-92"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-92" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-92"></a>        <span class="n">service_name</span><span class="p">,</span> <span class="n">separator</span><span class="p">,</span> <span class="n">raw_capabilities</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">":"</span><span class="p">)</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-93"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-93" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-93"></a>        <span class="n">service_name</span> <span class="o">=</span> <span class="n">service_name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-94"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-94" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-94"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">separator</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">service_name</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">raw_capabilities</span><span class="p">:</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-95"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-95" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-95"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-96"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-96" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-96"></a>                <span class="s2">"FEISHU_GATEWAY_SERVICE_CAPABILITIES entries must be "</span> <span class="s2">"service:capability|capability pairs"</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-97"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-97" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-97"></a>            <span class="p">)</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-98"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-98" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-98"></a>        <span class="k">if</span> <span class="n">service_name</span> <span class="ow">in</span> <span class="n">service_capabilities</span><span class="p">:</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-99"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-99" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-99"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_SERVICE_CAPABILITIES cannot repeat a service"</span><span class="p">)</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-100"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-100" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-100"></a>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-101"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-101" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-101"></a>        <span class="n">capabilities</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">capability</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">capability</span> <span class="ow">in</span> <span class="n">raw_capabilities</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"|"</span><span class="p">)</span> <span class="k">if</span> <span class="n">capability</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-102"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-102" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-102"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">capabilities</span><span class="p">:</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-103"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-103" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-103"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"FEISHU_GATEWAY_SERVICE_CAPABILITIES entries require a capability"</span><span class="p">)</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-104"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-104" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-104"></a>        <span class="k">for</span> <span class="n">capability</span> <span class="ow">in</span> <span class="n">capabilities</span><span class="p">:</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-105"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-105" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-105"></a>            <span class="n">_validate_capability</span><span class="p">(</span><span class="n">capability</span><span class="p">)</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-106"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-106" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-106"></a>        <span class="n">service_capabilities</span><span class="p">[</span><span class="n">service_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">capabilities</span>
+</span><span id="feishu.gateway.config.parse_service_capabilities--source--__span-0-107"><a id="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-107" name="feishu.gateway.config.parse_service_capabilities--source--__codelineno-0-107"></a>    <span class="k">return</span> <span class="n">service_capabilities</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3626,7 +3650,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年10月1日 15:29:12 UTC">2026-10-01 15:29:12</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年11月3日 16:40:53 UTC">2026-11-03 16:40:53</span>
   </span>
 
     
@@ -3833,10 +3857,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       

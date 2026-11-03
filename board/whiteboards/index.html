@@ -43,7 +43,7 @@
         <link rel="alternate" type="application/rss+xml" title="已更新内容的 RSS 订阅" href="../../feed_rss_updated.xml">
       
       <link rel="icon" href="../../assets/images/logo.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -51,10 +51,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1143,6 +1143,20 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2155,6 +2169,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -2175,7 +2195,7 @@
   
   
   
-    <a href="../../events/crypto/" class="md-nav__link">
+    <a href="../../events/conversations/" class="md-nav__link">
       
   
   
@@ -2343,6 +2363,8 @@
   
     
     
+      
+        
       
         
       
@@ -2946,6 +2968,8 @@
       
         
       
+        
+      
     
     
     
@@ -3298,205 +3322,205 @@
 
               <details class="mkdocstrings-source">
                 <summary>源代码位于： <code>feishu/board/whiteboards.py</code></summary>
-                <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-31"> 31</a></span>
-<span class="normal"><a href="#__codelineno-0-32"> 32</a></span>
-<span class="normal"><a href="#__codelineno-0-33"> 33</a></span>
-<span class="normal"><a href="#__codelineno-0-34"> 34</a></span>
-<span class="normal"><a href="#__codelineno-0-35"> 35</a></span>
-<span class="normal"><a href="#__codelineno-0-36"> 36</a></span>
-<span class="normal"><a href="#__codelineno-0-37"> 37</a></span>
-<span class="normal"><a href="#__codelineno-0-38"> 38</a></span>
-<span class="normal"><a href="#__codelineno-0-39"> 39</a></span>
-<span class="normal"><a href="#__codelineno-0-40"> 40</a></span>
-<span class="normal"><a href="#__codelineno-0-41"> 41</a></span>
-<span class="normal"><a href="#__codelineno-0-42"> 42</a></span>
-<span class="normal"><a href="#__codelineno-0-43"> 43</a></span>
-<span class="normal"><a href="#__codelineno-0-44"> 44</a></span>
-<span class="normal"><a href="#__codelineno-0-45"> 45</a></span>
-<span class="normal"><a href="#__codelineno-0-46"> 46</a></span>
-<span class="normal"><a href="#__codelineno-0-47"> 47</a></span>
-<span class="normal"><a href="#__codelineno-0-48"> 48</a></span>
-<span class="normal"><a href="#__codelineno-0-49"> 49</a></span>
-<span class="normal"><a href="#__codelineno-0-50"> 50</a></span>
-<span class="normal"><a href="#__codelineno-0-51"> 51</a></span>
-<span class="normal"><a href="#__codelineno-0-52"> 52</a></span>
-<span class="normal"><a href="#__codelineno-0-53"> 53</a></span>
-<span class="normal"><a href="#__codelineno-0-54"> 54</a></span>
-<span class="normal"><a href="#__codelineno-0-55"> 55</a></span>
-<span class="normal"><a href="#__codelineno-0-56"> 56</a></span>
-<span class="normal"><a href="#__codelineno-0-57"> 57</a></span>
-<span class="normal"><a href="#__codelineno-0-58"> 58</a></span>
-<span class="normal"><a href="#__codelineno-0-59"> 59</a></span>
-<span class="normal"><a href="#__codelineno-0-60"> 60</a></span>
-<span class="normal"><a href="#__codelineno-0-61"> 61</a></span>
-<span class="normal"><a href="#__codelineno-0-62"> 62</a></span>
-<span class="normal"><a href="#__codelineno-0-63"> 63</a></span>
-<span class="normal"><a href="#__codelineno-0-64"> 64</a></span>
-<span class="normal"><a href="#__codelineno-0-65"> 65</a></span>
-<span class="normal"><a href="#__codelineno-0-66"> 66</a></span>
-<span class="normal"><a href="#__codelineno-0-67"> 67</a></span>
-<span class="normal"><a href="#__codelineno-0-68"> 68</a></span>
-<span class="normal"><a href="#__codelineno-0-69"> 69</a></span>
-<span class="normal"><a href="#__codelineno-0-70"> 70</a></span>
-<span class="normal"><a href="#__codelineno-0-71"> 71</a></span>
-<span class="normal"><a href="#__codelineno-0-72"> 72</a></span>
-<span class="normal"><a href="#__codelineno-0-73"> 73</a></span>
-<span class="normal"><a href="#__codelineno-0-74"> 74</a></span>
-<span class="normal"><a href="#__codelineno-0-75"> 75</a></span>
-<span class="normal"><a href="#__codelineno-0-76"> 76</a></span>
-<span class="normal"><a href="#__codelineno-0-77"> 77</a></span>
-<span class="normal"><a href="#__codelineno-0-78"> 78</a></span>
-<span class="normal"><a href="#__codelineno-0-79"> 79</a></span>
-<span class="normal"><a href="#__codelineno-0-80"> 80</a></span>
-<span class="normal"><a href="#__codelineno-0-81"> 81</a></span>
-<span class="normal"><a href="#__codelineno-0-82"> 82</a></span>
-<span class="normal"><a href="#__codelineno-0-83"> 83</a></span>
-<span class="normal"><a href="#__codelineno-0-84"> 84</a></span>
-<span class="normal"><a href="#__codelineno-0-85"> 85</a></span>
-<span class="normal"><a href="#__codelineno-0-86"> 86</a></span>
-<span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
-<span class="normal"><a href="#__codelineno-0-88"> 88</a></span>
-<span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
-<span class="normal"><a href="#__codelineno-0-90"> 90</a></span>
-<span class="normal"><a href="#__codelineno-0-91"> 91</a></span>
-<span class="normal"><a href="#__codelineno-0-92"> 92</a></span>
-<span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
-<span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
-<span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
-<span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
-<span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
-<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
-<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
-<span class="normal"><a href="#__codelineno-0-100">100</a></span>
-<span class="normal"><a href="#__codelineno-0-101">101</a></span>
-<span class="normal"><a href="#__codelineno-0-102">102</a></span>
-<span class="normal"><a href="#__codelineno-0-103">103</a></span>
-<span class="normal"><a href="#__codelineno-0-104">104</a></span>
-<span class="normal"><a href="#__codelineno-0-105">105</a></span>
-<span class="normal"><a href="#__codelineno-0-106">106</a></span>
-<span class="normal"><a href="#__codelineno-0-107">107</a></span>
-<span class="normal"><a href="#__codelineno-0-108">108</a></span>
-<span class="normal"><a href="#__codelineno-0-109">109</a></span>
-<span class="normal"><a href="#__codelineno-0-110">110</a></span>
-<span class="normal"><a href="#__codelineno-0-111">111</a></span>
-<span class="normal"><a href="#__codelineno-0-112">112</a></span>
-<span class="normal"><a href="#__codelineno-0-113">113</a></span>
-<span class="normal"><a href="#__codelineno-0-114">114</a></span>
-<span class="normal"><a href="#__codelineno-0-115">115</a></span>
-<span class="normal"><a href="#__codelineno-0-116">116</a></span>
-<span class="normal"><a href="#__codelineno-0-117">117</a></span>
-<span class="normal"><a href="#__codelineno-0-118">118</a></span>
-<span class="normal"><a href="#__codelineno-0-119">119</a></span>
-<span class="normal"><a href="#__codelineno-0-120">120</a></span>
-<span class="normal"><a href="#__codelineno-0-121">121</a></span>
-<span class="normal"><a href="#__codelineno-0-122">122</a></span>
-<span class="normal"><a href="#__codelineno-0-123">123</a></span>
-<span class="normal"><a href="#__codelineno-0-124">124</a></span>
-<span class="normal"><a href="#__codelineno-0-125">125</a></span>
-<span class="normal"><a href="#__codelineno-0-126">126</a></span>
-<span class="normal"><a href="#__codelineno-0-127">127</a></span>
-<span class="normal"><a href="#__codelineno-0-128">128</a></span>
-<span class="normal"><a href="#__codelineno-0-129">129</a></span>
-<span class="normal"><a href="#__codelineno-0-130">130</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="k">class</span><span class="w"> </span><span class="nc">WhiteboardsNamespace</span><span class="p">(</span><span class="n">Namespace</span><span class="p">):</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">    画板资源接口命名空间。</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    封装飞书开放平台 `board/v1/whiteboards` 资源下的服务端接口，包括获取画板主题、</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">    列举画板内的全部节点，以及将整块画板导出为图片等能力。画板由若干节点（node）组成，</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">    节点是画板内容的最小结构单元。</span>
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a>
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="sd">    通常无需直接实例化，应通过客户端的 `client.board.whiteboards` 访问。</span>
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a>
-</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">        [画板概述](https://open.feishu.cn/document/docs/board-v1/overview)</span>
-</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">    """</span>
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a>
-</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">download_as_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">        下载画板为图片。</span>
-</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a>
-</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">        将整块画板渲染并导出为图片，返回图片的原始字节内容（通常为 PNG）。</span>
-</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a>
-</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">        Args:</span>
-</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">            whiteboard_id: 画板的唯一标识。</span>
-</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a>
-</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">        Returns:</span>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">            画板图片的原始字节内容。</span>
-</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a>
-</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">        Raises:</span>
-</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a>
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">            [下载为图片](https://open.feishu.cn/document/docs/board-v1/whiteboard/download_as_image)</span>
-</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">            参见 [feishu.board.whiteboards.WhiteboardsNamespace.list_nodes][]。</span>
-</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a>
-</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">        Examples:</span>
-</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">            &gt;&gt;&gt; import asyncio</span>
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">            &gt;&gt;&gt; async def main():</span>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">            ...     async with FeishuClient("cli_xxx", "secret") as client:</span>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">            ...         return await client.board.whiteboards.download_as_image("wb_abc")</span>
-</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">            &gt;&gt;&gt; asyncio.run(main())  # doctest: +SKIP</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">            b'\\x89PNG...'</span>
-</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">        """</span>
-</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/download_as_image"</span><span class="p">)</span>
-</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>
-</span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_theme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedDict</span><span class="p">:</span>
-</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">        获取画板主题。</span>
-</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a>
-</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">        返回画板当前使用的主题信息。该接口对应开放平台的「获取画板主题」能力，响应数据</span>
-</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">        含 `theme` 字段（取值如 `classic`、`minimalist_gray`、`default` 等）。</span>
-</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a>
-</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">        Args:</span>
-</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">            whiteboard_id: 画板的唯一标识。</span>
-</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a>
-</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">        Returns:</span>
-</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="sd">            画板主题数据，含 `theme` 字段（画板当前主题的标识）。</span>
-</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a>
-</span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="sd">        Raises:</span>
-</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="sd">            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
-</span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>
-</span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a><span class="sd">            [获取画板主题](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard/theme)</span>
-</span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">            参见 [feishu.board.whiteboards.WhiteboardsNamespace.list_nodes][]。</span>
-</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>
-</span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="sd">        Examples:</span>
-</span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="sd">            &gt;&gt;&gt; await client.board.whiteboards.get_theme("wb_abc")  # doctest:+SKIP</span>
-</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">            {'theme': 'classic'}</span>
-</span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="sd">        """</span>
-</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_data</span><span class="p">(</span><span class="s2">"GET"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/theme"</span><span class="p">)</span>
-</span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99"></a>
-</span><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">user_id_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">NestedDict</span><span class="p">]:</span>
-</span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-</span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">        获取画板内的所有节点。</span>
-</span><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103"></a>
-</span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="sd">        一次性返回画板内的全部节点（该接口不分页），节点以 `id`、`type`、`parent_id`、</span>
-</span><span id="__span-0-105"><a id="__codelineno-0-105" name="__codelineno-0-105"></a><span class="sd">        `children` 以及对应类型的内容字段（如 `text`、`image`、`composite_shape` 等）描述。</span>
-</span><span id="__span-0-106"><a id="__codelineno-0-106" name="__codelineno-0-106"></a>
-</span><span id="__span-0-107"><a id="__codelineno-0-107" name="__codelineno-0-107"></a><span class="sd">        Args:</span>
-</span><span id="__span-0-108"><a id="__codelineno-0-108" name="__codelineno-0-108"></a><span class="sd">            whiteboard_id: 画板的唯一标识。</span>
-</span><span id="__span-0-109"><a id="__codelineno-0-109" name="__codelineno-0-109"></a><span class="sd">            user_id_type: 返回数据中的用户 ID 类型，如 `open_id`、`union_id`、`user_id`；</span>
-</span><span id="__span-0-110"><a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="sd">                为空时使用接口默认值。</span>
-</span><span id="__span-0-111"><a id="__codelineno-0-111" name="__codelineno-0-111"></a>
-</span><span id="__span-0-112"><a id="__codelineno-0-112" name="__codelineno-0-112"></a><span class="sd">        Returns:</span>
-</span><span id="__span-0-113"><a id="__codelineno-0-113" name="__codelineno-0-113"></a><span class="sd">            画板节点数据列表（取自响应数据的 `nodes` 字段）；画板为空时返回空列表。</span>
-</span><span id="__span-0-114"><a id="__codelineno-0-114" name="__codelineno-0-114"></a>
-</span><span id="__span-0-115"><a id="__codelineno-0-115" name="__codelineno-0-115"></a><span class="sd">        Raises:</span>
-</span><span id="__span-0-116"><a id="__codelineno-0-116" name="__codelineno-0-116"></a><span class="sd">            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
-</span><span id="__span-0-117"><a id="__codelineno-0-117" name="__codelineno-0-117"></a>
-</span><span id="__span-0-118"><a id="__codelineno-0-118" name="__codelineno-0-118"></a><span class="sd">        飞书文档:</span>
-</span><span id="__span-0-119"><a id="__codelineno-0-119" name="__codelineno-0-119"></a><span class="sd">            [获取所有节点](https://open.feishu.cn/document/docs/board-v1/whiteboard-node/list)</span>
-</span><span id="__span-0-120"><a id="__codelineno-0-120" name="__codelineno-0-120"></a><span class="sd">            参见 [feishu.board.whiteboards.WhiteboardsNamespace.get_theme][]。</span>
-</span><span id="__span-0-121"><a id="__codelineno-0-121" name="__codelineno-0-121"></a>
-</span><span id="__span-0-122"><a id="__codelineno-0-122" name="__codelineno-0-122"></a><span class="sd">        Examples:</span>
-</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">            &gt;&gt;&gt; await client.board.whiteboards.list_nodes("wb_abc")  # doctest:+SKIP</span>
-</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">            [{'id': 'n1', 'type': 'composite_shape', ...}, {'id': 'n2', 'type': 'text', ...}]</span>
-</span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="sd">        """</span>
-</span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a>        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"user_id_type"</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span>
-</span><span id="__span-0-127"><a id="__codelineno-0-127" name="__codelineno-0-127"></a>        <span class="n">envelope</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
-</span><span id="__span-0-128"><a id="__codelineno-0-128" name="__codelineno-0-128"></a>            <span class="s2">"GET"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/nodes"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span>
-</span><span id="__span-0-129"><a id="__codelineno-0-129" name="__codelineno-0-129"></a>        <span class="p">)</span>
-</span><span id="__span-0-130"><a id="__codelineno-0-130" name="__codelineno-0-130"></a>        <span class="k">return</span> <span class="n">_data</span><span class="p">(</span><span class="n">envelope</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodes"</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]</span>
+                <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-31"> 31</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-32"> 32</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-33"> 33</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-34"> 34</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-35"> 35</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-36"> 36</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-37"> 37</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-38"> 38</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-39"> 39</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-40"> 40</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-41"> 41</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-42"> 42</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-43"> 43</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-44"> 44</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-45"> 45</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-46"> 46</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-47"> 47</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-48"> 48</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-49"> 49</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-50"> 50</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-51"> 51</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-52"> 52</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-53"> 53</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-54"> 54</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-55"> 55</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-56"> 56</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-57"> 57</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-58"> 58</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-59"> 59</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-60"> 60</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-61"> 61</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-62"> 62</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-63"> 63</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-64"> 64</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-65"> 65</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-66"> 66</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-67"> 67</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-68"> 68</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-69"> 69</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-70"> 70</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-71"> 71</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-72"> 72</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-73"> 73</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-74"> 74</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-75"> 75</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-76"> 76</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-77"> 77</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-78"> 78</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-79"> 79</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-80"> 80</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-81"> 81</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-82"> 82</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-83"> 83</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-84"> 84</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-85"> 85</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-86"> 86</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-87"> 87</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-88"> 88</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-89"> 89</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-90"> 90</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-91"> 91</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-92"> 92</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-93"> 93</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-94"> 94</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-95"> 95</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-96"> 96</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-97"> 97</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-98"> 98</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-99"> 99</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-100">100</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-101">101</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-102">102</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-106">106</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-107">107</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-108">108</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-109">109</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-112">112</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-113">113</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-115">115</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-116">116</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-117">117</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-118">118</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-119">119</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-120">120</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-121">121</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-122">122</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-123">123</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-124">124</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-125">125</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-126">126</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-127">127</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-128">128</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-129">129</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-130">130</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-31"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-31" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-31"></a><span class="k">class</span><span class="w"> </span><span class="nc">WhiteboardsNamespace</span><span class="p">(</span><span class="n">Namespace</span><span class="p">):</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-32"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-32" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-32"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-33"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-33" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-33"></a><span class="sd">    画板资源接口命名空间。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-34"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-34" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-34"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-35"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-35" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-35"></a><span class="sd">    封装飞书开放平台 `board/v1/whiteboards` 资源下的服务端接口，包括获取画板主题、</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-36"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-36" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-36"></a><span class="sd">    列举画板内的全部节点，以及将整块画板导出为图片等能力。画板由若干节点（node）组成，</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-37"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-37" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-37"></a><span class="sd">    节点是画板内容的最小结构单元。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-38"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-38" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-38"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-39"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-39" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-39"></a><span class="sd">    通常无需直接实例化，应通过客户端的 `client.board.whiteboards` 访问。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-40"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-40" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-40"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-41"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-41" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-41"></a><span class="sd">    飞书文档:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-42"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-42" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-42"></a><span class="sd">        [画板概述](https://open.feishu.cn/document/docs/board-v1/overview)</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-43"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-43" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-43"></a><span class="sd">    """</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-44"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-44" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-44"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-45"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-45" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-45"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">download_as_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-46"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-46" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-46"></a><span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-47"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-47" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-47"></a><span class="sd">        下载画板为图片。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-48"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-48" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-48"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-49"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-49" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-49"></a><span class="sd">        将整块画板渲染并导出为图片，返回图片的原始字节内容（通常为 PNG）。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-50"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-50" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-50"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-51"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-51" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-51"></a><span class="sd">        Args:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-52"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-52" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-52"></a><span class="sd">            whiteboard_id: 画板的唯一标识。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-53"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-53" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-53"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-54"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-54" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-54"></a><span class="sd">        Returns:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-55"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-55" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-55"></a><span class="sd">            画板图片的原始字节内容。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-56"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-56" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-56"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-57"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-57" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-57"></a><span class="sd">        Raises:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-58"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-58" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-58"></a><span class="sd">            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-59"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-59" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-59"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-60"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-60" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-60"></a><span class="sd">        飞书文档:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-61"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-61" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-61"></a><span class="sd">            [下载为图片](https://open.feishu.cn/document/docs/board-v1/whiteboard/download_as_image)</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-62"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-62" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-62"></a><span class="sd">            参见 [feishu.board.whiteboards.WhiteboardsNamespace.list_nodes][]。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-63"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-63" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-63"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-64"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-64" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-64"></a><span class="sd">        Examples:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-65"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-65" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-65"></a><span class="sd">            &gt;&gt;&gt; import asyncio</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-66"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-66" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-66"></a><span class="sd">            &gt;&gt;&gt; async def main():</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-67"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-67" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-67"></a><span class="sd">            ...     async with FeishuClient("cli_xxx", "secret") as client:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-68"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-68" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-68"></a><span class="sd">            ...         return await client.board.whiteboards.download_as_image("wb_abc")</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-69"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-69" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-69"></a><span class="sd">            &gt;&gt;&gt; asyncio.run(main())  # doctest: +SKIP</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-70"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-70" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-70"></a><span class="sd">            b'\\x89PNG...'</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-71"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-71" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-71"></a><span class="sd">        """</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-72"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-72" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-72"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/download_as_image"</span><span class="p">)</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-73"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-73" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-73"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-74"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-74" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-74"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_theme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedDict</span><span class="p">:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-75"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-75" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-75"></a><span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-76"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-76" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-76"></a><span class="sd">        获取画板主题。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-77"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-77" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-77"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-78"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-78" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-78"></a><span class="sd">        返回画板当前使用的主题信息。该接口对应开放平台的「获取画板主题」能力，响应数据</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-79"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-79" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-79"></a><span class="sd">        含 `theme` 字段（取值如 `classic`、`minimalist_gray`、`default` 等）。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-80"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-80" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-80"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-81"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-81" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-81"></a><span class="sd">        Args:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-82"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-82" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-82"></a><span class="sd">            whiteboard_id: 画板的唯一标识。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-83"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-83" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-83"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-84"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-84" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-84"></a><span class="sd">        Returns:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-85"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-85" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-85"></a><span class="sd">            画板主题数据，含 `theme` 字段（画板当前主题的标识）。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-86"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-86" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-86"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-87"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-87" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-87"></a><span class="sd">        Raises:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-88"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-88" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-88"></a><span class="sd">            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-89"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-89" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-89"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-90"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-90" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-90"></a><span class="sd">        飞书文档:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-91"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-91" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-91"></a><span class="sd">            [获取画板主题](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard/theme)</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-92"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-92" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-92"></a><span class="sd">            参见 [feishu.board.whiteboards.WhiteboardsNamespace.list_nodes][]。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-93"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-93" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-93"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-94"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-94" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-94"></a><span class="sd">        Examples:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-95"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-95" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-95"></a><span class="sd">            &gt;&gt;&gt; await client.board.whiteboards.get_theme("wb_abc")  # doctest:+SKIP</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-96"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-96" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-96"></a><span class="sd">            {'theme': 'classic'}</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-97"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-97" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-97"></a><span class="sd">        """</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-98"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-98" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-98"></a>        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_data</span><span class="p">(</span><span class="s2">"GET"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/theme"</span><span class="p">)</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-99"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-99" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-99"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-100"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-100" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-100"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">user_id_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">NestedDict</span><span class="p">]:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-101"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-101" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-101"></a><span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-102"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-102" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-102"></a><span class="sd">        获取画板内的所有节点。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-103"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-103" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-103"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-104"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-104" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-104"></a><span class="sd">        一次性返回画板内的全部节点（该接口不分页），节点以 `id`、`type`、`parent_id`、</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-105"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-105" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-105"></a><span class="sd">        `children` 以及对应类型的内容字段（如 `text`、`image`、`composite_shape` 等）描述。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-106"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-106" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-106"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-107"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-107" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-107"></a><span class="sd">        Args:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-108"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-108" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-108"></a><span class="sd">            whiteboard_id: 画板的唯一标识。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-109"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-109" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-109"></a><span class="sd">            user_id_type: 返回数据中的用户 ID 类型，如 `open_id`、`union_id`、`user_id`；</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-110"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-110" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-110"></a><span class="sd">                为空时使用接口默认值。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-111"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-111" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-111"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-112"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-112" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-112"></a><span class="sd">        Returns:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-113"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-113" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-113"></a><span class="sd">            画板节点数据列表（取自响应数据的 `nodes` 字段）；画板为空时返回空列表。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-114"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-114" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-114"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-115"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-115" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-115"></a><span class="sd">        Raises:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-116"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-116" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-116"></a><span class="sd">            feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-117"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-117" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-117"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-118"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-118" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-118"></a><span class="sd">        飞书文档:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-119"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-119" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-119"></a><span class="sd">            [获取所有节点](https://open.feishu.cn/document/docs/board-v1/whiteboard-node/list)</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-120"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-120" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-120"></a><span class="sd">            参见 [feishu.board.whiteboards.WhiteboardsNamespace.get_theme][]。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-121"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-121" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-121"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-122"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-122" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-122"></a><span class="sd">        Examples:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-123"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-123" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-123"></a><span class="sd">            &gt;&gt;&gt; await client.board.whiteboards.list_nodes("wb_abc")  # doctest:+SKIP</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-124"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-124" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-124"></a><span class="sd">            [{'id': 'n1', 'type': 'composite_shape', ...}, {'id': 'n2', 'type': 'text', ...}]</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-125"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-125" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-125"></a><span class="sd">        """</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-126"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-126" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-126"></a>        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"user_id_type"</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-127"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-127" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-127"></a>        <span class="n">envelope</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-128"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-128" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-128"></a>            <span class="s2">"GET"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/nodes"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-129"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-129" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-129"></a>        <span class="p">)</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace--source--__span-0-130"><a id="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-130" name="feishu.board.whiteboards.WhiteboardsNamespace--source--__codelineno-0-130"></a>        <span class="k">return</span> <span class="n">_data</span><span class="p">(</span><span class="n">envelope</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodes"</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]</span>
 </span></code></pre></div></td></tr></table></div>
               </details>
 
@@ -3639,61 +3663,61 @@
 
             <details class="mkdocstrings-source">
               <summary>源代码位于： <code>feishu/board/whiteboards.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-45">45</a></span>
-<span class="normal"><a href="#__codelineno-0-46">46</a></span>
-<span class="normal"><a href="#__codelineno-0-47">47</a></span>
-<span class="normal"><a href="#__codelineno-0-48">48</a></span>
-<span class="normal"><a href="#__codelineno-0-49">49</a></span>
-<span class="normal"><a href="#__codelineno-0-50">50</a></span>
-<span class="normal"><a href="#__codelineno-0-51">51</a></span>
-<span class="normal"><a href="#__codelineno-0-52">52</a></span>
-<span class="normal"><a href="#__codelineno-0-53">53</a></span>
-<span class="normal"><a href="#__codelineno-0-54">54</a></span>
-<span class="normal"><a href="#__codelineno-0-55">55</a></span>
-<span class="normal"><a href="#__codelineno-0-56">56</a></span>
-<span class="normal"><a href="#__codelineno-0-57">57</a></span>
-<span class="normal"><a href="#__codelineno-0-58">58</a></span>
-<span class="normal"><a href="#__codelineno-0-59">59</a></span>
-<span class="normal"><a href="#__codelineno-0-60">60</a></span>
-<span class="normal"><a href="#__codelineno-0-61">61</a></span>
-<span class="normal"><a href="#__codelineno-0-62">62</a></span>
-<span class="normal"><a href="#__codelineno-0-63">63</a></span>
-<span class="normal"><a href="#__codelineno-0-64">64</a></span>
-<span class="normal"><a href="#__codelineno-0-65">65</a></span>
-<span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span>
-<span class="normal"><a href="#__codelineno-0-68">68</a></span>
-<span class="normal"><a href="#__codelineno-0-69">69</a></span>
-<span class="normal"><a href="#__codelineno-0-70">70</a></span>
-<span class="normal"><a href="#__codelineno-0-71">71</a></span>
-<span class="normal"><a href="#__codelineno-0-72">72</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">download_as_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">    下载画板为图片。</span>
-</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a>
-</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">    将整块画板渲染并导出为图片，返回图片的原始字节内容（通常为 PNG）。</span>
-</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a>
-</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">        whiteboard_id: 画板的唯一标识。</span>
-</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a>
-</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">        画板图片的原始字节内容。</span>
-</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a>
-</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="sd">    Raises:</span>
-</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="sd">        feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a>
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">        [下载为图片](https://open.feishu.cn/document/docs/board-v1/whiteboard/download_as_image)</span>
-</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="sd">        参见 [feishu.board.whiteboards.WhiteboardsNamespace.list_nodes][]。</span>
-</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a>
-</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">        &gt;&gt;&gt; import asyncio</span>
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">        &gt;&gt;&gt; async def main():</span>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="sd">        ...     async with FeishuClient("cli_xxx", "secret") as client:</span>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="sd">        ...         return await client.board.whiteboards.download_as_image("wb_abc")</span>
-</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a><span class="sd">        &gt;&gt;&gt; asyncio.run(main())  # doctest: +SKIP</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="sd">        b'\\x89PNG...'</span>
-</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="sd">    """</span>
-</span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/download_as_image"</span><span class="p">)</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-72">72</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-45"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-45" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-45"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">download_as_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-46"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-46" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-46"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-47"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-47" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-47"></a><span class="sd">    下载画板为图片。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-48"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-48" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-48"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-49"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-49" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-49"></a><span class="sd">    将整块画板渲染并导出为图片，返回图片的原始字节内容（通常为 PNG）。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-50"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-50" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-50"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-51"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-51" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-51"></a><span class="sd">    Args:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-52"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-52" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-52"></a><span class="sd">        whiteboard_id: 画板的唯一标识。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-53"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-53" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-53"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-54"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-54" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-54"></a><span class="sd">    Returns:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-55"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-55" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-55"></a><span class="sd">        画板图片的原始字节内容。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-56"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-56" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-56"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-57"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-57" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-57"></a><span class="sd">    Raises:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-58"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-58" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-58"></a><span class="sd">        feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-59"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-59" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-59"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-60"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-60" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-60"></a><span class="sd">    飞书文档:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-61"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-61" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-61"></a><span class="sd">        [下载为图片](https://open.feishu.cn/document/docs/board-v1/whiteboard/download_as_image)</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-62"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-62" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-62"></a><span class="sd">        参见 [feishu.board.whiteboards.WhiteboardsNamespace.list_nodes][]。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-63"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-63" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-63"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-64"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-64" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-64"></a><span class="sd">    Examples:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-65"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-65" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-65"></a><span class="sd">        &gt;&gt;&gt; import asyncio</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-66"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-66" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-66"></a><span class="sd">        &gt;&gt;&gt; async def main():</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-67"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-67" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-67"></a><span class="sd">        ...     async with FeishuClient("cli_xxx", "secret") as client:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-68"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-68" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-68"></a><span class="sd">        ...         return await client.board.whiteboards.download_as_image("wb_abc")</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-69"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-69" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-69"></a><span class="sd">        &gt;&gt;&gt; asyncio.run(main())  # doctest: +SKIP</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-70"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-70" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-70"></a><span class="sd">        b'\\x89PNG...'</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-71"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-71" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-71"></a><span class="sd">    """</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__span-0-72"><a id="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-72" name="feishu.board.whiteboards.WhiteboardsNamespace.download_as_image--source--__codelineno-0-72"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/download_as_image"</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3819,55 +3843,55 @@
 
             <details class="mkdocstrings-source">
               <summary>源代码位于： <code>feishu/board/whiteboards.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-74">74</a></span>
-<span class="normal"><a href="#__codelineno-0-75">75</a></span>
-<span class="normal"><a href="#__codelineno-0-76">76</a></span>
-<span class="normal"><a href="#__codelineno-0-77">77</a></span>
-<span class="normal"><a href="#__codelineno-0-78">78</a></span>
-<span class="normal"><a href="#__codelineno-0-79">79</a></span>
-<span class="normal"><a href="#__codelineno-0-80">80</a></span>
-<span class="normal"><a href="#__codelineno-0-81">81</a></span>
-<span class="normal"><a href="#__codelineno-0-82">82</a></span>
-<span class="normal"><a href="#__codelineno-0-83">83</a></span>
-<span class="normal"><a href="#__codelineno-0-84">84</a></span>
-<span class="normal"><a href="#__codelineno-0-85">85</a></span>
-<span class="normal"><a href="#__codelineno-0-86">86</a></span>
-<span class="normal"><a href="#__codelineno-0-87">87</a></span>
-<span class="normal"><a href="#__codelineno-0-88">88</a></span>
-<span class="normal"><a href="#__codelineno-0-89">89</a></span>
-<span class="normal"><a href="#__codelineno-0-90">90</a></span>
-<span class="normal"><a href="#__codelineno-0-91">91</a></span>
-<span class="normal"><a href="#__codelineno-0-92">92</a></span>
-<span class="normal"><a href="#__codelineno-0-93">93</a></span>
-<span class="normal"><a href="#__codelineno-0-94">94</a></span>
-<span class="normal"><a href="#__codelineno-0-95">95</a></span>
-<span class="normal"><a href="#__codelineno-0-96">96</a></span>
-<span class="normal"><a href="#__codelineno-0-97">97</a></span>
-<span class="normal"><a href="#__codelineno-0-98">98</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_theme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedDict</span><span class="p">:</span>
-</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="sd">    获取画板主题。</span>
-</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a>
-</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">    返回画板当前使用的主题信息。该接口对应开放平台的「获取画板主题」能力，响应数据</span>
-</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="sd">    含 `theme` 字段（取值如 `classic`、`minimalist_gray`、`default` 等）。</span>
-</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a>
-</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">        whiteboard_id: 画板的唯一标识。</span>
-</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a>
-</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="sd">        画板主题数据，含 `theme` 字段（画板当前主题的标识）。</span>
-</span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a>
-</span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="sd">    Raises:</span>
-</span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="sd">        feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
-</span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>
-</span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a><span class="sd">        [获取画板主题](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard/theme)</span>
-</span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a><span class="sd">        参见 [feishu.board.whiteboards.WhiteboardsNamespace.list_nodes][]。</span>
-</span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>
-</span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="sd">        &gt;&gt;&gt; await client.board.whiteboards.get_theme("wb_abc")  # doctest:+SKIP</span>
-</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">        {'theme': 'classic'}</span>
-</span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="sd">    """</span>
-</span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_data</span><span class="p">(</span><span class="s2">"GET"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/theme"</span><span class="p">)</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-82">82</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-83">83</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-88">88</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-90">90</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-91">91</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-92">92</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-93">93</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-94">94</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-95">95</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-96">96</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-97">97</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-98">98</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-74"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-74" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-74"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_theme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NestedDict</span><span class="p">:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-75"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-75" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-75"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-76"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-76" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-76"></a><span class="sd">    获取画板主题。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-77"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-77" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-77"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-78"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-78" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-78"></a><span class="sd">    返回画板当前使用的主题信息。该接口对应开放平台的「获取画板主题」能力，响应数据</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-79"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-79" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-79"></a><span class="sd">    含 `theme` 字段（取值如 `classic`、`minimalist_gray`、`default` 等）。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-80"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-80" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-80"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-81"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-81" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-81"></a><span class="sd">    Args:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-82"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-82" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-82"></a><span class="sd">        whiteboard_id: 画板的唯一标识。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-83"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-83" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-83"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-84"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-84" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-84"></a><span class="sd">    Returns:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-85"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-85" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-85"></a><span class="sd">        画板主题数据，含 `theme` 字段（画板当前主题的标识）。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-86"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-86" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-86"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-87"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-87" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-87"></a><span class="sd">    Raises:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-88"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-88" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-88"></a><span class="sd">        feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-89"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-89" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-89"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-90"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-90" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-90"></a><span class="sd">    飞书文档:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-91"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-91" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-91"></a><span class="sd">        [获取画板主题](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard/theme)</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-92"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-92" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-92"></a><span class="sd">        参见 [feishu.board.whiteboards.WhiteboardsNamespace.list_nodes][]。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-93"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-93" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-93"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-94"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-94" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-94"></a><span class="sd">    Examples:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-95"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-95" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-95"></a><span class="sd">        &gt;&gt;&gt; await client.board.whiteboards.get_theme("wb_abc")  # doctest:+SKIP</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-96"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-96" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-96"></a><span class="sd">        {'theme': 'classic'}</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-97"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-97" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-97"></a><span class="sd">    """</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__span-0-98"><a id="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-98" name="feishu.board.whiteboards.WhiteboardsNamespace.get_theme--source--__codelineno-0-98"></a>    <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_data</span><span class="p">(</span><span class="s2">"GET"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/theme"</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -4010,67 +4034,67 @@
 
             <details class="mkdocstrings-source">
               <summary>源代码位于： <code>feishu/board/whiteboards.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-100">100</a></span>
-<span class="normal"><a href="#__codelineno-0-101">101</a></span>
-<span class="normal"><a href="#__codelineno-0-102">102</a></span>
-<span class="normal"><a href="#__codelineno-0-103">103</a></span>
-<span class="normal"><a href="#__codelineno-0-104">104</a></span>
-<span class="normal"><a href="#__codelineno-0-105">105</a></span>
-<span class="normal"><a href="#__codelineno-0-106">106</a></span>
-<span class="normal"><a href="#__codelineno-0-107">107</a></span>
-<span class="normal"><a href="#__codelineno-0-108">108</a></span>
-<span class="normal"><a href="#__codelineno-0-109">109</a></span>
-<span class="normal"><a href="#__codelineno-0-110">110</a></span>
-<span class="normal"><a href="#__codelineno-0-111">111</a></span>
-<span class="normal"><a href="#__codelineno-0-112">112</a></span>
-<span class="normal"><a href="#__codelineno-0-113">113</a></span>
-<span class="normal"><a href="#__codelineno-0-114">114</a></span>
-<span class="normal"><a href="#__codelineno-0-115">115</a></span>
-<span class="normal"><a href="#__codelineno-0-116">116</a></span>
-<span class="normal"><a href="#__codelineno-0-117">117</a></span>
-<span class="normal"><a href="#__codelineno-0-118">118</a></span>
-<span class="normal"><a href="#__codelineno-0-119">119</a></span>
-<span class="normal"><a href="#__codelineno-0-120">120</a></span>
-<span class="normal"><a href="#__codelineno-0-121">121</a></span>
-<span class="normal"><a href="#__codelineno-0-122">122</a></span>
-<span class="normal"><a href="#__codelineno-0-123">123</a></span>
-<span class="normal"><a href="#__codelineno-0-124">124</a></span>
-<span class="normal"><a href="#__codelineno-0-125">125</a></span>
-<span class="normal"><a href="#__codelineno-0-126">126</a></span>
-<span class="normal"><a href="#__codelineno-0-127">127</a></span>
-<span class="normal"><a href="#__codelineno-0-128">128</a></span>
-<span class="normal"><a href="#__codelineno-0-129">129</a></span>
-<span class="normal"><a href="#__codelineno-0-130">130</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">user_id_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">NestedDict</span><span class="p">]:</span>
-</span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-</span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">    获取画板内的所有节点。</span>
-</span><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103"></a>
-</span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="sd">    一次性返回画板内的全部节点（该接口不分页），节点以 `id`、`type`、`parent_id`、</span>
-</span><span id="__span-0-105"><a id="__codelineno-0-105" name="__codelineno-0-105"></a><span class="sd">    `children` 以及对应类型的内容字段（如 `text`、`image`、`composite_shape` 等）描述。</span>
-</span><span id="__span-0-106"><a id="__codelineno-0-106" name="__codelineno-0-106"></a>
-</span><span id="__span-0-107"><a id="__codelineno-0-107" name="__codelineno-0-107"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-108"><a id="__codelineno-0-108" name="__codelineno-0-108"></a><span class="sd">        whiteboard_id: 画板的唯一标识。</span>
-</span><span id="__span-0-109"><a id="__codelineno-0-109" name="__codelineno-0-109"></a><span class="sd">        user_id_type: 返回数据中的用户 ID 类型，如 `open_id`、`union_id`、`user_id`；</span>
-</span><span id="__span-0-110"><a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="sd">            为空时使用接口默认值。</span>
-</span><span id="__span-0-111"><a id="__codelineno-0-111" name="__codelineno-0-111"></a>
-</span><span id="__span-0-112"><a id="__codelineno-0-112" name="__codelineno-0-112"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-113"><a id="__codelineno-0-113" name="__codelineno-0-113"></a><span class="sd">        画板节点数据列表（取自响应数据的 `nodes` 字段）；画板为空时返回空列表。</span>
-</span><span id="__span-0-114"><a id="__codelineno-0-114" name="__codelineno-0-114"></a>
-</span><span id="__span-0-115"><a id="__codelineno-0-115" name="__codelineno-0-115"></a><span class="sd">    Raises:</span>
-</span><span id="__span-0-116"><a id="__codelineno-0-116" name="__codelineno-0-116"></a><span class="sd">        feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
-</span><span id="__span-0-117"><a id="__codelineno-0-117" name="__codelineno-0-117"></a>
-</span><span id="__span-0-118"><a id="__codelineno-0-118" name="__codelineno-0-118"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-119"><a id="__codelineno-0-119" name="__codelineno-0-119"></a><span class="sd">        [获取所有节点](https://open.feishu.cn/document/docs/board-v1/whiteboard-node/list)</span>
-</span><span id="__span-0-120"><a id="__codelineno-0-120" name="__codelineno-0-120"></a><span class="sd">        参见 [feishu.board.whiteboards.WhiteboardsNamespace.get_theme][]。</span>
-</span><span id="__span-0-121"><a id="__codelineno-0-121" name="__codelineno-0-121"></a>
-</span><span id="__span-0-122"><a id="__codelineno-0-122" name="__codelineno-0-122"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-123"><a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="sd">        &gt;&gt;&gt; await client.board.whiteboards.list_nodes("wb_abc")  # doctest:+SKIP</span>
-</span><span id="__span-0-124"><a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="sd">        [{'id': 'n1', 'type': 'composite_shape', ...}, {'id': 'n2', 'type': 'text', ...}]</span>
-</span><span id="__span-0-125"><a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="sd">    """</span>
-</span><span id="__span-0-126"><a id="__codelineno-0-126" name="__codelineno-0-126"></a>    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"user_id_type"</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span>
-</span><span id="__span-0-127"><a id="__codelineno-0-127" name="__codelineno-0-127"></a>    <span class="n">envelope</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
-</span><span id="__span-0-128"><a id="__codelineno-0-128" name="__codelineno-0-128"></a>        <span class="s2">"GET"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/nodes"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span>
-</span><span id="__span-0-129"><a id="__codelineno-0-129" name="__codelineno-0-129"></a>    <span class="p">)</span>
-</span><span id="__span-0-130"><a id="__codelineno-0-130" name="__codelineno-0-130"></a>    <span class="k">return</span> <span class="n">_data</span><span class="p">(</span><span class="n">envelope</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodes"</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-100">100</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-101">101</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-102">102</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-106">106</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-107">107</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-108">108</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-109">109</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-112">112</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-113">113</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-115">115</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-116">116</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-117">117</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-118">118</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-119">119</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-120">120</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-121">121</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-122">122</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-123">123</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-124">124</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-125">125</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-126">126</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-127">127</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-128">128</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-129">129</a></span>
+<span class="normal"><a href="#feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-130">130</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-100"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-100" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-100"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whiteboard_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">user_id_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">NestedDict</span><span class="p">]:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-101"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-101" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-101"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-102"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-102" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-102"></a><span class="sd">    获取画板内的所有节点。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-103"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-103" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-103"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-104"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-104" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-104"></a><span class="sd">    一次性返回画板内的全部节点（该接口不分页），节点以 `id`、`type`、`parent_id`、</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-105"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-105" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-105"></a><span class="sd">    `children` 以及对应类型的内容字段（如 `text`、`image`、`composite_shape` 等）描述。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-106"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-106" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-106"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-107"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-107" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-107"></a><span class="sd">    Args:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-108"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-108" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-108"></a><span class="sd">        whiteboard_id: 画板的唯一标识。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-109"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-109" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-109"></a><span class="sd">        user_id_type: 返回数据中的用户 ID 类型，如 `open_id`、`union_id`、`user_id`；</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-110"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-110" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-110"></a><span class="sd">            为空时使用接口默认值。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-111"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-111" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-111"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-112"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-112" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-112"></a><span class="sd">    Returns:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-113"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-113" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-113"></a><span class="sd">        画板节点数据列表（取自响应数据的 `nodes` 字段）；画板为空时返回空列表。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-114"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-114" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-114"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-115"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-115" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-115"></a><span class="sd">    Raises:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-116"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-116" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-116"></a><span class="sd">        feishu.errors.FeishuError: 请求失败或返回错误码时抛出。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-117"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-117" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-117"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-118"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-118" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-118"></a><span class="sd">    飞书文档:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-119"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-119" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-119"></a><span class="sd">        [获取所有节点](https://open.feishu.cn/document/docs/board-v1/whiteboard-node/list)</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-120"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-120" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-120"></a><span class="sd">        参见 [feishu.board.whiteboards.WhiteboardsNamespace.get_theme][]。</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-121"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-121" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-121"></a>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-122"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-122" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-122"></a><span class="sd">    Examples:</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-123"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-123" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-123"></a><span class="sd">        &gt;&gt;&gt; await client.board.whiteboards.list_nodes("wb_abc")  # doctest:+SKIP</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-124"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-124" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-124"></a><span class="sd">        [{'id': 'n1', 'type': 'composite_shape', ...}, {'id': 'n2', 'type': 'text', ...}]</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-125"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-125" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-125"></a><span class="sd">    """</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-126"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-126" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-126"></a>    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"user_id_type"</span><span class="p">:</span> <span class="n">user_id_type</span><span class="p">}</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-127"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-127" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-127"></a>    <span class="n">envelope</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-128"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-128" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-128"></a>        <span class="s2">"GET"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"board/v1/whiteboards/</span><span class="si">{</span><span class="n">quote_segment</span><span class="p">(</span><span class="n">whiteboard_id</span><span class="p">)</span><span class="si">}</span><span class="s2">/nodes"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-129"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-129" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-129"></a>    <span class="p">)</span>
+</span><span id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__span-0-130"><a id="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-130" name="feishu.board.whiteboards.WhiteboardsNamespace.list_nodes--source--__codelineno-0-130"></a>    <span class="k">return</span> <span class="n">_data</span><span class="p">(</span><span class="n">envelope</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodes"</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -4113,7 +4137,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年10月1日 15:29:09 UTC">2026-10-01 15:29:09</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年11月3日 16:40:50 UTC">2026-11-03 16:40:50</span>
   </span>
 
     
@@ -4320,10 +4344,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       

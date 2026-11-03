@@ -43,7 +43,7 @@
         <link rel="alternate" type="application/rss+xml" title="已更新内容的 RSS 订阅" href="../../feed_rss_updated.xml">
       
       <link rel="icon" href="../../assets/images/logo.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -51,10 +51,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1143,6 +1143,20 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1907,6 +1921,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1927,7 +1947,7 @@
   
   
   
-    <a href="../../events/crypto/" class="md-nav__link">
+    <a href="../../events/conversations/" class="md-nav__link">
       
   
   
@@ -2095,6 +2115,8 @@
   
     
     
+      
+        
       
         
       
@@ -2944,6 +2966,8 @@
       
         
       
+        
+      
     
     
     
@@ -3585,237 +3609,299 @@
 
             <details class="mkdocstrings-source">
               <summary>源代码位于： <code>feishu/streaming/cardkit.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-180">180</a></span>
-<span class="normal"><a href="#__codelineno-0-181">181</a></span>
-<span class="normal"><a href="#__codelineno-0-182">182</a></span>
-<span class="normal"><a href="#__codelineno-0-183">183</a></span>
-<span class="normal"><a href="#__codelineno-0-184">184</a></span>
-<span class="normal"><a href="#__codelineno-0-185">185</a></span>
-<span class="normal"><a href="#__codelineno-0-186">186</a></span>
-<span class="normal"><a href="#__codelineno-0-187">187</a></span>
-<span class="normal"><a href="#__codelineno-0-188">188</a></span>
-<span class="normal"><a href="#__codelineno-0-189">189</a></span>
-<span class="normal"><a href="#__codelineno-0-190">190</a></span>
-<span class="normal"><a href="#__codelineno-0-191">191</a></span>
-<span class="normal"><a href="#__codelineno-0-192">192</a></span>
-<span class="normal"><a href="#__codelineno-0-193">193</a></span>
-<span class="normal"><a href="#__codelineno-0-194">194</a></span>
-<span class="normal"><a href="#__codelineno-0-195">195</a></span>
-<span class="normal"><a href="#__codelineno-0-196">196</a></span>
-<span class="normal"><a href="#__codelineno-0-197">197</a></span>
-<span class="normal"><a href="#__codelineno-0-198">198</a></span>
-<span class="normal"><a href="#__codelineno-0-199">199</a></span>
-<span class="normal"><a href="#__codelineno-0-200">200</a></span>
-<span class="normal"><a href="#__codelineno-0-201">201</a></span>
-<span class="normal"><a href="#__codelineno-0-202">202</a></span>
-<span class="normal"><a href="#__codelineno-0-203">203</a></span>
-<span class="normal"><a href="#__codelineno-0-204">204</a></span>
-<span class="normal"><a href="#__codelineno-0-205">205</a></span>
-<span class="normal"><a href="#__codelineno-0-206">206</a></span>
-<span class="normal"><a href="#__codelineno-0-207">207</a></span>
-<span class="normal"><a href="#__codelineno-0-208">208</a></span>
-<span class="normal"><a href="#__codelineno-0-209">209</a></span>
-<span class="normal"><a href="#__codelineno-0-210">210</a></span>
-<span class="normal"><a href="#__codelineno-0-211">211</a></span>
-<span class="normal"><a href="#__codelineno-0-212">212</a></span>
-<span class="normal"><a href="#__codelineno-0-213">213</a></span>
-<span class="normal"><a href="#__codelineno-0-214">214</a></span>
-<span class="normal"><a href="#__codelineno-0-215">215</a></span>
-<span class="normal"><a href="#__codelineno-0-216">216</a></span>
-<span class="normal"><a href="#__codelineno-0-217">217</a></span>
-<span class="normal"><a href="#__codelineno-0-218">218</a></span>
-<span class="normal"><a href="#__codelineno-0-219">219</a></span>
-<span class="normal"><a href="#__codelineno-0-220">220</a></span>
-<span class="normal"><a href="#__codelineno-0-221">221</a></span>
-<span class="normal"><a href="#__codelineno-0-222">222</a></span>
-<span class="normal"><a href="#__codelineno-0-223">223</a></span>
-<span class="normal"><a href="#__codelineno-0-224">224</a></span>
-<span class="normal"><a href="#__codelineno-0-225">225</a></span>
-<span class="normal"><a href="#__codelineno-0-226">226</a></span>
-<span class="normal"><a href="#__codelineno-0-227">227</a></span>
-<span class="normal"><a href="#__codelineno-0-228">228</a></span>
-<span class="normal"><a href="#__codelineno-0-229">229</a></span>
-<span class="normal"><a href="#__codelineno-0-230">230</a></span>
-<span class="normal"><a href="#__codelineno-0-231">231</a></span>
-<span class="normal"><a href="#__codelineno-0-232">232</a></span>
-<span class="normal"><a href="#__codelineno-0-233">233</a></span>
-<span class="normal"><a href="#__codelineno-0-234">234</a></span>
-<span class="normal"><a href="#__codelineno-0-235">235</a></span>
-<span class="normal"><a href="#__codelineno-0-236">236</a></span>
-<span class="normal"><a href="#__codelineno-0-237">237</a></span>
-<span class="normal"><a href="#__codelineno-0-238">238</a></span>
-<span class="normal"><a href="#__codelineno-0-239">239</a></span>
-<span class="normal"><a href="#__codelineno-0-240">240</a></span>
-<span class="normal"><a href="#__codelineno-0-241">241</a></span>
-<span class="normal"><a href="#__codelineno-0-242">242</a></span>
-<span class="normal"><a href="#__codelineno-0-243">243</a></span>
-<span class="normal"><a href="#__codelineno-0-244">244</a></span>
-<span class="normal"><a href="#__codelineno-0-245">245</a></span>
-<span class="normal"><a href="#__codelineno-0-246">246</a></span>
-<span class="normal"><a href="#__codelineno-0-247">247</a></span>
-<span class="normal"><a href="#__codelineno-0-248">248</a></span>
-<span class="normal"><a href="#__codelineno-0-249">249</a></span>
-<span class="normal"><a href="#__codelineno-0-250">250</a></span>
-<span class="normal"><a href="#__codelineno-0-251">251</a></span>
-<span class="normal"><a href="#__codelineno-0-252">252</a></span>
-<span class="normal"><a href="#__codelineno-0-253">253</a></span>
-<span class="normal"><a href="#__codelineno-0-254">254</a></span>
-<span class="normal"><a href="#__codelineno-0-255">255</a></span>
-<span class="normal"><a href="#__codelineno-0-256">256</a></span>
-<span class="normal"><a href="#__codelineno-0-257">257</a></span>
-<span class="normal"><a href="#__codelineno-0-258">258</a></span>
-<span class="normal"><a href="#__codelineno-0-259">259</a></span>
-<span class="normal"><a href="#__codelineno-0-260">260</a></span>
-<span class="normal"><a href="#__codelineno-0-261">261</a></span>
-<span class="normal"><a href="#__codelineno-0-262">262</a></span>
-<span class="normal"><a href="#__codelineno-0-263">263</a></span>
-<span class="normal"><a href="#__codelineno-0-264">264</a></span>
-<span class="normal"><a href="#__codelineno-0-265">265</a></span>
-<span class="normal"><a href="#__codelineno-0-266">266</a></span>
-<span class="normal"><a href="#__codelineno-0-267">267</a></span>
-<span class="normal"><a href="#__codelineno-0-268">268</a></span>
-<span class="normal"><a href="#__codelineno-0-269">269</a></span>
-<span class="normal"><a href="#__codelineno-0-270">270</a></span>
-<span class="normal"><a href="#__codelineno-0-271">271</a></span>
-<span class="normal"><a href="#__codelineno-0-272">272</a></span>
-<span class="normal"><a href="#__codelineno-0-273">273</a></span>
-<span class="normal"><a href="#__codelineno-0-274">274</a></span>
-<span class="normal"><a href="#__codelineno-0-275">275</a></span>
-<span class="normal"><a href="#__codelineno-0-276">276</a></span>
-<span class="normal"><a href="#__codelineno-0-277">277</a></span>
-<span class="normal"><a href="#__codelineno-0-278">278</a></span>
-<span class="normal"><a href="#__codelineno-0-279">279</a></span>
-<span class="normal"><a href="#__codelineno-0-280">280</a></span>
-<span class="normal"><a href="#__codelineno-0-281">281</a></span>
-<span class="normal"><a href="#__codelineno-0-282">282</a></span>
-<span class="normal"><a href="#__codelineno-0-283">283</a></span>
-<span class="normal"><a href="#__codelineno-0-284">284</a></span>
-<span class="normal"><a href="#__codelineno-0-285">285</a></span>
-<span class="normal"><a href="#__codelineno-0-286">286</a></span>
-<span class="normal"><a href="#__codelineno-0-287">287</a></span>
-<span class="normal"><a href="#__codelineno-0-288">288</a></span>
-<span class="normal"><a href="#__codelineno-0-289">289</a></span>
-<span class="normal"><a href="#__codelineno-0-290">290</a></span>
-<span class="normal"><a href="#__codelineno-0-291">291</a></span>
-<span class="normal"><a href="#__codelineno-0-292">292</a></span>
-<span class="normal"><a href="#__codelineno-0-293">293</a></span>
-<span class="normal"><a href="#__codelineno-0-294">294</a></span>
-<span class="normal"><a href="#__codelineno-0-295">295</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-180"><a id="__codelineno-0-180" name="__codelineno-0-180"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stream_card</span><span class="p">(</span>
-</span><span id="__span-0-181"><a id="__codelineno-0-181" name="__codelineno-0-181"></a>    <span class="n">client</span><span class="p">:</span> <span class="n">FeishuClient</span><span class="p">,</span>
-</span><span id="__span-0-182"><a id="__codelineno-0-182" name="__codelineno-0-182"></a>    <span class="n">tokens</span><span class="p">:</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-</span><span id="__span-0-183"><a id="__codelineno-0-183" name="__codelineno-0-183"></a>    <span class="o">*</span><span class="p">,</span>
-</span><span id="__span-0-184"><a id="__codelineno-0-184" name="__codelineno-0-184"></a>    <span class="n">receive_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-185"><a id="__codelineno-0-185" name="__codelineno-0-185"></a>    <span class="n">receive_id_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-186"><a id="__codelineno-0-186" name="__codelineno-0-186"></a>    <span class="n">reply_to_message_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-187"><a id="__codelineno-0-187" name="__codelineno-0-187"></a>    <span class="n">element_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"md"</span><span class="p">,</span>
-</span><span id="__span-0-188"><a id="__codelineno-0-188" name="__codelineno-0-188"></a>    <span class="n">debounce_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">,</span>
-</span><span id="__span-0-189"><a id="__codelineno-0-189" name="__codelineno-0-189"></a>    <span class="n">header</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-190"><a id="__codelineno-0-190" name="__codelineno-0-190"></a>    <span class="n">template</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-191"><a id="__codelineno-0-191" name="__codelineno-0-191"></a>    <span class="n">_now</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">_now</span><span class="p">,</span>
-</span><span id="__span-0-192"><a id="__codelineno-0-192" name="__codelineno-0-192"></a>    <span class="n">_new_uuid</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">_new_uuid</span><span class="p">,</span>
-</span><span id="__span-0-193"><a id="__codelineno-0-193" name="__codelineno-0-193"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="__span-0-194"><a id="__codelineno-0-194" name="__codelineno-0-194"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""驱动 CardKit v1 流式生命周期，并返回创建出的 ``card_id``。</span>
-</span><span id="__span-0-195"><a id="__codelineno-0-195" name="__codelineno-0-195"></a>
-</span><span id="__span-0-196"><a id="__codelineno-0-196" name="__codelineno-0-196"></a><span class="sd">    先创建并发送一张初始流式卡片，随后将逐 token 累积的**完整文本**流式写入</span>
-</span><span id="__span-0-197"><a id="__codelineno-0-197" name="__codelineno-0-197"></a><span class="sd">    ``element_id`` 指定的 markdown 元素（带去抖限流、序号单调递增、每次写入以 uuid 标识），</span>
-</span><span id="__span-0-198"><a id="__codelineno-0-198" name="__codelineno-0-198"></a><span class="sd">    最后**始终**执行收尾（``streaming_mode=False``）。即使 token 生产者抛出异常也会收尾：</span>
-</span><span id="__span-0-199"><a id="__codelineno-0-199" name="__codelineno-0-199"></a><span class="sd">    卡片的流式状态在 10 分钟后会自动关闭，若不主动收尾，泄漏的开放流会白白浪费卡片实体。</span>
-</span><span id="__span-0-200"><a id="__codelineno-0-200" name="__codelineno-0-200"></a>
-</span><span id="__span-0-201"><a id="__codelineno-0-201" name="__codelineno-0-201"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-202"><a id="__codelineno-0-202" name="__codelineno-0-202"></a><span class="sd">        client: 飞书客户端，须提供 ``async request(method, path, *, params, json)`` 方法。</span>
-</span><span id="__span-0-203"><a id="__codelineno-0-203" name="__codelineno-0-203"></a><span class="sd">        tokens: 逐段产出文本的异步迭代器，通常为 LLM 的流式输出。每段会被追加到累积文本上。</span>
-</span><span id="__span-0-204"><a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="sd">        receive_id: 消息接收者 ID，其类型由 ``receive_id_type`` 指定。发新消息时必填，且与</span>
-</span><span id="__span-0-205"><a id="__codelineno-0-205" name="__codelineno-0-205"></a><span class="sd">            ``reply_to_message_id`` 二者只能取其一。</span>
-</span><span id="__span-0-206"><a id="__codelineno-0-206" name="__codelineno-0-206"></a><span class="sd">        receive_id_type: 接收者 ID 类型，如 ``open_id``、``user_id``、``chat_id`` 等；为空时按 ``receive_id``</span>
-</span><span id="__span-0-207"><a id="__codelineno-0-207" name="__codelineno-0-207"></a><span class="sd">            前缀自动推断（与 IM 发送族一致），仅发新消息时适用。</span>
-</span><span id="__span-0-208"><a id="__codelineno-0-208" name="__codelineno-0-208"></a><span class="sd">        reply_to_message_id: 以回复形式发送时的目标消息 ``message_id``（``om_`` 开头）。提供时初始卡片</span>
-</span><span id="__span-0-209"><a id="__codelineno-0-209" name="__codelineno-0-209"></a><span class="sd">            经回复接口发出（在原消息所在会话内成串显示），此时 ``receive_id`` 应留空。</span>
-</span><span id="__span-0-210"><a id="__codelineno-0-210" name="__codelineno-0-210"></a><span class="sd">        element_id: 流式写入目标 markdown 元素的 ID，默认为 ``md``。</span>
-</span><span id="__span-0-211"><a id="__codelineno-0-211" name="__codelineno-0-211"></a><span class="sd">        debounce_s: 去抖间隔（秒），默认为 ``0.25``（约 4 次/秒，远低于飞书 10 次/秒/卡片的上限）。</span>
-</span><span id="__span-0-212"><a id="__codelineno-0-212" name="__codelineno-0-212"></a><span class="sd">        header: 卡片标题文本。为 ``None`` 时不渲染标题。</span>
-</span><span id="__span-0-213"><a id="__codelineno-0-213" name="__codelineno-0-213"></a><span class="sd">        template: 标题栏配色模板（如 ``blue``、``green``），仅在提供 ``header`` 时生效。</span>
-</span><span id="__span-0-214"><a id="__codelineno-0-214" name="__codelineno-0-214"></a><span class="sd">        _now: 单调时钟函数，仅供测试注入以使去抖确定化，生产调用请勿传入。</span>
-</span><span id="__span-0-215"><a id="__codelineno-0-215" name="__codelineno-0-215"></a><span class="sd">        _new_uuid: uuid 生成函数，仅供测试注入，生产调用请勿传入。</span>
-</span><span id="__span-0-216"><a id="__codelineno-0-216" name="__codelineno-0-216"></a>
-</span><span id="__span-0-217"><a id="__codelineno-0-217" name="__codelineno-0-217"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-218"><a id="__codelineno-0-218" name="__codelineno-0-218"></a><span class="sd">        创建出的卡片实体 ``card_id``。</span>
-</span><span id="__span-0-219"><a id="__codelineno-0-219" name="__codelineno-0-219"></a>
-</span><span id="__span-0-220"><a id="__codelineno-0-220" name="__codelineno-0-220"></a><span class="sd">    飞书文档:</span>
-</span><span id="__span-0-221"><a id="__codelineno-0-221" name="__codelineno-0-221"></a><span class="sd">        [创建卡片实体](https://open.feishu.cn/document/cardkit-v1/card/create)</span>
-</span><span id="__span-0-222"><a id="__codelineno-0-222" name="__codelineno-0-222"></a>
-</span><span id="__span-0-223"><a id="__codelineno-0-223" name="__codelineno-0-223"></a><span class="sd">        [流式更新文本](https://open.feishu.cn/document/cardkit-v1/card-element/content)</span>
-</span><span id="__span-0-224"><a id="__codelineno-0-224" name="__codelineno-0-224"></a>
-</span><span id="__span-0-225"><a id="__codelineno-0-225" name="__codelineno-0-225"></a><span class="sd">        [发送消息](https://open.feishu.cn/document/server-docs/im-v1/message/create)</span>
-</span><span id="__span-0-226"><a id="__codelineno-0-226" name="__codelineno-0-226"></a>
-</span><span id="__span-0-227"><a id="__codelineno-0-227" name="__codelineno-0-227"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-228"><a id="__codelineno-0-228" name="__codelineno-0-228"></a><span class="sd">        &gt;&gt;&gt; async def tokens():</span>
-</span><span id="__span-0-229"><a id="__codelineno-0-229" name="__codelineno-0-229"></a><span class="sd">        ...     for tok in ["你好", "，", "世界"]:</span>
-</span><span id="__span-0-230"><a id="__codelineno-0-230" name="__codelineno-0-230"></a><span class="sd">        ...         yield tok</span>
-</span><span id="__span-0-231"><a id="__codelineno-0-231" name="__codelineno-0-231"></a><span class="sd">        &gt;&gt;&gt; card_id = await client.stream_card(  # doctest: +SKIP</span>
-</span><span id="__span-0-232"><a id="__codelineno-0-232" name="__codelineno-0-232"></a><span class="sd">        ...     tokens(), receive_id="ou_xxx", receive_id_type="open_id"</span>
-</span><span id="__span-0-233"><a id="__codelineno-0-233" name="__codelineno-0-233"></a><span class="sd">        ... )</span>
-</span><span id="__span-0-234"><a id="__codelineno-0-234" name="__codelineno-0-234"></a><span class="sd">        &gt;&gt;&gt; card_id  # doctest: +SKIP</span>
-</span><span id="__span-0-235"><a id="__codelineno-0-235" name="__codelineno-0-235"></a><span class="sd">        'card_42'</span>
-</span><span id="__span-0-236"><a id="__codelineno-0-236" name="__codelineno-0-236"></a><span class="sd">    """</span>
-</span><span id="__span-0-237"><a id="__codelineno-0-237" name="__codelineno-0-237"></a>    <span class="k">if</span> <span class="p">(</span><span class="n">receive_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">reply_to_message_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
-</span><span id="__span-0-238"><a id="__codelineno-0-238" name="__codelineno-0-238"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"stream_card requires exactly one of receive_id or reply_to_message_id"</span><span class="p">)</span>
-</span><span id="__span-0-239"><a id="__codelineno-0-239" name="__codelineno-0-239"></a>    <span class="n">counter</span> <span class="o">=</span> <span class="n">_SequenceCounter</span><span class="p">()</span>
-</span><span id="__span-0-240"><a id="__codelineno-0-240" name="__codelineno-0-240"></a>
-</span><span id="__span-0-241"><a id="__codelineno-0-241" name="__codelineno-0-241"></a>    <span class="c1"># 1) Create the card entity.</span>
-</span><span id="__span-0-242"><a id="__codelineno-0-242" name="__codelineno-0-242"></a>    <span class="n">card_json</span> <span class="o">=</span> <span class="n">_build_streaming_card</span><span class="p">(</span><span class="n">element_id</span><span class="o">=</span><span class="n">element_id</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span> <span class="n">template</span><span class="o">=</span><span class="n">template</span><span class="p">)</span>
-</span><span id="__span-0-243"><a id="__codelineno-0-243" name="__codelineno-0-243"></a>    <span class="n">create</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
-</span><span id="__span-0-244"><a id="__codelineno-0-244" name="__codelineno-0-244"></a>        <span class="s2">"POST"</span><span class="p">,</span>
-</span><span id="__span-0-245"><a id="__codelineno-0-245" name="__codelineno-0-245"></a>        <span class="n">spec</span><span class="o">.</span><span class="n">CREATE_CARD_PATH</span><span class="p">,</span>
-</span><span id="__span-0-246"><a id="__codelineno-0-246" name="__codelineno-0-246"></a>        <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="n">spec</span><span class="o">.</span><span class="n">CREATE_CARD_TYPE_FIELD</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">CREATE_CARD_TYPE</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">CREATE_CARD_DATA_FIELD</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">card_json</span><span class="p">)},</span>
-</span><span id="__span-0-247"><a id="__codelineno-0-247" name="__codelineno-0-247"></a>    <span class="p">)</span>
-</span><span id="__span-0-248"><a id="__codelineno-0-248" name="__codelineno-0-248"></a>    <span class="n">card_id</span> <span class="o">=</span> <span class="n">create</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"card_id"</span><span class="p">]</span>
-</span><span id="__span-0-249"><a id="__codelineno-0-249" name="__codelineno-0-249"></a>
-</span><span id="__span-0-250"><a id="__codelineno-0-250" name="__codelineno-0-250"></a>    <span class="c1"># 2) Send the interactive message referencing the entity — fresh, or in reply position.</span>
-</span><span id="__span-0-251"><a id="__codelineno-0-251" name="__codelineno-0-251"></a>    <span class="n">content</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">"type"</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">SEND_CARD_CONTENT_TYPE</span><span class="p">,</span> <span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"card_id"</span><span class="p">:</span> <span class="n">card_id</span><span class="p">}})</span>
-</span><span id="__span-0-252"><a id="__codelineno-0-252" name="__codelineno-0-252"></a>    <span class="k">if</span> <span class="n">reply_to_message_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-253"><a id="__codelineno-0-253" name="__codelineno-0-253"></a>        <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
-</span><span id="__span-0-254"><a id="__codelineno-0-254" name="__codelineno-0-254"></a>            <span class="s2">"POST"</span><span class="p">,</span>
-</span><span id="__span-0-255"><a id="__codelineno-0-255" name="__codelineno-0-255"></a>            <span class="n">spec</span><span class="o">.</span><span class="n">reply_message_path</span><span class="p">(</span><span class="n">reply_to_message_id</span><span class="p">),</span>
-</span><span id="__span-0-256"><a id="__codelineno-0-256" name="__codelineno-0-256"></a>            <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">"msg_type"</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">SEND_MESSAGE_TYPE</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">content</span><span class="p">},</span>
-</span><span id="__span-0-257"><a id="__codelineno-0-257" name="__codelineno-0-257"></a>        <span class="p">)</span>
-</span><span id="__span-0-258"><a id="__codelineno-0-258" name="__codelineno-0-258"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-259"><a id="__codelineno-0-259" name="__codelineno-0-259"></a>        <span class="k">assert</span> <span class="n">receive_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>  <span class="c1"># guaranteed by the receive_id / reply_to_message_id XOR check above</span>
-</span><span id="__span-0-260"><a id="__codelineno-0-260" name="__codelineno-0-260"></a>        <span class="n">rid_type</span> <span class="o">=</span> <span class="n">receive_id_type</span> <span class="ow">or</span> <span class="n">infer_receive_id_type</span><span class="p">(</span><span class="n">receive_id</span><span class="p">)</span>
-</span><span id="__span-0-261"><a id="__codelineno-0-261" name="__codelineno-0-261"></a>        <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
-</span><span id="__span-0-262"><a id="__codelineno-0-262" name="__codelineno-0-262"></a>            <span class="s2">"POST"</span><span class="p">,</span>
-</span><span id="__span-0-263"><a id="__codelineno-0-263" name="__codelineno-0-263"></a>            <span class="n">spec</span><span class="o">.</span><span class="n">SEND_MESSAGE_PATH</span><span class="p">,</span>
-</span><span id="__span-0-264"><a id="__codelineno-0-264" name="__codelineno-0-264"></a>            <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">"receive_id_type"</span><span class="p">:</span> <span class="n">rid_type</span><span class="p">},</span>
-</span><span id="__span-0-265"><a id="__codelineno-0-265" name="__codelineno-0-265"></a>            <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">"receive_id"</span><span class="p">:</span> <span class="n">receive_id</span><span class="p">,</span> <span class="s2">"msg_type"</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">SEND_MESSAGE_TYPE</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">content</span><span class="p">},</span>
-</span><span id="__span-0-266"><a id="__codelineno-0-266" name="__codelineno-0-266"></a>        <span class="p">)</span>
-</span><span id="__span-0-267"><a id="__codelineno-0-267" name="__codelineno-0-267"></a>
-</span><span id="__span-0-268"><a id="__codelineno-0-268" name="__codelineno-0-268"></a>    <span class="c1"># 3) Stream cumulative text. Finalize is mandatory -&gt; try/finally.</span>
-</span><span id="__span-0-269"><a id="__codelineno-0-269" name="__codelineno-0-269"></a>    <span class="n">flusher</span> <span class="o">=</span> <span class="n">_Flusher</span><span class="p">(</span>
-</span><span id="__span-0-270"><a id="__codelineno-0-270" name="__codelineno-0-270"></a>        <span class="n">client</span><span class="p">,</span>
-</span><span id="__span-0-271"><a id="__codelineno-0-271" name="__codelineno-0-271"></a>        <span class="n">card_id</span><span class="o">=</span><span class="n">card_id</span><span class="p">,</span>
-</span><span id="__span-0-272"><a id="__codelineno-0-272" name="__codelineno-0-272"></a>        <span class="n">element_id</span><span class="o">=</span><span class="n">element_id</span><span class="p">,</span>
-</span><span id="__span-0-273"><a id="__codelineno-0-273" name="__codelineno-0-273"></a>        <span class="n">counter</span><span class="o">=</span><span class="n">counter</span><span class="p">,</span>
-</span><span id="__span-0-274"><a id="__codelineno-0-274" name="__codelineno-0-274"></a>        <span class="n">debounce_s</span><span class="o">=</span><span class="n">debounce_s</span><span class="p">,</span>
-</span><span id="__span-0-275"><a id="__codelineno-0-275" name="__codelineno-0-275"></a>        <span class="n">now</span><span class="o">=</span><span class="n">_now</span><span class="p">,</span>
-</span><span id="__span-0-276"><a id="__codelineno-0-276" name="__codelineno-0-276"></a>        <span class="n">new_uuid</span><span class="o">=</span><span class="n">_new_uuid</span><span class="p">,</span>
-</span><span id="__span-0-277"><a id="__codelineno-0-277" name="__codelineno-0-277"></a>    <span class="p">)</span>
-</span><span id="__span-0-278"><a id="__codelineno-0-278" name="__codelineno-0-278"></a>    <span class="n">accumulated</span> <span class="o">=</span> <span class="s2">""</span>
-</span><span id="__span-0-279"><a id="__codelineno-0-279" name="__codelineno-0-279"></a>    <span class="k">try</span><span class="p">:</span>
-</span><span id="__span-0-280"><a id="__codelineno-0-280" name="__codelineno-0-280"></a>        <span class="k">async</span> <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
-</span><span id="__span-0-281"><a id="__codelineno-0-281" name="__codelineno-0-281"></a>            <span class="n">accumulated</span> <span class="o">+=</span> <span class="n">tok</span>
-</span><span id="__span-0-282"><a id="__codelineno-0-282" name="__codelineno-0-282"></a>            <span class="k">await</span> <span class="n">flusher</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">accumulated</span><span class="p">)</span>  <span class="c1"># debounced; may skip</span>
-</span><span id="__span-0-283"><a id="__codelineno-0-283" name="__codelineno-0-283"></a>    <span class="k">finally</span><span class="p">:</span>
-</span><span id="__span-0-284"><a id="__codelineno-0-284" name="__codelineno-0-284"></a>        <span class="c1"># One mandatory final flush of whatever we accumulated, then finalize.</span>
-</span><span id="__span-0-285"><a id="__codelineno-0-285" name="__codelineno-0-285"></a>        <span class="k">if</span> <span class="n">accumulated</span><span class="p">:</span>
-</span><span id="__span-0-286"><a id="__codelineno-0-286" name="__codelineno-0-286"></a>            <span class="k">await</span> <span class="n">flusher</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">accumulated</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="__span-0-287"><a id="__codelineno-0-287" name="__codelineno-0-287"></a>        <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
-</span><span id="__span-0-288"><a id="__codelineno-0-288" name="__codelineno-0-288"></a>            <span class="s2">"PATCH"</span><span class="p">,</span>
-</span><span id="__span-0-289"><a id="__codelineno-0-289" name="__codelineno-0-289"></a>            <span class="n">spec</span><span class="o">.</span><span class="n">settings_path</span><span class="p">(</span><span class="n">card_id</span><span class="p">),</span>
-</span><span id="__span-0-290"><a id="__codelineno-0-290" name="__codelineno-0-290"></a>            <span class="n">json</span><span class="o">=</span><span class="p">{</span>
-</span><span id="__span-0-291"><a id="__codelineno-0-291" name="__codelineno-0-291"></a>                <span class="n">spec</span><span class="o">.</span><span class="n">SETTINGS_FIELD</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">"config"</span><span class="p">:</span> <span class="p">{</span><span class="n">spec</span><span class="o">.</span><span class="n">STREAMING_MODE_KEY</span><span class="p">:</span> <span class="kc">False</span><span class="p">}}),</span>
-</span><span id="__span-0-292"><a id="__codelineno-0-292" name="__codelineno-0-292"></a>                <span class="n">spec</span><span class="o">.</span><span class="n">SEQUENCE_FIELD</span><span class="p">:</span> <span class="k">await</span> <span class="n">counter</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span>
-</span><span id="__span-0-293"><a id="__codelineno-0-293" name="__codelineno-0-293"></a>            <span class="p">},</span>
-</span><span id="__span-0-294"><a id="__codelineno-0-294" name="__codelineno-0-294"></a>        <span class="p">)</span>
-</span><span id="__span-0-295"><a id="__codelineno-0-295" name="__codelineno-0-295"></a>    <span class="k">return</span> <span class="n">card_id</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><th colspan="2" class="filename"><span class="filename">Python</span></th></tr><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-181">181</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-182">182</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-183">183</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-184">184</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-185">185</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-186">186</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-187">187</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-188">188</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-189">189</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-190">190</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-191">191</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-192">192</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-193">193</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-194">194</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-195">195</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-196">196</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-197">197</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-198">198</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-199">199</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-200">200</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-201">201</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-202">202</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-203">203</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-204">204</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-205">205</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-206">206</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-207">207</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-208">208</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-209">209</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-210">210</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-211">211</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-212">212</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-213">213</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-214">214</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-215">215</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-216">216</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-217">217</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-218">218</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-219">219</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-220">220</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-221">221</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-222">222</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-223">223</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-224">224</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-225">225</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-226">226</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-227">227</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-228">228</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-229">229</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-230">230</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-231">231</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-232">232</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-233">233</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-234">234</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-235">235</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-236">236</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-237">237</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-238">238</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-239">239</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-240">240</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-241">241</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-242">242</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-243">243</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-244">244</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-245">245</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-246">246</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-247">247</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-248">248</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-249">249</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-250">250</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-251">251</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-252">252</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-253">253</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-254">254</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-255">255</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-256">256</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-257">257</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-258">258</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-259">259</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-260">260</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-261">261</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-262">262</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-263">263</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-264">264</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-265">265</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-266">266</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-267">267</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-268">268</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-269">269</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-270">270</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-271">271</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-272">272</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-273">273</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-274">274</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-275">275</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-276">276</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-277">277</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-278">278</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-279">279</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-280">280</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-281">281</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-282">282</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-283">283</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-284">284</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-285">285</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-286">286</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-287">287</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-288">288</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-289">289</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-290">290</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-291">291</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-292">292</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-293">293</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-294">294</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-295">295</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-296">296</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-297">297</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-298">298</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-299">299</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-300">300</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-301">301</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-302">302</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-303">303</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-304">304</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-305">305</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-306">306</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-307">307</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-308">308</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-309">309</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-310">310</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-311">311</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-312">312</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-313">313</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-314">314</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-315">315</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-316">316</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-317">317</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-318">318</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-319">319</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-320">320</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-321">321</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-322">322</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-323">323</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-324">324</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-325">325</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-326">326</a></span>
+<span class="normal"><a href="#feishu.streaming.cardkit.stream_card--source--__codelineno-0-327">327</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="feishu.streaming.cardkit.stream_card--source--__span-0-181"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-181" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-181"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stream_card</span><span class="p">(</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-182"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-182" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-182"></a>    <span class="n">client</span><span class="p">:</span> <span class="n">FeishuClient</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-183"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-183" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-183"></a>    <span class="n">tokens</span><span class="p">:</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-184"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-184" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-184"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-185"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-185" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-185"></a>    <span class="n">receive_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-186"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-186" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-186"></a>    <span class="n">receive_id_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-187"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-187" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-187"></a>    <span class="n">reply_to_message_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-188"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-188" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-188"></a>    <span class="n">element_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"md"</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-189"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-189" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-189"></a>    <span class="n">debounce_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-190"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-190" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-190"></a>    <span class="n">header</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-191"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-191" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-191"></a>    <span class="n">template</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-192"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-192" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-192"></a>    <span class="n">_now</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">_now</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-193"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-193" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-193"></a>    <span class="n">_new_uuid</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">_new_uuid</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-194"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-194" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-194"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-195"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-195" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-195"></a><span class="w">    </span><span class="sa">r</span><span class="sd">"""驱动 CardKit v1 流式生命周期，并返回创建出的 ``card_id``。</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-196"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-196" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-196"></a>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-197"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-197" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-197"></a><span class="sd">    先创建并发送一张初始流式卡片，随后将逐 token 累积的**完整文本**流式写入</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-198"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-198" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-198"></a><span class="sd">    ``element_id`` 指定的 markdown 元素（带去抖限流、序号单调递增、每次写入以 uuid 标识），</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-199"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-199" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-199"></a><span class="sd">    最后**始终**执行收尾（``streaming_mode=False``）。即使 token 生产者抛出异常也会收尾：</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-200"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-200" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-200"></a><span class="sd">    卡片的流式状态在 10 分钟后会自动关闭，若不主动收尾，泄漏的开放流会白白浪费卡片实体。</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-201"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-201" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-201"></a>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-202"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-202" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-202"></a><span class="sd">    Args:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-203"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-203" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-203"></a><span class="sd">        client: 飞书客户端，须提供 ``async request(method, path, *, params, json)`` 方法。</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-204"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-204" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-204"></a><span class="sd">        tokens: 逐段产出文本的异步迭代器，通常为 LLM 的流式输出。每段会被追加到累积文本上。</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-205"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-205" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-205"></a><span class="sd">        receive_id: 消息接收者 ID，其类型由 ``receive_id_type`` 指定。发新消息时必填，且与</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-206"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-206" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-206"></a><span class="sd">            ``reply_to_message_id`` 二者只能取其一。</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-207"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-207" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-207"></a><span class="sd">        receive_id_type: 接收者 ID 类型，如 ``open_id``、``user_id``、``chat_id`` 等；为空时按 ``receive_id``</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-208"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-208" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-208"></a><span class="sd">            前缀自动推断（与 IM 发送族一致），仅发新消息时适用。</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-209"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-209" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-209"></a><span class="sd">        reply_to_message_id: 以回复形式发送时的目标消息 ``message_id``（``om_`` 开头）。提供时初始卡片</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-210"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-210" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-210"></a><span class="sd">            经回复接口发出（在原消息所在会话内成串显示），此时 ``receive_id`` 应留空。</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-211"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-211" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-211"></a><span class="sd">        element_id: 流式写入目标 markdown 元素的 ID，默认为 ``md``。</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-212"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-212" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-212"></a><span class="sd">        debounce_s: 去抖间隔（秒），默认为 ``0.25``（约 4 次/秒，远低于飞书 10 次/秒/卡片的上限）。</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-213"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-213" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-213"></a><span class="sd">        header: 卡片标题文本。为 ``None`` 时不渲染标题。</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-214"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-214" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-214"></a><span class="sd">        template: 标题栏配色模板（如 ``blue``、``green``），仅在提供 ``header`` 时生效。</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-215"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-215" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-215"></a><span class="sd">        _now: 单调时钟函数，仅供测试注入以使去抖确定化，生产调用请勿传入。</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-216"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-216" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-216"></a><span class="sd">        _new_uuid: uuid 生成函数，仅供测试注入，生产调用请勿传入。</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-217"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-217" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-217"></a>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-218"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-218" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-218"></a><span class="sd">    Returns:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-219"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-219" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-219"></a><span class="sd">        创建出的卡片实体 ``card_id``。</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-220"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-220" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-220"></a>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-221"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-221" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-221"></a><span class="sd">    飞书文档:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-222"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-222" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-222"></a><span class="sd">        [创建卡片实体](https://open.feishu.cn/document/cardkit-v1/card/create)</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-223"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-223" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-223"></a>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-224"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-224" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-224"></a><span class="sd">        [流式更新文本](https://open.feishu.cn/document/cardkit-v1/card-element/content)</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-225"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-225" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-225"></a>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-226"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-226" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-226"></a><span class="sd">        [发送消息](https://open.feishu.cn/document/server-docs/im-v1/message/create)</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-227"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-227" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-227"></a>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-228"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-228" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-228"></a><span class="sd">    Examples:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-229"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-229" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-229"></a><span class="sd">        &gt;&gt;&gt; async def tokens():</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-230"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-230" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-230"></a><span class="sd">        ...     for tok in ["你好", "，", "世界"]:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-231"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-231" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-231"></a><span class="sd">        ...         yield tok</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-232"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-232" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-232"></a><span class="sd">        &gt;&gt;&gt; card_id = await client.stream_card(  # doctest: +SKIP</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-233"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-233" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-233"></a><span class="sd">        ...     tokens(), receive_id="ou_xxx", receive_id_type="open_id"</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-234"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-234" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-234"></a><span class="sd">        ... )</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-235"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-235" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-235"></a><span class="sd">        &gt;&gt;&gt; card_id  # doctest: +SKIP</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-236"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-236" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-236"></a><span class="sd">        'card_42'</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-237"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-237" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-237"></a><span class="sd">    """</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-238"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-238" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-238"></a>    <span class="k">if</span> <span class="p">(</span><span class="n">receive_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">reply_to_message_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-239"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-239" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-239"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"stream_card requires exactly one of receive_id or reply_to_message_id"</span><span class="p">)</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-240"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-240" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-240"></a>    <span class="n">counter</span> <span class="o">=</span> <span class="n">_SequenceCounter</span><span class="p">()</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-241"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-241" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-241"></a>    <span class="n">card_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-242"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-242" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-242"></a>    <span class="n">flusher</span><span class="p">:</span> <span class="n">_Flusher</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-243"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-243" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-243"></a>    <span class="n">accumulated</span> <span class="o">=</span> <span class="s2">""</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-244"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-244" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-244"></a>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-245"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-245" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-245"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">cleanup</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-246"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-246" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-246"></a><span class="w">        </span><span class="sd">"""Attempt every cleanup operation, preserving the first failure."""</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-247"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-247" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-247"></a>        <span class="n">error</span><span class="p">:</span> <span class="ne">BaseException</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-248"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-248" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-248"></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-249"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-249" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-249"></a>            <span class="n">close</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="s2">"aclose"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-250"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-250" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-250"></a>            <span class="k">if</span> <span class="n">close</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-251"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-251" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-251"></a>                <span class="k">await</span> <span class="n">close</span><span class="p">()</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-252"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-252" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-252"></a>        <span class="k">except</span> <span class="p">(</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-253"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-253" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-253"></a>            <span class="n">error</span> <span class="o">=</span> <span class="n">exc</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-254"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-254" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-254"></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-255"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-255" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-255"></a>            <span class="k">if</span> <span class="n">accumulated</span> <span class="ow">and</span> <span class="n">flusher</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-256"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-256" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-256"></a>                <span class="k">await</span> <span class="n">flusher</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">accumulated</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-257"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-257" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-257"></a>        <span class="k">except</span> <span class="p">(</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-258"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-258" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-258"></a>            <span class="k">if</span> <span class="n">error</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-259"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-259" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-259"></a>                <span class="n">error</span> <span class="o">=</span> <span class="n">exc</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-260"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-260" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-260"></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-261"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-261" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-261"></a>            <span class="k">if</span> <span class="n">card_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-262"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-262" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-262"></a>                <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-263"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-263" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-263"></a>                    <span class="s2">"PATCH"</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-264"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-264" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-264"></a>                    <span class="n">spec</span><span class="o">.</span><span class="n">settings_path</span><span class="p">(</span><span class="n">card_id</span><span class="p">),</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-265"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-265" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-265"></a>                    <span class="n">json</span><span class="o">=</span><span class="p">{</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-266"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-266" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-266"></a>                        <span class="n">spec</span><span class="o">.</span><span class="n">SETTINGS_FIELD</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">"config"</span><span class="p">:</span> <span class="p">{</span><span class="n">spec</span><span class="o">.</span><span class="n">STREAMING_MODE_KEY</span><span class="p">:</span> <span class="kc">False</span><span class="p">}}),</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-267"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-267" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-267"></a>                        <span class="n">spec</span><span class="o">.</span><span class="n">SEQUENCE_FIELD</span><span class="p">:</span> <span class="k">await</span> <span class="n">counter</span><span class="o">.</span><span class="n">next</span><span class="p">(),</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-268"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-268" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-268"></a>                    <span class="p">},</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-269"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-269" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-269"></a>                <span class="p">)</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-270"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-270" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-270"></a>        <span class="k">except</span> <span class="p">(</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-271"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-271" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-271"></a>            <span class="k">if</span> <span class="n">error</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-272"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-272" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-272"></a>                <span class="n">error</span> <span class="o">=</span> <span class="n">exc</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-273"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-273" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-273"></a>        <span class="k">if</span> <span class="n">error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-274"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-274" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-274"></a>            <span class="k">raise</span> <span class="n">error</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-275"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-275" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-275"></a>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-276"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-276" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-276"></a>    <span class="k">try</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-277"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-277" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-277"></a>        <span class="c1"># 1) Create the card entity, keeping its identity for cleanup even when sending fails.</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-278"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-278" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-278"></a>        <span class="n">card_json</span> <span class="o">=</span> <span class="n">_build_streaming_card</span><span class="p">(</span><span class="n">element_id</span><span class="o">=</span><span class="n">element_id</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span> <span class="n">template</span><span class="o">=</span><span class="n">template</span><span class="p">)</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-279"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-279" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-279"></a>        <span class="n">create</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-280"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-280" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-280"></a>            <span class="s2">"POST"</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-281"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-281" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-281"></a>            <span class="n">spec</span><span class="o">.</span><span class="n">CREATE_CARD_PATH</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-282"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-282" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-282"></a>            <span class="n">json</span><span class="o">=</span><span class="p">{</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-283"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-283" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-283"></a>                <span class="n">spec</span><span class="o">.</span><span class="n">CREATE_CARD_TYPE_FIELD</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">CREATE_CARD_TYPE</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-284"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-284" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-284"></a>                <span class="n">spec</span><span class="o">.</span><span class="n">CREATE_CARD_DATA_FIELD</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">card_json</span><span class="p">),</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-285"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-285" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-285"></a>            <span class="p">},</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-286"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-286" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-286"></a>        <span class="p">)</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-287"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-287" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-287"></a>        <span class="n">card_id</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">create</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"card_id"</span><span class="p">])</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-288"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-288" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-288"></a>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-289"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-289" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-289"></a>        <span class="c1"># 2) Send the interactive message once — fresh, or in reply position.</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-290"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-290" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-290"></a>        <span class="n">content</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">"type"</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">SEND_CARD_CONTENT_TYPE</span><span class="p">,</span> <span class="s2">"data"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"card_id"</span><span class="p">:</span> <span class="n">card_id</span><span class="p">}})</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-291"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-291" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-291"></a>        <span class="k">if</span> <span class="n">reply_to_message_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-292"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-292" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-292"></a>            <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-293"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-293" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-293"></a>                <span class="s2">"POST"</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-294"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-294" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-294"></a>                <span class="n">spec</span><span class="o">.</span><span class="n">reply_message_path</span><span class="p">(</span><span class="n">reply_to_message_id</span><span class="p">),</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-295"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-295" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-295"></a>                <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">"msg_type"</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">SEND_MESSAGE_TYPE</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">content</span><span class="p">},</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-296"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-296" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-296"></a>            <span class="p">)</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-297"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-297" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-297"></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-298"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-298" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-298"></a>            <span class="k">assert</span> <span class="n">receive_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>  <span class="c1"># guaranteed by the receive_id / reply_to_message_id XOR check above</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-299"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-299" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-299"></a>            <span class="n">rid_type</span> <span class="o">=</span> <span class="n">receive_id_type</span> <span class="ow">or</span> <span class="n">infer_receive_id_type</span><span class="p">(</span><span class="n">receive_id</span><span class="p">)</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-300"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-300" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-300"></a>            <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-301"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-301" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-301"></a>                <span class="s2">"POST"</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-302"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-302" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-302"></a>                <span class="n">spec</span><span class="o">.</span><span class="n">SEND_MESSAGE_PATH</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-303"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-303" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-303"></a>                <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">"receive_id_type"</span><span class="p">:</span> <span class="n">rid_type</span><span class="p">},</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-304"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-304" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-304"></a>                <span class="n">json</span><span class="o">=</span><span class="p">{</span><span class="s2">"receive_id"</span><span class="p">:</span> <span class="n">receive_id</span><span class="p">,</span> <span class="s2">"msg_type"</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">SEND_MESSAGE_TYPE</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">content</span><span class="p">},</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-305"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-305" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-305"></a>            <span class="p">)</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-306"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-306" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-306"></a>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-307"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-307" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-307"></a>        <span class="c1"># 3) Stream cumulative text with one mandatory final flush and settings close.</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-308"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-308" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-308"></a>        <span class="n">flusher</span> <span class="o">=</span> <span class="n">_Flusher</span><span class="p">(</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-309"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-309" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-309"></a>            <span class="n">client</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-310"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-310" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-310"></a>            <span class="n">card_id</span><span class="o">=</span><span class="n">card_id</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-311"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-311" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-311"></a>            <span class="n">element_id</span><span class="o">=</span><span class="n">element_id</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-312"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-312" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-312"></a>            <span class="n">counter</span><span class="o">=</span><span class="n">counter</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-313"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-313" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-313"></a>            <span class="n">debounce_s</span><span class="o">=</span><span class="n">debounce_s</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-314"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-314" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-314"></a>            <span class="n">now</span><span class="o">=</span><span class="n">_now</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-315"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-315" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-315"></a>            <span class="n">new_uuid</span><span class="o">=</span><span class="n">_new_uuid</span><span class="p">,</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-316"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-316" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-316"></a>        <span class="p">)</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-317"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-317" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-317"></a>        <span class="k">async</span> <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-318"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-318" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-318"></a>            <span class="n">accumulated</span> <span class="o">+=</span> <span class="n">tok</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-319"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-319" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-319"></a>            <span class="k">await</span> <span class="n">flusher</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">accumulated</span><span class="p">)</span>  <span class="c1"># debounced; may skip</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-320"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-320" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-320"></a>    <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-321"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-321" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-321"></a>        <span class="c1"># Preserve the original stream/delivery error or cancellation during cleanup.</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-322"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-322" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-322"></a>        <span class="k">with</span> <span class="n">suppress</span><span class="p">(</span><span class="ne">Exception</span><span class="p">,</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">):</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-323"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-323" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-323"></a>            <span class="k">await</span> <span class="n">cleanup</span><span class="p">()</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-324"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-324" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-324"></a>        <span class="k">raise</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-325"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-325" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-325"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-326"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-326" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-326"></a>        <span class="k">await</span> <span class="n">cleanup</span><span class="p">()</span>
+</span><span id="feishu.streaming.cardkit.stream_card--source--__span-0-327"><a id="feishu.streaming.cardkit.stream_card--source--__codelineno-0-327" name="feishu.streaming.cardkit.stream_card--source--__codelineno-0-327"></a>        <span class="k">return</span> <span class="n">card_id</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3849,7 +3935,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年10月1日 15:29:13 UTC">2026-10-01 15:29:13</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_datetime" title="2026年11月3日 16:40:55 UTC">2026-11-03 16:40:55</span>
   </span>
 
     
@@ -4056,10 +4142,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.code.select", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="../../javascripts/mathjax.js"></script>
       
