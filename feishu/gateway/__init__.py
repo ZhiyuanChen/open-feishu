@@ -28,6 +28,7 @@ from .notifications import (
     InMemoryEventMessageStore,
     InteractiveCardDelivery,
     JsonFileEventMessageStore,
+    SqliteEventMessageStore,
     deterministic_uuid,
     upsert_interactive_card,
 )
@@ -39,6 +40,7 @@ __all__ = [
     "InMemoryEventMessageStore",
     "InteractiveCardDelivery",
     "JsonFileEventMessageStore",
+    "SqliteEventMessageStore",
     "create_gateway",
     "deterministic_uuid",
     "upsert_interactive_card",

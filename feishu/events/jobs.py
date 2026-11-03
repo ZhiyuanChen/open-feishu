@@ -25,6 +25,9 @@ import contextvars
 import copy
 import json
 import time
+import uuid
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -64,6 +67,8 @@ class EventJob:
     lease_until: float | None = None
     side_effect_started: bool = False
     error_type: str | None = None
+    lease_token: str | None = None
+    private_message: bool = False
 
 
 class EventJobStoreError(RuntimeError):
@@ -83,8 +88,19 @@ class EventJobContext:
     event_id: str
     worker_id: str
     side_effect_started: bool = False
+    lease_token: str | None = None
+    partition_key: str | None = None
+    interruptible: bool = False
+    cancellation: asyncio.Event | None = None
+    clock: Callable[[], float] = time.time
 
     async def mark_side_effect_started(self) -> None:
+        if self.lease_token:
+            await self.store.mark_fenced_started(  # type: ignore[attr-defined]
+                self.job_id, self.worker_id, self.lease_token, now=self.clock()
+            )
+            self.side_effect_started = True
+            return
         if self.side_effect_started:
             return
         await self.store.mark_side_effect_started(self.job_id, self.worker_id)
@@ -106,6 +122,52 @@ async def mark_current_event_side_effect_started() -> None:
     context = current_event_job()
     if context is not None:
         await context.mark_side_effect_started()
+
+
+class EventSuperseded(BaseException):
+    """A newer direct message superseded this event at a safe checkpoint.
+
+    This is deliberately separate from CancelledError: Python 3.10 discards
+    CancelledError subclasses when their task is awaited by another task.
+    """
+
+
+@asynccontextmanager
+async def current_event_effect() -> AsyncIterator[None]:
+    """Persist the lifecycle of one external effect for a protected event."""
+    context = current_event_job()
+    if context is None or not context.lease_token:
+        yield
+        return
+    await context.store.begin_effect(  # type: ignore[attr-defined]
+        context.job_id, context.worker_id, context.lease_token, now=context.clock()
+    )
+    context.side_effect_started = True
+    try:
+        yield
+    except BaseException:
+        await asyncio.shield(
+            context.store.end_effect(  # type: ignore[attr-defined]
+                context.job_id, context.worker_id, context.lease_token, uncertain=True, now=context.clock()
+            )
+        )
+        raise
+    else:
+        await context.store.end_effect(  # type: ignore[attr-defined]
+            context.job_id, context.worker_id, context.lease_token, uncertain=False, now=context.clock()
+        )
+
+
+def event_checkpoint() -> None:
+    """Stop an interruptible turn only between completed operations."""
+    context = current_event_job()
+    if (
+        context is not None
+        and context.interruptible
+        and context.cancellation is not None
+        and context.cancellation.is_set()
+    ):
+        raise EventSuperseded()
 
 
 @runtime_checkable
@@ -233,10 +295,8 @@ class InMemoryEventJobStore:
             for job in self._jobs.values():
                 if job.status is EventJobStatus.COMPLETED:
                     continue
-                current_first = first_unresolved.get(job.partition_key)
-                # Dict iteration retains receipt order when timestamps tie.
-                if current_first is None or job.created_at < current_first.created_at:
-                    first_unresolved[job.partition_key] = job
+                # Insertion order remains stable even when the wall clock moves backwards.
+                first_unresolved.setdefault(job.partition_key, job)
             candidates = [
                 job
                 for job in self._jobs.values()
@@ -246,7 +306,7 @@ class InMemoryEventJobStore:
             ]
             if not candidates:
                 return None
-            job = min(candidates, key=lambda item: item.created_at)
+            job = candidates[0]
             job.status = EventJobStatus.RUNNING
             job.attempt += 1
             job.worker_id = worker_id
@@ -340,9 +400,7 @@ class InMemoryEventJobStore:
             for job in self._jobs.values():
                 if job.status is EventJobStatus.COMPLETED:
                     continue
-                current_first = first_unresolved.get(job.partition_key)
-                if current_first is None or job.created_at < current_first.created_at:
-                    first_unresolved[job.partition_key] = job
+                first_unresolved.setdefault(job.partition_key, job)
             times = []
             for job in first_unresolved.values():
                 if job.status in (EventJobStatus.QUEUED, EventJobStatus.RETRY_WAIT):
@@ -384,7 +442,12 @@ class InMemoryEventJobStore:
 
 
 class SqliteEventJobStore:
-    """SQLite-backed durable event inbox for resident runtimes."""
+    """SQLite-backed durable event inbox for resident runtimes.
+
+    Receipt ordering is backfilled when opening a legacy database. Stop all
+    older writers and workers before upgrading; mixed versions cannot preserve
+    receipt ordering and older writers do not populate the ordering table.
+    """
 
     def __init__(
         self,
@@ -392,7 +455,7 @@ class SqliteEventJobStore:
         *,
         max_attempts: int = 5,
         completed_ttl_seconds: int = _COMPLETED_TTL_SECONDS,
-        unknown_ttl_seconds: int = _UNKNOWN_TTL_SECONDS,
+        unknown_ttl_seconds: int | None = _UNKNOWN_TTL_SECONDS,
         connection: Any | None = None,
     ) -> None:
         if max_attempts < 1:
@@ -414,7 +477,17 @@ class SqliteEventJobStore:
             "CREATE INDEX IF NOT EXISTS event_jobs_claim "
             "ON event_jobs(status, available_at, created_at, partition_key)"
         )
+        self._db.execute(
+            "CREATE TABLE IF NOT EXISTS event_job_order ("
+            "sequence INTEGER PRIMARY KEY, event_id TEXT NOT NULL UNIQUE)"
+        )
+        self._db.execute(
+            "CREATE TABLE IF NOT EXISTS event_job_control ("
+            "event_id TEXT PRIMARY KEY, private_message INTEGER NOT NULL DEFAULT 0, "
+            "lease_token TEXT, inflight INTEGER NOT NULL DEFAULT 0, uncertain INTEGER NOT NULL DEFAULT 0)"
+        )
         self._db.commit()
+        run_transaction(self._db, self._sync_receipt_order)
 
     async def enqueue(
         self,
@@ -423,19 +496,178 @@ class SqliteEventJobStore:
         *,
         partition_key: str,
         now: float | None = None,
+        private_message: bool = False,
     ) -> bool:
         current = time.time() if now is None else now
-        encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+        if private_message and self._unknown_ttl is not None:
+            raise ValueError("private interruption requires UNKNOWN records without automatic expiry")
         async with self._lock:
-            with self._db:
-                self._purge(current)
+            return run_transaction(
+                self._db,
+                lambda: self._enqueue_in_transaction(
+                    event_id, payload, partition_key=partition_key, now=current, private_message=private_message
+                ),
+            )
+
+    async def should_interrupt(self, job_id: str, worker_id: str, lease_token: str, *, now: float) -> bool:
+        """Check the first later work item without skipping a callback."""
+        async with self._lock:
+            row = self._db.execute(
+                "SELECT j.partition_key,o.sequence,c.private_message FROM event_jobs j "
+                "JOIN event_job_order o ON o.event_id=j.event_id "
+                "JOIN event_job_control c ON c.event_id=j.event_id "
+                "WHERE j.event_id=? AND j.status=? AND j.worker_id=? AND j.lease_until>? AND c.lease_token=?",
+                (job_id, EventJobStatus.RUNNING.value, worker_id, now, lease_token),
+            ).fetchone()
+            if row is None:
+                raise EventJobLeaseError("event lease no longer owned")
+            if not row[2]:
+                return False
+            successor = self._db.execute(
+                "SELECT c.private_message FROM event_jobs j JOIN event_job_order o ON o.event_id=j.event_id "
+                "LEFT JOIN event_job_control c ON c.event_id=j.event_id "
+                "WHERE j.partition_key=? AND o.sequence>? AND j.status!=? ORDER BY o.sequence LIMIT 1",
+                (row[0], row[1], EventJobStatus.COMPLETED.value),
+            ).fetchone()
+            return bool(successor and successor[0])
+
+    async def validate_lease(self, job_id: str, worker_id: str, lease_token: str, *, now: float) -> None:
+        async with self._lock:
+            row = self._db.execute(
+                "SELECT 1 FROM event_jobs j JOIN event_job_control c ON c.event_id=j.event_id "
+                "WHERE j.event_id=? AND j.status=? AND j.worker_id=? AND j.lease_until>? AND c.lease_token=?",
+                (job_id, EventJobStatus.RUNNING.value, worker_id, now, lease_token),
+            ).fetchone()
+            if row is None:
+                raise EventJobLeaseError("event lease no longer owned")
+
+    async def begin_effect(self, job_id: str, worker_id: str, lease_token: str, *, now: float) -> None:
+        async with self._lock:
+
+            def begin() -> None:
                 cursor = self._db.execute(
-                    "INSERT INTO event_jobs "
-                    "(event_id, payload, partition_key, status, attempt, created_at, updated_at, available_at) "
-                    "VALUES (?, ?, ?, ?, 0, ?, ?, ?) ON CONFLICT(event_id) DO NOTHING",
-                    (event_id, encoded, partition_key, EventJobStatus.QUEUED.value, current, current, current),
+                    "UPDATE event_job_control SET inflight=inflight+1 WHERE event_id=? AND lease_token=? "
+                    "AND EXISTS (SELECT 1 FROM event_jobs WHERE event_id=? AND status=? "
+                    "AND worker_id=? AND lease_until>?)",
+                    (job_id, lease_token, job_id, EventJobStatus.RUNNING.value, worker_id, now),
                 )
-                return cursor.rowcount == 1
+                self._require_owner(cursor.rowcount, job_id, worker_id)
+                self._db.execute("UPDATE event_jobs SET side_effect_started=1 WHERE event_id=?", (job_id,))
+
+            run_transaction(self._db, begin)
+
+    async def mark_fenced_started(self, job_id: str, worker_id: str, lease_token: str, *, now: float) -> None:
+        async with self._lock:
+            cursor = self._db.execute(
+                "UPDATE event_jobs SET side_effect_started=1 WHERE event_id=? AND status=? AND worker_id=? "
+                "AND lease_until>? AND EXISTS (SELECT 1 FROM event_job_control WHERE event_id=? AND lease_token=?)",
+                (job_id, EventJobStatus.RUNNING.value, worker_id, now, job_id, lease_token),
+            )
+            self._db.commit()
+            self._require_owner(cursor.rowcount, job_id, worker_id)
+
+    async def end_effect(self, job_id: str, worker_id: str, lease_token: str, *, uncertain: bool, now: float) -> None:
+        async with self._lock:
+            cursor = self._db.execute(
+                "UPDATE event_job_control SET inflight=inflight-1,uncertain=MAX(uncertain,?) "
+                "WHERE event_id=? AND lease_token=? AND inflight>0 AND EXISTS "
+                "(SELECT 1 FROM event_jobs WHERE event_id=? AND status=? AND worker_id=? AND lease_until>?)",
+                (int(uncertain), job_id, lease_token, job_id, EventJobStatus.RUNNING.value, worker_id, now),
+            )
+            self._db.commit()
+            self._require_owner(cursor.rowcount, job_id, worker_id)
+
+    async def renew_fenced(
+        self, job_id: str, worker_id: str, lease_token: str, *, now: float, lease_seconds: float
+    ) -> None:
+        async with self._lock:
+            cursor = self._db.execute(
+                "UPDATE event_jobs SET lease_until=?,updated_at=? WHERE event_id=? AND status=? AND worker_id=? "
+                "AND lease_until>? AND EXISTS (SELECT 1 FROM event_job_control WHERE event_id=? AND lease_token=?)",
+                (now + lease_seconds, now, job_id, EventJobStatus.RUNNING.value, worker_id, now, job_id, lease_token),
+            )
+            self._db.commit()
+            self._require_owner(cursor.rowcount, job_id, worker_id)
+
+    async def finish_fenced(
+        self, job_id: str, worker_id: str, lease_token: str, *, now: float, superseded: bool = False
+    ) -> None:
+        async with self._lock:
+
+            def finish() -> None:
+                row = self._db.execute(
+                    "SELECT c.inflight,c.uncertain FROM event_jobs j JOIN event_job_control c ON c.event_id=j.event_id "
+                    "WHERE j.event_id=? AND j.status=? AND j.worker_id=? AND j.lease_until>? AND c.lease_token=?",
+                    (job_id, EventJobStatus.RUNNING.value, worker_id, now, lease_token),
+                ).fetchone()
+                if row is None:
+                    raise EventJobLeaseError("event lease no longer owned")
+                uncertain = bool(row[0] or row[1])
+                self._db.execute(
+                    "UPDATE event_jobs SET status=?,worker_id=NULL,lease_until=NULL,updated_at=?,error_type=? "
+                    "WHERE event_id=?",
+                    (
+                        EventJobStatus.UNKNOWN.value if uncertain else EventJobStatus.COMPLETED.value,
+                        now,
+                        "UncertainEffect" if uncertain else "Superseded" if superseded else None,
+                        job_id,
+                    ),
+                )
+
+            run_transaction(self._db, finish)
+
+    async def fail_fenced(
+        self, job_id: str, worker_id: str, lease_token: str, *, now: float, available_at: float, error_type: str
+    ) -> None:
+        async with self._lock:
+
+            def fail() -> None:
+                row = self._db.execute(
+                    "SELECT j.side_effect_started,j.attempt,c.inflight,c.uncertain FROM event_jobs j "
+                    "JOIN event_job_control c ON c.event_id=j.event_id WHERE j.event_id=? AND j.status=? "
+                    "AND j.worker_id=? AND j.lease_until>? AND c.lease_token=?",
+                    (job_id, EventJobStatus.RUNNING.value, worker_id, now, lease_token),
+                ).fetchone()
+                if row is None:
+                    raise EventJobLeaseError("event lease no longer owned")
+                state = (
+                    EventJobStatus.UNKNOWN
+                    if row[0] or row[2] or row[3]
+                    else EventJobStatus.RETRY_WAIT if row[1] < self._max_attempts else EventJobStatus.FAILED
+                )
+                self._db.execute(
+                    "UPDATE event_jobs SET status=?,worker_id=NULL,lease_until=NULL,updated_at=?,available_at=?, "
+                    "error_type=? WHERE event_id=?",
+                    (state.value, now, available_at, error_type, job_id),
+                )
+
+            run_transaction(self._db, fail)
+
+    def _enqueue_in_transaction(
+        self,
+        event_id: str,
+        payload: dict[str, Any],
+        *,
+        partition_key: str,
+        now: float,
+        private_message: bool = False,
+    ) -> bool:
+        """Insert into this store's already-open SQLite transaction."""
+        encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+        self._purge(now)
+        cursor = self._db.execute(
+            "INSERT INTO event_jobs "
+            "(event_id, payload, partition_key, status, attempt, created_at, updated_at, available_at) "
+            "VALUES (?, ?, ?, ?, 0, ?, ?, ?) ON CONFLICT(event_id) DO NOTHING",
+            (event_id, encoded, partition_key, EventJobStatus.QUEUED.value, now, now, now),
+        )
+        if cursor.rowcount != 1:
+            return False
+        self._db.execute("INSERT INTO event_job_order(event_id) VALUES (?)", (event_id,))
+        self._db.execute(
+            "INSERT INTO event_job_control(event_id,private_message) VALUES (?,?)", (event_id, int(private_message))
+        )
+        return True
 
     async def claim_next(
         self,
@@ -459,13 +691,13 @@ class SqliteEventJobStore:
                 self._purge(current)
                 self._recover_expired(current)
                 row = self._db.execute(
-                    "SELECT j.event_id FROM event_jobs AS j "
+                    "SELECT j.event_id FROM event_jobs AS j JOIN event_job_order AS seq ON seq.event_id=j.event_id "
                     "WHERE j.status IN (?, ?) AND j.available_at <= ? "
                     "AND NOT EXISTS (SELECT 1 FROM event_jobs AS prior "
+                    "JOIN event_job_order AS prior_seq ON prior_seq.event_id=prior.event_id "
                     "WHERE prior.partition_key = j.partition_key AND prior.status != ? "
-                    "AND (prior.created_at < j.created_at OR "
-                    "(prior.created_at = j.created_at AND prior.rowid < j.rowid))) "
-                    "ORDER BY j.created_at, j.rowid LIMIT 1",
+                    "AND prior_seq.sequence < seq.sequence) "
+                    "ORDER BY seq.sequence LIMIT 1",
                     (
                         EventJobStatus.QUEUED.value,
                         EventJobStatus.RETRY_WAIT.value,
@@ -491,6 +723,11 @@ class SqliteEventJobStore:
                 )
                 if cursor.rowcount != 1:
                     return None
+                self._db.execute(
+                    "INSERT INTO event_job_control(event_id,lease_token) VALUES (?,?) "
+                    "ON CONFLICT(event_id) DO UPDATE SET lease_token=excluded.lease_token,inflight=0,uncertain=0",
+                    (event_id, uuid.uuid4().hex),
+                )
                 return event_id
 
             claimed_event_id = run_transaction(self._db, claim)
@@ -596,10 +833,12 @@ class SqliteEventJobStore:
             row = self._db.execute(
                 "SELECT MIN(CASE WHEN j.status IN (?, ?) THEN j.available_at "
                 "WHEN j.status = ? THEN j.lease_until END) FROM event_jobs AS j "
+                "JOIN event_job_order AS seq ON seq.event_id=j.event_id "
                 "WHERE j.status IN (?, ?, ?) AND NOT EXISTS ("
-                "SELECT 1 FROM event_jobs AS prior WHERE prior.partition_key = j.partition_key "
-                "AND prior.status != ? AND (prior.created_at < j.created_at "
-                "OR (prior.created_at = j.created_at AND prior.rowid < j.rowid)))",
+                "SELECT 1 FROM event_jobs AS prior "
+                "JOIN event_job_order AS prior_seq ON prior_seq.event_id=prior.event_id "
+                "WHERE prior.partition_key = j.partition_key AND prior.status != ? "
+                "AND prior_seq.sequence < seq.sequence)",
                 (
                     EventJobStatus.QUEUED.value,
                     EventJobStatus.RETRY_WAIT.value,
@@ -648,22 +887,53 @@ class SqliteEventJobStore:
 
     def _purge(self, now: float) -> None:
         self._db.execute(
-            "DELETE FROM event_jobs WHERE (status = ? AND updated_at + ? <= ?) "
-            "OR (status = ? AND updated_at + ? <= ?)",
+            "DELETE FROM event_job_control WHERE event_id IN (SELECT event_id FROM event_jobs "
+            "WHERE (status=? AND updated_at+?<=?) OR (status=? AND ? IS NOT NULL AND updated_at+?<=?))",
             (
                 EventJobStatus.COMPLETED.value,
-                _COMPLETED_TTL_SECONDS,
+                self._completed_ttl,
                 now,
                 EventJobStatus.UNKNOWN.value,
-                _UNKNOWN_TTL_SECONDS,
+                self._unknown_ttl,
+                self._unknown_ttl,
                 now,
             ),
+        )
+        self._db.execute(
+            "DELETE FROM event_job_order WHERE event_id IN "
+            "(SELECT event_id FROM event_jobs WHERE status = ? AND updated_at + ? <= ?)",
+            (EventJobStatus.COMPLETED.value, self._completed_ttl, now),
+        )
+        self._db.execute(
+            "DELETE FROM event_jobs WHERE status = ? AND updated_at + ? <= ?",
+            (EventJobStatus.COMPLETED.value, self._completed_ttl, now),
+        )
+        if self._unknown_ttl is not None:
+            self._db.execute(
+                "DELETE FROM event_job_order WHERE event_id IN "
+                "(SELECT event_id FROM event_jobs WHERE status = ? AND updated_at + ? <= ?)",
+                (EventJobStatus.UNKNOWN.value, self._unknown_ttl, now),
+            )
+            self._db.execute(
+                "DELETE FROM event_jobs WHERE status = ? AND updated_at + ? <= ?",
+                (EventJobStatus.UNKNOWN.value, self._unknown_ttl, now),
+            )
+
+    def _sync_receipt_order(self) -> None:
+        # Backfill a quiesced legacy database in original rowid order. The
+        # explicit INTEGER PRIMARY KEY survives VACUUM.
+        self._db.execute(
+            "INSERT INTO event_job_order(event_id) "
+            "SELECT j.event_id FROM event_jobs AS j LEFT JOIN event_job_order AS seq ON seq.event_id=j.event_id "
+            "WHERE seq.event_id IS NULL ORDER BY j.rowid"
         )
 
     def _get_locked(self, job_id: str) -> EventJob | None:
         row = self._db.execute(
-            "SELECT event_id, payload, partition_key, status, attempt, created_at, updated_at, available_at, "
-            "worker_id, lease_until, side_effect_started, error_type FROM event_jobs WHERE event_id = ?",
+            "SELECT j.event_id,j.payload,j.partition_key,j.status,j.attempt,j.created_at,j.updated_at,"
+            "j.available_at,j.worker_id,j.lease_until,j.side_effect_started,j.error_type, "
+            "c.lease_token,COALESCE(c.private_message,0) FROM event_jobs j "
+            "LEFT JOIN event_job_control c ON c.event_id=j.event_id WHERE j.event_id = ?",
             (job_id,),
         ).fetchone()
         if row is None:
@@ -682,6 +952,8 @@ class SqliteEventJobStore:
             lease_until=row[9],
             side_effect_started=bool(row[10]),
             error_type=row[11],
+            lease_token=row[12],
+            private_message=bool(row[13]),
         )
 
     @staticmethod
@@ -709,4 +981,6 @@ def _copy_job(job: EventJob) -> EventJob:
         lease_until=job.lease_until,
         side_effect_started=job.side_effect_started,
         error_type=job.error_type,
+        lease_token=job.lease_token,
+        private_message=job.private_message,
     )

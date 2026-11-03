@@ -77,6 +77,7 @@ def reauth_on_permission_error(tool: Tool, scopes: Sequence[str]) -> Tool:
         handler=handler,
         requires_approval=tool.requires_approval,
         auth_scopes=tuple(scopes),
+        scheduled_effect=tool.scheduled_effect,
     )
 
 

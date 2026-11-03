@@ -98,6 +98,7 @@ for path in sorted(src.rglob("*.py"), key=depth_and_name_key):
         mkdocs_gen_files.set_edit_path(full_doc_path, path.relative_to(root))
 
 nav[("guides", "agent")] = "guides/agent.md"
+nav[("guides", "external-events")] = "guides/external-events.md"
 nav[("about", "index")] = "about/index.md"
 nav[("about", "license")] = "about/license.md"
 nav[("about", "privacy")] = "about/privacy.md"

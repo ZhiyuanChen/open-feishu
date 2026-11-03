@@ -218,3 +218,19 @@ def test_json_write_failure_preserves_state_and_removes_temporary_file(tmp_path,
 
     assert json.loads(path.read_text()) == {"initial": "om_initial"}
     assert list(tmp_path.iterdir()) == [path]
+
+
+def test_sqlite_store_reopens(tmp_path):
+    from feishu.gateway.notifications import SqliteEventMessageStore
+
+    path = tmp_path / "messages.db"
+    first = SqliteEventMessageStore(path)
+    second = SqliteEventMessageStore(path)
+    first.set("incident-1", "om_1")
+    assert second.get("incident-1") == "om_1"
+    second.set("incident-1", "om_2")
+    first.close()
+    second.close()
+    reopened = SqliteEventMessageStore(path)
+    assert reopened.get("incident-1") == "om_2"
+    reopened.close()

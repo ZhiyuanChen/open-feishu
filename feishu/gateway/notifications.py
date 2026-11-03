@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Any, Protocol
 from weakref import WeakValueDictionary
 
+from .._sqlite import connect
 from .._store_io import invoke_store
 from ..errors import FeishuError
 
@@ -70,12 +71,74 @@ class InMemoryEventMessageStore:
 
     def __init__(self) -> None:
         self._messages: dict[str, str] = {}
+        self._revisions: dict[str, tuple[int, str]] = {}
 
     def get(self, event_id: str) -> str | None:
         return self._messages.get(event_id)
 
     def set(self, event_id: str, message_id: str) -> None:
         self._messages[event_id] = message_id
+
+    def get_revision(self, event_id: str) -> tuple[int, str] | None:
+        return self._revisions.get(event_id)
+
+    def set_revision(self, event_id: str, revision: int, digest: str) -> None:
+        self._revisions[event_id] = (revision, digest)
+
+
+class SqliteEventMessageStore:
+    r"""SQLite card mappings shared by processes using the same database.
+
+    Serializing the overall get/send/set delivery remains the caller's
+    responsibility. The durable external event runner partitions by source.
+    """
+
+    def __init__(self, path: str | Path) -> None:
+        self._db = connect(path)
+        self._lock = threading.RLock()
+        self._db.execute(
+            "CREATE TABLE IF NOT EXISTS notification_messages " "(event_id TEXT PRIMARY KEY, message_id TEXT NOT NULL)"
+        )
+        self._db.execute(
+            "CREATE TABLE IF NOT EXISTS notification_revisions "
+            "(event_id TEXT PRIMARY KEY, revision INTEGER NOT NULL, digest TEXT NOT NULL)"
+        )
+        self._db.commit()
+
+    def get(self, event_id: str) -> str | None:
+        with self._lock:
+            row = self._db.execute(
+                "SELECT message_id FROM notification_messages WHERE event_id = ?", (event_id,)
+            ).fetchone()
+            return str(row[0]) if row else None
+
+    def set(self, event_id: str, message_id: str) -> None:
+        with self._lock, self._db:
+            self._db.execute(
+                "INSERT INTO notification_messages (event_id, message_id) VALUES (?, ?) "
+                "ON CONFLICT(event_id) DO UPDATE SET message_id = excluded.message_id",
+                (event_id, message_id),
+            )
+
+    def get_revision(self, event_id: str) -> tuple[int, str] | None:
+        with self._lock:
+            row = self._db.execute(
+                "SELECT revision, digest FROM notification_revisions WHERE event_id = ?", (event_id,)
+            ).fetchone()
+            return (int(row[0]), str(row[1])) if row else None
+
+    def set_revision(self, event_id: str, revision: int, digest: str) -> None:
+        with self._lock, self._db:
+            self._db.execute(
+                "INSERT INTO notification_revisions (event_id, revision, digest) VALUES (?, ?, ?) "
+                "ON CONFLICT(event_id) DO UPDATE SET revision=excluded.revision, digest=excluded.digest "
+                "WHERE excluded.revision > notification_revisions.revision",
+                (event_id, revision, digest),
+            )
+
+    def close(self) -> None:
+        with self._lock:
+            self._db.close()
 
 
 class JsonFileEventMessageStore:

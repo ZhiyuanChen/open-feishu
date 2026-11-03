@@ -49,7 +49,15 @@ from .._sqlite import run_transaction
 from .integrity import payload_summary
 from .llm import Message, ReasoningPart, TextPart, ToolResultPart, ToolUsePart
 from .memory import MemoryIdentityConflict, MemoryRecord, MemoryScope
-from .session import ClaimResult, PendingApproval, PendingAuthorization
+from .session import (
+    SCHEDULED_APPROVAL_TTL_SECONDS,
+    SCHEDULED_AUTHORIZATION_TTL_SECONDS,
+    ClaimResult,
+    PendingApproval,
+    PendingAuthorization,
+    _scheduled_approval,
+    _scheduled_authorization,
+)
 
 T = TypeVar("T")
 
@@ -529,7 +537,18 @@ class SqlitePendingApprovalStore:
                 if row is None:
                     return ClaimResult.MISSING
                 state, stored_sha, created_at, data = row
-                if self._is_expired(state, created_at):
+                scheduled = _scheduled_approval(approval_from_dict(json.loads(data)))
+                if scheduled and state == "expired":
+                    return ClaimResult.EXPIRED
+                if (
+                    scheduled
+                    and state == "awaiting_confirmation"
+                    and created_at is not None
+                    and _now() >= created_at + SCHEDULED_APPROVAL_TTL_SECONDS
+                ):
+                    self._db.execute("UPDATE approvals SET state = 'expired' WHERE approval_id = ?", (approval_id,))
+                    return ClaimResult.EXPIRED
+                if self._is_expired(state, created_at, scheduled=scheduled):
                     self._db.execute("DELETE FROM approvals WHERE approval_id = ?", (approval_id,))
                     return ClaimResult.EXPIRED
                 # Fail closed on tampering: when EITHER side has a payload hash, both must match. A stored hash with a
@@ -550,6 +569,34 @@ class SqlitePendingApprovalStore:
                 return ClaimResult.CLAIMED if cursor.rowcount == 1 else ClaimResult.ALREADY_CLAIMED
 
             return run_transaction(self._db, claim_approval)
+
+    async def expire_if_pending(self, approval_id: str, *, now: float) -> str:
+        """Atomically expire a scheduled confirmation and retain its outcome for recovery."""
+        async with self._lock:
+
+            def expire() -> str:
+                row = self._db.execute(
+                    "SELECT state, created_at, data FROM approvals WHERE approval_id = ?", (approval_id,)
+                ).fetchone()
+                if row is None:
+                    return "missing"
+                state, created_at, data = row
+                if not _scheduled_approval(approval_from_dict(json.loads(data))):
+                    return "missing"
+                if state == "expired":
+                    return "expired"
+                if state == "execution_unknown":
+                    return "unknown"
+                if state == "executing":
+                    return "executing"
+                if state != "awaiting_confirmation" or created_at is None:
+                    return "unknown"
+                if now < created_at + SCHEDULED_APPROVAL_TTL_SECONDS:
+                    return "not_due"
+                self._db.execute("UPDATE approvals SET state = 'expired' WHERE approval_id = ?", (approval_id,))
+                return "expired"
+
+            return run_transaction(self._db, expire)
 
     async def complete(self, approval_id: str, *, outcome: str) -> None:
         r"""标记最终处置：成功/拒绝/取消即移除，结果未知则冻结为 `execution_unknown`。"""
@@ -597,14 +644,23 @@ class SqlitePendingApprovalStore:
         async with self._lock:
             # `executing` is retained like `execution_unknown` (long TTL): a stale executing means a process died
             # mid-side-effect, and its unknown outcome must not be purged at the short pending TTL.
-            cursor = self._db.execute(
-                "DELETE FROM approvals WHERE (state IN ('execution_unknown', 'executing') AND created_at < ?) "
-                "OR (state NOT IN ('execution_unknown', 'executing') AND created_at < ?)",
-                (now - self._frozen_ttl, now - self._ttl),
-            )
-            deleted = cursor.rowcount
-            self._db.commit()
-            return deleted
+            def purge() -> int:
+                rows = self._db.execute(
+                    "SELECT approval_id, state, created_at, data FROM approvals WHERE created_at < ?",
+                    (now - min(self._ttl, self._frozen_ttl),),
+                ).fetchall()
+                expired = [
+                    row[0]
+                    for row in rows
+                    if self._is_expired(
+                        row[1], row[2], scheduled=_scheduled_approval(approval_from_dict(json.loads(row[3])))
+                    )
+                ]
+                for approval_id in expired:
+                    self._db.execute("DELETE FROM approvals WHERE approval_id = ?", (approval_id,))
+                return len(expired)
+
+            return run_transaction(self._db, purge)
 
     def _load_locked(self, approval_id: str) -> PendingApproval | None:
         row = self._db.execute(
@@ -613,21 +669,21 @@ class SqlitePendingApprovalStore:
         if row is None:
             return None
         state, created_at, data = row
-        if self._is_expired(state, created_at):
+        approval = approval_from_dict(json.loads(data))
+        if self._is_expired(state, created_at, scheduled=_scheduled_approval(approval)):
             self._db.execute("DELETE FROM approvals WHERE approval_id = ?", (approval_id,))
             self._db.commit()
             return None
-        approval = approval_from_dict(json.loads(data))
         approval.state = state
         approval.created_at = created_at
         return approval
 
-    def _is_expired(self, state: str, created_at: int | None) -> bool:
+    def _is_expired(self, state: str, created_at: int | None, *, scheduled: bool = False) -> bool:
         if created_at is None:
             return False
         # `executing` (a process that died mid-side-effect) is retained for the long frozen TTL like
         # `execution_unknown`, so its unknown outcome is not silently dropped at the short pending TTL.
-        ttl = self._frozen_ttl if state in ("execution_unknown", "executing") else self._ttl
+        ttl = self._frozen_ttl if scheduled or state in ("execution_unknown", "executing") else self._ttl
         return _now() - created_at > ttl
 
 
@@ -705,7 +761,20 @@ class SqlitePendingAuthorizationStore:
                 if row is None:
                     return ClaimResult.MISSING
                 state, created_at, data = row
-                if self._is_expired(state, created_at):
+                scheduled = _scheduled_authorization(authorization_from_dict(json.loads(data)))
+                if scheduled and state == "expired":
+                    return ClaimResult.EXPIRED
+                if (
+                    scheduled
+                    and state == "awaiting_authorization"
+                    and created_at is not None
+                    and _now() >= created_at + SCHEDULED_AUTHORIZATION_TTL_SECONDS
+                ):
+                    self._db.execute(
+                        "UPDATE authorizations SET state = 'expired' WHERE authorization_id = ?", (authorization_id,)
+                    )
+                    return ClaimResult.EXPIRED
+                if self._is_expired(state, created_at, scheduled=scheduled):
                     self._db.execute("DELETE FROM authorizations WHERE authorization_id = ?", (authorization_id,))
                     return ClaimResult.EXPIRED
                 if state != "awaiting_authorization":
@@ -718,6 +787,36 @@ class SqlitePendingAuthorizationStore:
                 return ClaimResult.CLAIMED if cursor.rowcount == 1 else ClaimResult.ALREADY_CLAIMED
 
             return run_transaction(self._db, claim_authorization)
+
+    async def expire_if_pending(self, authorization_id: str, *, now: float) -> str:
+        """Atomically expire a scheduled authorization and retain its outcome for recovery."""
+        async with self._lock:
+
+            def expire() -> str:
+                row = self._db.execute(
+                    "SELECT state, created_at, data FROM authorizations WHERE authorization_id = ?", (authorization_id,)
+                ).fetchone()
+                if row is None:
+                    return "missing"
+                state, created_at, data = row
+                if not _scheduled_authorization(authorization_from_dict(json.loads(data))):
+                    return "missing"
+                if state == "expired":
+                    return "expired"
+                if state == "execution_unknown":
+                    return "unknown"
+                if state == "executing":
+                    return "executing"
+                if state != "awaiting_authorization" or created_at is None:
+                    return "unknown"
+                if now < created_at + SCHEDULED_AUTHORIZATION_TTL_SECONDS:
+                    return "not_due"
+                self._db.execute(
+                    "UPDATE authorizations SET state = 'expired' WHERE authorization_id = ?", (authorization_id,)
+                )
+                return "expired"
+
+            return run_transaction(self._db, expire)
 
     async def complete(self, authorization_id: str, *, outcome: str) -> None:
         r"""标记最终处置：`retry` 重开，`unknown`/`frozen` 冻结，其余终态移除。"""
@@ -767,14 +866,24 @@ class SqlitePendingAuthorizationStore:
         r"""删除所有已过期的授权记录，返回删除数量。"""
         now = _now()
         async with self._lock:
-            cursor = self._db.execute(
-                "DELETE FROM authorizations WHERE (state IN ('execution_unknown', 'executing') AND created_at < ?) "
-                "OR (state NOT IN ('execution_unknown', 'executing') AND created_at < ?)",
-                (now - self._frozen_ttl, now - self._ttl),
-            )
-            deleted = cursor.rowcount
-            self._db.commit()
-            return deleted
+
+            def purge() -> int:
+                rows = self._db.execute(
+                    "SELECT authorization_id, state, created_at, data FROM authorizations WHERE created_at < ?",
+                    (now - min(self._ttl, self._frozen_ttl),),
+                ).fetchall()
+                expired = [
+                    row[0]
+                    for row in rows
+                    if self._is_expired(
+                        row[1], row[2], scheduled=_scheduled_authorization(authorization_from_dict(json.loads(row[3])))
+                    )
+                ]
+                for authorization_id in expired:
+                    self._db.execute("DELETE FROM authorizations WHERE authorization_id = ?", (authorization_id,))
+                return len(expired)
+
+            return run_transaction(self._db, purge)
 
     def _load_locked(self, authorization_id: str) -> PendingAuthorization | None:
         row = self._db.execute(
@@ -788,10 +897,10 @@ class SqlitePendingAuthorizationStore:
         authorization.created_at = created_at
         return authorization
 
-    def _is_expired(self, state: str, created_at: int | None) -> bool:
+    def _is_expired(self, state: str, created_at: int | None, *, scheduled: bool = False) -> bool:
         if created_at is None:
             return False
-        ttl = self._frozen_ttl if state in ("execution_unknown", "executing") else self._ttl
+        ttl = self._frozen_ttl if scheduled or state in ("execution_unknown", "executing") else self._ttl
         return _now() - created_at > ttl
 
 

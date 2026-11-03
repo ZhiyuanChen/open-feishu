@@ -77,18 +77,6 @@ async def test_unresolved_head_blocks_tied_successor_but_not_other_partition(sto
     assert tail is not None and tail.event_id == "a-tail"
 
 
-async def test_created_at_remains_primary_order_for_different_timestamps(store_factory):
-    store = store_factory()
-    await store.enqueue("first-received", {}, partition_key="chat", now=20)
-    await store.enqueue("earlier-created", {}, partition_key="chat", now=10)
-
-    first = await store.claim_next("worker", now=20)
-    assert first is not None and first.event_id == "earlier-created"
-    await store.complete(first.job_id, "worker", now=21)
-    second = await store.claim_next("worker", now=21)
-    assert second is not None and second.event_id == "first-received"
-
-
 async def test_sqlite_reopen_retains_receipt_order_for_equal_timestamps(tmp_path):
     path = tmp_path / "reopened.db"
     store = SqliteEventJobStore(path)

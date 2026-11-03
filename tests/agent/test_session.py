@@ -6,6 +6,7 @@ import pytest
 from feishu.agent.llm import Message, ReasoningPart, TextPart, ToolUsePart
 from feishu.agent.persistence import SqliteSessionStore
 from feishu.agent.session import (
+    ClaimResult,
     InMemoryPendingApprovalStore,
     InMemoryPendingAuthorizationStore,
     InMemorySessionStore,
@@ -130,6 +131,23 @@ class TestPendingApprovalStore:
     async def test_pop_unknown_is_none(self, store):
         assert await store.pop("nope") is None
 
+    async def test_scheduled_expiry(self, store):
+        import time
+
+        created = int(time.time())
+        pending = PendingApproval("ap", "scheduled:task:run", "call", "write", {}, created_at=created)
+        await store.put(pending)
+        assert await store.expire_if_pending("ap", now=created + 1799) == "not_due"
+        assert await store.expire_if_pending("ap", now=created + 1800) == "expired"
+        assert await store.expire_if_pending("ap", now=created + 1801) == "expired"
+        assert await store.claim("ap") == ClaimResult.EXPIRED
+        pending = PendingApproval("active", "scheduled:task:run", "call", "write", {}, created_at=created)
+        await store.put(pending)
+        assert await store.claim("active") == ClaimResult.CLAIMED
+        assert await store.expire_if_pending("active", now=created + 2000) == "executing"
+        await store.complete("active", outcome="unknown")
+        assert await store.expire_if_pending("active", now=created + 2000) == "unknown"
+
 
 class TestPendingAuthorizationStore:
     @pytest.fixture
@@ -160,3 +178,20 @@ class TestPendingAuthorizationStore:
         await store.put(pa)
         assert (await store.claim("az_1")).value == "claimed"
         assert (await store.claim("az_1")).value == "already_claimed"
+
+    async def test_scheduled_expiry(self, store):
+        import time
+
+        created = int(time.time())
+        pending = PendingAuthorization("az", "scheduled:task:run", "call", "write", {}, created_at=created)
+        await store.put(pending)
+        assert await store.expire_if_pending("az", now=created + 3599) == "not_due"
+        assert await store.expire_if_pending("az", now=created + 3600) == "expired"
+        assert await store.expire_if_pending("az", now=created + 3601) == "expired"
+        assert await store.claim("az") == ClaimResult.EXPIRED
+        pending = PendingAuthorization("active", "scheduled:task:run", "call", "write", {}, created_at=created)
+        await store.put(pending)
+        assert await store.claim("active") == ClaimResult.CLAIMED
+        assert await store.expire_if_pending("active", now=created + 4000) == "executing"
+        await store.complete("active", outcome="unknown")
+        assert await store.expire_if_pending("active", now=created + 4000) == "unknown"

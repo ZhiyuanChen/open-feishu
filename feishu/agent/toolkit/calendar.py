@@ -59,7 +59,7 @@ def list_calendar_events(
     读类工厂：列出用户日程，返回一个 [feishu.agent.tools.Tool][]。
 
     处理函数解析日历（缺省取主日历），把 ISO 时间经 [feishu.calendar.unix_seconds][] 转为接口所需的秒级
-    时间戳，再调用 `client.calendar.events.list(calendar_id, start_time=..., end_time=...)`。
+    时间戳，再调用 `client.calendar.events.instance_view(...)`，由飞书展开重复日程。
 
     Args:
         description: 工具描述（产品本地化文案）。
@@ -79,7 +79,7 @@ def list_calendar_events(
             "time_min": {"type": "string", "description": "ISO 8601 start of the range"},
             "time_max": {"type": "string", "description": "ISO 8601 end of the range"},
             "calendar_id": {"type": "string", "description": "calendar id; defaults to the user's primary calendar"},
-            "max_items": {"type": "integer", "description": "max events to return"},
+            "max_items": {"type": "integer", "minimum": 1, "description": "max events to return"},
         },
         "required": ["time_min", "time_max"],
         "additionalProperties": False,
@@ -91,19 +91,24 @@ def list_calendar_events(
             return needs_user_auth(auth_scopes)
         tz = await resolve_timezone(timezone)
         calendar_id = await _resolve_calendar_id(client, arguments.get("calendar_id"))
-        events = await client.calendar.events.list(
+        limit = int(arguments.get("max_items") or 20)
+        if limit < 1:
+            raise ValueError("max_items must be positive")
+        events = await client.calendar.events.instance_view(
             calendar_id,
             start_time=str(unix_seconds(arguments["time_min"], timezone=tz)),
             end_time=str(unix_seconds(arguments["time_max"], timezone=tz)),
-            max_items=int(arguments.get("max_items") or 20),
         )
-        return ToolResult(ToolOutcome.COMPLETED, content=events)
+        events = [event for event in events if not isinstance(event, dict) or event.get("status") != "cancelled"]
+        content = {"items": events[:limit], "truncated": True} if len(events) > limit else events
+        return ToolResult(ToolOutcome.COMPLETED, content=content)
 
     return Tool(
         name=name,
         description=description,
         input_schema=input_schema,
         handler=handler,
+        scheduled_effect="read",
         auth_scopes=tuple(auth_scopes),
     )
 
@@ -244,6 +249,7 @@ def query_calendar_freebusy(
         description=description,
         input_schema=input_schema,
         handler=handler,
+        scheduled_effect="read",
         auth_scopes=tuple(auth_scopes),
     )
 

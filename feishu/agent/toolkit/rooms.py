@@ -76,6 +76,7 @@ def list_meeting_room_buildings(
         description=description,
         input_schema=input_schema,
         handler=handler,
+        scheduled_effect="read",
         auth_scopes=tuple(auth_scopes),
     )
 
@@ -136,6 +137,7 @@ def list_meeting_rooms(
         description=description,
         input_schema=input_schema,
         handler=handler,
+        scheduled_effect="read",
         auth_scopes=tuple(auth_scopes),
     )
 
@@ -196,6 +198,7 @@ def query_meeting_room_freebusy(
         description=description,
         input_schema=input_schema,
         handler=handler,
+        scheduled_effect="read",
         auth_scopes=tuple(auth_scopes),
     )
 

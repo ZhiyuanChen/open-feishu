@@ -25,6 +25,21 @@ def reg():
 
 
 class TestRegister:
+    @pytest.mark.parametrize("effect", [None, "read", "write"])
+    def test_scheduled_effect(self, effect):
+        registry = ToolRegistry()
+        registry.register(
+            "tool", lambda: None, input_schema={"type": "object"}, description="d", scheduled_effect=effect
+        )
+        assert registry.get("tool").scheduled_effect == effect
+
+    def test_invalid_scheduled_effect(self):
+        registry = ToolRegistry()
+        with pytest.raises(ValueError, match="scheduled_effect"):
+            registry.register(
+                "tool", lambda: None, input_schema={"type": "object"}, description="d", scheduled_effect="invalid"
+            )
+
     def test_plain_call_returns_handler(self):
         reg = ToolRegistry()
 

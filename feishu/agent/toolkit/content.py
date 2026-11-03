@@ -217,7 +217,7 @@ def list_document_blocks(
         ]
         return ToolResult(ToolOutcome.COMPLETED, content=summary)
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(name=name, description=description, input_schema=input_schema, handler=handler, scheduled_effect="read")
 
 
 def update_document(
@@ -588,4 +588,4 @@ def read_sheet_range(
         )
         return ToolResult(ToolOutcome.COMPLETED, content=result)
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(name=name, description=description, input_schema=input_schema, handler=handler, scheduled_effect="read")

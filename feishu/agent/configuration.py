@@ -70,6 +70,7 @@ _SECTIONS = (
     "reply",
     "memory",
     "runtime",
+    "scheduling",
 )
 
 
@@ -162,7 +163,7 @@ def validate_agent_config(
     if port is not None and (isinstance(port, bool) or not isinstance(port, int) or not 1 <= port <= 65535):
         issue("server.port", "must be an integer between 1 and 65535")
 
-    for path in ("reply.stream", "memory.enabled", "time_aware_system", "model.thinking_enabled"):
+    for path in ("reply.stream", "memory.enabled", "time_aware_system", "model.thinking_enabled", "scheduling.enabled"):
         check_bool(path)
 
     for path in (
@@ -201,6 +202,7 @@ def validate_agent_config(
     ):
         check_integer(path, minimum=1)
     check_number("runtime.shutdown_timeout_seconds", minimum=0.000001)
+    check_number("scheduling.poll_interval", minimum=0.000001)
 
     for path in ("model.base_url", "fast_model.base_url", "oauth.public_url"):
         check_url(path)
@@ -231,7 +233,7 @@ def validate_agent_config(
             if "memory" in toolkits and get_value("memory.enabled") is not True and "memory_store" not in supplied:
                 issue("toolkits", "the memory bundle requires memory.enabled=true or an injected memory_store")
 
-    for path in ("server.host", "server.service"):
+    for path in ("server.host", "server.service", "feishu.tenant_key"):
         current = get_value(path)
         if current is not None and (not isinstance(current, str) or not current.strip()):
             issue(path, "must be a non-empty string")
@@ -288,7 +290,7 @@ def validate_agent_config(
         else:
             used_paths[path] = field
 
-    for path in ("storage.path", "storage.audit_path", "system_path"):
+    for path in ("storage.path", "storage.audit_path", "scheduling.path", "system_path"):
         current = get_value(path)
         if current is not None and (not isinstance(current, str | PathLike) or not str(current).strip()):
             issue(path, "must be a non-empty filesystem path")

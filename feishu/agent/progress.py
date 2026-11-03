@@ -29,8 +29,9 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from ..events.jobs import mark_current_event_side_effect_started
-from .replies import send_turn_card
+from ..events.jobs import current_event_effect, current_event_job, mark_current_event_side_effect_started
+from .replies import ScheduledTurn, send_turn_card, turn_message
+from .scheduled_policy import ScheduledDeliveryUnknown
 
 logger = logging.getLogger("feishu")
 
@@ -76,7 +77,7 @@ class _ProgressCard:
     def __init__(self, agent: Any, event: Any) -> None:
         self._agent = agent
         self._event = event
-        message = event.body.get("message") or {}
+        message = turn_message(event)
         self._chat_id = message.get("chat_id")
         self._message_id: str | None = None
         self._steps: list[str] = []
@@ -100,8 +101,14 @@ class _ProgressCard:
         if message_id and self._message_id is None:
             self._message_id = message_id
 
+    def _strict_delivery(self) -> bool:
+        job = current_event_job()
+        return isinstance(self._event, ScheduledTurn) or bool(job is not None and job.lease_token)
+
     def _ready(self) -> tuple[Callable[[list[str], bool, str], dict[str, Any]], Any, str] | None:
         r"""返回 `(builder, client, chat_id)`（均非空）表示本轮可渲染进度卡片；缺构造器 / 客户端 / chat_id 时返回 `None`。"""
+        if isinstance(self._event, ScheduledTurn):
+            self._agent._assert_scheduled_lease(self._event)
         builder = self._agent._progress_card_builder
         client = self._agent.client
         chat_id = self._chat_id
@@ -120,7 +127,11 @@ class _ProgressCard:
             await mark_current_event_side_effect_started()
             resp = await send_turn_card(client, self._event, card)
             self._message_id = _message_id_from_response(resp)
-        except Exception:  # noqa: BLE001 - the progress UI must never break the turn
+            if isinstance(self._event, ScheduledTurn) and not self._message_id:
+                raise ScheduledDeliveryUnknown("scheduled progress card response has no message ID")
+        except Exception as exc:  # noqa: BLE001 - ordinary progress UI must never break the turn
+            if self._strict_delivery():
+                raise ScheduledDeliveryUnknown("scheduled progress card outcome is unknown") from exc
             logger.debug("progress card start failed", exc_info=True)
 
     async def thinking(self, *, reasoning: str, text: str = "") -> None:
@@ -184,11 +195,16 @@ class _ProgressCard:
             if self._message_id is None:
                 resp = await send_turn_card(client, self._event, card)
                 self._message_id = _message_id_from_response(resp)
+                if isinstance(self._event, ScheduledTurn) and not self._message_id:
+                    raise ScheduledDeliveryUnknown("scheduled progress card response has no message ID")
             else:
-                await client.im.patch(self._message_id, card)
+                async with current_event_effect():
+                    await client.im.patch(self._message_id, card)
             self._last_status_text = status_text
             return True
-        except Exception:  # noqa: BLE001 - progress UI must never break the turn
+        except Exception as exc:  # noqa: BLE001 - ordinary progress UI must never break the turn
+            if self._strict_delivery():
+                raise ScheduledDeliveryUnknown("scheduled progress update outcome is unknown") from exc
             logger.debug("progress status update failed", exc_info=True)
             return False
 
@@ -200,10 +216,13 @@ class _ProgressCard:
         _, client, _ = ready
         try:
             await mark_current_event_side_effect_started()
-            await client.im.patch(self._message_id, card)
+            async with current_event_effect():
+                await client.im.patch(self._message_id, card)
             self._done = True
             return self._message_id
         except Exception:  # noqa: BLE001 - caller can fall back to sending a separate card
+            if self._strict_delivery():
+                raise
             logger.debug("progress card replacement failed", exc_info=True)
             return None
 
@@ -220,11 +239,21 @@ class _ProgressCard:
             if self._message_id is None:
                 resp = await send_turn_card(client, self._event, card)
                 self._message_id = _message_id_from_response(resp)
+                if isinstance(self._event, ScheduledTurn) and not self._message_id:
+                    raise ScheduledDeliveryUnknown("scheduled progress card response has no message ID")
             else:
-                await client.im.patch(self._message_id, card)
-        except Exception:  # noqa: BLE001 - the progress UI must never break the turn
+                async with current_event_effect():
+                    await client.im.patch(self._message_id, card)
+        except Exception as exc:  # noqa: BLE001 - ordinary progress UI must never break the turn
+            if self._strict_delivery():
+                raise ScheduledDeliveryUnknown("scheduled progress update outcome is unknown") from exc
             logger.debug("progress card update failed", exc_info=True)
-        if self._agent._progress_summarizer is not None:
+        job = current_event_job()
+        if (
+            self._agent._progress_summarizer is not None
+            and not isinstance(self._event, ScheduledTurn)
+            and not (job is not None and job.lease_token)
+        ):
             self._agent._spawn_background(
                 self._summarize_and_update(
                     ProgressSnapshot(
@@ -252,9 +281,12 @@ class _ProgressCard:
         try:
             card = builder(list(self._steps), True, result_text)
             await mark_current_event_side_effect_started()
-            await client.im.patch(self._message_id, card)
+            async with current_event_effect():
+                await client.im.patch(self._message_id, card)
             return True
-        except Exception:  # noqa: BLE001 - on failure, fall back to a normal reply
+        except Exception as exc:  # noqa: BLE001 - ordinary failure may fall back to a normal reply
+            if self._strict_delivery():
+                raise ScheduledDeliveryUnknown("scheduled progress finalization outcome is unknown") from exc
             logger.debug("progress card finalize failed", exc_info=True)
             return False
 

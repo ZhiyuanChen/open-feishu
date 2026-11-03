@@ -22,7 +22,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Sequence
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -104,12 +104,15 @@ def create_gateway(
         app.state.feishu_client = feishu_client
         app.state.seen_store = seen_store
         app.state.event_dispatcher = dispatcher
-        try:
-            yield
-        finally:
+        async with AsyncExitStack() as stack:
             if owns_client:
                 close = getattr(feishu_client, "aclose", None)
                 if close is not None:
-                    await close()
+                    stack.push_async_callback(close)
+            for integration in integrations:
+                integration_lifespan = getattr(integration, "lifespan", None)
+                if integration_lifespan is not None:
+                    await stack.enter_async_context(integration_lifespan(context))
+            yield
 
     return Starlette(routes=routes, lifespan=lifespan)

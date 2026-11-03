@@ -459,6 +459,7 @@ def list_my_tasks(
         description=description,
         input_schema=input_schema,
         handler=handler,
+        scheduled_effect="read",
         auth_scopes=tuple(auth_scopes),
     )
 
@@ -511,5 +512,6 @@ def list_task_comments(
         description=description,
         input_schema=input_schema,
         handler=handler,
+        scheduled_effect="read",
         auth_scopes=tuple(auth_scopes),
     )

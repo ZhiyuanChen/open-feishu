@@ -31,6 +31,16 @@ from typing import Any, Protocol, TypeVar, runtime_checkable
 from .llm import Message
 
 T = TypeVar("T")
+SCHEDULED_APPROVAL_TTL_SECONDS = 30 * 60
+SCHEDULED_AUTHORIZATION_TTL_SECONDS = 60 * 60
+
+
+def _scheduled_approval(approval: PendingApproval) -> bool:
+    return approval.session_id.split("::", 1)[-1].startswith("scheduled:")
+
+
+def _scheduled_authorization(authorization: PendingAuthorization) -> bool:
+    return authorization.session_id.split("::", 1)[-1].startswith("scheduled:")
 
 
 @runtime_checkable
@@ -373,6 +383,16 @@ class InMemoryPendingApprovalStore:
             approval = self._store.get(approval_id)
             if approval is None:
                 return ClaimResult.MISSING
+            if _scheduled_approval(approval):
+                if approval.state == "expired":
+                    return ClaimResult.EXPIRED
+                if (
+                    approval.state == "awaiting_confirmation"
+                    and approval.created_at is not None
+                    and time.time() >= approval.created_at + SCHEDULED_APPROVAL_TTL_SECONDS
+                ):
+                    approval.state = "expired"
+                    return ClaimResult.EXPIRED
             # Fail closed on tampering: when EITHER side has a payload hash, both must match. A stored hash with a
             # missing/None callback hash is a mismatch (so a callback that omits payload_sha256 can't skip the
             # check); a callback hash with no stored hash is also a mismatch. Only when neither exists is there
@@ -384,6 +404,25 @@ class InMemoryPendingApprovalStore:
                 return ClaimResult.ALREADY_CLAIMED
             approval.state = "executing"
             return ClaimResult.CLAIMED
+
+    async def expire_if_pending(self, approval_id: str, *, now: float) -> str:
+        """Atomically expire a scheduled confirmation without cancelling an execution."""
+        async with self._lock:
+            approval = self._store.get(approval_id)
+            if approval is None or not _scheduled_approval(approval):
+                return "missing"
+            if approval.state == "expired":
+                return "expired"
+            if approval.state == "execution_unknown":
+                return "unknown"
+            if approval.state == "executing":
+                return "executing"
+            if approval.state != "awaiting_confirmation" or approval.created_at is None:
+                return "unknown"
+            if now < approval.created_at + SCHEDULED_APPROVAL_TTL_SECONDS:
+                return "not_due"
+            approval.state = "expired"
+            return "expired"
 
     async def complete(self, approval_id: str, *, outcome: str) -> None:
         r"""
@@ -504,10 +543,39 @@ class InMemoryPendingAuthorizationStore:
             authorization = self._store.get(authorization_id)
             if authorization is None:
                 return ClaimResult.MISSING
+            if _scheduled_authorization(authorization):
+                if authorization.state == "expired":
+                    return ClaimResult.EXPIRED
+                if (
+                    authorization.state == "awaiting_authorization"
+                    and authorization.created_at is not None
+                    and time.time() >= authorization.created_at + SCHEDULED_AUTHORIZATION_TTL_SECONDS
+                ):
+                    authorization.state = "expired"
+                    return ClaimResult.EXPIRED
             if authorization.state != "awaiting_authorization":
                 return ClaimResult.ALREADY_CLAIMED
             authorization.state = "executing"
             return ClaimResult.CLAIMED
+
+    async def expire_if_pending(self, authorization_id: str, *, now: float) -> str:
+        """Atomically expire a scheduled OAuth continuation without cancelling an execution."""
+        async with self._lock:
+            authorization = self._store.get(authorization_id)
+            if authorization is None or not _scheduled_authorization(authorization):
+                return "missing"
+            if authorization.state == "expired":
+                return "expired"
+            if authorization.state == "execution_unknown":
+                return "unknown"
+            if authorization.state == "executing":
+                return "executing"
+            if authorization.state != "awaiting_authorization" or authorization.created_at is None:
+                return "unknown"
+            if now < authorization.created_at + SCHEDULED_AUTHORIZATION_TTL_SECONDS:
+                return "not_due"
+            authorization.state = "expired"
+            return "expired"
 
     async def complete(self, authorization_id: str, *, outcome: str) -> None:
         r"""标记授权恢复的最终处置；`retry` 重开，`unknown`/`frozen` 冻结，其余终态移除。"""

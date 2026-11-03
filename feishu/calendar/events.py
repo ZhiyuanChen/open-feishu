@@ -21,6 +21,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from chanfig import NestedDict
@@ -155,13 +156,13 @@ class EventsNamespace(Namespace):
         r"""
         获取日程列表。
 
-        自动翻页并将各页结果拼接为单个列表返回。`page_size` 会被限制在
-        [feishu.consts.MAX_PAGE_SIZE][] 以内。仅将显式传入的可选查询参数并入请求，
-        未设置的项会被省略。
+        无时间范围时自动翻页。指定时间范围时，飞书不支持分页：只请求一次，
+        使用接口允许的最大 `page_size=1000`；如果结果可能被截断且不足以满足
+        `max_items`，抛出异常提示缩小范围。
 
         Args:
             calendar_id: 日历的 `calendar_id`。
-            page_size: 每页条数，默认为 50，超过上限时按上限截断。
+            page_size: 无时间范围时每页条数，默认为 50，超过上限时按上限截断。
             max_items: 最多返回的条数；为空表示返回全部。
             start_time: 时间范围的起始（Unix 秒时间戳字符串）；为空时省略该参数。
             end_time: 时间范围的结束（Unix 秒时间戳字符串）；为空时省略该参数。
@@ -171,6 +172,7 @@ class EventsNamespace(Namespace):
 
         Raises:
             feishu.errors.FeishuError: 请求失败或返回错误码时抛出。
+            ValueError: 范围参数未成对提供，或结果可能被飞书截断。
 
         飞书文档:
             [获取日程列表](https://open.feishu.cn/document/server-docs/calendar-v4/calendar-event/list)
@@ -179,17 +181,56 @@ class EventsNamespace(Namespace):
             >>> await client.calendar.events.list("feishu.cn_xxx")  # doctest:+SKIP
             [{'event_id': 'evtxxx', 'summary': '周会', ...}, ...]  # noqa: E501
         """
-        params: dict[str, Any] = {}
-        if start_time is not None:
-            params["start_time"] = start_time
-        if end_time is not None:
-            params["end_time"] = end_time
+        if (start_time is None) != (end_time is None):
+            raise ValueError("start_time and end_time must be provided together")
+        if start_time is not None and end_time is not None:
+            data = await self._request_data(
+                "GET",
+                f"calendar/v4/calendars/{quote_segment(calendar_id)}/events",
+                params={"start_time": start_time, "end_time": end_time, "page_size": 1000},
+            )
+            items = data.get("items") or []
+            if max_items is not None and 0 < max_items <= len(items):
+                return items[:max_items]
+            if data.get("has_more") or len(items) >= 1000:
+                raise ValueError("calendar time range may be truncated; narrow the requested range")
+            return items if max_items is None else items[:max_items]
         return await self._client.paginate_get(
             f"calendar/v4/calendars/{quote_segment(calendar_id)}/events",
-            params=params,
             page_size=page_size,
             max_items=max_items,
         )
+
+    async def instance_view(
+        self,
+        calendar_id: str,
+        *,
+        start_time: str,
+        end_time: str,
+        max_items: int | None = None,
+        user_id_type: str | None = None,
+    ) -> Sequence[NestedDict]:
+        r"""查询时间范围内的日程实例，包括展开后的重复日程。
+
+        `start_time` 和 `end_time` 是 Unix 秒，范围必须小于 40 天。飞书此接口
+        一次返回实例列表，不支持分页；`max_items` 只限制本地返回数量。
+
+        飞书文档:
+            [查询日程视图](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/reference/calendar-v4/calendar-event/instance_view)
+        """
+        start, end = int(start_time), int(end_time)
+        if start >= end or end - start >= 40 * 24 * 60 * 60:
+            raise ValueError("calendar instance range must be positive and shorter than 40 days")
+        if max_items is not None and (isinstance(max_items, bool) or not isinstance(max_items, int) or max_items < 1):
+            raise ValueError("max_items must be a positive integer")
+        params = {"start_time": str(start), "end_time": str(end)}
+        if user_id_type is not None:
+            params["user_id_type"] = user_id_type
+        data = await self._request_data(
+            "GET", f"calendar/v4/calendars/{quote_segment(calendar_id)}/events/instance_view", params=params
+        )
+        items = data.get("items") or []
+        return items if max_items is None else items[:max_items]
 
     async def update(
         self, calendar_id: str, event_id: str, event: dict[str, Any], *, user_id_type: str | None = None

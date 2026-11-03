@@ -33,13 +33,15 @@ r"""
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import re
 import sqlite3
 import time
-from collections.abc import Iterable, Mapping
-from contextlib import nullcontext
+import uuid
+from collections.abc import AsyncIterator, Iterable, Mapping
+from contextlib import asynccontextmanager, nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
@@ -193,6 +195,31 @@ def _keys_for_save(user_info: Mapping[str, Any] | None, explicit: tuple[str, ...
     return keys
 
 
+def _tenant(tenant_key: str) -> str:
+    if not isinstance(tenant_key, str) or not tenant_key.strip() or tenant_key != tenant_key.strip():
+        raise ValueError("a valid tenant key is required")
+    return tenant_key
+
+
+def _tenant_user(tenant_key: str, user: Mapping[str, Any]) -> None:
+    if "tenant_key" in user and user["tenant_key"] != tenant_key:
+        raise ValueError("user identity does not match the requested tenant")
+
+
+def _scoped_keys(tenant_key: str, user_info: Mapping[str, Any] | None, explicit: tuple[str, ...]) -> tuple[str, ...]:
+    _tenant(tenant_key)
+    if user_info is not None and user_info.get("tenant_key") != tenant_key:
+        raise ValueError("OAuth user information does not match the requested tenant")
+    keys = _keys_for_save(user_info, explicit)
+    if tuple(sorted(user_identity_keys(user_from_identity_keys(keys)))) != tuple(sorted(set(keys))):
+        raise ValueError("invalid or conflicting user identity keys")
+    return keys
+
+
+def _token_fingerprint(refresh_token: str) -> str:
+    return hashlib.sha256(refresh_token.encode("utf-8")).hexdigest()
+
+
 class InMemoryOAuthTokenStore:
     r"""
     基于内存的 [feishu.auth.user_tokens.OAuthTokenStore][] 实现，仅适用于单进程、可接受重启即丢失的场景。
@@ -204,6 +231,8 @@ class InMemoryOAuthTokenStore:
 
     def __init__(self) -> None:
         self._by_key: dict[str, TokenRecord] = {}
+        self._by_tenant: dict[tuple[str, str], TokenRecord] = {}
+        self._tenant_refresh: dict[tuple[str, str], str] = {}
         self._lock = asyncio.Lock()
 
     async def get(self, user: Mapping[str, Any]) -> TokenRecord | None:
@@ -240,6 +269,75 @@ class InMemoryOAuthTokenStore:
                 self._by_key[key] = record
         return keys
 
+    async def get_for_tenant(self, tenant_key: str, user: Mapping[str, Any]) -> TokenRecord | None:
+        tenant_key = _tenant(tenant_key)
+        _tenant_user(tenant_key, user)
+        async with self._lock:
+            found = [
+                self._by_tenant[(tenant_key, key)]
+                for key in user_identity_keys(user)
+                if (tenant_key, key) in self._by_tenant
+            ]
+            if found and any(record != found[0] for record in found[1:]):
+                raise ValueError("conflicting user aliases in tenant")
+            return found[0] if found else None
+
+    async def save_for_tenant(
+        self,
+        tenant_key: str,
+        token_data: Mapping[str, Any],
+        *,
+        user_info: Mapping[str, Any] | None = None,
+        user_keys: tuple[str, ...] = (),
+        expected_refresh_token: str | None = None,
+        expected_access_token: str | None = None,
+    ) -> tuple[str, ...]:
+        keys = _scoped_keys(tenant_key, user_info, user_keys)
+        record = TokenRecord.from_token_data(token_data, keys, now=_now())
+        async with self._lock:
+            previous = [self._by_tenant[(tenant_key, key)] for key in keys if (tenant_key, key) in self._by_tenant]
+            if previous and any(item != previous[0] for item in previous[1:]):
+                raise ValueError("conflicting user aliases in tenant")
+            if expected_refresh_token is not None and (
+                not previous
+                or previous[0].refresh_token != expected_refresh_token
+                or previous[0].user_access_token != expected_access_token
+            ):
+                raise ValueError("user authorization changed while refreshing")
+            stale = {alias for item in previous for alias in item.user_keys}
+            for alias in stale - set(keys):
+                self._by_tenant.pop((tenant_key, alias), None)
+            for key in keys:
+                self._by_tenant[(tenant_key, key)] = record
+        return keys
+
+    @asynccontextmanager
+    async def refresh_guard_for_tenant(
+        self, tenant_key: str, user: Mapping[str, Any], refresh_token: str
+    ) -> AsyncIterator[None]:
+        del user
+        key = (_tenant(tenant_key), _token_fingerprint(refresh_token))
+        for _ in range(101):
+            async with self._lock:
+                state = self._tenant_refresh.get(key)
+                if state == "frozen":
+                    raise RuntimeError("token refresh outcome is unknown; reauthorize")
+                if state is None:
+                    self._tenant_refresh[key] = "active"
+                    break
+            await asyncio.sleep(0.05)
+        else:
+            raise RuntimeError("token refresh is busy")
+        try:
+            yield
+        except BaseException:
+            async with self._lock:
+                self._tenant_refresh[key] = "frozen"
+            raise
+        else:
+            async with self._lock:
+                self._tenant_refresh.pop(key, None)
+
 
 class SqliteOAuthTokenStore:
     r"""
@@ -259,6 +357,16 @@ class SqliteOAuthTokenStore:
         self._db.execute(
             "CREATE TABLE IF NOT EXISTS oauth_tokens "
             "(user_key TEXT PRIMARY KEY, record TEXT NOT NULL, updated_at INTEGER)"
+        )
+        self._db.execute(
+            "CREATE TABLE IF NOT EXISTS oauth_tenant_tokens "
+            "(tenant_key TEXT NOT NULL, user_key TEXT NOT NULL, record TEXT NOT NULL, updated_at INTEGER, "
+            "PRIMARY KEY (tenant_key, user_key))"
+        )
+        self._db.execute(
+            "CREATE TABLE IF NOT EXISTS oauth_tenant_refresh "
+            "(tenant_key TEXT NOT NULL, token_hash TEXT NOT NULL, owner TEXT NOT NULL, state TEXT NOT NULL, "
+            "PRIMARY KEY (tenant_key, token_hash))"
         )
         self._db.commit()
         self._lock = asyncio.Lock()
@@ -308,6 +416,135 @@ class SqliteOAuthTokenStore:
             run_transaction(self._db, reconcile_aliases)
         return keys
 
+    async def get_for_tenant(self, tenant_key: str, user: Mapping[str, Any]) -> TokenRecord | None:
+        tenant_key = _tenant(tenant_key)
+        _tenant_user(tenant_key, user)
+        keys = user_identity_keys(user)
+        if not keys:
+            return None
+        placeholders = ",".join("?" * len(keys))
+        async with self._lock:
+            rows = self._db.execute(
+                f"SELECT DISTINCT record FROM oauth_tenant_tokens WHERE tenant_key=? AND user_key IN ({placeholders})",
+                (tenant_key, *keys),
+            ).fetchall()
+        if len(rows) > 1:
+            raise ValueError("conflicting user aliases in tenant")
+        return TokenRecord.from_dict(json.loads(rows[0][0])) if rows else None
+
+    async def save_for_tenant(
+        self,
+        tenant_key: str,
+        token_data: Mapping[str, Any],
+        *,
+        user_info: Mapping[str, Any] | None = None,
+        user_keys: tuple[str, ...] = (),
+        expected_refresh_token: str | None = None,
+        expected_access_token: str | None = None,
+    ) -> tuple[str, ...]:
+        async with self._lock:
+            return run_transaction(
+                self._db,
+                lambda: self._save_for_tenant_in_transaction(
+                    self._db,
+                    tenant_key,
+                    token_data,
+                    user_info=user_info,
+                    user_keys=user_keys,
+                    expected_refresh_token=expected_refresh_token,
+                    expected_access_token=expected_access_token,
+                ),
+            )
+
+    def _save_for_tenant_in_transaction(
+        self,
+        db: Any,
+        tenant_key: str,
+        token_data: Mapping[str, Any],
+        *,
+        user_info: Mapping[str, Any] | None = None,
+        user_keys: tuple[str, ...] = (),
+        expected_refresh_token: str | None = None,
+        expected_access_token: str | None = None,
+    ) -> tuple[str, ...]:
+        """Save using an already-open transaction on the same SQLite database."""
+        keys = _scoped_keys(tenant_key, user_info, user_keys)
+        now = _now()
+        record = TokenRecord.from_token_data(token_data, keys, now=now)
+        payload = json.dumps(record.to_dict(), ensure_ascii=False)
+        placeholders = ",".join("?" * len(keys))
+        rows = db.execute(
+            "SELECT DISTINCT record FROM oauth_tenant_tokens " f"WHERE tenant_key=? AND user_key IN ({placeholders})",
+            (tenant_key, *keys),
+        ).fetchall()
+        if len(rows) > 1:
+            raise ValueError("conflicting user aliases in tenant")
+        previous = TokenRecord.from_dict(json.loads(rows[0][0])) if rows else None
+        if expected_refresh_token is not None and (
+            previous is None
+            or previous.refresh_token != expected_refresh_token
+            or previous.user_access_token != expected_access_token
+        ):
+            raise ValueError("user authorization changed while refreshing")
+        stale = set(keys) | (set(previous.user_keys) if previous is not None else set())
+        placeholders = ",".join("?" * len(stale))
+        db.execute(
+            f"DELETE FROM oauth_tenant_tokens WHERE tenant_key=? AND user_key IN ({placeholders})", (tenant_key, *stale)
+        )
+        db.executemany(
+            "INSERT INTO oauth_tenant_tokens (tenant_key, user_key, record, updated_at) VALUES (?, ?, ?, ?)",
+            [(tenant_key, key, payload, now) for key in keys],
+        )
+        return keys
+
+    @asynccontextmanager
+    async def refresh_guard_for_tenant(
+        self, tenant_key: str, user: Mapping[str, Any], refresh_token: str
+    ) -> AsyncIterator[None]:
+        del user
+        tenant_key, token_hash, owner = _tenant(tenant_key), _token_fingerprint(refresh_token), uuid.uuid4().hex
+        for _ in range(101):
+            async with self._lock:
+
+                def acquire() -> str:
+                    row = self._db.execute(
+                        "SELECT state FROM oauth_tenant_refresh WHERE tenant_key=? AND token_hash=?",
+                        (tenant_key, token_hash),
+                    ).fetchone()
+                    if row is not None:
+                        return str(row[0])
+                    self._db.execute(
+                        "INSERT INTO oauth_tenant_refresh VALUES (?, ?, ?, 'active')", (tenant_key, token_hash, owner)
+                    )
+                    return "acquired"
+
+                state = run_transaction(self._db, acquire)
+            if state == "acquired":
+                break
+            if state == "frozen":
+                raise RuntimeError("token refresh outcome is unknown; reauthorize")
+            await asyncio.sleep(0.05)
+        else:
+            raise RuntimeError("token refresh is busy")
+        try:
+            yield
+        except BaseException:
+            async with self._lock:
+                self._db.execute(
+                    "UPDATE oauth_tenant_refresh SET state='frozen' WHERE tenant_key=? AND token_hash=? AND owner=?",
+                    (tenant_key, token_hash, owner),
+                )
+                self._db.commit()
+            raise
+        else:
+            async with self._lock:
+                self._db.execute(
+                    "DELETE FROM oauth_tenant_refresh WHERE tenant_key=? AND token_hash=? "
+                    "AND owner=? AND state='active'",
+                    (tenant_key, token_hash, owner),
+                )
+                self._db.commit()
+
 
 class UserTokenProvider:
     r"""
@@ -340,8 +577,74 @@ class UserTokenProvider:
 
     async def user_token(self, user: Mapping[str, Any]) -> str | None:
         r"""解析有效的用户态访问令牌；临近过期则刷新；无记录或已失效返回 `None`。"""
+        if "tenant_key" in user:
+            return await self.user_token_for_tenant(user["tenant_key"], user)
         record = await self._valid_record(user)
         return record.user_access_token if record is not None else None
+
+    async def _valid_record_for_tenant(self, tenant_key: str, user: Mapping[str, Any]) -> TokenRecord | None:
+        tenant_key = _tenant(tenant_key)
+        _tenant_user(tenant_key, user)
+        get = getattr(self.store, "get_for_tenant", None)
+        save = getattr(self.store, "save_for_tenant", None)
+        guard = getattr(self.store, "refresh_guard_for_tenant", None)
+        if not callable(get):
+            return None
+        try:
+            record = await get(tenant_key, user)
+            if (
+                record
+                and record.refresh_token
+                and record.is_expiring(self.refresh_skew_seconds, _now())
+                and callable(save)
+                and callable(guard)
+            ):
+                refresh_token = record.refresh_token
+                async with guard(tenant_key, user, refresh_token):
+                    record = await get(tenant_key, user)
+                    if (
+                        record
+                        and record.refresh_token == refresh_token
+                        and record.is_expiring(self.refresh_skew_seconds, _now())
+                    ):
+                        token_data = await self.client.oauth.refresh(refresh_token)
+                        if "scope" not in token_data and record.scope:
+                            token_data = {**token_data, "scope": record.scope}
+                        await save(
+                            tenant_key,
+                            token_data,
+                            user_keys=record.user_keys,
+                            expected_refresh_token=refresh_token,
+                            expected_access_token=record.user_access_token,
+                        )
+                    record = await get(tenant_key, user)
+        except Exception:  # noqa: BLE001 - never expose token endpoint or persistence errors
+            self._log.warning("user_token: scoped refresh or lookup failed")
+            try:
+                record = await get(tenant_key, user)
+            except Exception:  # noqa: BLE001 - no safe token to return
+                return None
+        if record is None or record.is_expired(_now()) or not record.user_access_token:
+            return None
+        return record
+
+    async def user_token_for_tenant(self, tenant_key: str, user: Mapping[str, Any]) -> str | None:
+        """Return only a token explicitly stored for the authenticated tenant."""
+        record = await self._valid_record_for_tenant(tenant_key, user)
+        return record.user_access_token if record else None
+
+    async def has_scopes_for_tenant(self, tenant_key: str, user: Mapping[str, Any], scopes: Iterable[str]) -> bool:
+        tenant_key = _tenant(tenant_key)
+        _tenant_user(tenant_key, user)
+        required = {scope for scope in scopes if scope}
+        if not required:
+            return True
+        record = await self._valid_record_for_tenant(tenant_key, user)
+        return record is not None and required.issubset(_scope_set(record.scope))
+
+    async def as_user_for_tenant(self, tenant_key: str, user: Mapping[str, Any]) -> Any | None:
+        token = await self.user_token_for_tenant(tenant_key, user)
+        return self.client.as_user(token) if token else None
 
     async def _valid_record(self, user: Mapping[str, Any]) -> TokenRecord | None:
         r"""读取一个有效用户 token 记录；临近过期时刷新，硬过期或无 token 时返回 `None`。"""
@@ -379,6 +682,8 @@ class UserTokenProvider:
 
     async def has_scopes(self, user: Mapping[str, Any], scopes: Iterable[str]) -> bool:
         r"""返回当前用户是否已有有效 token，且 token 的 `scope` 覆盖所需权限。"""
+        if "tenant_key" in user:
+            return await self.has_scopes_for_tenant(user["tenant_key"], user, scopes)
         required = {scope for scope in scopes if scope}
         if not required:
             return True
@@ -401,6 +706,21 @@ class UserTokenProvider:
         access_token = token_data.get("access_token")
         info = await self.client.oauth.user_info(access_token) if access_token else {}
         return await self.store.save(token_data, user_info=dict(info))
+
+    async def complete_authorization_for_tenant(
+        self, tenant_key: str, code: str, *, redirect_uri: str | None = None
+    ) -> tuple[str, ...]:
+        """Exchange a code only when user-info confirms the expected tenant."""
+        tenant_key = _tenant(tenant_key)
+        save = getattr(self.store, "save_for_tenant", None)
+        if not callable(save):
+            raise ValueError("token store does not support tenant isolation")
+        token_data = await self.client.oauth.exchange_code(code, redirect_uri=redirect_uri)
+        access_token = token_data.get("access_token")
+        info = dict(await self.client.oauth.user_info(access_token)) if access_token else {}
+        if info.get("tenant_key") != tenant_key:
+            raise ValueError("OAuth user information does not match the requested tenant")
+        return await save(tenant_key, token_data, user_info=info)
 
     def authorize_url(
         self, redirect_uri: str, *, scope: str | list[str] | tuple[str, ...] | None = None, state: str | None = None

@@ -15,7 +15,7 @@ jobs:
     environment: test
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -78,7 +78,7 @@ jobs:
       - run: mkdocs build -v -f docs/mkdocs.yml
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.ref == 'refs/heads/master' }}
+        if: ${{ contains(fromJson('["refs/heads/master", "refs/heads/main"]'), github.ref) }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/site

@@ -28,6 +28,7 @@ import json
 import logging
 import time
 from collections.abc import Callable, Mapping, Sequence
+from contextlib import nullcontext
 from typing import Any, Literal
 from uuid import uuid4
 
@@ -46,9 +47,18 @@ from .context import current_tool_context, use_tool_context
 from .integrity import payload_sha256
 from .llm import Message, ToolCall, ToolResultPart, parse_tool_arguments
 from .progress import _message_id_from_response, _pending_progress_extra, _progress_message_id, _ProgressCard
-from .replies import event_from_pending, pending_message_extra, send_turn_card
+from .replies import ScheduledTurn, event_from_pending, pending_message_extra, send_turn_card, turn_message
 from .result import ToolOutcome, ToolResult, coerce_tool_result
-from .session import ClaimResult, PendingApproval, PendingAuthorization
+from .scheduled_policy import (
+    ScheduledContinuationNotReady,
+    ScheduledDeliveryUnknown,
+    _stored_policy,
+    _validate_scheduled_pending,
+    assert_scheduled_context_lease,
+    scheduled_registry_scope,
+    scheduled_resume_lease,
+)
+from .session import SCHEDULED_AUTHORIZATION_TTL_SECONDS, ClaimResult, PendingApproval, PendingAuthorization
 from .tools import Tool
 
 logger = logging.getLogger("feishu")
@@ -69,16 +79,22 @@ def build_authorize_url_builder(
         if not keys:
             return None
         authorization_id = getattr(authorization, "authorization_id", None)
+        pending_tenant = getattr(authorization, "tenant_key", None)
+        event_tenant = current_tool_context().resolved_tenant_key()
+        if pending_tenant and event_tenant and pending_tenant != event_tenant:
+            return None
+        tenant_key = pending_tenant or event_tenant
         extra = {"authorization_id": authorization_id} if authorization_id else None
-        state = signer.issue(user_keys=keys, scopes=tuple(scopes), extra=extra)
+        state = signer.issue(user_keys=keys, scopes=tuple(scopes), tenant_key=tenant_key, extra=extra)
         return provider.authorize_url(redirect_uri, scope=list(scopes) or None, state=state)
 
+    builder._tenant_scoped_provider = provider  # type: ignore[attr-defined]
     return builder
 
 
 async def preflight_authorization(
     agent: Any,
-    event: Event,
+    event: Event | ScheduledTurn,
     session_id: str,
     history: list[Message],
     call: ToolCall,
@@ -111,7 +127,7 @@ async def preflight_authorization(
 
 async def request_authorization(
     agent: Any,
-    event: Event,
+    event: Event | ScheduledTurn,
     session_id: str,
     history: list[Message],
     call: ToolCall,
@@ -127,9 +143,20 @@ async def request_authorization(
     """
     initiator = current_tool_context().requesting_user()
     owner_user_keys = user_identity_keys(initiator)
-    message = event.body.get("message") or {}
+    message = turn_message(event)
     chat_id = message.get("chat_id")
     if not owner_user_keys or agent.client is None or not chat_id or agent._auth_card_builder is None:
+        return False
+    if isinstance(event, ScheduledTurn):
+        provider = agent.user_tokens
+        if (
+            not callable(getattr(provider, "as_user_for_tenant", None))
+            or not callable(getattr(provider, "has_scopes_for_tenant", None))
+            or not callable(getattr(getattr(provider, "store", None), "save_for_tenant", None))
+            or getattr(agent.authorize_url_builder, "_tenant_scoped_provider", None) is not provider
+        ):
+            return False
+    if isinstance(event, ScheduledTurn) and not callable(getattr(agent.authorizations, "expire_if_pending", None)):
         return False
     authorization = PendingAuthorization(
         authorization_id=uuid4().hex,
@@ -139,7 +166,7 @@ async def request_authorization(
         arguments=parse_tool_arguments(call.arguments),
         scopes=tuple(result.auth_scopes),
         owner_user_keys=owner_user_keys,
-        tenant_key=getattr(event, "tenant_key", None),
+        tenant_key=current_tool_context().resolved_tenant_key(),
         chat_id=chat_id,
         created_message_id=message.get("message_id"),
         created_event_id=getattr(event, "event_id", None) or None,
@@ -175,36 +202,68 @@ async def request_authorization(
         return False
     try:
         await agent.authorizations.put(authorization)
+        if isinstance(event, ScheduledTurn):
+            assert authorization.created_at is not None
+            await agent._record_scheduled_wait(
+                event,
+                "authorization",
+                authorization.authorization_id,
+                authorization.created_at + SCHEDULED_AUTHORIZATION_TTL_SECONDS,
+            )
     except asyncio.CancelledError:
-        await asyncio.shield(cancel_pending_authorization(agent, authorization.authorization_id))
+        await asyncio.shield(_cancel_scheduled_authorization(agent, event, authorization.authorization_id))
         raise
     except Exception:  # noqa: BLE001 - no persisted pending means callback cannot resume safely
+        await _cancel_scheduled_authorization(agent, event, authorization.authorization_id)
         logger.warning("failed to persist pending authorization", exc_info=True)
         return False
     try:
+        if isinstance(event, ScheduledTurn):
+            agent._assert_scheduled_lease(event)
         auth_card_message_id = await progress.replace_with_card(card) if progress is not None else None
         if not auth_card_message_id:
+            if isinstance(event, ScheduledTurn):
+                agent._assert_scheduled_lease(event)
             response = await send_turn_card(agent.client, event, card)
             auth_card_message_id = _message_id_from_response(response)
         if auth_card_message_id:
+            if isinstance(event, ScheduledTurn):
+                agent._assert_scheduled_lease(event)
             await persist_authorization_card_message_id(agent, authorization, auth_card_message_id)
     except asyncio.CancelledError:
-        await asyncio.shield(cancel_pending_authorization(agent, authorization.authorization_id))
+        if isinstance(event, ScheduledTurn):
+            await asyncio.shield(agent._settle_scheduled_resume(event, "unknown"))
+        else:
+            await asyncio.shield(_cancel_scheduled_authorization(agent, event, authorization.authorization_id))
         raise
-    except Exception:  # noqa: BLE001 - undeliverable card -> cancel the pending, then fall back
+    except Exception as exc:  # noqa: BLE001 - card delivery might have succeeded before an error
+        if isinstance(event, ScheduledTurn):
+            await agent._settle_scheduled_resume(event, "unknown")
+            raise ScheduledDeliveryUnknown("scheduled authorization card delivery outcome is unknown") from exc
         logger.warning("failed to send auth card; cancelling pending %s", authorization.authorization_id, exc_info=True)
-        await cancel_pending_authorization(agent, authorization.authorization_id)
+        await _cancel_scheduled_authorization(agent, event, authorization.authorization_id)
         return False
+    if isinstance(event, ScheduledTurn) and not auth_card_message_id:
+        await agent._settle_scheduled_resume(event, "unknown")
+        raise ScheduledDeliveryUnknown("scheduled authorization card response has no message ID")
     return True
 
 
-async def cancel_pending_authorization(agent: Any, authorization_id: str) -> None:
+async def _cancel_scheduled_authorization(agent: Any, event: Any, authorization_id: str) -> None:
+    cancelled = await cancel_pending_authorization(agent, authorization_id)
+    if isinstance(event, ScheduledTurn) and cancelled:
+        await agent._clear_scheduled_wait(event, "authorization", authorization_id)
+
+
+async def cancel_pending_authorization(agent: Any, authorization_id: str) -> bool:
     r"""Cancel only an awaiting authorization, preserving already claimed or unknown executions."""
     try:
         if await agent.authorizations.claim(authorization_id) is ClaimResult.CLAIMED:
             await agent.authorizations.complete(authorization_id, outcome="cancelled")
+            return True
     except Exception:  # noqa: BLE001 - cleanup should not mask delivery failure or turn cancellation
         logger.warning("failed to cancel pending authorization %s", authorization_id, exc_info=True)
+    return False
 
 
 async def persist_authorization_card_message_id(
@@ -240,7 +299,7 @@ async def send_auth_card(agent: Any, event: Event, authorize_url: str, progress:
     r"""向当前会话发送一张授权卡片；缺少构造器、客户端或 chat 时返回 `False`。"""
     if agent._auth_card_builder is None or agent.client is None or not authorize_url:
         return False
-    message = event.body.get("message") or {}
+    message = turn_message(event)
     chat_id = message.get("chat_id")
     if not chat_id:
         return False
@@ -273,8 +332,52 @@ async def resume_authorization(
     authorization = await agent.authorizations.get(authorization_id)
     if authorization is None:
         return "missing"
-    async with agent._session_lock(authorization.session_id):
-        return await _resume_authorization_locked(agent, authorization_id, user=user, propagate_errors=propagate_errors)
+    if authorization.tenant_key and (user is None or user.get("tenant_key") != authorization.tenant_key):
+        return "forbidden"
+    if _stored_policy(authorization) is not None:
+        callback_keys = set(user_identity_keys(user or {}))
+        if not authorization.owner_user_keys or not (callback_keys & set(authorization.owner_user_keys)):
+            return "forbidden"
+    try:
+        policy = _validate_scheduled_pending(agent, authorization)
+    except ScheduledContinuationNotReady:
+        if propagate_errors:
+            raise
+        for _ in range(100):
+            await asyncio.sleep(0.05)
+            try:
+                policy = _validate_scheduled_pending(agent, authorization)
+            except ScheduledContinuationNotReady:
+                continue
+            break
+        else:
+            await notify_authorization_resume_problem(agent, authorization, "任务仍在准备，请稍后重新授权。")
+            return "not_ready"
+    scope = (
+        scheduled_registry_scope(agent.registry, policy, lease_validator=lambda: assert_scheduled_context_lease(agent))
+        if policy
+        else nullcontext()
+    )
+    with scope:
+        async with agent._session_lock(authorization.session_id):
+            async with scheduled_resume_lease(agent, authorization):
+                if policy:
+                    from .scheduled_session import fenced_session_scope
+
+                    turn = event_from_pending_authorization(authorization)
+                    if not isinstance(turn, ScheduledTurn):
+                        raise ValueError("scheduled authorization has invalid turn context")
+                    with fenced_session_scope(agent._store, agent.scheduled_store, turn, clock=agent._now):
+                        return await _resume_authorization_locked(
+                            agent,
+                            authorization_id,
+                            user=user,
+                            propagate_errors=propagate_errors,
+                            expected_policy=policy,
+                        )
+                return await _resume_authorization_locked(
+                    agent, authorization_id, user=user, propagate_errors=propagate_errors, expected_policy=policy
+                )
 
 
 async def _resume_authorization_locked(
@@ -283,6 +386,7 @@ async def _resume_authorization_locked(
     *,
     user: Mapping[str, Any] | None = None,
     propagate_errors: bool = False,
+    expected_policy: Literal["read_only", "confirm_writes"] | None = None,
 ) -> str:
     r"""
     OAuth callback 成功保存用户 token 后，恢复一次挂起授权对应的原工具调用。
@@ -292,6 +396,10 @@ async def _resume_authorization_locked(
     authorization = await agent.authorizations.get(authorization_id)
     if authorization is None:
         return "missing"
+    if _validate_scheduled_pending(agent, authorization) != expected_policy:
+        raise ValueError("scheduled authorization policy changed during resume")
+    if authorization.tenant_key and (user is None or user.get("tenant_key") != authorization.tenant_key):
+        return "forbidden"
     if user is None:
         if not propagate_errors:
             await notify_authorization_resume_problem(
@@ -330,8 +438,18 @@ async def _claim_and_resume_authorization(
             await notify_authorization_resume_problem(
                 agent,
                 authorization,
-                "授权已完成，但原请求已过期。请再告诉我一次。",
+                (
+                    "授权已完成，但原请求已过期。请再告诉我一次。"
+                    if claim is ClaimResult.EXPIRED
+                    else "授权已完成，但原请求的状态不明。请先核对后再处理。"
+                ),
             )
+            resume_event = event_from_pending_authorization(authorization)
+            if isinstance(resume_event, ScheduledTurn):
+                # An expired claim did not dispatch; a missing row does not
+                # establish whether another worker already caused an effect.
+                status = "failed" if claim is ClaimResult.EXPIRED else "unknown"
+                await agent._settle_scheduled_resume(resume_event, status)
         return claim.value
 
     from .approval import has_original_tool_call
@@ -344,6 +462,9 @@ async def _claim_and_resume_authorization(
         await notify_authorization_resume_problem(
             agent, authorization, "授权已完成，但原请求的上下文已过期或被替代。请重新发起请求。"
         )
+        resume_event = event_from_pending_authorization(authorization)
+        if isinstance(resume_event, ScheduledTurn):
+            await agent._settle_scheduled_resume(resume_event, "failed")
         return "superseded"
 
     await remove_authorization_card(agent, authorization)
@@ -374,6 +495,7 @@ async def _claim_and_resume_authorization(
                             content=AWAITING_APPROVAL_NOTE,
                         ),
                     )
+                    status = "awaiting_confirmation"
                 else:
                     # The ordinary approval path records a tool error and continues the turn on delivery failure.
                     suspension = await agent._continue_tool_calls_after(
@@ -385,18 +507,27 @@ async def _claim_and_resume_authorization(
                     )
                     if suspension:
                         await progress.finalize(suspension_progress_note(suspension))
+                        status = "awaiting_authorization" if suspension == "authorization" else "awaiting_confirmation"
                     else:
-                        await agent._loop(resume_event, authorization.session_id, history, progress=progress)
+                        status = await agent._loop(resume_event, authorization.session_id, history, progress=progress)
                 await agent.authorizations.complete(authorization_id, outcome="resumed" if pending else "failed")
                 if pending:
                     await progress.finalize(suspension_progress_note("approval"))
+                if isinstance(resume_event, ScheduledTurn):
+                    await agent._settle_scheduled_resume(resume_event, status)
                 return "resumed"
             await progress.step(
                 authorization.tool_name,
                 description=agent._tool_description(authorization.tool_name),
             )
             try:
-                result = await agent.registry.dispatch(authorization.tool_name, authorization.arguments)
+                if _has_prior_approval(authorization):
+                    from .scheduled_policy import _prior_approval
+
+                    with _prior_approval(authorization):
+                        result = await agent.registry.dispatch(authorization.tool_name, authorization.arguments)
+                else:
+                    result = await agent.registry.dispatch(authorization.tool_name, authorization.arguments)
             except Exception as exc:  # noqa: BLE001 - report tool failure to the model, not the browser
                 if propagate_errors:
                     raise
@@ -430,11 +561,16 @@ async def _claim_and_resume_authorization(
             )
             if suspension:
                 await progress.finalize(suspension_progress_note(suspension))
+                status = "awaiting_authorization" if suspension == "authorization" else "awaiting_confirmation"
             else:
-                await agent._loop(resume_event, authorization.session_id, history, progress=progress)
+                status = await agent._loop(resume_event, authorization.session_id, history, progress=progress)
             await agent.authorizations.complete(authorization_id, outcome="failed" if is_error else "executed")
+            if isinstance(resume_event, ScheduledTurn):
+                await agent._settle_scheduled_resume(resume_event, status)
             return "resumed"
         except Exception:  # noqa: BLE001 - callback background failures should be reported in chat and logged
+            if isinstance(resume_event, ScheduledTurn):
+                await agent._settle_scheduled_resume(resume_event, "unknown")
             if propagate_errors:
                 raise
             await agent.authorizations.complete(authorization_id, outcome="frozen")
@@ -498,7 +634,7 @@ async def remove_authorization_card(
         logger.debug("could not recall authorization card %s", message_id, exc_info=True)
 
 
-def event_from_pending_authorization(authorization: PendingAuthorization) -> Event:
+def event_from_pending_authorization(authorization: PendingAuthorization) -> Event | ScheduledTurn:
     r"""从挂起授权记录重建原会话事件，供工具恢复与最终回复定位。"""
     return event_from_pending(authorization)
 
@@ -509,6 +645,7 @@ def oauth_callback_handler(
     redirect_uri: str,
     *,
     on_authorized: AuthorizationResumeCallback | None = None,
+    durable_receiver: Any | None = None,
     track_task: Callable[[asyncio.Task[Any]], None] | None = None,
     success_message: str = "授权成功，正在回到飞书继续处理。",
     success_title: str = "授权完成",
@@ -528,15 +665,49 @@ def oauth_callback_handler(
             return PlainTextResponse(invalid_state_message, status_code=400)
         if not code:
             return PlainTextResponse(missing_code_message, status_code=400)
+        if durable_receiver is not None:
+            try:
+                receipt = await durable_receiver.begin_authorization(request.query_params.get("state"), state)
+            except PermissionError:
+                return PlainTextResponse(user_mismatch_message, status_code=403)
+            except Exception:  # noqa: BLE001 - do not expose authorization internals
+                logger.warning("oauth callback: failed to reserve durable authorization")
+                return PlainTextResponse(exchange_error_message, status_code=503)
+            if receipt == "completed":
+                return _auto_close_response(success_message, title=success_title)
+            if receipt != "started":
+                return PlainTextResponse("授权结果不确定，请重新发起授权。", status_code=409)
         try:
             token_data = await provider.client.oauth.exchange_code(code, redirect_uri=redirect_uri)
             info = await provider.client.oauth.user_info(token_data.get("access_token"))
         except Exception:
-            logger.exception("oauth callback: failed to exchange code")
+            if durable_receiver is not None:
+                logger.warning("oauth callback: failed to exchange code or verify user")
+            else:
+                logger.exception("oauth callback: failed to exchange code")
             return PlainTextResponse(exchange_error_message, status_code=400)
         if not signer.user_matches(state, dict(info)):
             return PlainTextResponse(user_mismatch_message, status_code=403)
-        await provider.store.save(token_data, user_info=dict(info))
+        if info.get("tenant_key") and not state.tenant_key:
+            return PlainTextResponse(user_mismatch_message, status_code=403)
+        if durable_receiver is not None:
+            try:
+                await durable_receiver.commit_authorization(
+                    request.query_params.get("state"), state, token_data, dict(info)
+                )
+            except Exception:  # noqa: BLE001 - code has been consumed; require a new authorization
+                logger.warning("oauth callback: failed durable credential and continuation commit")
+                return PlainTextResponse("授权接收失败，请重新发起授权。", status_code=503)
+            return _auto_close_response(success_message, title=success_title)
+        if state.tenant_key:
+            if info.get("tenant_key") != state.tenant_key:
+                return PlainTextResponse(user_mismatch_message, status_code=403)
+            save = getattr(provider.store, "save_for_tenant", None)
+            if not callable(save):
+                return PlainTextResponse(exchange_error_message, status_code=503)
+            await save(state.tenant_key, token_data, user_info=dict(info))
+        else:
+            await provider.store.save(token_data, user_info=dict(info))
         authorization_id = str(state.extra.get("authorization_id") or "")
         if on_authorized is not None and authorization_id:
             _spawn_authorization_resume(on_authorized, authorization_id, dict(info), track_task=track_task)

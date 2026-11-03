@@ -45,6 +45,7 @@ import json
 import logging
 import time
 from collections.abc import Awaitable, Callable, Mapping
+from contextlib import nullcontext
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Literal, Protocol, runtime_checkable
@@ -63,14 +64,28 @@ from .context import current_tool_context, use_tool_context
 from .integrity import derive_idempotency_key, payload_sha256, stable_hash
 from .llm import Message, ToolCall, ToolResultPart, ToolUsePart, parse_tool_arguments
 from .progress import _message_id_from_response, _pending_progress_extra, _progress_message_id, _ProgressCard
-from .replies import event_from_pending, pending_message_extra, send_turn_card
+from .replies import ScheduledTurn, event_from_pending, pending_message_extra, send_turn_card, turn_message
 from .result import ToolOutcome, ToolResult, coerce_tool_result
-from .session import ClaimResult, PendingApproval, PendingApprovalStore
+from .scheduled_policy import (
+    ScheduledContinuationNotReady,
+    ScheduledDeliveryUnknown,
+    ScheduledPolicyRegistry,
+    _claimed_approval,
+    _validate_scheduled_pending,
+    _verified_approval,
+    assert_scheduled_context_lease,
+    scheduled_registry_scope,
+    scheduled_resume_lease,
+)
+from .session import SCHEDULED_APPROVAL_TTL_SECONDS, ClaimResult, PendingApproval, PendingApprovalStore
 from .shared_files import collect_shared_file_ids
 from .tools import ToolValidationError
 
 Decision = Literal["approve", "reject"]
 AWAITING_APPROVAL_PROGRESS_TEXT = "等待用户确认。"
+_SCHEDULING_MUTATIONS = frozenset(
+    ("create_scheduled_task", "pause_scheduled_task", "resume_scheduled_task", "delete_scheduled_task")
+)
 
 # Dispatch a tool by (name, arguments) and await its result; the Agent passes
 # ToolRegistry.dispatch here so the engine stays decoupled from the registry.
@@ -206,7 +221,7 @@ class ApprovalEngine(Protocol):
         r"""持久化一次挂起审批并完成下发前准备。"""
         ...
 
-    async def on_cancel(self, approval_id: str) -> None:
+    async def on_cancel(self, approval_id: str) -> bool | None:
         r"""撤销一次尚未决策的挂起审批（如确认卡片下发失败），移除记录以免留下用户无法确认的悬挂审批。"""
         ...
 
@@ -282,7 +297,7 @@ class DefaultApprovalEngine:
         await self.approvals.put(approval)
         await self._record("write_request", approval)
 
-    async def on_cancel(self, approval_id: str) -> None:
+    async def on_cancel(self, approval_id: str) -> bool:
         r"""
         撤销一次尚未决策的挂起审批：移除记录并写入 `cancel` 审计事件。
 
@@ -292,12 +307,13 @@ class DefaultApprovalEngine:
         """
         approval = await self.approvals.get(approval_id)
         if approval is None:
-            return
+            return False
         claim = await self.approvals.claim(approval_id, expected_payload_sha256=approval.payload_sha256)
         if claim is not ClaimResult.CLAIMED:
-            return
+            return False
         await self.approvals.complete(approval_id, outcome="cancelled")
         await self._record("cancel", approval)
+        return True
 
     async def on_decision(
         self,
@@ -345,7 +361,8 @@ class DefaultApprovalEngine:
             return await dispatch(tool_name, arguments)
 
         try:
-            return await self._on_claimed_decision(approval, tracked_dispatch)
+            with _claimed_approval(approval):
+                return await self._on_claimed_decision(approval, tracked_dispatch)
         except asyncio.CancelledError:
             # Once claimed, cancellation can happen during replay lookup, remote dispatch, or
             # local result recording. Reopen only if dispatch never began; otherwise freeze it
@@ -525,12 +542,13 @@ async def persist_approval_card_message_id(agent: Any, approval: PendingApproval
         logging.getLogger("feishu").debug("approval %s gone before card id update", approval.approval_id)
 
 
-async def cancel_approval_after_delivery_failure(agent: Any, approval_id: str) -> None:
+async def cancel_approval_after_delivery_failure(agent: Any, approval_id: str) -> bool:
     r"""Best-effort cancellation, shielded by the caller when its turn was interrupted."""
     try:
-        await agent.approval_engine.on_cancel(approval_id)
+        return await agent.approval_engine.on_cancel(approval_id) is True
     except Exception:  # noqa: BLE001 - failed cleanup must not mask delivery failure or cancellation
         logging.getLogger("feishu").warning("failed to cancel pending approval %s", approval_id, exc_info=True)
+        return False
 
 
 def action_value(event: Event) -> dict[str, Any]:
@@ -555,7 +573,7 @@ async def request_approval(
     arguments = parse_tool_arguments(call.arguments)
     initiator = current_tool_context().requesting_user()
     owner_user_keys = user_identity_keys(initiator)
-    message = event.body.get("message") or {}
+    message = turn_message(event)
     chat_id = message.get("chat_id")
     if not owner_user_keys:
         await agent._record_tool_error(
@@ -573,15 +591,18 @@ async def request_approval(
             "cannot create a confirmable write: no chat is available for the confirmation card",
         )
         return False
+    if isinstance(event, ScheduledTurn) and not callable(getattr(agent.approvals, "expire_if_pending", None)):
+        await agent._record_tool_error(history, session_id, call.id, "scheduled approval expiry is not supported")
+        return False
     approval = PendingApproval(
-        approval_id=uuid4().hex,
+        approval_id=("sched_" if isinstance(event, ScheduledTurn) else "") + uuid4().hex,
         session_id=session_id,
         tool_call_id=call.id,
         tool_name=call.name,
         arguments=arguments,
         payload_sha256=payload_sha256(arguments),
         owner_user_keys=owner_user_keys,
-        tenant_key=getattr(event, "tenant_key", None),
+        tenant_key=current_tool_context().resolved_tenant_key(),
         chat_id=chat_id,
         created_message_id=message.get("message_id"),
         created_event_id=getattr(event, "event_id", None) or None,
@@ -594,40 +615,70 @@ async def request_approval(
     card = agent._approval_card_builder(approval)
     try:
         await agent.approval_engine.on_request(approval)
+        if isinstance(event, ScheduledTurn):
+            assert approval.created_at is not None
+            await agent._record_scheduled_wait(
+                event, "approval", approval.approval_id, approval.created_at + SCHEDULED_APPROVAL_TTL_SECONDS
+            )
     except asyncio.CancelledError:
-        await asyncio.shield(cancel_approval_after_delivery_failure(agent, approval.approval_id))
+        await asyncio.shield(_cancel_scheduled_approval(agent, event, approval.approval_id))
         raise
     except Exception:  # noqa: BLE001 — could not record the pending → no confirmable write
+        await _cancel_scheduled_approval(agent, event, approval.approval_id)
         logging.getLogger("feishu").warning("failed to persist pending approval; write not started", exc_info=True)
         await agent._record_tool_error(
             history, session_id, call.id, "could not record the confirmation request; the write was not started"
         )
         return False
     try:
+        if isinstance(event, ScheduledTurn):
+            agent._assert_scheduled_lease(event)
         approval_message_id = await progress.replace_with_card(card)
         if approval_message_id is None:
+            if isinstance(event, ScheduledTurn):
+                agent._assert_scheduled_lease(event)
             response = await send_turn_card(agent.client, event, card)
             approval_message_id = _message_id_from_response(response)
         if approval_message_id:
+            if isinstance(event, ScheduledTurn):
+                agent._assert_scheduled_lease(event)
             await persist_approval_card_message_id(agent, approval, approval_message_id)
     except asyncio.CancelledError:
-        await asyncio.shield(cancel_approval_after_delivery_failure(agent, approval.approval_id))
+        if isinstance(event, ScheduledTurn):
+            await asyncio.shield(agent._settle_scheduled_resume(event, "unknown"))
+        else:
+            await asyncio.shield(_cancel_scheduled_approval(agent, event, approval.approval_id))
         raise
-    except Exception:  # noqa: BLE001 — undeliverable card → cancel the pending, then let the model respond
+    except Exception as exc:  # noqa: BLE001 — delivery can fail before or after the server accepted the card
+        if isinstance(event, ScheduledTurn):
+            await agent._settle_scheduled_resume(event, "unknown")
+            raise ScheduledDeliveryUnknown("scheduled approval card delivery outcome is unknown") from exc
         logging.getLogger("feishu").warning(
             "failed to send approval card; cancelling pending %s", approval.approval_id, exc_info=True
         )
-        await cancel_approval_after_delivery_failure(agent, approval.approval_id)
+        await _cancel_scheduled_approval(agent, event, approval.approval_id)
         await agent._record_tool_error(
             history, session_id, call.id, "failed to send the confirmation card; the write was not started"
         )
         return False
+    if isinstance(event, ScheduledTurn) and not approval_message_id:
+        await agent._settle_scheduled_resume(event, "unknown")
+        raise ScheduledDeliveryUnknown("scheduled approval card response has no message ID")
     try:
         await pin_referenced_files(agent, arguments)
     except asyncio.CancelledError:
-        await asyncio.shield(cancel_approval_after_delivery_failure(agent, approval.approval_id))
+        if isinstance(event, ScheduledTurn):
+            await asyncio.shield(agent._settle_scheduled_resume(event, "unknown"))
+        else:
+            await asyncio.shield(_cancel_scheduled_approval(agent, event, approval.approval_id))
         raise
     return True
+
+
+async def _cancel_scheduled_approval(agent: Any, event: Any, approval_id: str) -> None:
+    cancelled = await cancel_approval_after_delivery_failure(agent, approval_id)
+    if isinstance(event, ScheduledTurn) and cancelled:
+        await agent._clear_scheduled_wait(event, "approval", approval_id)
 
 
 async def pin_referenced_files(agent: Any, arguments: Any) -> None:
@@ -675,6 +726,16 @@ async def handle_card_action(
             return {"toast": {"type": "error", "content": "无法处理该确认请求"}}
         await decision_dispatcher(event, approval)
         return {"toast": {"type": "info", "content": "处理中…"}}
+    if str(approval_id).startswith("sched_"):
+        pending = await _load_card_approval(agent, event, str(approval_id), value, card_message_id, strict=True)
+        if pending is None:
+            return {"toast": {"type": "error", "content": "无法处理该确认请求"}}
+        try:
+            _validate_scheduled_pending(agent, pending)
+        except ScheduledContinuationNotReady:
+            return {"toast": {"type": "info", "content": "任务仍在准备，请稍后再试。"}}
+        except (PermissionError, ValueError, RuntimeError):
+            return {"toast": {"type": "error", "content": "无法处理该确认请求"}}
     agent._spawn_background(load_and_decide(agent, event, str(approval_id), decision, value, card_message_id))
     return {"toast": {"type": "info", "content": "处理中…"}}
 
@@ -718,15 +779,25 @@ async def _load_card_approval(
     approval = await agent.approvals.get(approval_id)
     if approval is None:
         return None
-    clicker_keys = set(user_identity_keys(agent._tool_context(event).requesting_user()))
+    context = agent._tool_context(event)
+    try:
+        callback_tenant = context.resolved_tenant_key()
+    except PermissionError:
+        return None
+    if approval.tenant_key and approval.tenant_key != callback_tenant:
+        return None
+    clicker_keys = set(user_identity_keys(context.requesting_user()))
     if not approval.owner_user_keys or not (clicker_keys & set(approval.owner_user_keys)):
         return None
-    if strict:
+    scheduling_mutation = approval.tool_name in _SCHEDULING_MUTATIONS
+    if scheduling_mutation and (
+        not approval.tenant_key or not approval.payload_sha256 or not _progress_message_id(approval.extra)
+    ):
+        return None
+    if strict or scheduling_mutation:
         stored_sha = approval.payload_sha256 or ""
         expected_sha = value.get("payload_sha256")
         if (stored_sha or expected_sha is not None) and expected_sha != stored_sha:
-            return None
-        if approval.tenant_key and approval.tenant_key != getattr(event, "tenant_key", None):
             return None
         saved_card_id = _progress_message_id(approval.extra)
         if saved_card_id and saved_card_id != card_message_id:
@@ -746,12 +817,50 @@ async def load_and_decide(
 ) -> None:
     r"""Load and validate a decision, optionally propagating worker failures."""
     try:
-        approval = await _load_card_approval(agent, event, approval_id, value, card_message_id, strict=propagate_errors)
-        if approval is None:
+        pending = await agent.approvals.get(approval_id)
+        if pending is None:
             return
-        await decide_and_resume(
-            agent, event, approval, decision, value, card_message_id, propagate_errors=propagate_errors
+        policy = _validate_scheduled_pending(agent, pending)
+        scope = (
+            scheduled_registry_scope(
+                agent.registry, policy, lease_validator=lambda: assert_scheduled_context_lease(agent)
+            )
+            if policy
+            else nullcontext()
         )
+        with scope:
+            approval = await _load_card_approval(
+                agent,
+                event,
+                approval_id,
+                value,
+                card_message_id,
+                strict=propagate_errors or isinstance(agent.registry, ScheduledPolicyRegistry),
+            )
+            if approval is None or _validate_scheduled_pending(agent, approval) != policy:
+                return
+            with _verified_approval(approval):
+                async with scheduled_resume_lease(agent, approval):
+                    if policy:
+                        from .scheduled_session import fenced_session_scope
+
+                        turn = event_from_pending(approval)
+                        if not isinstance(turn, ScheduledTurn):
+                            raise ValueError("scheduled approval has invalid turn context")
+                        with fenced_session_scope(agent._store, agent.scheduled_store, turn, clock=agent._now):
+                            await decide_and_resume(
+                                agent,
+                                event,
+                                approval,
+                                decision,
+                                value,
+                                card_message_id,
+                                propagate_errors=propagate_errors,
+                            )
+                    else:
+                        await decide_and_resume(
+                            agent, event, approval, decision, value, card_message_id, propagate_errors=propagate_errors
+                        )
     except Exception:  # noqa: BLE001 - background preparation must not surface as an unhandled task error
         if propagate_errors:
             raise
@@ -798,6 +907,10 @@ async def decide_and_resume(
                     logging.getLogger("feishu").debug("could not patch the stale approval card", exc_info=True)
             if propagate_errors and current is not None and current.state in ("executing", "execution_unknown"):
                 raise RuntimeError("approval execution requires reconciliation")
+            resume_event = event_from_pending(approval)
+            if isinstance(resume_event, ScheduledTurn):
+                run_status = "unknown" if current is not None and current.state == "execution_unknown" else "failed"
+                await agent._settle_scheduled_resume(resume_event, run_status)
             return
         await _decide_and_resume_locked(
             agent, event, approval, decision, value, card_message_id, history, propagate_errors=propagate_errors
@@ -843,6 +956,18 @@ async def _decide_and_resume_locked(
                 expected_payload_sha256=value.get("payload_sha256"),
                 dispatch=agent.registry.dispatch,
             )
+            if isinstance(resume_event, ScheduledTurn) and outcome.status in (
+                ApprovalStatus.EXPIRED,
+                ApprovalStatus.MISSING,
+            ):
+                # Expiry is a definite no-dispatch result. A missing record may
+                # have disappeared after an effect, so preserve uncertainty.
+                status = "failed" if outcome.status is ApprovalStatus.EXPIRED else "unknown"
+                await agent._settle_scheduled_resume(resume_event, status)
+                return
+            if outcome.status is ApprovalStatus.FROZEN and isinstance(resume_event, ScheduledTurn):
+                await agent._settle_scheduled_resume(resume_event, "unknown")
+                return
             if propagate_errors and outcome.status in (ApprovalStatus.FROZEN, ApprovalStatus.ALREADY_DECIDED):
                 raise RuntimeError("approval execution requires reconciliation")
             if _should_resume(outcome.status):
@@ -880,6 +1005,8 @@ async def _decide_and_resume_locked(
                         )
                         await agent._record_tool_result_part(approval.session_id, history, result_part)
                         await progress.finalize(suspension_progress_note("authorization"))
+                        if isinstance(resume_event, ScheduledTurn):
+                            await agent._settle_scheduled_resume(resume_event, "awaiting_authorization")
                         return
                 content, tr_is_error, _ = coerce_tool_result(outcome.content)
                 if outcome.authorize_url and not outcome.auth_scopes:
@@ -898,9 +1025,14 @@ async def _decide_and_resume_locked(
                 )
                 if suspension:
                     await progress.finalize(suspension_progress_note(suspension))
+                    status = "awaiting_authorization" if suspension == "authorization" else "awaiting_confirmation"
                 else:
-                    await agent._loop(resume_event, approval.session_id, history, progress=progress)
+                    status = await agent._loop(resume_event, approval.session_id, history, progress=progress)
+                if isinstance(resume_event, ScheduledTurn):
+                    await agent._settle_scheduled_resume(resume_event, status)
         except Exception:  # noqa: BLE001 - background failure must not surface as an unhandled task error
+            if isinstance(resume_event, ScheduledTurn):
+                await agent._settle_scheduled_resume(resume_event, "unknown")
             if propagate_errors:
                 raise
             logging.getLogger("feishu").exception(

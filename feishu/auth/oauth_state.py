@@ -110,6 +110,10 @@ class OAuthStateSigner:
         extra: Mapping[str, Any] | None = None,
     ) -> str:
         r"""签发一个签名的 `state` 字符串，可绑定发起用户、scopes 与租户。"""
+        if tenant_key is not None and (
+            not isinstance(tenant_key, str) or not tenant_key.strip() or tenant_key != tenant_key.strip()
+        ):
+            raise ValueError("tenant_key must be a non-empty string")
         payload: dict[str, Any] = {
             "v": self._version,
             "uk": list(user_keys),
@@ -139,10 +143,15 @@ class OAuthStateSigner:
         issued_at = payload.get("iat")
         if not isinstance(issued_at, int) or _now() - issued_at > self._ttl:
             return None
+        tenant_key = payload.get("tk")
+        if tenant_key is not None and (
+            not isinstance(tenant_key, str) or not tenant_key.strip() or tenant_key != tenant_key.strip()
+        ):
+            return None
         return OAuthState(
             user_keys=tuple(payload.get("uk") or ()),
             scopes=tuple(payload.get("sc") or ()),
-            tenant_key=payload.get("tk"),
+            tenant_key=tenant_key,
             nonce=str(payload.get("n") or ""),
             issued_at=issued_at,
             extra=dict(payload.get("ex") or {}),
@@ -156,6 +165,8 @@ class OAuthStateSigner:
         者即发起者」，按零信任视作校验失败而非放行（避免任意回调用户冒用一个无主 `state`）。发起方应始终绑定
         用户（见 [feishu.auth.oauth_state.OAuthStateSigner.issue][] 的 `user_keys`）。
         """
-        if not state.user_keys:
+        if not state.user_keys or (
+            state.tenant_key is not None and callback_user.get("tenant_key") != state.tenant_key
+        ):
             return False
         return bool(set(user_identity_keys(callback_user)) & set(state.user_keys))

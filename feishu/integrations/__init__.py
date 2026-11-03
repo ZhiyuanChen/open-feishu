@@ -22,6 +22,7 @@
 from __future__ import annotations
 
 from .alertmanager import AlertmanagerIntegration
+from .external_events import ExternalEvent, ExternalEventIntegration, NotificationEventHandler
 from .mlflow import MLflowBundle, MLflowClient
 from .ops import OpsBundle
 from .registry import GatewayIntegration, IntegrationRegistry
@@ -54,8 +55,11 @@ __all__ = [
     "INTEGRATIONS",
     "IntegrationRegistry",
     "AlertmanagerIntegration",
+    "ExternalEvent",
+    "ExternalEventIntegration",
     "MLflowBundle",
     "MLflowClient",
+    "NotificationEventHandler",
     "OpsBundle",
     "SlurmBundle",
     "SlurmRestdClient",

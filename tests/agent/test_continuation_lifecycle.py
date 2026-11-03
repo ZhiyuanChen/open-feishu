@@ -20,6 +20,7 @@ from feishu.agent.loop import AgentEngine
 from feishu.agent.oauth import persist_authorization_card_message_id
 from feishu.agent.persistence import SqlitePendingApprovalStore, SqlitePendingAuthorizationStore, SqliteSessionStore
 from feishu.agent.result import ToolOutcome, ToolResult
+from feishu.agent.scheduled_policy import ScheduledPolicyRegistry
 from feishu.agent.session import ClaimResult, InMemoryPendingApprovalStore, PendingApproval, PendingAuthorization
 from feishu.agent.tools import ToolRegistry
 from tests._fakes import FakeLlmBackend, text_turn, tool_turn
@@ -485,6 +486,50 @@ async def test_prior_approval_cannot_transfer_to_another_identical_live_batch(du
     assert writes == []
     assert len(proposals) == 3
     assert proposals[2].extra["origin_continuation_id"] == newer_origin
+
+
+@pytest.mark.parametrize("tamper", [False, True])
+async def test_scheduled_auth_respects_approval(durable_stores, tamper):
+    approvals, authorizations, writes = [], [], []
+    authorized = False
+    registry = ToolRegistry()
+
+    async def deploy(env):
+        if not authorized:
+            return ToolResult(ToolOutcome.NEEDS_USER_AUTH, "need auth", auth_scopes=("scope",), is_error=True)
+        writes.append(env)
+        return "deployed"
+
+    registry.register("deploy", deploy, input_schema=SCHEMA, description="deploy", scheduled_effect="write")
+    agent = AgentEngine(
+        backend=FakeLlmBackend(
+            [tool_turn(id="call", name="deploy", arguments_json='{"env":"prod"}'), text_turn("done")]
+        ),
+        registry=ScheduledPolicyRegistry(registry, "confirm_writes"),
+        store=durable_stores.sessions,
+        approvals=durable_stores.approvals,
+        authorizations=durable_stores.authorizations,
+        client=_ApprovalRecordingClient(),
+        approval_card_builder=lambda pending: approvals.append(pending) or {"id": pending.approval_id},
+        auth_card_builder=lambda url: {"url": url},
+        authorize_url_builder=lambda user, scopes, pending: authorizations.append(pending) or "https://example.invalid",
+    )
+    await agent.run(_text_event("deploy"))
+    pending = approvals[0]
+    await agent.handle_card_action(_action_event(pending.approval_id, "approve", payload_sha256=pending.payload_sha256))
+    await _drain(agent)
+    authorization = authorizations[0]
+    if tamper:
+
+        def change_digest(current):
+            current.extra["approved_tool_call"]["payload_sha256"] = "wrong"
+            return None, current
+
+        await durable_stores.authorizations.update(authorization.authorization_id, change_digest)
+    authorized = True
+    assert await agent.resume_authorization(authorization.authorization_id, user={"open_id": "ou_tester"}) == "resumed"
+    assert writes == ([] if tamper else ["prod"])
+    assert len(approvals) == (2 if tamper else 1)
 
 
 async def test_cache_read_failure_finishes_claim_without_dispatch_and_settles_card(durable_stores):

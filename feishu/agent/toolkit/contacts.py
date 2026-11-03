@@ -95,4 +95,4 @@ def find_user(
         ]
         return ToolResult(ToolOutcome.COMPLETED, content=matches)
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(name=name, description=description, input_schema=input_schema, handler=handler, scheduled_effect="read")

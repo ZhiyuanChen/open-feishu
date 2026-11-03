@@ -3,6 +3,13 @@ from __future__ import annotations
 import pytest
 
 from feishu.agent.app import Agent, AgentConfigurationError
+from feishu.agent.configuration import validate_agent_config
+
+
+@pytest.mark.parametrize("value", ["true", 1])
+def test_scheduling_config(value) -> None:
+    issues = validate_agent_config({"scheduling": {"enabled": value}}, injected={"client", "backend"})
+    assert any(issue.field == "scheduling.enabled" for issue in issues)
 
 
 def test_validate_agent_config_rejects_non_boolean_stream_setting() -> None:

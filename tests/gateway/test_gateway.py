@@ -307,3 +307,61 @@ class TestOrgRoutes:
                 },
             )
         ]
+
+
+def test_integration_lifespan():
+    from contextlib import asynccontextmanager
+
+    events = []
+
+    class Integration:
+        def routes(self, context):
+            return []
+
+        @asynccontextmanager
+        async def lifespan(self, context):
+            events.append("started")
+            try:
+                yield
+            finally:
+                events.append("stopped")
+
+    config = GatewayConfig(app_id="app", app_secret="secret", service_keys={"k": "svc"})
+    client = StubClient()
+    with TestClient(create_gateway(config, client=client, integrations=[Integration()])):
+        assert events == ["started"]
+    assert events == ["started", "stopped"]
+    assert not client.closed
+
+
+def test_lifespan_start_failure():
+    from contextlib import asynccontextmanager
+
+    events = []
+
+    class Integration:
+        def __init__(self, fail=False):
+            self.fail = fail
+
+        def routes(self, context):
+            return []
+
+        @asynccontextmanager
+        async def lifespan(self, context):
+            if self.fail:
+                raise RuntimeError("startup failed")
+            events.append("started")
+            try:
+                yield
+            finally:
+                events.append("stopped")
+
+    config = GatewayConfig(app_id="app", app_secret="secret", service_keys={"k": "svc"})
+    client = StubClient()
+    with (
+        pytest.raises(RuntimeError, match="startup failed"),
+        TestClient(create_gateway(config, client=client, integrations=[Integration(), Integration(fail=True)])),
+    ):
+        pass
+    assert events == ["started", "stopped"]
+    assert not client.closed

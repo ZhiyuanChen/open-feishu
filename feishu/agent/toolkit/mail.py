@@ -116,6 +116,7 @@ def list_mail_messages(
             "additionalProperties": False,
         },
         handler=handler,
+        scheduled_effect="read",
         auth_scopes=tuple(auth_scopes),
     )
 
@@ -175,6 +176,7 @@ def search_mail_messages(
             "additionalProperties": False,
         },
         handler=handler,
+        scheduled_effect="read",
         auth_scopes=tuple(auth_scopes),
     )
 
@@ -230,6 +232,7 @@ def get_mail_message(
             "additionalProperties": False,
         },
         handler=handler,
+        scheduled_effect="read",
         auth_scopes=tuple(auth_scopes),
     )
 
@@ -660,6 +663,7 @@ def list_mail_folders(
             "additionalProperties": False,
         },
         handler=handler,
+        scheduled_effect="read",
         auth_scopes=tuple(auth_scopes),
     )
 

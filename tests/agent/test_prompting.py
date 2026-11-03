@@ -59,8 +59,53 @@ def test_timezone_resolver_can_read_user_timezone_from_user_token() -> None:
             return {"user": {"time_zone": "America/Los_Angeles"}}
 
     client = SimpleNamespace(oauth=_OAuth())
-    resolver = build_timezone_resolver("Asia/Shanghai", user_tokens=_UserTokens(), client=client)
+    resolver = build_timezone_resolver(
+        "Asia/Shanghai", user_tokens=_UserTokens(), client=client, allow_legacy_unscoped=True
+    )
     event = SimpleNamespace(body={"sender": {"sender_id": {"open_id": "ou_1"}}})
 
     assert asyncio.run(resolver(event)) == "America/Los_Angeles"
     assert ZoneInfo("America/Los_Angeles")
+
+
+def test_timezone_tenant_isolation() -> None:
+    class Tokens:
+        async def user_token_for_tenant(self, tenant, user):
+            return tenant
+
+        async def user_token(self, user):
+            raise AssertionError("legacy token must not be used")
+
+    class OAuth:
+        async def user_info(self, token):
+            return {"tenant_key": token, "timezone": {"a": "Europe/Berlin", "b": "Asia/Tokyo"}[token]}
+
+    resolver = build_timezone_resolver("UTC", user_tokens=Tokens(), client=SimpleNamespace(oauth=OAuth()))
+
+    def event(tenant):
+        return SimpleNamespace(tenant_key=tenant, body={"sender": {"sender_id": {"user_id": "alice"}}})
+
+    async def check():
+        assert await resolver(event("a")) == "Europe/Berlin"
+        assert await resolver(event("b")) == "Asia/Tokyo"
+        assert await resolver(event(None)) == "UTC"
+
+    asyncio.run(check())
+
+
+def test_timezone_trusted_tenant() -> None:
+    class Tokens:
+        async def user_token_for_tenant(self, tenant, user):
+            assert tenant == "a"
+            return "token"
+
+    class OAuth:
+        async def user_info(self, token):
+            return {"tenant_key": "a", "timezone": "Europe/Berlin"}
+
+    resolver = build_timezone_resolver(
+        "UTC", user_tokens=Tokens(), client=SimpleNamespace(oauth=OAuth()), trusted_tenant_key="a"
+    )
+    user = {"sender": {"sender_id": {"user_id": "alice"}}}
+    assert asyncio.run(resolver(SimpleNamespace(body=user))) == "Europe/Berlin"
+    assert asyncio.run(resolver(SimpleNamespace(tenant_key="b", body=user))) == "UTC"

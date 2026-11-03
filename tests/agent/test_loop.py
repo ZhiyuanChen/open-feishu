@@ -39,7 +39,7 @@ import pytest
 from feishu.agent.adapters.anthropic import AnthropicBackend
 from feishu.agent.adapters.openai import OpenAIBackend
 from feishu.agent.approval import ApprovalStatus, DefaultApprovalEngine
-from feishu.agent.context import ToolContext
+from feishu.agent.context import ToolContext, current_tool_context
 from feishu.agent.llm import (
     Message,
     MessageStop,
@@ -55,8 +55,12 @@ from feishu.agent.llm import (
 )
 from feishu.agent.loop import AgentEngine as Agent
 from feishu.agent.loop import StreamResult, accumulate_stream, session_id_for, user_message_from_event
-from feishu.agent.persistence import SqlitePendingAuthorizationStore
+from feishu.agent.oauth import build_authorize_url_builder
+from feishu.agent.persistence import SqlitePendingAuthorizationStore, SqliteSessionStore
+from feishu.agent.replies import ScheduledTurn
 from feishu.agent.result import ToolOutcome, ToolResult
+from feishu.agent.scheduled import Schedule, ScheduledTaskStore
+from feishu.agent.scheduled_policy import ScheduledDeliveryUnknown
 from feishu.agent.session import (
     ClaimResult,
     InMemoryPendingApprovalStore,
@@ -65,12 +69,137 @@ from feishu.agent.session import (
     PendingApproval,
     PendingAuthorization,
 )
+from feishu.agent.toolkit.scheduled import register_scheduled_tools
 from feishu.agent.tools import ToolRegistry
+from feishu.auth import OAuthStateSigner
 from feishu.events.envelope import Event
 from tests._fakes import FakeLlmBackend, text_turn, tool_turn
 
 SCHEMA = {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}
 DEPLOY_SCHEMA = {"type": "object", "properties": {"env": {"type": "string"}}, "required": ["env"]}
+
+
+async def test_scheduled_turn_is_isolated(tmp_path):
+    client = _LoopRecordingClient()
+    backend = FakeLlmBackend([tool_turn(id="call", name="who", arguments_json="{}"), text_turn("done")])
+    registry = ToolRegistry()
+    owners = []
+
+    @registry.register("who", input_schema={"type": "object"}, description="identity", scheduled_effect="read")
+    async def who():
+        owners.append(current_tool_context().requesting_user())
+        return "ok"
+
+    scheduled = ScheduledTaskStore(tmp_path / "schedule.db")
+    draft = scheduled.create_draft(
+        tenant_key="tenant-a",
+        owner_keys=("open_id:ou_1",),
+        chat_id="oc_1",
+        instruction="check status",
+        schedule=Schedule.once(100),
+        now=1,
+    )
+    scheduled.confirm_draft(draft.draft_id, ("open_id:ou_1",), draft.payload_hash, tenant_key="tenant-a", now=2)
+    run = scheduled.claim_due(now=100)
+    agent = Agent(
+        backend=backend,
+        registry=registry,
+        client=client,
+        store=SqliteSessionStore(tmp_path / "schedule.db"),
+        scheduled_store=scheduled,
+        now=lambda: 100,
+    )
+    turn = ScheduledTurn(
+        chat_id="oc_1",
+        user={"open_id": "ou_1"},
+        session_id=run.session_id,
+        run_id=run.run_id,
+        policy="read_only",
+        tenant_key="tenant-a",
+        lease_token=run.lease_token,
+    )
+    result = await agent.run_scheduled(turn, "check status")
+    assert result == "succeeded"
+    assert owners == [{"open_id": "ou_1"}]
+    assert client.sent_cards == [("oc_1", "done", "text", "chat_id")]
+    assert (await agent.store.get(run.session_id))[0].content == [TextPart(text="check status")]
+
+
+@pytest.mark.parametrize("kind", ["approval", "authorization"])
+async def test_scheduled_card_without_id(tmp_path, kind):
+    client = _LoopRecordingClient()
+    sends = []
+
+    async def send(*args, **kwargs):
+        sends.append((args, kwargs))
+        return {}
+
+    client.im.send = send
+    registry = ToolRegistry()
+    registry.register(
+        "tool",
+        lambda: "done",
+        input_schema={"type": "object"},
+        description="tool",
+        scheduled_effect="write" if kind == "approval" else "read",
+        auth_scopes=("scope",) if kind == "authorization" else (),
+    )
+    store = ScheduledTaskStore(tmp_path / "scheduled.db")
+    draft = store.create_draft(
+        tenant_key="tenant-a",
+        owner_keys=("open_id:ou_1",),
+        chat_id="oc_1",
+        instruction="check",
+        schedule=Schedule.once(100),
+        now=1,
+        policy="confirm_writes",
+    )
+    store.confirm_draft(draft.draft_id, ("open_id:ou_1",), draft.payload_hash, tenant_key="tenant-a", now=2)
+    run = store.claim_due(now=100)
+
+    class Provider:
+        store = SimpleNamespace(save_for_tenant=lambda *args, **kwargs: None)
+
+        async def as_user_for_tenant(self, tenant, user):
+            return None
+
+        async def has_scopes_for_tenant(self, tenant, user, scopes):
+            return False
+
+        def authorize_url(self, redirect_uri, *, scope, state):
+            return "https://example.invalid"
+
+    provider = Provider()
+    agent = Agent(
+        backend=FakeLlmBackend([tool_turn(id="call", name="tool", arguments_json="{}")]),
+        registry=registry,
+        store=SqliteSessionStore(tmp_path / "scheduled.db"),
+        client=client,
+        scheduled_store=store,
+        now=lambda: 100,
+        auth_card_builder=lambda url: {"url": url},
+        user_tokens=provider,
+        authorize_url_builder=build_authorize_url_builder(
+            provider, OAuthStateSigner("secret"), "https://example.invalid"
+        ),
+    )
+    turn = ScheduledTurn(
+        "oc_1",
+        {"open_id": "ou_1"},
+        run.session_id,
+        run.run_id,
+        "confirm_writes",
+        "tenant-a",
+        lease_token=run.lease_token,
+    )
+    with pytest.raises(ScheduledDeliveryUnknown):
+        await agent.run_scheduled(turn, "check")
+    result = store.get_run(run.run_id)
+    assert result.status == "unknown"
+    assert result.wait_kind == kind and result.wait_id
+    pending = agent.approvals if kind == "approval" else agent.authorizations
+    assert await pending.get(result.wait_id) is not None
+    assert len(sends) == 1
 
 
 def test_assistant_tool_message_retains_reasoning_for_provider_replay() -> None:
@@ -218,6 +347,9 @@ class _DenyingScopeProvider:
     async def has_scopes(self, user, scopes):
         self.checked.append((dict(user), tuple(scopes)))
         return False
+
+    async def has_scopes_for_tenant(self, tenant, user, scopes):
+        return await self.has_scopes(user, scopes)
 
     async def as_user(self, user):
         raise AssertionError("preflight should not fall through to tool execution")
@@ -827,6 +959,7 @@ class TestAgentLoop:
             auth_card_builder=lambda url: {"auth": url},
             authorize_url_builder=authorize_url_builder,
             user_tokens=user_tokens,
+            trusted_tenant_key="tenant-a",
         )
 
         await agent.run(_text_event("calendar?", chat_id="oc_1", open_id="ou_tester"))
@@ -839,9 +972,19 @@ class TestAgentLoop:
         pending = next(iter(authorizations._store.values()))
         assert seen_authorizations == [({"open_id": "ou_tester"}, ("calendar:calendar",), pending.authorization_id)]
 
-        assert await agent.resume_authorization(pending.authorization_id, user={"open_id": "ou_other"}) == "forbidden"
+        assert (
+            await agent.resume_authorization(
+                pending.authorization_id, user={"open_id": "ou_other", "tenant_key": "tenant-a"}
+            )
+            == "forbidden"
+        )
         assert calls == []
-        assert await agent.resume_authorization(pending.authorization_id, user={"open_id": "ou_tester"}) == "resumed"
+        assert (
+            await agent.resume_authorization(
+                pending.authorization_id, user={"open_id": "ou_tester", "tenant_key": "tenant-a"}
+            )
+            == "resumed"
+        )
 
         assert calls == []  # OAuth consent does not confirm this write.
         assert len(backend.calls) == 1
@@ -854,7 +997,12 @@ class TestAgentLoop:
         assert len(results) == 1
         assert "Awaiting your confirmation" in results[0].content
 
-        assert await agent.resume_authorization(pending.authorization_id, user={"open_id": "ou_tester"}) == "missing"
+        assert (
+            await agent.resume_authorization(
+                pending.authorization_id, user={"open_id": "ou_tester", "tenant_key": "tenant-a"}
+            )
+            == "missing"
+        )
         assert len(approvals._store) == 1
         await agent.handle_card_action(
             _action_event(
@@ -1382,6 +1530,42 @@ def _has_buttons(card: dict) -> bool:
 
 
 class TestApprovalFlow:
+    async def test_schedule_confirmation_is_owner_bound(self, tmp_path):
+        import time
+
+        now = time.time()
+        scheduled = ScheduledTaskStore(tmp_path / "schedule.db")
+        registry = ToolRegistry()
+        register_scheduled_tools(registry, scheduled, clock=lambda: now)
+        request = {
+            "instruction": "check status",
+            "schedule": {"kind": "once", "run_at": now + 3600},
+            "timezone": "UTC",
+            "policy": "read_only",
+        }
+        backend = FakeLlmBackend(
+            [tool_turn(id="c1", name="create_scheduled_task", arguments_json=json.dumps(request)), text_turn("created")]
+        )
+        client = _ApprovalRecordingClient()
+        agent = Agent(backend=backend, registry=registry, client=client, scheduled_store=scheduled, now=lambda: now)
+        event = _text_event("schedule it")
+        event.tenant_key = "tenant-a"
+        await agent.run(event)
+        card = client.cards[0][0]
+        assert "check status" in json.dumps(card)
+        assert scheduled.list_owned(("open_id:ou_tester",), tenant_key="tenant-a") == []
+        approval_id, digest = _extract_approval_id(card), _extract_payload_sha256(card)
+        wrong = _action_event(approval_id, "approve", open_id="ou_other", payload_sha256=digest)
+        wrong.tenant_key = "tenant-a"
+        await agent.handle_card_action(wrong)
+        await _drain(agent)
+        assert scheduled.list_owned(("open_id:ou_tester",), tenant_key="tenant-a") == []
+        correct = _action_event(approval_id, "approve", payload_sha256=digest)
+        correct.tenant_key = "tenant-a"
+        await agent.handle_card_action(correct)
+        await _drain(agent)
+        assert len(scheduled.list_owned(("open_id:ou_tester",), tenant_key="tenant-a")) == 1
+
     async def test_sends_card_and_suspends(self):
         client = _ApprovalRecordingClient()
         store = InMemorySessionStore()

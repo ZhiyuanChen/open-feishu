@@ -7,6 +7,7 @@ from urllib.parse import parse_qs, quote, urlsplit
 
 import pytest
 
+from feishu.agent.context import ToolContext, use_tool_context
 from feishu.agent.oauth import (
     _RESUME_TASKS,
     build_authorize_url_builder,
@@ -15,6 +16,18 @@ from feishu.agent.oauth import (
 )
 from feishu.agent.session import PendingAuthorization
 from feishu.auth import OAuthStateSigner, UserTokenProvider
+
+
+@pytest.mark.parametrize("missing", [False, True])
+async def test_scheduled_expiry(expired_scheduled_wait, missing):
+    from feishu.agent.oauth import resume_authorization
+
+    agent, store, run, _event, writes = await expired_scheduled_wait("authorization", missing)
+    await resume_authorization(
+        agent, "authorization", user={"user_id": "owner", "tenant_key": "tenant"}, propagate_errors=True
+    )
+    assert writes == []
+    assert store.get_run(run.run_id).status == ("unknown" if missing else "failed")
 
 
 class _Provider:
@@ -71,6 +84,69 @@ def test_authorize_url_state_carries_pending_authorization_id() -> None:
     assert state.user_keys == ("open_id:ou_1",)
     assert state.scopes == ("calendar:calendar",)
     assert state.extra == {"authorization_id": "az_1"}
+
+
+def test_authorize_state_binds_tenant() -> None:
+    signer = OAuthStateSigner("secret")
+    builder = build_authorize_url_builder(cast(UserTokenProvider, _Provider()), signer, "https://example.invalid")
+    url = builder({"user_id": "same"}, (), SimpleNamespace(authorization_id="az", tenant_key="tenant-a"))
+    assert url is not None
+    state = signer.consume(parse_qs(urlsplit(url).query)["state"][0])
+    assert state is not None
+    assert state.tenant_key == "tenant-a"
+
+
+def test_legacy_state_uses_fixed_tenant() -> None:
+    signer = OAuthStateSigner("secret")
+    builder = build_authorize_url_builder(cast(UserTokenProvider, _Provider()), signer, "https://example.invalid")
+    context = ToolContext(event=SimpleNamespace(), trusted_tenant_key="tenant-a")
+    with use_tool_context(context):
+        url = builder({"user_id": "same"}, (), SimpleNamespace(authorization_id="az"))
+    assert url is not None
+    state = signer.consume(parse_qs(urlsplit(url).query)["state"][0])
+    assert state is not None
+    assert state.tenant_key == "tenant-a"
+
+
+@pytest.mark.parametrize(
+    "tenant,user_id,status",
+    [("tenant-a", "same", 200), ("tenant-b", "same", 403), (None, "same", 403), ("tenant-a", "other", 403)],
+)
+async def test_callback_requires_tenant(tenant, user_id, status, monkeypatch) -> None:
+    provider = _Provider()
+    saved = []
+
+    async def user_info(token):
+        return {"user_id": user_id, "tenant_key": tenant}
+
+    async def save_for_tenant(tenant_key, token_data, *, user_info):
+        saved.append(tenant_key)
+
+    provider.client.oauth.user_info = user_info
+    monkeypatch.setattr(provider.store, "save_for_tenant", save_for_tenant, raising=False)
+    signer = OAuthStateSigner("secret")
+    state = signer.issue(user_keys=("user_id:same",), tenant_key="tenant-a")
+    handler = oauth_callback_handler(cast(UserTokenProvider, provider), signer, "https://example.invalid")
+    response = await handler(SimpleNamespace(query_params={"code": "code", "state": state}))
+    assert response.status_code == status
+    assert saved == (["tenant-a"] if status == 200 else [])
+    assert provider.store.saved == []
+
+
+async def test_scoped_callback_no_fallback() -> None:
+    provider = _Provider()
+
+    async def user_info(token):
+        return {"user_id": "same", "tenant_key": "tenant-a"}
+
+    provider.client.oauth.user_info = user_info
+    signer = OAuthStateSigner("secret")
+    handler = oauth_callback_handler(cast(UserTokenProvider, provider), signer, "https://example.invalid")
+    for tenant, expected in (("tenant-a", 503), (None, 403)):
+        state = signer.issue(user_keys=("user_id:same",), tenant_key=tenant)
+        response = await handler(SimpleNamespace(query_params={"code": "code", "state": state}))
+        assert response.status_code == expected
+    assert provider.store.saved == []
 
 
 def test_oauth_callback_auto_closes_and_resumes_pending_authorization() -> None:

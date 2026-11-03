@@ -31,9 +31,11 @@ from .jobs import (
     EventJob,
     EventJobContext,
     EventJobStore,
+    EventSuperseded,
 )
 
-EventHandler = Callable[[Event], Awaitable[Any]]
+EventHandler = Callable[[Any], Awaitable[Any]]
+PayloadDecoder = Callable[[dict[str, Any]], Any]
 
 
 class EventJobRunner:
@@ -48,6 +50,9 @@ class EventJobRunner:
         lease_seconds: float = 60.0,
         backoff_base_seconds: float = 1.0,
         backoff_max_seconds: float = 300.0,
+        payload_decoder: PayloadDecoder = Event.from_payload,
+        protected: bool = False,
+        interrupt_poll_seconds: float = 0.2,
         now: Callable[[], float] = time.time,
         sleep: Callable[[float], Awaitable[Any]] = asyncio.sleep,
     ) -> None:
@@ -57,12 +62,19 @@ class EventJobRunner:
             raise ValueError("lease_seconds must be positive")
         if backoff_base_seconds < 0 or backoff_max_seconds < 0:
             raise ValueError("retry backoff values must be non-negative")
+        if interrupt_poll_seconds <= 0:
+            raise ValueError("interrupt_poll_seconds must be positive")
+        if protected and getattr(store, "_unknown_ttl", 1) is not None:
+            raise ValueError("protected jobs require UNKNOWN records without automatic expiry")
         self.store = store
         self.handler = handler
         self.worker_id = worker_id
         self.lease_seconds = lease_seconds
         self.backoff_base_seconds = backoff_base_seconds
         self.backoff_max_seconds = backoff_max_seconds
+        self.payload_decoder = payload_decoder
+        self.protected = protected
+        self.interrupt_poll_seconds = interrupt_poll_seconds
         self._now = now
         self._sleep = sleep
 
@@ -73,18 +85,39 @@ class EventJobRunner:
         if job is None:
             return None
 
+        fenced = self.protected or job.private_message
+        if fenced and (not job.lease_token or not callable(getattr(self.store, "renew_fenced", None))):
+            raise ValueError("protected jobs require a fenced SQLite event store")
+        cancellation = asyncio.Event() if job.private_message else None
         context = EventJobContext(
             store=self.store,
             job_id=job.job_id,
             event_id=job.event_id,
             worker_id=self.worker_id,
             side_effect_started=job.side_effect_started,
+            lease_token=job.lease_token if fenced else None,
+            partition_key=job.partition_key if fenced else None,
+            interruptible=job.private_message,
+            cancellation=cancellation,
+            clock=self._now,
         )
+        if cancellation is not None and await self.store.should_interrupt(  # type: ignore[attr-defined]
+            job.job_id, self.worker_id, job.lease_token, now=self._now()
+        ):
+            cancellation.set()
         token = _CURRENT_EVENT_JOB.set(context)
-        handler_task: asyncio.Future[Any] = asyncio.ensure_future(self.handler(Event.from_payload(job.payload)))
+
+        # Decode inside the task so malformed durable payloads are settled by
+        # the same retry/unknown policy rather than leaving an unowned lease.
+        async def dispatch() -> Any:
+            return await self.handler(self.payload_decoder(job.payload))
+
+        handler_task: asyncio.Future[Any] = asyncio.ensure_future(dispatch())
         heartbeat_task = asyncio.create_task(self._heartbeat(job))
+        interrupt_task = asyncio.create_task(self._watch_interrupt(job, cancellation)) if cancellation else None
         try:
-            done, _pending = await asyncio.wait((handler_task, heartbeat_task), return_when=asyncio.FIRST_COMPLETED)
+            tasks = (handler_task, heartbeat_task, interrupt_task) if interrupt_task else (handler_task, heartbeat_task)
+            done, _pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
             if heartbeat_task in done:
                 try:
                     await heartbeat_task
@@ -92,7 +125,18 @@ class EventJobRunner:
                     handler_task.cancel()
                     await asyncio.gather(handler_task, return_exceptions=True)
                     raise
+            if interrupt_task is not None and interrupt_task in done:
+                try:
+                    await interrupt_task
+                except Exception:
+                    handler_task.cancel()
+                    await asyncio.gather(handler_task, return_exceptions=True)
+                    raise
             await handler_task
+        except EventSuperseded:
+            await self.store.finish_fenced(  # type: ignore[attr-defined]
+                job.job_id, self.worker_id, job.lease_token, now=self._now(), superseded=True
+            )
         except asyncio.CancelledError:
             handler_task.cancel()
             await asyncio.gather(handler_task, return_exceptions=True)
@@ -101,10 +145,18 @@ class EventJobRunner:
         except Exception as exc:  # noqa: BLE001 - persist the result before returning control to the runtime
             await self._settle_failure(job, context, type(exc).__name__)
         else:
-            await self.store.complete(job.job_id, self.worker_id, now=self._now())
+            if fenced:
+                await self.store.finish_fenced(  # type: ignore[attr-defined]
+                    job.job_id, self.worker_id, job.lease_token, now=self._now()
+                )
+            else:
+                await self.store.complete(job.job_id, self.worker_id, now=self._now())
         finally:
             heartbeat_task.cancel()
             await asyncio.gather(heartbeat_task, return_exceptions=True)
+            if interrupt_task is not None:
+                interrupt_task.cancel()
+                await asyncio.gather(interrupt_task, return_exceptions=True)
             _CURRENT_EVENT_JOB.reset(token)
         return await self.store.get(job.job_id)
 
@@ -124,20 +176,33 @@ class EventJobRunner:
         interval = max(0.01, self.lease_seconds / 3)
         while True:
             await self._sleep(interval)
-            await self.store.renew(
-                job.job_id,
-                self.worker_id,
-                now=self._now(),
-                lease_seconds=self.lease_seconds,
-            )
+            if self.protected or job.private_message:
+                await self.store.renew_fenced(  # type: ignore[attr-defined]
+                    job.job_id, self.worker_id, job.lease_token, now=self._now(), lease_seconds=self.lease_seconds
+                )
+            else:
+                await self.store.renew(job.job_id, self.worker_id, now=self._now(), lease_seconds=self.lease_seconds)
+
+    async def _watch_interrupt(self, job: EventJob, cancellation: asyncio.Event) -> None:
+        while True:
+            await asyncio.sleep(self.interrupt_poll_seconds)
+            if await self.store.should_interrupt(  # type: ignore[attr-defined]
+                job.job_id, self.worker_id, job.lease_token, now=self._now()
+            ):
+                cancellation.set()
 
     async def _settle_failure(self, job: EventJob, context: EventJobContext, error_type: str) -> None:
         now = self._now()
+        exponent = max(0, job.attempt - 1)
+        delay = min(self.backoff_max_seconds, self.backoff_base_seconds * (2**exponent))
+        if self.protected or job.private_message:
+            await self.store.fail_fenced(  # type: ignore[attr-defined]
+                job.job_id, self.worker_id, job.lease_token, now=now, available_at=now + delay, error_type=error_type
+            )
+            return
         if context.side_effect_started:
             await self.store.mark_unknown(job.job_id, self.worker_id, error_type=error_type, now=now)
             return
-        exponent = max(0, job.attempt - 1)
-        delay = min(self.backoff_max_seconds, self.backoff_base_seconds * (2**exponent))
         await self.store.retry(
             job.job_id,
             self.worker_id,

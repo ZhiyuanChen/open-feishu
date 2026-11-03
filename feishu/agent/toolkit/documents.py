@@ -102,7 +102,7 @@ def search_documents(
         )
         return ToolResult(ToolOutcome.COMPLETED, content={"items": items})
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(name=name, description=description, input_schema=input_schema, handler=handler, scheduled_effect="read")
 
 
 def get_document_content(
@@ -169,7 +169,7 @@ def get_document_content(
             content={"token": resolved.token, "doc_type": resolved.doc_type, "content": content},
         )
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(name=name, description=description, input_schema=input_schema, handler=handler, scheduled_effect="read")
 
 
 def get_message_thread(
@@ -225,7 +225,7 @@ def get_message_thread(
         transcript = message_transcript(messages)
         return ToolResult(ToolOutcome.COMPLETED, content={"transcript": transcript})
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(name=name, description=description, input_schema=input_schema, handler=handler, scheduled_effect="read")
 
 
 def get_meeting_record(
@@ -311,7 +311,7 @@ def get_meeting_record(
             content={"meeting": meeting or None, "note_token": resolved.token, "content": content},
         )
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(name=name, description=description, input_schema=input_schema, handler=handler, scheduled_effect="read")
 
 
 async def _resolve_meeting(client: Any, arguments: dict[str, Any], *, timezone: str) -> dict[str, Any]:

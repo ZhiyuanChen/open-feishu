@@ -237,7 +237,7 @@ def list_approval_definitions(
         definitions = [approval_definition_summary(item) for item in items]
         return ToolResult(ToolOutcome.COMPLETED, content=definitions)
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(name=name, description=description, input_schema=input_schema, handler=handler, scheduled_effect="read")
 
 
 def get_approval_definition(
@@ -291,7 +291,7 @@ def get_approval_definition(
         )
         return ToolResult(ToolOutcome.COMPLETED, content=approval_definition_schema(definition))
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(name=name, description=description, input_schema=input_schema, handler=handler, scheduled_effect="read")
 
 
 def create_approval_instance(
@@ -626,7 +626,7 @@ def get_approval_status(
             )
         return ToolResult(ToolOutcome.COMPLETED, content=_approval_instance_for_model(instance))
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(name=name, description=description, input_schema=input_schema, handler=handler, scheduled_effect="read")
 
 
 def approve_approval_task(
@@ -826,7 +826,7 @@ def list_my_pending_approvals(
         )
         return ToolResult(ToolOutcome.COMPLETED, content=tasks)
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(name=name, description=description, input_schema=input_schema, handler=handler, scheduled_effect="read")
 
 
 def list_my_payment_accounts(

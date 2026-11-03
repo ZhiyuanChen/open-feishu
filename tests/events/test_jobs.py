@@ -1,11 +1,52 @@
 from __future__ import annotations
 
 import asyncio
+import sqlite3
 from pathlib import Path
 
 import pytest
 
 from feishu.events.jobs import EventJobStatus, InMemoryEventJobStore, SqliteEventJobStore
+
+
+@pytest.mark.parametrize("kind", ["memory", "sqlite"])
+async def test_fifo_after_clock_reset(tmp_path, kind):
+    store = InMemoryEventJobStore() if kind == "memory" else SqliteEventJobStore(tmp_path / "jobs.db")
+    await store.enqueue("first", {}, partition_key="chat", now=100)
+    await store.enqueue("second", {}, partition_key="chat", now=99)
+
+    assert await store.next_wakeup() == 100
+    assert await store.claim_next("worker", now=99) is None
+    assert (await store.claim_next("worker", now=100)).job_id == "first"
+    await store.complete("first", "worker", now=100)
+    assert (await store.claim_next("worker", now=100)).job_id == "second"
+
+
+async def test_fifo_legacy_migration(tmp_path):
+    path = tmp_path / "jobs.db"
+    with sqlite3.connect(path) as db:
+        db.execute(
+            "CREATE TABLE event_jobs (event_id TEXT PRIMARY KEY, payload TEXT NOT NULL, partition_key TEXT NOT NULL, "
+            "status TEXT NOT NULL, attempt INTEGER NOT NULL, created_at REAL NOT NULL, updated_at REAL NOT NULL, "
+            "available_at REAL NOT NULL, worker_id TEXT, lease_until REAL, side_effect_started INTEGER NOT NULL, "
+            "error_type TEXT)"
+        )
+        db.execute(
+            "INSERT INTO event_jobs VALUES ('first', '{}', 'chat', 'queued', 0, 100, 100, 100, NULL, NULL, 0, NULL)"
+        )
+        db.execute(
+            "INSERT INTO event_jobs VALUES ('second', '{}', 'chat', 'queued', 0, 99, 99, 99, NULL, NULL, 0, NULL)"
+        )
+    store = SqliteEventJobStore(path)
+    await store.close()
+    with sqlite3.connect(path) as db:
+        # SQLite may renumber implicit rowids during maintenance.
+        db.execute("UPDATE event_jobs SET rowid=100 WHERE event_id='first'")
+        db.commit()
+        db.execute("VACUUM")
+    reopened = SqliteEventJobStore(path)
+    assert (await reopened.claim_next("worker", now=100)).job_id == "first"
+    await reopened.close()
 
 
 @pytest.mark.parametrize("store_factory", [InMemoryEventJobStore])
@@ -181,4 +222,47 @@ async def test_sqlite_next_wakeup_obeys_partition_head_and_unknown_state(tmp_pat
 
     await store.requeue_unknown("evt-1", now=20)
     assert await store.next_wakeup() == 20
+    await store.close()
+
+
+@pytest.mark.parametrize("status", ["completed", "unknown"])
+async def test_sqlite_retention_limits(tmp_path, status):
+    store = SqliteEventJobStore(tmp_path / "jobs.db", completed_ttl_seconds=10, unknown_ttl_seconds=20)
+    await store.enqueue("first", {}, partition_key="p", now=0)
+    await store.claim_next("w", now=0)
+    if status == "completed":
+        await store.complete("first", "w", now=0)
+    else:
+        await store.mark_unknown("first", "w", error_type="unknown", now=0)
+    limit = 10 if status == "completed" else 20
+    await store.enqueue("other", {}, partition_key="q", now=limit - 1)
+    assert await store.get("first") is not None
+    await store.enqueue("later", {}, partition_key="q", now=limit)
+    assert await store.get("first") is None
+    await store.close()
+
+
+async def test_unknown_retention_unlimited(tmp_path):
+    store = SqliteEventJobStore(tmp_path / "jobs.db", unknown_ttl_seconds=None)
+    await store.enqueue("first", {}, partition_key="p", now=0)
+    await store.claim_next("w", now=0)
+    await store.mark_unknown("first", "w", error_type="unknown", now=0)
+    await store.enqueue("later", {}, partition_key="q", now=10**9)
+    assert (await store.get("first")).status == EventJobStatus.UNKNOWN
+    await store.close()
+
+
+async def test_interrupt_respects_callback(tmp_path):
+    store = SqliteEventJobStore(tmp_path / "jobs.db", unknown_ttl_seconds=None)
+    await store.enqueue("first", {}, partition_key="chat", private_message=True, now=1)
+    first = await store.claim_next("worker", now=1, lease_seconds=60)
+    assert first is not None and first.lease_token
+    assert not await store.enqueue("first", {}, partition_key="chat", private_message=True, now=2)
+    assert not await store.should_interrupt("first", "worker", first.lease_token, now=2)
+    await store.enqueue("approval", {}, partition_key="chat", now=3)
+    await store.enqueue("new", {}, partition_key="chat", private_message=True, now=4)
+    assert not await store.should_interrupt("first", "worker", first.lease_token, now=4)
+    await store.finish_fenced("first", "worker", first.lease_token, now=5)
+    callback = await store.claim_next("worker", now=5)
+    assert callback is not None and callback.event_id == "approval"
     await store.close()

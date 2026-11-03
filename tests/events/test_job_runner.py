@@ -19,6 +19,175 @@ def payload(event_id: str) -> dict:
     }
 
 
+async def test_interrupt_after_progress(tmp_path):
+    from types import SimpleNamespace
+
+    from feishu.agent.loop import AgentEngine
+    from feishu.agent.persistence import SqliteSessionStore
+    from feishu.agent.tools import ToolRegistry
+    from feishu.events.jobs import SqliteEventJobStore
+
+    started = asyncio.Event()
+
+    class Model:
+        async def stream(self, **_kwargs):
+            started.set()
+            await asyncio.Event().wait()
+            yield None
+
+    class IM:
+        async def send(self, *_args, **_kwargs):
+            return {"message_id": "progress"}
+
+        async def patch(self, *_args, **_kwargs):
+            return {}
+
+    path = tmp_path / "agent.db"
+    store = SqliteEventJobStore(path, unknown_ttl_seconds=None)
+    sessions = SqliteSessionStore(path)
+    agent = AgentEngine(
+        backend=Model(),
+        registry=ToolRegistry(),
+        store=sessions,
+        client=SimpleNamespace(im=IM()),
+        progress_card_builder=lambda *_: {},
+    )
+    first = payload("first")
+    first["event"]["message"].update(chat_type="p2p", message_type="text", content='{"text":"hello"}')
+    await store.enqueue("first", first, partition_key="chat-1", private_message=True)
+    runner = EventJobRunner(store, agent.run, worker_id="a", interrupt_poll_seconds=0.01)
+    running = asyncio.create_task(runner.run_once())
+    try:
+        await asyncio.wait_for(started.wait(), 2)
+        await store.enqueue("second", payload("second"), partition_key="chat-1", private_message=True)
+        old = await asyncio.wait_for(running, 2)
+        new = await store.claim_next("b")
+        assert old is not None and old.status is EventJobStatus.COMPLETED
+        assert new is not None and new.event_id == "second"
+    finally:
+        if not running.done():
+            running.cancel()
+            await asyncio.gather(running, return_exceptions=True)
+        await store.close()
+        sessions._db.close()
+
+
+async def test_progress_failure_is_unknown(tmp_path):
+    from types import SimpleNamespace
+
+    from feishu.agent.loop import AgentEngine
+    from feishu.agent.persistence import SqliteSessionStore
+    from feishu.agent.tools import ToolRegistry
+    from feishu.events.jobs import SqliteEventJobStore
+    from tests._fakes import FakeLlmBackend, text_turn
+
+    class IM:
+        def __init__(self):
+            self.replies = []
+
+        async def send(self, *_args, **_kwargs):
+            return {"message_id": "progress"}
+
+        async def patch(self, *_args, **_kwargs):
+            raise TimeoutError("delivery outcome unknown")
+
+        async def reply(self, *_args, **_kwargs):
+            self.replies.append("duplicate")
+
+    path = tmp_path / "agent.db"
+    jobs = SqliteEventJobStore(path, unknown_ttl_seconds=None)
+    sessions = SqliteSessionStore(path)
+    im = IM()
+    agent = AgentEngine(
+        backend=FakeLlmBackend([text_turn("done")]),
+        registry=ToolRegistry(),
+        store=sessions,
+        client=SimpleNamespace(im=im),
+        progress_card_builder=lambda *_: {},
+    )
+    event = payload("first")
+    event["event"]["message"].update(chat_type="p2p", message_type="text", content='{"text":"hello"}')
+    await jobs.enqueue("first", event, partition_key="chat-1", private_message=True)
+    try:
+        result = await EventJobRunner(jobs, agent.run, worker_id="a").run_once()
+        assert result is not None and result.status is EventJobStatus.UNKNOWN
+        assert not im.replies
+    finally:
+        await jobs.close()
+        sessions._db.close()
+
+
+async def test_precheck_clears_context(tmp_path, monkeypatch):
+    from feishu.events.jobs import SqliteEventJobStore, current_event_job
+
+    store = SqliteEventJobStore(tmp_path / "jobs.db", unknown_ttl_seconds=None)
+    await store.enqueue("first", payload("first"), partition_key="chat-1", private_message=True)
+
+    async def fail(*_args, **_kwargs):
+        raise RuntimeError("precheck unavailable")
+
+    monkeypatch.setattr(store, "should_interrupt", fail)
+    try:
+        with pytest.raises(RuntimeError):
+            await EventJobRunner(store, lambda _event: asyncio.sleep(0), worker_id="a").run_once()
+        assert current_event_job() is None
+    finally:
+        await store.close()
+
+
+@pytest.mark.parametrize("fails", [False, True])
+async def test_interrupt_waits_for_tool(tmp_path, fails):
+    import threading
+
+    from feishu.agent.loop import AgentEngine
+    from feishu.agent.persistence import SqliteSessionStore
+    from feishu.agent.tools import ToolRegistry
+    from feishu.events.jobs import SqliteEventJobStore
+    from tests._fakes import FakeLlmBackend, tool_turn
+
+    entered, release = threading.Event(), threading.Event()
+    registry = ToolRegistry()
+    effects = []
+
+    @registry.register("write", input_schema={"type": "object"}, description="write")
+    def write():
+        entered.set()
+        release.wait(2)
+        effects.append("sent")
+        if fails:
+            raise TimeoutError("response unknown")
+
+    path = tmp_path / "agent.db"
+    store = SqliteEventJobStore(path, unknown_ttl_seconds=None)
+    sessions = SqliteSessionStore(path)
+    backend = FakeLlmBackend([tool_turn(id="call", name="write", arguments_json="{}")])
+    agent = AgentEngine(backend=backend, registry=registry, store=sessions)
+    first = payload("first")
+    first["event"]["message"].update(chat_type="p2p", message_type="text", content='{"text":"hello"}')
+    await store.enqueue("first", first, partition_key="chat-1", private_message=True)
+    runner = EventJobRunner(store, agent.run, worker_id="a", interrupt_poll_seconds=0.01)
+    running = asyncio.create_task(runner.run_once())
+    try:
+        assert await asyncio.to_thread(entered.wait, 2)
+        await store.enqueue("second", payload("second"), partition_key="chat-1", private_message=True)
+        await asyncio.sleep(0.05)
+        assert not running.done()
+        assert await store.claim_next("b") is None
+        release.set()
+        old = await asyncio.wait_for(running, 2)
+        assert effects == ["sent"]
+        assert old is not None and old.status is (EventJobStatus.UNKNOWN if fails else EventJobStatus.COMPLETED)
+        next_job = await store.claim_next("b")
+        assert (next_job is None) is fails
+    finally:
+        release.set()
+        if not running.done():
+            running.cancel()
+            await asyncio.gather(running, return_exceptions=True)
+        await store.close()
+        sessions._db.close()
+
+
 async def test_runner_completes_a_job_and_deduplicates_later_delivery() -> None:
     store = InMemoryEventJobStore()
     await store.enqueue("evt-1", payload("evt-1"), partition_key="chat-1", now=1)
@@ -168,9 +337,17 @@ async def test_runner_renews_lease_while_handler_is_active() -> None:
             await asyncio.gather(task, return_exceptions=True)
 
 
-async def test_runner_cancellation_after_effect_becomes_unknown() -> None:
-    store = InMemoryEventJobStore()
-    await store.enqueue("evt-1", payload("evt-1"), partition_key="chat-1")
+@pytest.mark.parametrize("protected", [False, True])
+async def test_runner_cancellation_after_effect_becomes_unknown(tmp_path, protected) -> None:
+    from feishu.events.jobs import SqliteEventJobStore
+
+    store = (
+        SqliteEventJobStore(tmp_path / "jobs.db", unknown_ttl_seconds=None) if protected else InMemoryEventJobStore()
+    )
+    if isinstance(store, SqliteEventJobStore):
+        await store.enqueue("evt-1", payload("evt-1"), partition_key="chat-1", private_message=True)
+    else:
+        await store.enqueue("evt-1", payload("evt-1"), partition_key="chat-1")
     started = asyncio.Event()
 
     async def blocked_after_effect(_event: Event) -> None:
@@ -187,6 +364,8 @@ async def test_runner_cancellation_after_effect_becomes_unknown() -> None:
 
     job = await store.get("evt-1")
     assert job is not None and job.status is EventJobStatus.UNKNOWN
+    if isinstance(store, SqliteEventJobStore):
+        await store.close()
 
 
 @pytest.mark.parametrize("cancel_runner", [False, True])

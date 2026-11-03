@@ -99,17 +99,33 @@ class TestList:
         await client.calendar.events.list("cal1", start_time="100", end_time="200")
         params = recorder[0][2]
         assert params["start_time"] == "100" and params["end_time"] == "200"
+        assert params["page_size"] == "1000" and len(recorder) == 1
         await client.aclose()
 
-    async def test_time_range_paginates(self, client_factory, recorder):
+    @pytest.mark.parametrize("max_items", [None, 1])
+    async def test_range_truncation(self, client_factory, recorder, max_items):
         responder = paginated_responder([[{"event_id": "evt1"}], [{"event_id": "evt2"}]])
         client = client_factory(recorder=recorder, responder=responder)
-        items = await client.calendar.events.list("cal1", start_time="100", end_time="200")
-        assert [item["event_id"] for item in items] == ["evt1", "evt2"]
-        assert len(recorder) == 2
-        assert recorder[0][2]["start_time"] == "100"
-        assert recorder[0][2]["end_time"] == "200"
-        assert recorder[1][2]["start_time"] == "100"
-        assert recorder[1][2]["end_time"] == "200"
-        assert recorder[1][2]["page_token"] == "p2"
+        if max_items is None:
+            with pytest.raises(ValueError, match="narrow"):
+                await client.calendar.events.list("cal1", start_time="100", end_time="200")
+        else:
+            items = await client.calendar.events.list("cal1", start_time="100", end_time="200", max_items=max_items)
+            assert [item["event_id"] for item in items] == ["evt1"]
+        assert len(recorder) == 1
+        await client.aclose()
+
+
+class TestInstanceView:
+    async def test_returns_instances(self, client_factory, recorder):
+        client = client_factory(
+            recorder=recorder, responder=lambda _: envelope({"items": [{"event_id": "occurrence"}]})
+        )
+        items = await client.calendar.events.instance_view("cal1", start_time="100", end_time="200")
+        assert [item["event_id"] for item in items] == ["occurrence"]
+        method, path, params, _ = recorder.last
+        assert method == "GET" and path.endswith("/calendar/v4/calendars/cal1/events/instance_view")
+        assert params == {"start_time": "100", "end_time": "200"}
+        with pytest.raises(ValueError, match="shorter than 40 days"):
+            await client.calendar.events.instance_view("cal1", start_time="0", end_time=str(40 * 24 * 60 * 60))
         await client.aclose()

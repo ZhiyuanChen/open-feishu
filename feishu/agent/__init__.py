@@ -33,6 +33,13 @@ from .app import Agent
 from .configuration import AgentConfigurationError, ConfigurationIssue, validate_agent_config
 from .profiles import AgentProfile, AgentRuntime, ProfiledAgent, ProfileRouter
 from .result import ToolOutcome, ToolResult
+from .scheduled import (
+    Schedule,
+    ScheduledAgentAdapter,
+    ScheduledExecutionResult,
+    ScheduledTaskRunner,
+    ScheduledTaskStore,
+)
 from .tools import Tool, ToolRegistry, ToolValidationError
 
 __all__ = [
@@ -49,4 +56,9 @@ __all__ = [
     "ToolValidationError",
     "ToolOutcome",
     "ToolResult",
+    "Schedule",
+    "ScheduledTaskStore",
+    "ScheduledTaskRunner",
+    "ScheduledExecutionResult",
+    "ScheduledAgentAdapter",
 ]

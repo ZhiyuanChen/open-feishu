@@ -275,4 +275,4 @@ def list_bitable_records(
         )
         return ToolResult(ToolOutcome.COMPLETED, content=result)
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(name=name, description=description, input_schema=input_schema, handler=handler, scheduled_effect="read")

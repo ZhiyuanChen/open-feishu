@@ -69,6 +69,14 @@ class ToolContext:
     memory_namespace: str | None = None
     timezone: str | Callable[..., Any] | None = None
     continuation_id: str | None = None
+    trusted_tenant_key: str | None = None
+
+    def resolved_tenant_key(self) -> str | None:
+        """Resolve an authenticated event tenant against a trusted deployment default."""
+        event_tenant = getattr(self.event, "tenant_key", None)
+        if event_tenant and self.trusted_tenant_key and event_tenant != self.trusted_tenant_key:
+            raise PermissionError("event tenant does not match configured tenant")
+        return event_tenant or self.trusted_tenant_key
 
     async def as_user(self) -> Any | None:
         r"""解析当前请求用户的用户态飞书客户端；无提供方 / 无授权时返回 `None`。"""
@@ -77,6 +85,12 @@ class ToolContext:
         user = self.user or _user_from_event(self.event)
         if not user:
             return None
+        tenant_key = self.resolved_tenant_key()
+        if self.event is not None or tenant_key:
+            resolver = getattr(self.user_tokens, "as_user_for_tenant", None)
+            if not callable(resolver) or not tenant_key:
+                return None
+            return await resolver(tenant_key, user)
         return await self.user_tokens.as_user(user)
 
     async def has_user_auth(self, scopes: Sequence[str]) -> bool:
@@ -88,6 +102,15 @@ class ToolContext:
         user = self.user or _user_from_event(self.event)
         if not user:
             return False
+        tenant_key = self.resolved_tenant_key()
+        if self.event is not None or tenant_key:
+            checker = getattr(self.user_tokens, "has_scopes_for_tenant", None)
+            if not callable(checker) or not tenant_key:
+                return False
+            result = checker(tenant_key, user, tuple(scopes))
+            if inspect.isawaitable(result):
+                result = await result
+            return bool(result)
         checker = getattr(self.user_tokens, "has_scopes", None)
         if checker is not None:
             result = checker(user, tuple(scopes))

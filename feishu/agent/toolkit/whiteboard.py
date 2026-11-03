@@ -74,4 +74,4 @@ def list_whiteboard_nodes(
         nodes = await client.board.whiteboards.list_nodes(arguments["whiteboard_id"], user_id_type="open_id")
         return ToolResult(ToolOutcome.COMPLETED, content=nodes)
 
-    return Tool(name=name, description=description, input_schema=input_schema, handler=handler)
+    return Tool(name=name, description=description, input_schema=input_schema, handler=handler, scheduled_effect="read")

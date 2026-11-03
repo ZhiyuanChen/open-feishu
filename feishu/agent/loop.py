@@ -27,6 +27,7 @@ import logging
 import re
 import time
 from collections.abc import AsyncGenerator, Awaitable, Callable, Mapping
+from contextlib import nullcontext
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, AsyncIterator, Literal
 from uuid import uuid4
@@ -34,7 +35,13 @@ from weakref import WeakValueDictionary
 
 from ..events.conversations import is_group_message, session_id_for_message
 from ..events.envelope import Event
-from ..events.jobs import current_event_job, mark_current_event_side_effect_started
+from ..events.jobs import (
+    EventSuperseded,
+    current_event_effect,
+    current_event_job,
+    event_checkpoint,
+    mark_current_event_side_effect_started,
+)
 from . import approval as approval_flow
 from . import oauth as oauth_flow
 from . import summarization as summarization_flow
@@ -66,7 +73,8 @@ from .llm import (
     parse_tool_arguments,
 )
 from .profiles import namespaced_session_id
-from .progress import ProgressSnapshot, _ProgressCard
+from .progress import ProgressSnapshot, _message_id_from_response, _ProgressCard
+from .replies import ScheduledTurn, turn_message
 from .result import ToolOutcome, ToolResult, coerce_tool_result
 from .session import (
     InMemoryPendingApprovalStore,
@@ -325,6 +333,36 @@ def _default_now() -> float:
     return time.time()
 
 
+async def _cooperative_chunks(chunks: AsyncIterator[StreamChunk]) -> AsyncGenerator[StreamChunk, None]:
+    """Stop waiting for model output without cancelling an external tool or card write."""
+    job = current_event_job()
+    cancellation = job.cancellation if job is not None and job.interruptible else None
+    if cancellation is None:
+        async for chunk in chunks:
+            yield chunk
+        return
+    iterator = aiter(chunks)
+    while not cancellation.is_set():
+        next_chunk = asyncio.ensure_future(anext(iterator))
+        interrupted = asyncio.create_task(cancellation.wait())
+        try:
+            done, _ = await asyncio.wait((next_chunk, interrupted), return_when=asyncio.FIRST_COMPLETED)
+            if interrupted in done:
+                next_chunk.cancel()
+                await asyncio.gather(next_chunk, return_exceptions=True)
+                return
+            try:
+                yield next_chunk.result()
+            except StopAsyncIteration:
+                return
+        finally:
+            interrupted.cancel()
+            await asyncio.gather(interrupted, return_exceptions=True)
+            if not next_chunk.done():
+                next_chunk.cancel()
+                await asyncio.gather(next_chunk, return_exceptions=True)
+
+
 class AgentEngine:
     r"""
     智能体底层主循环：驱动大模型与工具协作，自动回复飞书消息。
@@ -413,6 +451,28 @@ class AgentEngine:
         >>> register_agent(dispatcher, agent)  # doctest:+SKIP
     """
 
+    @property
+    def registry(self) -> Any:
+        from .scheduled_policy import current_scheduled_registry
+
+        return current_scheduled_registry(self._registry)
+
+    @registry.setter
+    def registry(self, value: Any) -> None:
+        self._registry = value
+
+    @property
+    def store(self) -> Any:
+        from .event_session import current_event_session
+        from .scheduled_session import current_fenced_session
+
+        event_store = current_event_session(self._store)
+        return event_store if event_store is not self._store else current_fenced_session(self._store)
+
+    @store.setter
+    def store(self, value: Any) -> None:
+        self._store = value
+
     def __init__(
         self,
         *,
@@ -461,6 +521,8 @@ class AgentEngine:
         timezone: str | Callable[..., Any] | None = None,
         interrupted_progress_text: str = "已被更新的消息打断。",
         stream: bool = False,
+        scheduled_store: Any = None,
+        trusted_tenant_key: str | None = None,
         **backend_kwargs: Any,
     ) -> None:
         if max_iterations < 1:
@@ -474,7 +536,8 @@ class AgentEngine:
         self.approvals: PendingApprovalStore = approvals or InMemoryPendingApprovalStore()
         self.authorizations: PendingAuthorizationStore = authorizations or InMemoryPendingAuthorizationStore()
         self.approval_engine: ApprovalEngine = approval_engine or DefaultApprovalEngine(approvals=self.approvals)
-        self._approval_card_builder = approval_card_builder or approval_flow.default_approval_card
+        self._product_approval_card_builder = approval_card_builder or approval_flow.default_approval_card
+        self._approval_card_builder = self._build_approval_card
         self._decided_card_builder = decided_card_builder or approval_flow.default_decided_card
         self._auth_card_builder = auth_card_builder
         self._progress_card_builder = progress_card_builder
@@ -509,6 +572,8 @@ class AgentEngine:
         self.timezone = timezone
         self._interrupted_progress_text = interrupted_progress_text
         self.stream = stream
+        self.scheduled_store = scheduled_store
+        self.trusted_tenant_key = trusted_tenant_key
         self.backend_kwargs = backend_kwargs
         self._bg_tasks: set[asyncio.Task[Any]] = set()
         self._active_turns: dict[str, _ActiveTurn] = {}
@@ -664,11 +729,17 @@ class AgentEngine:
         user_msg.source_event_id = event_id or None
         progress = _ProgressCard(self, event)
         active_task = self._begin_session_turn(session_id, progress, interrupt_previous=not is_group_message(event))
+        job = current_event_job()
+        session_scope: Any = nullcontext()
+        if job is not None and job.lease_token:
+            from .event_session import fenced_event_session_scope
+
+            session_scope = fenced_event_session_scope(self._store, job, session_id)
         try:
             # Serialize per session: hold the session lock across the whole read-modify-write + loop so a
             # concurrent message (or a background approval-resume) for the same chat can't load stale history
             # and clobber a turn.
-            with use_tool_context(self._tool_context(event)):
+            with session_scope, use_tool_context(self._tool_context(event)):
                 async with self._session_lock(session_id):
                     # A reset command (e.g. "/clear") truly DROPS this session's history (cache-friendly: starts a
                     # fresh prefix rather than sliding a window), then acks — without running the model.
@@ -699,7 +770,11 @@ class AgentEngine:
                             user_msg.content.append(TextPart(text=shared_files_note(shared)))
                         history.append(user_msg)
                         await self.store.set(session_id, history)
+                    event_checkpoint()
                     await self._loop(event, session_id, history, progress=progress)
+        except EventSuperseded:
+            await self._finalize_interrupted_progress(progress)
+            raise
         except asyncio.CancelledError:
             if self._turn_was_superseded(active_task):
                 await self._finalize_interrupted_progress(progress)
@@ -708,9 +783,113 @@ class AgentEngine:
         finally:
             self._end_session_turn(session_id, active_task)
 
-    async def _loop(
-        self, event: Event, session_id: str, history: list[Message], progress: _ProgressCard | None = None
+    async def run_scheduled(self, turn: ScheduledTurn, instruction: str) -> str:
+        """Run an explicit owner-bound scheduled turn in its own session.
+
+        The caller must authenticate the stored owner and ensure durable claim
+        before invoking this method. No Feishu inbound event is manufactured.
+        """
+        from .scheduled_policy import scheduled_registry_scope
+        from .scheduled_session import fenced_session_scope
+
+        if not self._accepting_events:
+            raise RuntimeError("agent is shutting down and is not accepting work")
+        if not isinstance(turn, ScheduledTurn) or not isinstance(instruction, str) or not instruction.strip():
+            raise ValueError("a scheduled turn and instruction are required")
+        if self.scheduled_store is None:
+            raise ValueError("a persistent scheduled store is required")
+        from ..auth import user_identity_keys
+
+        run = self.scheduled_store.get_run(turn.run_id)
+        task = self.scheduled_store.get(run.task_id) if run is not None else None
+        if (
+            run is None
+            or task is None
+            or run.status != "running"
+            or run.session_id != turn.session_id
+            or task.chat_id != turn.chat_id
+            or task.tenant_key != turn.tenant_key
+            or task.policy != turn.policy
+            or task.instruction != instruction
+            or set(user_identity_keys(turn.user)) != set(task.owner_keys)
+        ):
+            raise PermissionError("scheduled turn does not match its claimed task")
+        self._assert_scheduled_lease(turn)
+        progress = _ProgressCard(self, turn)
+        active_task = self._begin_session_turn(turn.session_id, progress, interrupt_previous=False)
+        try:
+            with (
+                scheduled_registry_scope(
+                    self._registry, turn.policy, lease_validator=lambda: self._assert_scheduled_lease(turn)
+                ),
+                fenced_session_scope(self._store, self.scheduled_store, turn, clock=self._now),
+                use_tool_context(self._tool_context(turn)),
+            ):
+                async with self._session_lock(turn.session_id):
+                    if await self.store.get(turn.session_id):
+                        raise ValueError("scheduled session already exists")
+                    history = [Message(role="user", content=[TextPart(text=instruction)])]
+                    await self.store.set(turn.session_id, history)
+                    return await self._loop(turn, turn.session_id, history, progress=progress)
+        finally:
+            self._end_session_turn(turn.session_id, active_task)
+
+    def _scheduled_run_for(self, turn: ScheduledTurn) -> Any:
+        from ..auth import user_identity_keys
+
+        if self.scheduled_store is None:
+            raise RuntimeError("scheduled continuation has no persistent scheduled store")
+        run = self.scheduled_store.get_run(turn.run_id)
+        task = self.scheduled_store.get(run.task_id) if run is not None else None
+        if (
+            run is None
+            or task is None
+            or run.session_id != turn.session_id
+            or task.chat_id != turn.chat_id
+            or task.tenant_key != turn.tenant_key
+            or task.policy != turn.policy
+            or set(user_identity_keys(turn.user)) != set(task.owner_keys)
+        ):
+            raise PermissionError("scheduled continuation does not match its claimed task")
+        self._assert_scheduled_lease(turn)
+        return run
+
+    def _assert_scheduled_lease(self, turn: Event | ScheduledTurn) -> None:
+        if isinstance(turn, ScheduledTurn):
+            if self.scheduled_store is None:
+                raise PermissionError("scheduled store unavailable")
+            self.scheduled_store.validate_lease(turn.run_id, turn.lease_token, now=self._now())
+
+    async def _record_scheduled_wait(
+        self, turn: Event | ScheduledTurn, kind: str, wait_id: str, deadline: float
     ) -> None:
+        if isinstance(turn, ScheduledTurn):
+            self._scheduled_run_for(turn)
+            self.scheduled_store.record_wait(
+                turn.run_id, kind, wait_id, deadline, expected_token=turn.lease_token, now=self._now()
+            )
+
+    async def _clear_scheduled_wait(self, turn: Event | ScheduledTurn, kind: str, wait_id: str) -> None:
+        if isinstance(turn, ScheduledTurn):
+            run = self._scheduled_run_for(turn)
+            if run.wait_kind == kind:
+                self.scheduled_store.clear_wait(turn.run_id, wait_id, expected_token=turn.lease_token, now=self._now())
+
+    async def _settle_scheduled_resume(self, turn: Event | ScheduledTurn, status: str) -> None:
+        if not isinstance(turn, ScheduledTurn):
+            return
+        self._scheduled_run_for(turn)
+        self.scheduled_store.finish_run(
+            turn.run_id, status, now=self._now(), expected_status="running", expected_token=turn.lease_token
+        )
+
+    async def _loop(
+        self,
+        event: Event | ScheduledTurn,
+        session_id: str,
+        history: list[Message],
+        progress: _ProgressCard | None = None,
+    ) -> str:
         progress = progress or _ProgressCard(self, event)
         result = None
         streamed = False
@@ -719,11 +898,14 @@ class AgentEngine:
         # model call, so a long session keeps a stable, cacheable prefix instead of paying a growing prompt.
         try:
             history = await self._maybe_summarize(session_id, history)
+            event_checkpoint()
             if progress.will_start:
                 await mark_current_event_side_effect_started()
             await progress.start()
             timezone = await self._timezone_for_event(event)
             for _ in range(self.max_iterations):
+                event_checkpoint()
+                self._assert_scheduled_lease(event)
                 system = await self._system_for_event(event, timezone)
                 messages = _messages_with_turn_context(history, await self._turn_context_for_event(event, timezone))
                 result, streamed = await self._accumulate_stream_with_progress(
@@ -760,7 +942,7 @@ class AgentEngine:
                     active_tool_calls = None
                     if suspension:
                         await progress.finalize(_suspension_progress_note(suspension))
-                        return  # authorization / approval suspended the turn
+                        return "awaiting_authorization" if suspension == "authorization" else "awaiting_confirmation"
                     continue
                 assistant = Message(role="assistant", content=[TextPart(text=result.text)])
                 await mark_current_event_side_effect_started()
@@ -769,7 +951,7 @@ class AgentEngine:
                 # Replace the progress card in place with the answer; only send a separate reply if there was none.
                 if not await progress.finalize(result.text) and not streamed:
                     await self._finalize(event, result.text)
-                return
+                return "succeeded"
             # Loop exhausted max_iterations without a final text turn — send a fallback reply.
             logging.getLogger("feishu").warning(
                 "Agent loop reached max_iterations=%s without completing the request; sending fallback reply.",
@@ -782,22 +964,27 @@ class AgentEngine:
             )
             if not await progress.finalize(fallback) and not streamed:
                 await self._finalize(event, fallback)
-        except asyncio.CancelledError:
+            return "failed"
+        except (asyncio.CancelledError, EventSuperseded):
             if active_tool_calls:
                 await self._mark_interrupted_tool_results(session_id, history, active_tool_calls)
             raise
 
     async def _accumulate_stream_with_progress(
-        self, event: Event, chunks: AsyncIterator[StreamChunk], progress: _ProgressCard
+        self, event: Any, chunks: AsyncIterator[StreamChunk], progress: _ProgressCard
     ) -> tuple[StreamResult, bool]:
         r"""消费一轮模型流，同时推送正文；推理内容只交给进度摘要器。"""
 
         async def on_reasoning(reasoning: str, text: str) -> None:
             await progress.thinking(reasoning=reasoning, text=text)
 
-        message_id = (event.body.get("message") or {}).get("message_id")
+        chunks = _cooperative_chunks(chunks)
+
+        message_id = turn_message(event).get("message_id")
         if not self.stream or self.client is None or not message_id or progress.message_id:
-            return await accumulate_stream(chunks, on_reasoning=on_reasoning), False
+            result = await accumulate_stream(chunks, on_reasoning=on_reasoning)
+            event_checkpoint()
+            return result, False
 
         accumulator = _StreamAccumulator()
 
@@ -815,6 +1002,7 @@ class AgentEngine:
             # Tool-only turns must not create an empty visible card.
             first = await anext(tokens, None)
             if first is None:
+                event_checkpoint()
                 return accumulator.finish(), False
 
             async def replay() -> AsyncIterator[str]:
@@ -823,7 +1011,9 @@ class AgentEngine:
                     yield token
 
             await mark_current_event_side_effect_started()
-            await self.client.stream_card(replay(), reply_to_message_id=message_id)
+            async with current_event_effect():
+                await self.client.stream_card(replay(), reply_to_message_id=message_id)
+            event_checkpoint()
             return accumulator.finish(), True
         except BaseException:
             failed = True
@@ -914,9 +1104,11 @@ class AgentEngine:
         return Message(role="assistant", content=content, continuation_id=uuid4().hex)
 
     async def _dispatch_tool_calls(
-        self, event: Event, session_id: str, history: list[Message], tool_calls: list[ToolCall], progress: _ProgressCard
+        self, event: Any, session_id: str, history: list[Message], tool_calls: list[ToolCall], progress: _ProgressCard
     ) -> str | None:
         for call in tool_calls:
+            event_checkpoint()
+            self._assert_scheduled_lease(event)
             try:
                 tool = self.registry.get(call.name)
             except KeyError:
@@ -931,6 +1123,23 @@ class AgentEngine:
                     ToolResultPart(tool_call_id=call.id, content=f"error: unknown tool {call.name!r}", is_error=True),
                 )
                 continue
+            if self.scheduled_store is not None and tool.name in {
+                "create_scheduled_task",
+                "pause_scheduled_task",
+                "resume_scheduled_task",
+                "delete_scheduled_task",
+            }:
+                from .toolkit.scheduled import preflight_scheduled_tool
+
+                try:
+                    preflight_scheduled_tool(
+                        tool.name, parse_tool_arguments(call.arguments), self.scheduled_store, now=self._now()
+                    )
+                except (ValueError, TypeError, PermissionError, KeyError) as exc:
+                    await self._record_tool_error(
+                        history, session_id, call.id, f"scheduled task request rejected: {type(exc).__name__}"
+                    )
+                    continue
             auth_status = await self._preflight_authorization(event, session_id, history, call, tool, progress)
             if auth_status == "suspended":
                 await self._mark_awaiting_authorization(session_id, history, tool_calls)
@@ -945,8 +1154,10 @@ class AgentEngine:
                     await self._mark_awaiting_confirmation(session_id, history, tool_calls)
                     return "approval"  # suspend the turn awaiting confirmation
                 continue  # fail-closed: no identifiable requester — error recorded, keep processing
-            result_part, suspended = await self._execute_tool_call(event, session_id, history, call, tool, progress)
-            await self._record_tool_result_part(session_id, history, result_part)
+            async with current_event_effect():
+                result_part, suspended = await self._execute_tool_call(event, session_id, history, call, tool, progress)
+                await self._record_tool_result_part(session_id, history, result_part)
+            event_checkpoint()
             if suspended:
                 await self._mark_awaiting_authorization(session_id, history, tool_calls)
                 return "authorization"
@@ -1021,26 +1232,33 @@ class AgentEngine:
             return None
         return await self._dispatch_tool_calls(event, session_id, history, remaining, progress)
 
-    def _tool_context(self, event: Event) -> ToolContext:
-        return ToolContext(
+    def _tool_context(self, event: Any) -> ToolContext:
+        context = ToolContext(
             client=self.client,
             event=event,
+            user=dict(event.user) if isinstance(event, ScheduledTurn) else {},
             user_tokens=self.user_tokens,
             authorize_url_builder=self.authorize_url_builder,
             shared_files=self.shared_files,
             payment_accounts=self.payment_accounts,
             memory_store=self.memory_store,
             memory_namespace=self.memory_namespace,
-            timezone=self.timezone,
+            timezone=(event.timezone or self.timezone) if isinstance(event, ScheduledTurn) else self.timezone,
+            trusted_tenant_key=self.trusted_tenant_key,
         )
+        context.resolved_tenant_key()
+        return context
 
-    async def _timezone_for_event(self, event: Event) -> str | None:
+    async def _timezone_for_event(self, event: Any) -> str | None:
+        if isinstance(event, ScheduledTurn):
+            self._assert_scheduled_lease(event)
+            return await self._tool_context(event).current_timezone()
         return await ToolContext(event=event, timezone=self.timezone).current_timezone()
 
-    async def _system_for_event(self, event: Event, timezone: str | None) -> str | None:
+    async def _system_for_event(self, event: Any, timezone: str | None) -> str | None:
         return await _dynamic_text(self.system, event, timezone)
 
-    async def _turn_context_for_event(self, event: Event, timezone: str | None) -> str | None:
+    async def _turn_context_for_event(self, event: Any, timezone: str | None) -> str | None:
         return await _dynamic_text(self.turn_context, event, timezone)
 
     async def _register_inbound_files(self, event: Event) -> list[Any]:
@@ -1187,7 +1405,7 @@ class AgentEngine:
         r"""授权完成后尽力清理独立 OAuth 授权卡片。"""
         await oauth_flow.remove_authorization_card(self, authorization)
 
-    def _event_from_pending_authorization(self, authorization: PendingAuthorization) -> Event:
+    def _event_from_pending_authorization(self, authorization: PendingAuthorization) -> Any:
         return oauth_flow.event_from_pending_authorization(authorization)
 
     def _tool_description(self, tool_name: str) -> str | None:
@@ -1220,12 +1438,36 @@ class AgentEngine:
     def _default_approval_card(self, approval: PendingApproval) -> dict[str, Any]:
         return approval_flow.default_approval_card(approval)
 
+    def _build_approval_card(self, approval: PendingApproval) -> dict[str, Any]:
+        if self.scheduled_store is not None and approval.tool_name in {
+            "create_scheduled_task",
+            "pause_scheduled_task",
+            "resume_scheduled_task",
+            "delete_scheduled_task",
+        }:
+            from .toolkit.scheduled import scheduled_approval_card
+
+            return scheduled_approval_card(approval, self.scheduled_store)
+        return self._product_approval_card_builder(approval)
+
     def _default_decided_card(
         self, approval: PendingApproval, decision: str, outcome: ApprovalOutcome
     ) -> dict[str, Any]:
         return approval_flow.default_decided_card(approval, decision, outcome)
 
-    async def _finalize(self, event: Event, text: str) -> None:
+    async def _finalize(self, event: Any, text: str) -> None:
+        if isinstance(event, ScheduledTurn):
+            self._assert_scheduled_lease(event)
+            if self.client is None:
+                raise RuntimeError("scheduled turn has no delivery client")
+            await mark_current_event_side_effect_started()
+            async with current_event_effect():
+                response = await self.client.im.send(event.chat_id, text, msg_type="text", receive_id_type="chat_id")
+            if not _message_id_from_response(response):
+                from .scheduled_policy import ScheduledDeliveryUnknown
+
+                raise ScheduledDeliveryUnknown("scheduled text response has no message ID")
+            return
         message = event.body.get("message") or {}
         message_id = message.get("message_id")
         if self.stream and self.client is not None:
@@ -1234,7 +1476,8 @@ class AgentEngine:
             return
         if self.client is not None and message_id:
             await mark_current_event_side_effect_started()
-            await self.client.im.reply(message_id, text, msg_type="text")
+            async with current_event_effect():
+                await self.client.im.reply(message_id, text, msg_type="text")
 
     async def _finalize_stream(self, event: Event, text: str) -> None:
         message = event.body.get("message") or {}
@@ -1247,7 +1490,8 @@ class AgentEngine:
             yield text
 
         await mark_current_event_side_effect_started()
-        await self.client.stream_card(_one_token(), reply_to_message_id=message_id)  # type: ignore[union-attr]
+        async with current_event_effect():
+            await self.client.stream_card(_one_token(), reply_to_message_id=message_id)  # type: ignore[union-attr]
 
 
 def _originating_tool_messages(history: list[Message]) -> list[Message]:

@@ -76,6 +76,25 @@ logger = logging.getLogger("feishu")
 _UNSET = object()
 
 
+class _OverlayRegistry(ToolRegistry):
+    """Add Agent-owned tools without mutating a caller's registry."""
+
+    def __init__(self, base: Any) -> None:
+        super().__init__()
+        self._base = base
+
+    def specs(self) -> list[Any]:
+        return [*self._base.specs(), *super().specs()]
+
+    def get(self, name: str) -> Any:
+        return super().get(name) if name in self._tools else self._base.get(name)
+
+    async def dispatch(self, name: str, arguments: dict[str, Any]) -> Any:
+        if name in self._tools:
+            return await super().dispatch(name, arguments)
+        return await self._base.dispatch(name, arguments)
+
+
 class Agent:
     r"""
     基于配置开箱即用地装配并运行 Feishu agent。
@@ -105,6 +124,7 @@ class Agent:
         seen_store: SeenStore | None = None,
         event_job_store: EventJobStore | None = None,
         event_partition_key: Callable[[Event], str] | None = None,
+        durable_callbacks: Any | None = None,
         user_tokens: Any | None = None,
         authorize_url_builder: Any | None = None,
         describe_analyzer: Any | None = None,
@@ -141,10 +161,14 @@ class Agent:
         self._asgi_application: Any | None = None
         self._injected_seen_store = seen_store
         self._resolved_seen_store: Any = _UNSET
-        self._event_job_store = event_job_store
+        if durable_callbacks is not None and (event_job_store is not None or event_partition_key is not None):
+            raise ValueError("durable callbacks own their event store and session partitioning")
+        self._durable_callbacks = durable_callbacks
+        self._event_job_store = durable_callbacks if durable_callbacks is not None else event_job_store
         self._event_partition_key = event_partition_key
+        self._scheduled_runner: Any | None = None
         if engine is not None:
-            self.client = client
+            self.client = client if client is not None else getattr(engine, "client", None)
             self.model_client = model_client
             self.backend = backend
             self.progress_summarizer = progress_summarizer
@@ -159,6 +183,19 @@ class Agent:
             self.authorize_url_builder = authorize_url_builder
             self.describe_analyzer = describe_analyzer
             self.engine = engine
+            if durable_callbacks is not None and self._get("oauth.public_url"):
+                if authorize_url_builder is not None or engine.authorize_url_builder is not None:
+                    raise ValueError("durable OAuth with an injected engine requires the Agent-managed URL builder")
+                self.signer = self._oauth_state_signer()
+                self.oauth_redirect_uri = build_oauth_redirect_uri(
+                    self._get("oauth.public_url"), self.oauth_callback_path
+                )
+                self.authorize_url_builder = self._authorize_url_builder()
+                if self.authorize_url_builder is None:
+                    raise ValueError("durable OAuth requires a state secret and token provider")
+                engine.authorize_url_builder = self.authorize_url_builder
+            self._configure_scheduling()
+            self._configure_durable_callbacks()
             return
         self.client = client if client is not None else self._own_resource(self._client_from_config())
         self.model_client = model_client
@@ -189,6 +226,100 @@ class Agent:
         if self.describe_analyzer is None and self.model_client is not None:
             self.describe_analyzer = self._describe_analyzer()
         self.engine = self._engine(registry=registry, **engine_overrides)
+        self._configure_scheduling()
+        self._configure_durable_callbacks()
+
+    def _configure_durable_callbacks(self) -> None:
+        if self._durable_callbacks is None:
+            return
+        from ..auth import SqliteOAuthTokenStore
+        from .durable_callbacks import SqliteDurableCallbacks, _same_file
+
+        inbox = self._durable_callbacks
+        if not isinstance(inbox, SqliteDurableCallbacks) or inbox.approvals is None:
+            raise ValueError("durable callbacks require a configured SQLite callback inbox")
+        if not (self._get("feishu.encrypt_key") or self._get("feishu.verification_token")):
+            raise ValueError("durable callbacks require Feishu event authentication")
+        if not isinstance(getattr(self.provider, "store", None), SqliteOAuthTokenStore):
+            raise ValueError("durable callbacks require a SQLite OAuth token provider")
+        if self.engine.user_tokens is not self.provider:
+            raise ValueError("durable callbacks require the Agent and engine to share a token provider")
+        if getattr(self.provider, "client", None) is not self.engine.client:
+            raise ValueError("durable callbacks require the Agent and OAuth provider to share a Feishu client")
+        if (
+            not isinstance(self.engine.approvals, SqlitePendingApprovalStore)
+            or not isinstance(self.engine.authorizations, SqlitePendingAuthorizationStore)
+            or not isinstance(self.engine._store, SqliteSessionStore)
+        ):
+            raise ValueError("durable callbacks require SQLite session, approval and authorization stores")
+        if not _same_file(
+            inbox.jobs._db,
+            getattr(getattr(self.provider, "store", None), "_db", None),
+            getattr(self.engine.approvals, "_db", None),
+            getattr(self.engine.authorizations, "_db", None),
+            getattr(self.engine._store, "_db", None),
+        ):
+            raise ValueError("durable callbacks require Agent session, authorization and token stores in one database")
+        self._event_partition_key = self.engine._session_id_for_event
+
+    def _configure_scheduling(self) -> None:
+        """Assemble the optional scheduler around this Agent's existing stores."""
+        scheduling = self._section("scheduling")
+        enabled = scheduling.get("enabled")
+        if enabled is None:
+            enabled = False
+        if not isinstance(enabled, bool):
+            raise ValueError("scheduling.enabled must be a boolean")
+        if not enabled:
+            return
+        from .scheduled import (
+            ScheduledAgentAdapter,
+            ScheduledTaskRunner,
+            ScheduledTaskStore,
+            ScheduledTimezoneResolver,
+        )
+        from .scheduled_session import validate_fenced_stores
+        from .session import InMemoryPendingApprovalStore, InMemoryPendingAuthorizationStore, InMemorySessionStore
+        from .toolkit.scheduled import register_scheduled_tools
+
+        if (
+            isinstance(self.engine.store, InMemorySessionStore)
+            or isinstance(self.engine.approvals, InMemoryPendingApprovalStore)
+            or isinstance(self.engine.authorizations, InMemoryPendingAuthorizationStore)
+        ):
+            raise ValueError("scheduling requires persistent session, approval, and authorization stores")
+        store = getattr(self.engine, "scheduled_store", None)
+        if store is None:
+            store = ScheduledTaskStore(str(scheduling.get("path") or self.db_path))
+            self.engine.scheduled_store = store
+        validate_fenced_stores(self.engine.store, store)
+        expire_approval = getattr(self.engine.approvals, "expire_if_pending", None)
+        expire_authorization = getattr(self.engine.authorizations, "expire_if_pending", None)
+        if not callable(expire_approval) or not callable(expire_authorization):
+            raise ValueError("scheduling requires approval and authorization stores with expiry support")
+        base_registry = self.engine.registry
+        scheduled_names = {
+            "create_scheduled_task",
+            "list_scheduled_tasks",
+            "pause_scheduled_task",
+            "resume_scheduled_task",
+            "delete_scheduled_task",
+        }
+        if scheduled_names.intersection(spec.name for spec in base_registry.specs()):
+            raise ValueError("scheduling tool names already exist in the supplied registry")
+        registry = _OverlayRegistry(base_registry)
+        register_scheduled_tools(registry, store)
+        self.engine.registry = registry
+        adapter = ScheduledAgentAdapter(self.engine)
+        self._scheduled_runner = ScheduledTaskRunner(
+            store,
+            adapter.execute,
+            adapter.notify,
+            timezone_for=ScheduledTimezoneResolver(self.engine.user_tokens, self.engine.client),
+            expire_approval=lambda approval_id, now: expire_approval(approval_id, now=now),
+            expire_authorization=lambda authorization_id, now: expire_authorization(authorization_id, now=now),
+            poll_interval=float(scheduling.get("poll_interval", 5)),
+        )
 
     @staticmethod
     def validate_config(
@@ -226,6 +357,8 @@ class Agent:
             return
         if self._lifecycle_state != "created":
             raise RuntimeError(f"cannot start agent while runtime is {self._lifecycle_state}")
+        if self._scheduled_runner is not None:
+            await self._scheduled_runner.start()
         self._lifecycle_state = "ready"
 
     def _begin_shutdown(self, *, stop_engine: bool = True) -> float:
@@ -249,6 +382,11 @@ class Agent:
         if self._lifecycle_state == "stopped":
             return
         deadline = self._begin_shutdown()
+        if self._scheduled_runner is not None:
+            drained = await self._scheduled_runner.aclose(deadline=deadline)
+            if not drained:
+                logger.error("scheduled work did not stop before the shutdown deadline; leaving resources open")
+                return
         drained = True
         if self._owns_engine and hasattr(self.engine, "aclose"):
             drained = await self.engine.aclose(deadline=deadline)
@@ -321,6 +459,8 @@ class Agent:
 
     async def run_ws(self) -> None:
         r"""运行飞书 WebSocket 长连接服务。"""
+        if self._durable_callbacks is not None:
+            raise ValueError("durable callback intake currently requires the HTTP backend")
         feishu = self._section("feishu")
         app_id = str(feishu.get("app_id") or "")
         app_secret = str(feishu.get("app_secret") or "")
@@ -444,6 +584,7 @@ class Agent:
                 self.signer,
                 self.oauth_redirect_uri,
                 on_authorized=self.engine.resume_authorization,
+                durable_receiver=self._durable_callbacks,
                 track_task=getattr(self.engine, "track_background_task", None),
                 success_message=self.oauth_success_message(),
                 success_title=self.oauth_success_title(),
@@ -497,6 +638,8 @@ class Agent:
             options["seen_store"] = seen_store
         if self._event_job_store is not None:
             options["job_store"] = self._event_job_store
+        if self._durable_callbacks is not None:
+            options["card_handler"] = self._durable_callbacks.card_handler(self.engine)
         if self._event_partition_key is not None:
             options["partition_key"] = self._event_partition_key
         return options
@@ -581,6 +724,7 @@ class Agent:
             system=overrides.pop("system", None) or self._system_prompt(timezone_resolver),
             turn_context=overrides.pop("turn_context", None) or self._turn_context(timezone_resolver),
             timezone=timezone_resolver,
+            trusted_tenant_key=overrides.pop("trusted_tenant_key", None) or self._get("feishu.tenant_key"),
             summarize_threshold_tokens=int(self._get("session.summarize_threshold_tokens", 0) or 0),
             summarize_keep_recent=int(self._get("session.summarize_keep_recent", 12) or 12),
             idle_session_timeout_seconds=float(self._get("session.idle_session_timeout_seconds", 0) or 0),
@@ -678,6 +822,7 @@ class Agent:
             str(self._get("timezone", "Asia/Shanghai") or "Asia/Shanghai"),
             user_tokens=self.provider,
             client=self.client,
+            trusted_tenant_key=self._get("feishu.tenant_key"),
         )
 
     def _system_prompt(self, timezone_resolver: Any) -> Any:

@@ -69,24 +69,45 @@ def build_timezone_resolver(
     user_tokens: Any | None = None,
     client: Any | None = None,
     cache_ttl_seconds: float = 3600.0,
+    trusted_tenant_key: str | None = None,
+    allow_legacy_unscoped: bool = False,
 ) -> Callable[..., Any]:
     r"""构建按事件上下文、用户资料与配置默认值解析时区的 resolver。"""
+    if trusted_tenant_key is not None and (
+        not isinstance(trusted_tenant_key, str)
+        or not trusted_tenant_key.strip()
+        or trusted_tenant_key != trusted_tenant_key.strip()
+    ):
+        raise ValueError("trusted_tenant_key must be a non-empty string")
+    if not isinstance(allow_legacy_unscoped, bool):
+        raise ValueError("allow_legacy_unscoped must be a boolean")
     fallback_timezone = _valid_timezone(default_timezone) or "Asia/Shanghai"
-    cache: dict[str, tuple[float, str]] = {}
+    cache: dict[tuple[str | None, str], tuple[float, str]] = {}
 
     async def resolve(event: Any | None = None) -> str:
+        event_tenant = getattr(event, "tenant_key", None)
+        if event_tenant is not None and (
+            not isinstance(event_tenant, str) or not event_tenant.strip() or event_tenant != event_tenant.strip()
+        ):
+            return fallback_timezone
+        if trusted_tenant_key and event_tenant and trusted_tenant_key != event_tenant:
+            return fallback_timezone
+        tenant_key = event_tenant or trusted_tenant_key
         event_timezone = _valid_timezone(_event_timezone(event))
         if event_timezone:
             return event_timezone
+        if tenant_key is None and not allow_legacy_unscoped:
+            return fallback_timezone
         user = _event_user(event)
-        cache_key = _user_cache_key(user)
-        if cache_key:
+        user_key = _user_cache_key(user)
+        cache_key = (tenant_key, user_key) if user_key else None
+        if cache_key is not None:
             cached = cache.get(cache_key)
             if cached and time.monotonic() - cached[0] < cache_ttl_seconds:
                 return cached[1]
-        user_timezone = await _user_timezone(user_tokens, client, user)
+        user_timezone = await _user_timezone(user_tokens, client, user, tenant_key=tenant_key)
         if user_timezone:
-            if cache_key:
+            if cache_key is not None:
                 cache[cache_key] = (time.monotonic(), user_timezone)
             return user_timezone
         return fallback_timezone
@@ -109,16 +130,18 @@ async def _call_timezone_resolver(timezone_resolver: Callable[..., Any], event: 
     return _valid_timezone(value) or "Asia/Shanghai"
 
 
-async def _user_timezone(user_tokens: Any | None, client: Any | None, user: Mapping[str, Any]) -> str | None:
+async def _user_timezone(
+    user_tokens: Any | None, client: Any | None, user: Mapping[str, Any], *, tenant_key: str | None
+) -> str | None:
     if not user or user_tokens is None or client is None:
         return None
-    token_getter = getattr(user_tokens, "user_token", None)
+    token_getter = getattr(user_tokens, "user_token_for_tenant" if tenant_key else "user_token", None)
     oauth = getattr(client, "oauth", None)
     user_info = getattr(oauth, "user_info", None)
     if token_getter is None or user_info is None:
         return None
     try:
-        token = token_getter(user)
+        token = token_getter(tenant_key, user) if tenant_key else token_getter(user)
         if inspect.isawaitable(token):
             token = await token
         if not token:
@@ -126,6 +149,8 @@ async def _user_timezone(user_tokens: Any | None, client: Any | None, user: Mapp
         info = user_info(token)
         if inspect.isawaitable(info):
             info = await info
+        if tenant_key and isinstance(info, Mapping) and info.get("tenant_key") not in (None, tenant_key):
+            return None
     except Exception:
         return None
     return _extract_timezone(info)
@@ -147,6 +172,9 @@ def _event_timezone(event: Any | None) -> str | None:
 
 
 def _event_user(event: Any | None) -> dict[str, Any]:
+    user = getattr(event, "user", None)
+    if isinstance(user, Mapping):
+        return {key: user[key] for key in ("open_id", "union_id", "user_id") if user.get(key)}
     body = getattr(event, "body", None) or {}
     sender = (body.get("sender") or {}).get("sender_id") or {}
     source = sender or body.get("operator") or {}

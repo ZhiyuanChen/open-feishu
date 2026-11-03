@@ -293,9 +293,17 @@ async def test_oauth_resume_followon_approval_remains_in_original_group_branch()
             )
         ],
     )
-    assert await oauth_flow.resume_authorization(agent, "authorization", user={"open_id": "intruder"}) == "forbidden"
+    assert (
+        await oauth_flow.resume_authorization(
+            agent, "authorization", user={"open_id": "intruder", "tenant_key": "tenant"}
+        )
+        == "forbidden"
+    )
     assert approvals == []
-    assert await oauth_flow.resume_authorization(agent, "authorization", user={"open_id": "owner"}) == "resumed"
+    assert (
+        await oauth_flow.resume_authorization(agent, "authorization", user={"open_id": "owner", "tenant_key": "tenant"})
+        == "resumed"
+    )
     assert approvals[0].session_id == "trusted-session"
     assert approvals[0].owner_user_keys == ("open_id:owner",)
     assert approvals[0].extra["message_context"]["root_id"] == "root"

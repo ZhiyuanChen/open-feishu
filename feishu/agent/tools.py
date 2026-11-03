@@ -25,7 +25,7 @@ import asyncio
 import inspect
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
-from typing import Any, TypeVar, overload
+from typing import Any, Literal, TypeVar, overload
 
 from .llm import ToolSpec
 from .result import ToolOutcome, ToolResult
@@ -76,6 +76,11 @@ class Tool:
     handler: Callable[..., Awaitable[Any] | Any]
     requires_approval: bool = False
     auth_scopes: tuple[str, ...] = ()
+    scheduled_effect: Literal["read", "write"] | None = None
+
+    def __post_init__(self) -> None:
+        if self.scheduled_effect not in (None, "read", "write"):
+            raise ValueError("scheduled_effect must be 'read', 'write', or None")
 
 
 def _validate(name: str, input_schema: dict[str, Any], arguments: Any) -> None:
@@ -181,6 +186,7 @@ class ToolRegistry:
         description: str,
         requires_approval: bool = False,
         auth_scopes: Sequence[str] = (),
+        scheduled_effect: Literal["read", "write"] | None = None,
     ) -> Callable[[_ToolHandler], _ToolHandler]: ...
 
     @overload
@@ -193,6 +199,7 @@ class ToolRegistry:
         description: str,
         requires_approval: bool = False,
         auth_scopes: Sequence[str] = (),
+        scheduled_effect: Literal["read", "write"] | None = None,
     ) -> _ToolHandler: ...
 
     def register(
@@ -204,6 +211,7 @@ class ToolRegistry:
         description: str,
         requires_approval: bool = False,
         auth_scopes: Sequence[str] = (),
+        scheduled_effect: Literal["read", "write"] | None = None,
     ) -> Callable[[_ToolHandler], _ToolHandler] | _ToolHandler:
         r"""
         注册一个工具，支持装饰器与直接调用两种形式。
@@ -218,6 +226,7 @@ class ToolRegistry:
             description: 工具描述，供模型理解其用途。
             requires_approval: 是否在执行前要求用户审批。默认为 `False`。
             auth_scopes: 工具执行前可预检的用户授权范围。默认为空。
+            scheduled_effect: 定时任务中的副作用声明。未声明按写操作处理；普通交互不受影响。
 
         Returns:
             直接调用形式下原样返回 `handler`；装饰器形式下返回用于装饰处理函数的装饰器。
@@ -248,6 +257,7 @@ class ToolRegistry:
                 handler=fn,
                 requires_approval=requires_approval,
                 auth_scopes=tuple(auth_scopes),
+                scheduled_effect=scheduled_effect,
             )
             return fn
 

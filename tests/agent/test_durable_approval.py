@@ -12,7 +12,9 @@ from feishu.agent.context import current_tool_context
 from feishu.agent.integrity import payload_sha256
 from feishu.agent.llm import Message, TextPart, ToolResultPart, ToolUsePart
 from feishu.agent.loop import AgentEngine
-from feishu.agent.persistence import SqlitePendingApprovalStore
+from feishu.agent.persistence import SqlitePendingApprovalStore, SqliteSessionStore
+from feishu.agent.scheduled import Schedule, ScheduledTaskStore
+from feishu.agent.scheduled_policy import ScheduledPolicyRegistry
 from feishu.agent.session import InMemoryPendingApprovalStore, InMemorySessionStore, PendingApproval
 from feishu.agent.tools import ToolRegistry
 from feishu.events.envelope import Event
@@ -173,6 +175,14 @@ async def test_dispatch_does_not_accept_expired_pending(tmp_path, request):
     assert writes == []
 
 
+@pytest.mark.parametrize("missing", [False, True])
+async def test_scheduled_expiry(expired_scheduled_wait, missing):
+    agent, store, run, event, writes = await expired_scheduled_wait("approval", missing)
+    await approval_flow.process_card_action(agent, event)
+    assert writes == []
+    assert store.get_run(run.run_id).status == ("unknown" if missing else "failed")
+
+
 async def test_process_awaits_execution_and_continuation_once():
     agent, pending, writes = await _prepared()
     event = _action(digest=pending.payload_sha256)
@@ -185,6 +195,98 @@ async def test_process_awaits_execution_and_continuation_once():
     assert history[-1].content == [TextPart(text="done")]
     assert len(agent.backend.calls) == 1
     assert agent._bg_tasks == set()
+
+
+@pytest.mark.parametrize("changes,expected", [({}, 1), ({"user_id": "intruder"}, 0), ({"digest": "wrong"}, 0)])
+async def test_scheduled_approval(changes, expected):
+    agent, pending, writes = await _prepared()
+    agent.registry = ScheduledPolicyRegistry(agent.registry, "confirm_writes")
+    event = _action(**{"digest": pending.payload_sha256, **changes})
+    await approval_flow.process_card_action(agent, event)
+    await approval_flow.process_card_action(agent, event)
+    assert len(writes) == expected
+
+
+@pytest.mark.parametrize("tenant,expected", [("tenant", 1), ("other-tenant", 0)])
+async def test_scheduling_approval_tenant(tenant, expected):
+    agent, pending, writes = await _prepared()
+    tool = agent.registry._tools.pop("deploy")
+    tool.name = "create_scheduled_task"
+    agent.registry.add(tool)
+    pending.tool_name = tool.name
+    history = await agent.store.get(pending.session_id)
+    history[0].content[0].name = tool.name
+    await agent.store.set(pending.session_id, history)
+    await approval_flow.handle_card_action(agent, _action(digest=pending.payload_sha256, tenant=tenant))
+    await asyncio.gather(*agent._bg_tasks)
+    assert len(writes) == expected
+
+
+@pytest.mark.parametrize("case", ["confirmed", "mismatch", "paused", "preparing"])
+async def test_scheduled_resume_restores_policy(tmp_path, case):
+    from tests.agent.test_loop import _ApprovalRecordingClient
+
+    agent, pending, writes = await _prepared()
+    agent.client = _ApprovalRecordingClient()
+    history = await agent.store.get(pending.session_id)
+    store = ScheduledTaskStore(tmp_path / "scheduled.db")
+    agent.store = SqliteSessionStore(tmp_path / "scheduled.db")
+    draft = store.create_draft(
+        tenant_key="tenant",
+        owner_keys=("user_id:owner",),
+        chat_id="chat",
+        instruction="check",
+        schedule=Schedule.interval(seconds=100, anchor_at=100),
+        now=0,
+        policy="read_only" if case == "mismatch" else "confirm_writes",
+    )
+    task = store.confirm_draft(draft.draft_id, ("user_id:owner",), draft.payload_hash, tenant_key="tenant", now=1)
+    run = store.claim_due(now=100)
+    agent.scheduled_store = store
+    pending.session_id = run.session_id
+    pending.extra.update(scheduled_policy="confirm_writes", scheduled_run_id=run.run_id)
+    await agent.store.set(pending.session_id, history)
+    if case == "preparing":
+        await agent.approvals.pop(pending.approval_id)
+        pending.approval_id = "sched_approval"
+        await agent.approvals.put(pending)
+    store.record_wait(
+        run.run_id,
+        "approval",
+        pending.approval_id,
+        pending.created_at + 1800,
+        expected_token=run.lease_token,
+        now=100,
+    )
+    if case != "preparing":
+        store.finish_run(run.run_id, "awaiting_confirmation", now=100, expected_token=run.lease_token)
+    if case == "paused":
+        current = store.get(task.task_id)
+        store.set_state(
+            task.task_id, ("user_id:owner",), "paused", tenant_key="tenant", expected_revision=current.revision, now=101
+        )
+    if case == "preparing":
+        event = _action(digest=pending.payload_sha256)
+        event.body["action"]["value"]["__approval__"] = pending.approval_id
+        response = await approval_flow.handle_card_action(agent, event)
+        assert "请稍后再试" in response["toast"]["content"]
+        assert writes == []
+    elif case != "confirmed":
+        with pytest.raises(PermissionError, match="active task and run"):
+            await approval_flow.process_card_action(agent, _action(digest=pending.payload_sha256))
+        assert writes == []
+    else:
+        await approval_flow.process_card_action(agent, _action(digest=pending.payload_sha256))
+        assert writes == [("prod", {"user_id": "owner"})]
+        assert store.get_run(run.run_id).status == "succeeded"
+
+
+async def test_scheduled_resume_requires_policy():
+    agent, pending, writes = await _prepared()
+    pending.session_id = "scheduled:task:run"
+    with pytest.raises(ValueError, match="missing its run or tool policy"):
+        await approval_flow.process_card_action(agent, _action(digest=pending.payload_sha256))
+    assert writes == []
 
 
 @pytest.mark.parametrize("changes", [{"user_id": "intruder"}, {"digest": "wrong"}, {"digest": None}])
