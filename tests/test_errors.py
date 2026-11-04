@@ -52,6 +52,12 @@ async def client_returning():
 class TestErrorMapping:
     """An HTTP status + envelope code maps to the exception a caller catches."""
 
+    async def test_error_message(self, client_returning):
+        client = client_returning(400, {"code": 230001, "msg": "invalid receive_id", "error": {"log_id": "log"}})
+        with pytest.raises(FeishuApiError) as exc:
+            await client.request("GET", "x")
+        assert exc.value.message == "invalid receive_id"
+
     @pytest.mark.parametrize(
         ("status", "payload", "expected"),
         [

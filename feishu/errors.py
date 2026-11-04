@@ -356,7 +356,9 @@ def error_from_envelope(
     """
     text = error_description
     if not text and isinstance(raw, dict):
-        text = raw.get("error_description") or raw.get("error")
+        text = raw.get("error_description")
+        if not text and isinstance(raw.get("error"), str):
+            text = raw["error"]
     if not text:
         text = message or ""
     if code in RATE_LIMIT_CODES or status == 429:
